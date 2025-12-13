@@ -34,9 +34,20 @@ jobs:
             dotnet pack "$csproj" -c Release -o artifacts --no-build || exit 1
           done
 
+      - name: Get OIDC Token
+        id: oidc
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const token = await core.getIDToken('https://api.nuget.org/v3/index.json');
+            core.setSecret(token);
+            core.setOutput('token', token);
+
       - name: Publish to NuGet
+        env:
+          NUGET_TOKEN: ${{ steps.oidc.outputs.token }}
         run: |
           set -e
           for nupkg in artifacts/*.nupkg; do
-            dotnet nuget push "$nupkg" -s https://api.nuget.org/v3/index.json --skip-duplicate || true
+            dotnet nuget push "$nupkg" -s https://api.nuget.org/v3/index.json -k "$NUGET_TOKEN" --skip-duplicate || true
           done
