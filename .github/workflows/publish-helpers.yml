@@ -1,0 +1,58 @@
+name: Publish Helpers
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish-helpers:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Get Version from csproj
+        id: version
+        run: |
+          VERSION=$(grep -oP '<Version>\K[^<]+' src/TheNerdCollective.Helpers/TheNerdCollective.Helpers.csproj | head -1)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Publishing version: $VERSION"
+
+      - name: Restore
+        run: dotnet restore src/TheNerdCollective.Helpers
+
+      - name: Build
+        run: dotnet build src/TheNerdCollective.Helpers -c Release --no-restore
+
+      - name: Pack
+        run: dotnet pack src/TheNerdCollective.Helpers -c Release -o artifacts --no-build
+
+      - name: NuGet Login
+        id: login
+        uses: NuGet/login@v1
+        with:
+          user: janhjordie
+
+      - name: Push to NuGet
+        run: |
+          for nupkg in artifacts/*.nupkg; do
+            dotnet nuget push "$nupkg" --api-key ${{ steps.login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+          done
+
+      - name: Create Git Tag
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git tag -a "helpers-v${{ steps.version.outputs.version }}" -m "Helpers ${{ steps.version.outputs.version }}"
+          git push origin "helpers-v${{ steps.version.outputs.version }}"
