@@ -54,5 +54,7 @@ jobs:
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
+          git tag -d "mud-quill-editor-v${{ steps.version.outputs.version }}" 2>/dev/null || true
+          git push origin :refs/tags/"mud-quill-editor-v${{ steps.version.outputs.version }}" 2>/dev/null || true
           git tag -a "mud-quill-editor-v${{ steps.version.outputs.version }}" -m "MudQuillEditor ${{ steps.version.outputs.version }}"
           git push origin "mud-quill-editor-v${{ steps.version.outputs.version }}"

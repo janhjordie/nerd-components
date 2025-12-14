@@ -54,5 +54,7 @@ jobs:
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
+          git tag -d "helpers-v${{ steps.version.outputs.version }}" 2>/dev/null || true
+          git push origin :refs/tags/"helpers-v${{ steps.version.outputs.version }}" 2>/dev/null || true
           git tag -a "helpers-v${{ steps.version.outputs.version }}" -m "Helpers ${{ steps.version.outputs.version }}"
           git push origin "helpers-v${{ steps.version.outputs.version }}"
