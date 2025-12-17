@@ -24,6 +24,13 @@ public partial class TimesheetDisplay : ComponentBase
     [Parameter]
     public DateTime? InitialDate { get; set; }
 
+    /// <summary>
+    /// Gets or sets the keyword used to identify unbilled/unpaid hours in task names.
+    /// Default is "(U/B)".
+    /// </summary>
+    [Parameter]
+    public string UnbilledKeyword { get; set; } = "(U/B)";
+
     protected override async Task OnInitializedAsync()
     {
         var now = InitialDate ?? DateTime.Now;
@@ -79,7 +86,7 @@ public partial class TimesheetDisplay : ComponentBase
     private decimal TotalHours => Timesheets.Sum(t => t.Hours);
 
     private decimal UnbilledHours => Timesheets
-        .Where(t => t.TaskName?.Contains("(U/B)") ?? false)
+        .Where(t => t.TaskName?.Contains(UnbilledKeyword) ?? false)
         .Sum(t => t.Hours);
 
     private decimal BillableHours => TotalHours - UnbilledHours;

@@ -58,7 +58,7 @@
                         <MudTd>
                             <div Class="d-flex align-center gap-2">
                                 <span>@context.TaskName</span>
-                                @if (context.TaskName?.Contains("(U/B)") ?? false)
+                                @if (context.TaskName?.Contains(UnbilledKeyword) ?? false)
                                 {
                                     <MudIcon Icon="@Icons.Material.Filled.AttachMoney" Color="Color.Warning" Size="Size.Small" Title="Unpaid hours" />
                                 }
@@ -107,3 +107,8 @@
         }
     </MudContainer>
 </div>
+
+@code {
+    [Parameter]
+    public string UnbilledKeyword { get; set; } = "(U/B)";
+}
