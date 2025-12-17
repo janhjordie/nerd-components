@@ -48,6 +48,7 @@
                         <MudTh>Date</MudTh>
                         <MudTh>Project</MudTh>
                         <MudTh>Task</MudTh>
+                        <MudTh Style="text-align: center;">Trello</MudTh>
                         <MudTh>User</MudTh>
                         <MudTh>Notes</MudTh>
                         <MudTh Style="text-align: right;">Hours</MudTh>
@@ -63,6 +64,15 @@
                                     <MudIcon Icon="@Icons.Material.Filled.AttachMoney" Color="Color.Warning" Size="Size.Small" Title="U/B" />
                                 }
                             </div>
+                        </MudTd>
+                        <MudTd Style="text-align: center;">
+                            @if (!string.IsNullOrWhiteSpace(context.ExternalReferencePermalink) &&
+                                string.Equals(context.ExternalReferenceService, "trello", System.StringComparison.OrdinalIgnoreCase))
+                            {
+                                <MudLink Href="@context.ExternalReferencePermalink" Target="_blank" rel="noopener noreferrer" title="Open Trello card">
+                                    <MudIcon Icon="@Icons.Material.Filled.ViewKanban" Color="Color.Info" />
+                                </MudLink>
+                            }
                         </MudTd>
                         <MudTd>@context.UserName</MudTd>
                         <MudTd>@context.Notes</MudTd>

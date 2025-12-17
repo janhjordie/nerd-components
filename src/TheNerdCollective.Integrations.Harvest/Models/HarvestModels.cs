@@ -18,6 +18,8 @@ public class TimesheetEntry
     public string ProjectName { get; set; } = string.Empty;
     public string TaskName { get; set; } = string.Empty;
     public string Notes { get; set; } = string.Empty;
+    public string ExternalReferencePermalink { get; set; } = string.Empty;
+    public string ExternalReferenceService { get; set; } = string.Empty;
     public decimal Hours { get; set; }
     public DateTime SpentDate { get; set; }
     public DateTime CreatedAt { get; set; }
@@ -33,6 +35,7 @@ public class HarvestTimeEntry
     public HarvestUser? User { get; set; }
     public HarvestProject? Project { get; set; }
     public HarvestTask? Task { get; set; }
+    public HarvestExternalReference? ExternalReference { get; set; }
     public string? Notes { get; set; }
     public decimal Hours { get; set; }
 
@@ -71,6 +74,20 @@ public class HarvestTask
 {
     public long Id { get; set; }
     public string? Name { get; set; }
+}
+
+/// <summary>
+/// Harvest external reference information (e.g., Trello card link).
+/// </summary>
+public class HarvestExternalReference
+{
+    public string? Id { get; set; }
+
+    [JsonPropertyName("group_id")]
+    public string? GroupId { get; set; }
+
+    public string? Service { get; set; }
+    public string? Permalink { get; set; }
 }
 
 /// <summary>

@@ -151,6 +151,8 @@ public class HarvestService
             ProjectName = entry.Project?.Name ?? string.Empty,
             TaskName = entry.Task?.Name ?? string.Empty,
             Notes = entry.Notes ?? string.Empty,
+            ExternalReferencePermalink = entry.ExternalReference?.Permalink ?? string.Empty,
+            ExternalReferenceService = entry.ExternalReference?.Service ?? string.Empty,
             Hours = entry.Hours,
             SpentDate = !string.IsNullOrEmpty(entry.SpentDate) ? DateTime.Parse(entry.SpentDate) : DateTime.Now,
             CreatedAt = entry.CreatedAt,
