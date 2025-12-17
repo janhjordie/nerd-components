@@ -3,55 +3,160 @@ Important Copilot Instructions
 - Do not create new terminals. If an operation fails due to a port conflict or "address already in use" message, this indicates another terminal/process is already running and using the port.
 - If you encounter such an error, do NOT attempt to spawn or kill processes yourself. Instead, immediately notify me with the exact error message so I can stop the existing process manually.
 
-## Trusted Publishing Reminder
+## Trusted Publishing & NuGet Publishing (COMPLETE GUIDE)
 
-**CRITICAL: All NuGet package publishing MUST use Trusted Publishing (OIDC) via GitHub Actions.**
+**CRITICAL: All NuGet package publishing MUST use Trusted Publishing (OIDC) via GitHub Actions. This is the ONLY supported approach.**
 
-### ✅ CORRECT Approach (ALWAYS USE THIS):
+### ✅ COMPLETE CORRECT WORKFLOW PATTERN (ALWAYS USE THIS):
+
 ```yaml
-- name: Get OIDC Token
-  id: oidc
-  uses: actions/github-script@v7
-  with:
-    script: |
-      const token = await core.getIDToken('https://api.nuget.org/v3/index.json');
-      core.setSecret(token);
-      core.setOutput('token', token);
+name: Publish Package Name
 
-- name: Push to NuGet
-  env:
-    NUGET_TOKEN: ${{ steps.oidc.outputs.token }}
-  run: |
-    for nupkg in artifacts/*.nupkg; do
-      dotnet nuget push "$nupkg" -s https://api.nuget.org/v3/index.json -k "$NUGET_TOKEN" --skip-duplicate
-    done
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  id-token: write  # Required for OIDC token
+
+jobs:
+  publish-package:
+    runs-on: ubuntu-latest
+    environment: production  # Required for OIDC
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Get Version from csproj
+        id: version
+        run: |
+          VERSION=$(grep -oP '<Version>\K[^<]+' src/Package/Package.csproj | head -1)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Restore
+        run: dotnet restore src/Package
+
+      - name: Build
+        run: dotnet build src/Package -c Release --no-restore
+
+      - name: Pack
+        run: dotnet pack src/Package -c Release -o artifacts --no-build
+
+      - name: Get OIDC Token
+        id: oidc
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const token = await core.getIDToken('https://api.nuget.org/v3/index.json');
+            core.setSecret(token);
+            core.setOutput('token', token);
+
+      - name: Configure NuGet
+        run: dotnet nuget add source https://api.nuget.org/v3/index.json -n nuget.org 2>/dev/null || true
+
+      - name: Push to NuGet
+        env:
+          NUGET_TOKEN: ${{ steps.oidc.outputs.token }}
+        run: |
+          set -e
+          for nupkg in artifacts/*.nupkg; do
+            dotnet nuget push "$nupkg" -s https://api.nuget.org/v3/index.json -k "$NUGET_TOKEN" --skip-duplicate || true
+          done
+
+      - name: Create Git Tag
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git tag -a "package-v${{ steps.version.outputs.version }}" -m "Package ${{ steps.version.outputs.version }}"
+          git push origin "package-v${{ steps.version.outputs.version }}"
 ```
 
 ### ❌ NEVER use these approaches:
 - `NuGet/login@v1` action - incompatible with OIDC
-- `${{ secrets.NUGET_PUBLISH_KEY }}` as NUGET_AUTH_TOKEN environment variable
+- `${{ secrets.NUGET_PUBLISH_KEY }}` as environment variable
 - Any hardcoded API keys in workflows
-- `--api-key` parameter without the `-s` source parameter
+- `--api-key` parameter alone (MUST use `-s` with `-k`)
+- v2 API endpoints (use v3: `https://api.nuget.org/v3/index.json`)
 
-### Key Points:
-- Use `actions/github-script@v7` to get the OIDC token from GitHub
-- Pass token as `-k "$NUGET_TOKEN"` parameter to `dotnet nuget push`
-- Always use `-s https://api.nuget.org/v3/index.json` (v3 API, not v2)
-- Include `--skip-duplicate` to handle re-runs gracefully
-- This works for ALL new packages/workflows without any secrets needed
+### CRITICAL Implementation Details:
 
-### ⚠️ CRITICAL: NuGet.config Must Exist
-**The repository MUST have a `NuGet.config` at the root that forces v3 API:**
-```xml
-<?xml version="1.0" encoding="utf-8"?>
-<configuration>
-  <packageSources>
-    <clear />
-    <add key="nuget.org" value="https://api.nuget.org/v3/index.json" protocolVersion="3" />
-  </packageSources>
-</configuration>
-```
-GitHub Actions runners have a default NuGet.config that uses v2 API. This file overrides it to ensure v3 is used. **WITHOUT THIS FILE, PUBLISHING WILL FAIL with 403 Forbidden errors.**
+1. **OIDC Token Retrieval (MUST USE)**:
+   ```yaml
+   - name: Get OIDC Token
+     id: oidc
+     uses: actions/github-script@v7  # REQUIRED: Must be v7 or later
+     with:
+       script: |
+         const token = await core.getIDToken('https://api.nuget.org/v3/index.json');
+         core.setSecret(token);  # REQUIRED: Masks token in logs
+         core.setOutput('token', token);
+   ```
+
+2. **Configure NuGet Source (PREVENTS v2 API FALLBACK)**:
+   ```yaml
+   - name: Configure NuGet
+     run: dotnet nuget add source https://api.nuget.org/v3/index.json -n nuget.org 2>/dev/null || true
+   ```
+   **WHY**: GitHub Actions runners have a default NuGet.config with v2 API. This step explicitly registers v3.
+
+3. **NuGet.config at Repository Root (MANDATORY)**:
+   ```xml
+   <?xml version="1.0" encoding="utf-8"?>
+   <configuration>
+     <packageSources>
+       <clear />
+       <add key="nuget.org" value="https://api.nuget.org/v3/index.json" protocolVersion="3" />
+     </packageSources>
+   </configuration>
+   ```
+   **WHY**: Without this, dotnet defaults to v2 API and causes 403 Forbidden errors.
+
+4. **Push Command (WITH ERROR HANDLING)**:
+   ```bash
+   set -e  # Exit on error
+   for nupkg in artifacts/*.nupkg; do
+     dotnet nuget push "$nupkg" \
+       -s https://api.nuget.org/v3/index.json \
+       -k "$NUGET_TOKEN" \
+       --skip-duplicate || true  # Allow failure on duplicate
+   done
+   ```
+   **Key flags**:
+   - `-s` = source (REQUIRED, must be v3)
+   - `-k` = API key (use OIDC token)
+   - `--skip-duplicate` = ignore existing versions
+   - `|| true` = ignore errors on duplicate packages
+
+5. **Permissions in Workflow (REQUIRED)**:
+   ```yaml
+   permissions:
+     contents: write      # For git tag creation
+     id-token: write      # FOR OIDC TOKEN - DO NOT OMIT
+   ```
+
+6. **Production Environment (REQUIRED)**:
+   ```yaml
+   jobs:
+     publish:
+       environment: production  # Links to GitHub OIDC trust configuration
+   ```
+
+### Common Failure Patterns & Fixes:
+
+| Error | Cause | Fix |
+|-------|-------|-----|
+| `403 Forbidden` | Using v2 API | Add `Configure NuGet` step + check NuGet.config |
+| `401 Unauthorized` | Invalid/missing API key | Check OIDC token retrieval step, verify `id-token: write` permission |
+| `400 Bad Request` | Missing `-s` flag | Always use `-s https://api.nuget.org/v3/index.json` |
+| Workflow fails on duplicate | Missing `|| true` | Add `|| true` to allow re-runs |
+| Token error in logs | Token not masked | Add `core.setSecret(token)` in OIDC step |
 
 ## Release Workflows
 
