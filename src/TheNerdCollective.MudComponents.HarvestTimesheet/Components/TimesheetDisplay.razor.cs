@@ -91,4 +91,9 @@ public partial class TimesheetDisplay : ComponentBase
         .Sum(t => t.Hours);
 
     private decimal BillableHours => TotalHours - UnbilledHours;
+
+    private static bool IsTrelloExternal(TimesheetEntry entry)
+    {
+        return (entry.ExternalReferenceService?.IndexOf("trello", StringComparison.OrdinalIgnoreCase) ?? -1) >= 0;
+    }
 }
