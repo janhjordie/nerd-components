@@ -40,6 +40,19 @@ Important Copilot Instructions
 - Include `--skip-duplicate` to handle re-runs gracefully
 - This works for ALL new packages/workflows without any secrets needed
 
+### ⚠️ CRITICAL: NuGet.config Must Exist
+**The repository MUST have a `NuGet.config` at the root that forces v3 API:**
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <packageSources>
+    <clear />
+    <add key="nuget.org" value="https://api.nuget.org/v3/index.json" protocolVersion="3" />
+  </packageSources>
+</configuration>
+```
+GitHub Actions runners have a default NuGet.config that uses v2 API. This file overrides it to ensure v3 is used. **WITHOUT THIS FILE, PUBLISHING WILL FAIL with 403 Forbidden errors.**
+
 ## Release Workflows
 
 When user says "release MudComponent", "release Services", "release Components", or "release Helpers", execute the following workflow:
