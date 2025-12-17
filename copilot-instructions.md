@@ -202,7 +202,10 @@ If a package was successfully built but failed to publish to NuGet (e.g., due to
 2. Commit: `git commit -m "chore: bump <PackageName> to vX.Y.Z+1 for NuGet publishing"`
 3. Push: `git push origin main`
 4. The publish workflow will automatically run again with the new version
-5. Monitor Actions tab to verify successful publish
+5. The workflow will **automatically create/update git tags** matching the new version:
+   - Example: `harvest-integration-v1.0.1` (automatically created)
+   - No manual tag creation needed
+6. Monitor Actions tab to verify successful publish
 
-**WHY**: The workflows trigger on every push to main, so bumping the version ensures the workflow runs with the latest code/fixes and publishes successfully.
+**WHY**: The workflows trigger on every push to main, so bumping the version ensures the workflow runs with the latest code/fixes and publishes successfully. The "Create Git Tag" step in each workflow automatically creates version-matched tags.
 
