@@ -66,14 +66,17 @@ jobs:
       - name: Push to NuGet
         env:
           NUGET_AUTH_TOKEN: ${{ steps.oidc.outputs.token }}
+          NUGET_SECRET: ${{ secrets.NUGET }}
         run: |
           set -euo pipefail
-          if [ -z "${NUGET_AUTH_TOKEN:-}" ]; then
-            echo "NUGET_AUTH_TOKEN missing (trusted publishing token)" >&2
+          TOKEN=${NUGET_AUTH_TOKEN:-${NUGET_SECRET:-}}
+          if [ -z "$TOKEN" ]; then
+            echo "No token available (OIDC or NUGET secret)" >&2
             exit 1
           fi
+          echo "Using token from: $([ -n "${NUGET_AUTH_TOKEN:-}" ] && echo OIDC || echo secret)"
           for nupkg in artifacts/*.nupkg; do
-            dotnet nuget push "$nupkg" --source https://api.nuget.org/v3/index.json --api-key "$NUGET_AUTH_TOKEN" --skip-duplicate
+            dotnet nuget push "$nupkg" --source https://api.nuget.org/v3/index.json --api-key "$TOKEN" --skip-duplicate
           done
 
       - name: Create Git Tag
