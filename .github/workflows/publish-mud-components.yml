@@ -52,7 +52,7 @@ jobs:
           NUGET_TOKEN: ${{ steps.oidc.outputs.token }}
         run: |
           for nupkg in artifacts/*.nupkg; do
-            dotnet nuget push "$nupkg" -k "$NUGET_TOKEN" --skip-duplicate
+            dotnet nuget push "$nupkg" -s https://api.nuget.org/v3/index.json -k "$NUGET_TOKEN" --skip-duplicate
           done
 
       - name: Create Git Tag
@@ -105,7 +105,7 @@ jobs:
           NUGET_TOKEN: ${{ steps.oidc.outputs.token }}
         run: |
           for nupkg in artifacts/*.nupkg; do
-            dotnet nuget push "$nupkg" -k "$NUGET_TOKEN" --skip-duplicate
+            dotnet nuget push "$nupkg" -s https://api.nuget.org/v3/index.json -k "$NUGET_TOKEN" --skip-duplicate
           done
 
       - name: Create Git Tag
