@@ -38,22 +38,12 @@ jobs:
       - name: Pack
         run: dotnet pack src/TheNerdCollective.Helpers -c Release -o artifacts --no-build
 
-      - name: Get OIDC Token
-        id: oidc
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const token = await core.getIDToken('api://NuGetGallery');
-            core.setSecret(token);
-            core.setOutput('token', token);
-            core.exportVariable('NUGET_AUTH_TOKEN', token);
-
       - name: Configure NuGet Sources
         run: dotnet nuget update source nuget.org -s https://api.nuget.org/v3/index.json --configfile ./NuGet.config 2>/dev/null || dotnet nuget add source https://api.nuget.org/v3/index.json -n nuget.org --configfile ./NuGet.config
 
       - name: Diagnostics
         env:
-          NUGET_AUTH_TOKEN: ${{ steps.oidc.outputs.token }}
+          NUGET_SECRET: ${{ secrets.NUGET }}
         run: |
           set -euo pipefail
           echo "dotnet --info"
@@ -61,22 +51,21 @@ jobs:
           echo "NuGet sources (configfile ./NuGet.config):"
           dotnet nuget list source --configfile ./NuGet.config
           echo "GitHub context: repo=$GITHUB_REPOSITORY workflow=$GITHUB_WORKFLOW ref=$GITHUB_REF run_attempt=$GITHUB_RUN_ATTEMPT"
-          TOKEN_LEN=0
-          if [ -n "${NUGET_AUTH_TOKEN:-}" ]; then TOKEN_LEN=${#NUGET_AUTH_TOKEN}; fi
-          echo "NUGET_AUTH_TOKEN length: $TOKEN_LEN"
+          SECRET_LEN=0
+          if [ -n "${NUGET_SECRET:-}" ]; then SECRET_LEN=${#NUGET_SECRET}; fi
+          echo "NUGET secret length: $SECRET_LEN"
 
       - name: Push to NuGet
         env:
-          NUGET_AUTH_TOKEN: ${{ steps.oidc.outputs.token }}
           NUGET_SECRET: ${{ secrets.NUGET }}
         run: |
           set -euo pipefail
-          TOKEN=${NUGET_AUTH_TOKEN:-${NUGET_SECRET:-}}
+          TOKEN=${NUGET_SECRET:-}
           if [ -z "$TOKEN" ]; then
-            echo "No token available (OIDC or NUGET secret)" >&2
+            echo "No token available (NUGET secret)" >&2
             exit 1
           fi
-          echo "Using token from: $([ -n "${NUGET_AUTH_TOKEN:-}" ] && echo OIDC || echo secret)"
+          echo "Using token from: secret"
           for nupkg in artifacts/*.nupkg; do
             dotnet nuget push "$nupkg" --source https://api.nuget.org/v3/index.json --api-key "$TOKEN" --skip-duplicate
           done
