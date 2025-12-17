@@ -76,18 +76,28 @@ Sets the initial month to display. Defaults to the current month.
 <TimesheetDisplay InitialDate="new DateTime(2025, 12, 1)" />
 ```
 
+### `UnbilledKeyword`
+The keyword used to identify unbilled/without payment hours in task names. Defaults to `"(U/B)"` (Danish: uden betaling).
+
+```razor
+<!-- Use default "(U/B)" -->
+<TimesheetDisplay />
+
+<!-- Use custom keyword -->
+<TimesheetDisplay UnbilledKeyword="[UNPAID]" />
+```
+
 ## Customization
 
 ### Styling
 The component uses MudBlazor's theming system. Customize colors and spacing through your MudBlazor theme configuration.
 
-### Billable Hours Logic
-By default, tasks containing "(U/B)" are classified as unpaid/unbilled. Modify the logic in `TimesheetDisplay.razor.cs`:
+### Unbilled Hours Keyword
+By default, tasks containing "(U/B)" (Danish: uden betaling - without payment) are classified as unbilled. Use the `UnbilledKeyword` parameter to customize this:
 
-```csharp
-private decimal UnbilledHours => Timesheets
-    .Where(t => t.TaskName?.Contains("(U/B)") ?? false)
-    .Sum(t => t.Hours);
+```razor
+<!-- Use custom keyword for identifying unbilled hours -->
+<TimesheetDisplay UnbilledKeyword="[NO-PAY]" />
 ```
 
 ## Required Dependencies
