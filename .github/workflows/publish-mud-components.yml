@@ -61,7 +61,9 @@ jobs:
           echo "NuGet sources (configfile ./NuGet.config):"
           dotnet nuget list source --configfile ./NuGet.config
           echo "GitHub context: repo=$GITHUB_REPOSITORY workflow=$GITHUB_WORKFLOW ref=$GITHUB_REF run_attempt=$GITHUB_RUN_ATTEMPT"
-          echo "NUGET_AUTH_TOKEN length: ${#NUGET_AUTH_TOKEN:-0}"
+          TOKEN_LEN=0
+          if [ -n "${NUGET_AUTH_TOKEN:-}" ]; then TOKEN_LEN=${#NUGET_AUTH_TOKEN}; fi
+          echo "NUGET_AUTH_TOKEN length: $TOKEN_LEN"
 
       - name: Push to NuGet
         env:
@@ -138,7 +140,9 @@ jobs:
           echo "NuGet sources (configfile ./NuGet.config):"
           dotnet nuget list source --configfile ./NuGet.config
           echo "GitHub context: repo=$GITHUB_REPOSITORY workflow=$GITHUB_WORKFLOW ref=$GITHUB_REF run_attempt=$GITHUB_RUN_ATTEMPT"
-          echo "NUGET_AUTH_TOKEN length: ${#NUGET_AUTH_TOKEN:-0}"
+          TOKEN_LEN=0
+          if [ -n "${NUGET_AUTH_TOKEN:-}" ]; then TOKEN_LEN=${#NUGET_AUTH_TOKEN}; fi
+          echo "NUGET_AUTH_TOKEN length: $TOKEN_LEN"
 
       - name: Push to NuGet
         env:
