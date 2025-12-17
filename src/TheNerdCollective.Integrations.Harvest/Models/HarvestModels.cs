@@ -75,6 +75,7 @@ public class HarvestTimeEntry
     public HarvestClient? Client { get; set; }
     public HarvestProject? Project { get; set; }
     public HarvestTask? Task { get; set; }
+    [JsonPropertyName("external_reference")]
     public HarvestExternalReference? ExternalReference { get; set; }
     public string? Notes { get; set; }
     public decimal Hours { get; set; }
