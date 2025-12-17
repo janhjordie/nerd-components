@@ -4,7 +4,7 @@ A comprehensive collection of production-ready libraries and components for .NET
 
 ## 📦 Packages
 
-This monorepo includes four curated NuGet packages:
+This monorepo includes six curated NuGet packages:
 
 ### [TheNerdCollective.Components](src/TheNerdCollective.Components/README.md)
 The main Blazor components library bundling MudQuillEditor and other UI components.
@@ -33,6 +33,16 @@ Foundational services library with abstractions and utilities for scalable appli
 - Dependency injection extensions
 - Configuration options support
 - Type-safe configuration patterns
+
+### [TheNerdCollective.MudComponents.HarvestTimesheet](src/TheNerdCollective.MudComponents.HarvestTimesheet/README.md)
+MudBlazor component for displaying and managing Harvest timesheets.
+- Month navigation, summaries, and billable vs. unbilled tracking
+- Depends on TheNerdCollective.Integrations.Harvest
+
+### [TheNerdCollective.Integrations.Harvest](src/TheNerdCollective.Integrations.Harvest/README.md)
+Integration client for GetHarvest API v2.
+- Service abstractions and configuration support
+- Used by the HarvestTimesheet UI
 
 ## 🚀 Quick Start
 

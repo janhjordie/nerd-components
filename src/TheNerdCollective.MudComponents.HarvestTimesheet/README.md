@@ -1,17 +1,17 @@
-# TheNerdCollective.MudComponents.Timesheet
+# TheNerdCollective.MudComponents.HarvestTimesheet
 
 A MudBlazor component for displaying and managing timesheet entries from the GetHarvest API.
 
 ## Overview
 
-TheNerdCollective.MudComponents.Timesheet provides a beautiful, interactive Blazor component that displays timesheet data with month navigation, hourly summaries, and billable vs. unbilled hour tracking.
+TheNerdCollective.MudComponents.HarvestTimesheet provides a beautiful, interactive Blazor component that displays timesheet data with month navigation, hourly summaries, and billable vs. unbilled hour tracking.
 
 ## Quick Start
 
 ### Installation
 
 ```bash
-dotnet add package TheNerdCollective.MudComponents.Timesheet
+dotnet add package TheNerdCollective.MudComponents.HarvestTimesheet
 ```
 
 ### Setup
