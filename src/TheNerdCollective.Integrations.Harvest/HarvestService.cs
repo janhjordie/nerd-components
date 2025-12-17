@@ -17,6 +17,7 @@ public class HarvestService
     private readonly HttpClient _httpClient;
     private readonly HarvestOptions _options;
     private readonly List<long> _projectIds;
+    private static readonly JsonSerializerOptions SerializerOptions = new() { PropertyNameCaseInsensitive = true, WriteIndented = true };
 
     private const string HARVEST_BASE_URL = "https://api.harvestapp.com/v2/";
 
@@ -76,8 +77,7 @@ public class HarvestService
             response.EnsureSuccessStatusCode();
 
             var contentStr = await response.Content.ReadAsStringAsync();
-            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-            var data = JsonSerializer.Deserialize<HarvestTimeEntriesResponse>(contentStr, options);
+            var data = JsonSerializer.Deserialize<HarvestTimeEntriesResponse>(contentStr, SerializerOptions);
             var entries = data?.TimeEntries ?? new List<HarvestTimeEntry>();
 
             return entries.Select(MapToTimesheetEntry).ToList();
@@ -99,9 +99,8 @@ public class HarvestService
             var response = await _httpClient.GetAsync(url);
             response.EnsureSuccessStatusCode();
 
-            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
             var contentStr = await response.Content.ReadAsStringAsync();
-            var data = JsonSerializer.Deserialize<HarvestProjectsResponse>(contentStr, options);
+            var data = JsonSerializer.Deserialize<HarvestProjectsResponse>(contentStr, SerializerOptions);
             return data?.Projects ?? new List<HarvestProject>();
         }
         catch
@@ -153,6 +152,7 @@ public class HarvestService
             Notes = entry.Notes ?? string.Empty,
             ExternalReferencePermalink = entry.ExternalReference?.Permalink ?? string.Empty,
             ExternalReferenceService = entry.ExternalReference?.Service ?? string.Empty,
+            RawEntryJson = JsonSerializer.Serialize(entry, SerializerOptions),
             Hours = entry.Hours,
             SpentDate = !string.IsNullOrEmpty(entry.SpentDate) ? DateTime.Parse(entry.SpentDate) : DateTime.Now,
             CreatedAt = entry.CreatedAt,

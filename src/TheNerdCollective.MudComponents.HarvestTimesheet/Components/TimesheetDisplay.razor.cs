@@ -17,6 +17,7 @@ public partial class TimesheetDisplay : ComponentBase
     private List<TimesheetEntry> Timesheets = new();
     private DateTime? SelectedDate = DateTime.Now;
     private bool IsLoading = false;
+    private bool ShowDebugPanel = false;
 
     /// <summary>
     /// Gets or sets the date to display timesheets for. Defaults to current month.

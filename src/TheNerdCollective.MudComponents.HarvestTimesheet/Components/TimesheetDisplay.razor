@@ -9,6 +9,10 @@
             <MudText Typo="Typo.h4" GutterBottom="true">Timesheet Registrations</MudText>
         </div>
 
+        <MudPaper Class="pa-4 mb-6">
+            <MudSwitch T="bool" @bind-Value="ShowDebugPanel" Color="Color.Info" Label="Show debug panel (raw Harvest data)" />
+        </MudPaper>
+
         @* Month & Year Selection *@
         <MudPaper Class="pa-6 mb-6">
             <MudGrid>
@@ -113,6 +117,22 @@
                         </MudItem>
                     </MudGrid>
                 </MudPaper>
+
+                @if (ShowDebugPanel)
+                {
+                    <MudPaper Class="mt-6 pa-4" Elevation="0">
+                        <MudText Typo="Typo.subtitle1">Debug: Raw Harvest entries</MudText>
+                        <MudDivider Class="my-2" />
+                        <MudExpansionPanels MultiExpansion="true" Elevation="0">
+                            @foreach (var entry in Timesheets)
+                            {
+                                <MudExpansionPanel Text="@($"{entry.SpentDate:dd/MM/yyyy} - {entry.ProjectName} - {entry.TaskName}")">
+                                    <pre class="mud-pre" style="white-space: pre-wrap; word-break: break-word;">@entry.RawEntryJson</pre>
+                                </MudExpansionPanel>
+                            }
+                        </MudExpansionPanels>
+                    </MudPaper>
+                }
             </MudPaper>
         }
     </MudContainer>
