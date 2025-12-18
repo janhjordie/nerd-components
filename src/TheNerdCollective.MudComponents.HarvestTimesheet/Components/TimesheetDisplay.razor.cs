@@ -2,6 +2,8 @@
 // See LICENSE file in the project root for full license information.
 
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
+using Microsoft.Extensions.Options;
 using TheNerdCollective.Integrations.Harvest;
 using TheNerdCollective.Integrations.Harvest.Models;
 
@@ -13,11 +15,16 @@ namespace TheNerdCollective.MudComponents.HarvestTimesheet;
 public partial class TimesheetDisplay : ComponentBase
 {
     [Inject] private HarvestService HarvestService { get; set; } = null!;
+    [Inject] private IOptions<HarvestOptions> HarvestOptions { get; set; } = null!;
 
     private List<TimesheetEntry> Timesheets = new();
     private DateTime? SelectedDate = DateTime.Now;
     private bool IsLoading = false;
-    private bool ShowDebugPanel = false;
+    private readonly List<long> _appliedProjectIds = new();
+    private bool _hasInitialized;
+    private bool _passwordVerified = false;
+    private string _passwordInput = string.Empty;
+    private bool _passwordIncorrect = false;
 
     /// <summary>
     /// Gets or sets the date to display timesheets for. Defaults to current month.
@@ -32,11 +39,49 @@ public partial class TimesheetDisplay : ComponentBase
     [Parameter]
     public string UnbilledKeyword { get; set; } = "(U/B)";
 
+    /// <summary>
+    /// Optional project IDs to load timesheets for. When provided, overrides appsettings configuration.
+    /// </summary>
+    [Parameter]
+    public IEnumerable<long>? ProjectIds { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether to show the debug panel with raw Harvest JSON data.
+    /// Default is false.
+    /// </summary>
+    [Parameter]
+    public bool ShowDebugPanel { get; set; } = false;
+
     protected override async Task OnInitializedAsync()
     {
         var now = InitialDate ?? DateTime.Now;
         SelectedDate = new DateTime(now.Year, now.Month, 1);
-        await LoadTimesheets();
+
+        // Check if password protection is enabled
+        if (string.IsNullOrEmpty(HarvestOptions.Value.Password))
+        {
+            _passwordVerified = true;
+            ApplyProjectIdsOverride();
+            await LoadTimesheets();
+        }
+
+        _hasInitialized = true;
+    }
+
+    protected override Task OnParametersSetAsync()
+    {
+        if (!_hasInitialized)
+        {
+            return base.OnParametersSetAsync();
+        }
+
+        var projectIdsChanged = ApplyProjectIdsOverride();
+        if (projectIdsChanged && SelectedDate.HasValue)
+        {
+            return LoadTimesheets();
+        }
+
+        return base.OnParametersSetAsync();
     }
 
     private async Task LoadTimesheets()
@@ -95,5 +140,64 @@ public partial class TimesheetDisplay : ComponentBase
     private static bool IsTrelloExternal(TimesheetEntry entry)
     {
         return (entry.ExternalReferenceService?.IndexOf("trello", StringComparison.OrdinalIgnoreCase) ?? -1) >= 0;
+    }
+
+    private bool ApplyProjectIdsOverride()
+    {
+        if (ProjectIds == null)
+        {
+            return false;
+        }
+
+        var incoming = ProjectIds
+            .Where(id => id > 0)
+            .Distinct()
+            .ToList();
+
+        if (incoming.Count == 0)
+        {
+            return false;
+        }
+
+        if (_appliedProjectIds.SequenceEqual(incoming))
+        {
+            return false;
+        }
+
+        HarvestService.ClearProjectIds();
+        foreach (var id in incoming)
+        {
+            HarvestService.AddProjectId(id);
+        }
+
+        _appliedProjectIds.Clear();
+        _appliedProjectIds.AddRange(incoming);
+
+        return true;
+    }
+
+    private async Task VerifyPassword()
+    {
+        _passwordIncorrect = false;
+
+        if (_passwordInput == HarvestOptions.Value.Password)
+        {
+            _passwordVerified = true;
+            ApplyProjectIdsOverride();
+            await LoadTimesheets();
+            _passwordInput = string.Empty;
+        }
+        else
+        {
+            _passwordIncorrect = true;
+        }
+    }
+
+    private async Task HandlePasswordKeyDown(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter")
+        {
+            await VerifyPassword();
+        }
     }
 }

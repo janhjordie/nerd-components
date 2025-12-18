@@ -26,4 +26,10 @@ public class HarvestOptions
     /// Leave empty to manually add projects via AddProjectId().
     /// </summary>
     public List<long> ProjectIds { get; set; } = new();
+
+    /// <summary>
+    /// Gets or sets an optional password to protect the timesheet view.
+    /// Leave empty to disable password protection.
+    /// </summary>
+    public string? Password { get; set; }
 }

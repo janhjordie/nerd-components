@@ -31,10 +31,27 @@ dotnet add package TheNerdCollective.MudComponents.HarvestTimesheet
   "Harvest": {
     "ApiToken": "your_api_token",
     "AccountId": "your_account_id",
-    "ProjectIds": [123456, 789012]
+    "ProjectIds": [123456, 789012],
+    "Password": null
   }
 }
 ```
+
+**Optional Password Protection:**
+```json
+{
+  "Harvest": {
+    "ApiToken": "your_api_token",
+    "AccountId": "your_account_id",
+    "ProjectIds": [123456, 789012],
+    "Password": "your_secure_password"
+  }
+}
+```
+
+When `Password` is set, users must enter the password before accessing the timesheet list.
+
+You can override the configured `ProjectIds` per component instance if you need different project scopes on the same page.
 
 3. **Register Services** in Program.cs:
 ```csharp
@@ -52,7 +69,7 @@ var app = builder.Build();
 4. **Use the Component**:
 ```razor
 @page "/timesheets"
-@using TheNerdCollective.MudComponents.Timesheet
+@using TheNerdCollective.MudComponents.HarvestTimesheet
 
 <TimesheetDisplay />
 ```
@@ -87,6 +104,28 @@ The keyword used to identify unbilled/without payment hours in task names. Defau
 <TimesheetDisplay UnbilledKeyword="[UNPAID]" />
 ```
 
+### `ProjectIds`
+Optional override for the Harvest project IDs to fetch. When provided, these IDs take precedence over the values from appsettings.
+
+```razor
+<!-- Use project IDs from appsettings.json -->
+<TimesheetDisplay />
+
+<!-- Override project IDs per instance -->
+<TimesheetDisplay ProjectIds="new long[] { 123456, 789012 }" />
+```
+
+### `ShowDebugPanel`
+Controls whether the debug panel with raw Harvest JSON data is visible. Defaults to `false`. When set to `true`, the debug panel displays by default (users can still toggle it off with the switch).
+
+```razor
+<!-- Hide debug panel (default) -->
+<TimesheetDisplay />
+
+<!-- Show debug panel by default -->
+<TimesheetDisplay ShowDebugPanel="true" />
+```
+
 ## Customization
 
 ### Styling
@@ -112,7 +151,7 @@ By default, tasks containing "(U/B)" (Danish: uden betaling - without payment) a
 ### Complete Integration
 ```razor
 @page "/timesheets"
-@using TheNerdCollective.MudComponents.Timesheet
+@using TheNerdCollective.MudComponents.HarvestTimesheet
 
 <PageTitle>Timesheets</PageTitle>
 
@@ -126,7 +165,7 @@ By default, tasks containing "(U/B)" (Danish: uden betaling - without payment) a
 ### In a Page with Other Content
 ```razor
 @page "/dashboard"
-@using TheNerdCollective.MudComponents.Timesheet
+@using TheNerdCollective.MudComponents.HarvestTimesheet
 
 <MudContainer>
     <MudText Typo="Typo.h3" Class="mb-6">My Dashboard</MudText>
