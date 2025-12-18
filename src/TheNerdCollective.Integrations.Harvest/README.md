@@ -237,3 +237,7 @@ Apache License 2.0 - See LICENSE file for details
 ---
 
 Built with ❤️ by [The Nerd Collective Aps](https://www.thenerdcollective.dk/)
+
+By [Jan Hjørdie](https://github.com/janhjordie/) - [LinkedIn](https://www.linkedin.com/in/janhjordie/) | [Dev.to](https://dev.to/janhjordie)
+
+By [Jan Hjørdie](https://github.com/janhjordie/) - [LinkedIn](https://www.linkedin.com/in/janhjordie/) | [Dev.to](https://dev.to/janhjordie)

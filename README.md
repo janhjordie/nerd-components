@@ -85,7 +85,7 @@ For issues, feature requests, or questions:
 
 [The Nerd Collective Aps](https://www.thenerdcollective.dk/)
 
-Developed by [janhjordie](https://github.com/janhjordie)
+Developed by [Jan Hjørdie](https://github.com/janhjordie/)
 
 ---
 
@@ -98,6 +98,8 @@ For detailed documentation and interactive demos, visit the [online demo applica
 ---
 
 Built with ❤️ by [The Nerd Collective Aps](https://www.thenerdcollective.dk/)
+
+By [Jan Hjørdie](https://github.com/janhjordie/) - [LinkedIn](https://www.linkedin.com/in/janhjordie/) | [Dev.to](https://dev.to/janhjordie)
 
 
 ```
