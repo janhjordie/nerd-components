@@ -136,16 +136,34 @@
                 @if (ShowDebugPanel)
                 {
                     <MudPaper Class="mt-6 pa-4" Elevation="0">
+                        @if (!string.IsNullOrEmpty(_harvestError))
+                        {
+                            <MudAlert Severity="Severity.Error" Class="mb-4">
+                                <MudText Typo="Typo.subtitle2" Class="mb-2">Harvest Service Error</MudText>
+                                <pre style="white-space: pre-wrap; word-break: break-word; font-size: 0.85rem;">@_harvestError</pre>
+                            </MudAlert>
+                        }
                         <MudText Typo="Typo.subtitle1">Debug: Raw Harvest entries</MudText>
                         <MudDivider Class="my-2" />
-                        <MudExpansionPanels MultiExpansion="true" Elevation="0">
-                            @foreach (var entry in Timesheets)
-                            {
-                                <MudExpansionPanel Text="@($"{entry.SpentDate:dd/MM/yyyy} - {entry.ProjectName} - {entry.TaskName}")" IsInitiallyExpanded="true">
-                                    <pre class="mud-pre" style="white-space: pre-wrap; word-break: break-word;">@entry.RawEntryJson</pre>
-                                </MudExpansionPanel>
-                            }
-                        </MudExpansionPanels>
+                        @if (Timesheets.Count > 0)
+                        {
+                            <MudExpansionPanels MultiExpansion="true" Elevation="0">
+                                @foreach (var entry in Timesheets)
+                                {
+                                    <MudExpansionPanel Text="@($"{entry.SpentDate:dd/MM/yyyy} - {entry.ProjectName} - {entry.TaskName}")" IsInitiallyExpanded="true">
+                                        <pre class="mud-pre" style="white-space: pre-wrap; word-break: break-word;">@entry.RawEntryJson</pre>
+                                    </MudExpansionPanel>
+                                }
+                            </MudExpansionPanels>
+                        }
+                        else if (!string.IsNullOrEmpty(_harvestError))
+                        {
+                            <MudText Typo="Typo.body2" Class="text-muted">No entries available due to error.</MudText>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.body2" Class="text-muted">No entries to display.</MudText>
+                        }
                     </MudPaper>
                 }
             </MudPaper>

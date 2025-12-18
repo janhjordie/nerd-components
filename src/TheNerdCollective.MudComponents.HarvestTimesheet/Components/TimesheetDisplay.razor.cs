@@ -25,6 +25,7 @@ public partial class TimesheetDisplay : ComponentBase
     private bool _passwordVerified = false;
     private string _passwordInput = string.Empty;
     private bool _passwordIncorrect = false;
+    private string? _harvestError = null;
 
     /// <summary>
     /// Gets or sets the date to display timesheets for. Defaults to current month.
@@ -93,6 +94,7 @@ public partial class TimesheetDisplay : ComponentBase
         }
 
         IsLoading = true;
+        _harvestError = null;
 
         try
         {
@@ -102,9 +104,10 @@ public partial class TimesheetDisplay : ComponentBase
 
             Timesheets = await HarvestService.GetTimesheetEntriesAsync(firstDay, lastDay);
         }
-        catch
+        catch (Exception ex)
         {
-            // Error handling can be extended here
+            _harvestError = $"Error loading timesheets: {ex.GetType().Name}\n{ex.Message}\n\nStack Trace:\n{ex.StackTrace}";
+            ShowDebugPanel = true;
         }
         finally
         {
