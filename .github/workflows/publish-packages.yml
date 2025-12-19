@@ -1,0 +1,128 @@
+name: Publish NuGet Packages
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/**/*.csproj'
+      - 'src/**/*.cs'
+      - 'src/**/*.razor'
+      - '.github/workflows/publish-packages.yml'
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      packages: ${{ steps.filter.outputs.packages }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Detect changed packages
+        id: filter
+        run: |
+          # Get list of changed files
+          CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD)
+          
+          # Define package directories
+          declare -A PACKAGES=(
+            ["TheNerdCollective.Services"]="src/TheNerdCollective.Services"
+            ["TheNerdCollective.Services.BlazorServer"]="src/TheNerdCollective.Services.BlazorServer"
+            ["TheNerdCollective.Components"]="src/TheNerdCollective.Components"
+            ["TheNerdCollective.Components.BlazorServerCircuitHandler"]="src/TheNerdCollective.Components.BlazorServerCircuitHandler"
+            ["TheNerdCollective.Helpers"]="src/TheNerdCollective.Helpers"
+            ["TheNerdCollective.Integrations.Harvest"]="src/TheNerdCollective.Integrations.Harvest"
+            ["TheNerdCollective.MudComponents.MudQuillEditor"]="src/TheNerdCollective.MudComponents.MudQuillEditor"
+            ["TheNerdCollective.MudComponents.HarvestTimesheet"]="src/TheNerdCollective.MudComponents.HarvestTimesheet"
+          )
+          
+          # Detect which packages changed
+          PACKAGES_TO_BUILD="[]"
+          for pkg_name in "${!PACKAGES[@]}"; do
+            pkg_path="${PACKAGES[$pkg_name]}"
+            if echo "$CHANGED_FILES" | grep -q "^$pkg_path/"; then
+              PACKAGES_TO_BUILD=$(echo "$PACKAGES_TO_BUILD" | jq -c ". += [{\"name\": \"$pkg_name\", \"path\": \"$pkg_path\"}]")
+            fi
+          done
+          
+          # If workflow itself changed, build all packages
+          if echo "$CHANGED_FILES" | grep -q "^.github/workflows/publish-packages.yml"; then
+            echo "Workflow changed - building all packages"
+            PACKAGES_TO_BUILD="[]"
+            for pkg_name in "${!PACKAGES[@]}"; do
+              pkg_path="${PACKAGES[$pkg_name]}"
+              PACKAGES_TO_BUILD=$(echo "$PACKAGES_TO_BUILD" | jq -c ". += [{\"name\": \"$pkg_name\", \"path\": \"$pkg_path\"}]")
+            done
+          fi
+          
+          echo "packages=$PACKAGES_TO_BUILD" >> $GITHUB_OUTPUT
+          echo "Packages to build: $PACKAGES_TO_BUILD"
+
+  publish:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.packages != '[]'
+    runs-on: ubuntu-latest
+    environment: production
+    strategy:
+      matrix:
+        package: ${{ fromJson(needs.detect-changes.outputs.packages) }}
+      fail-fast: false
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Get Version
+        id: version
+        run: |
+          VERSION=$(grep -oP '<Version>\K[^<]+' ${{ matrix.package.path }}/${{ matrix.package.name }}.csproj | head -1)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Publishing ${{ matrix.package.name }} version: $VERSION"
+
+      - name: Restore
+        run: dotnet restore ${{ matrix.package.path }}
+
+      - name: Build
+        run: dotnet build ${{ matrix.package.path }} -c Release --no-restore
+
+      - name: Pack
+        run: dotnet pack ${{ matrix.package.path }} -c Release -o artifacts --no-build
+
+      - name: Configure NuGet Sources
+        run: dotnet nuget update source nuget.org -s https://api.nuget.org/v3/index.json --configfile ./NuGet.config 2>/dev/null || dotnet nuget add source https://api.nuget.org/v3/index.json -n nuget.org --configfile ./NuGet.config
+
+      - name: Push to NuGet
+        env:
+          NUGET_SECRET: ${{ secrets.NUGET }}
+        run: |
+          set -euo pipefail
+          TOKEN=${NUGET_SECRET:-}
+          if [ -z "$TOKEN" ]; then
+            echo "No token available (NUGET secret)" >&2
+            exit 1
+          fi
+          for nupkg in artifacts/*.nupkg; do
+            dotnet nuget push "$nupkg" --source https://api.nuget.org/v3/index.json --api-key "$TOKEN" --skip-duplicate
+          done
+
+      - name: Create Git Tag
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          TAG_NAME="${{ matrix.package.name }}-v${{ steps.version.outputs.version }}"
+          git tag -d "$TAG_NAME" 2>/dev/null || true
+          git push origin :refs/tags/"$TAG_NAME" 2>/dev/null || true
+          git tag -a "$TAG_NAME" -m "${{ matrix.package.name }} ${{ steps.version.outputs.version }}"
+          git push origin "$TAG_NAME"
