@@ -286,6 +286,17 @@
         };
     };
 
+    // Check if Blazor has already started (handles autostart scenarios)
+    if (window.Blazor && typeof window.Blazor._internal !== 'undefined') {
+        console.log('[Blazor] Already started, skipping custom start configuration');
+        // Mark initial load complete after brief delay
+        setTimeout(() => {
+            isInitialLoad = false;
+            console.log('[Blazor] Infinite reconnection handler active (post-start)');
+        }, 1000);
+        return;
+    }
+
     // Start Blazor with custom reconnection handler
     Blazor.start({
         circuit: {
