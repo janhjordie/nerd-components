@@ -65,7 +65,101 @@ Result: Fresh session with new app instance
 
 ## Configuration
 
-The handler uses sensible defaults, but you can customize circuit retention in your host's `Program.cs`:
+### Basic Usage
+
+The handler uses sensible defaults and requires zero configuration:
+
+```razor
+<CircuitReconnectionHandler @rendermode="InteractiveServer" />
+```
+
+### Customizing Colors
+
+```razor
+<CircuitReconnectionHandler 
+    @rendermode="InteractiveServer"
+    PrimaryColor="#FF5722"
+    SuccessColor="#00C853" />
+```
+
+### Custom Spinner Image
+
+```razor
+<CircuitReconnectionHandler 
+    @rendermode="InteractiveServer"
+    SpinnerUrl="/images/custom-spinner.gif" />
+```
+
+### Custom CSS
+
+```razor
+<CircuitReconnectionHandler 
+    @rendermode="InteractiveServer"
+    CustomCss="@customCss" />
+
+@code {
+    private string customCss = @"
+        @keyframes spin { to { transform: rotate(360deg); } }
+        #blazor-reconnect-modal { font-family: 'Roboto', sans-serif; }
+        #manual-reload-btn:hover { opacity: 0.9; }
+    ";
+}
+```
+
+### Fully Custom HTML Dialog
+
+For complete control over the dialog appearance, provide custom HTML:
+
+```razor
+<CircuitReconnectionHandler 
+    @rendermode="InteractiveServer"
+    ReconnectingHtml="@reconnectingHtml"
+    ServerRestartHtml="@serverRestartHtml"
+    CustomCss="@customCss" />
+
+@code {
+    private string reconnectingHtml = @"
+        <div style='position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 9999; 
+                    display: flex; align-items: center; justify-content: center;'>
+            <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                        padding: 3rem; border-radius: 16px; text-align: center; color: white;'>
+                <img src='/logo.svg' style='width: 64px; margin-bottom: 1rem;' />
+                <h2>We'll be right back!</h2>
+                <p id='reconnect-status'>Reconnecting to server...</p>
+                <p id='reconnect-countdown'>Next try in <span id='countdown-seconds'>1</span>s</p>
+                <button id='manual-reload-btn' style='background: white; color: #667eea; 
+                        border: none; padding: 0.75rem 2rem; border-radius: 8px; cursor: pointer;'>
+                    Refresh Page
+                </button>
+            </div>
+        </div>
+    ";
+
+    private string serverRestartHtml = @"
+        <div style='position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 9999; 
+                    display: flex; align-items: center; justify-content: center;'>
+            <div style='background: white; padding: 3rem; border-radius: 16px; text-align: center;'>
+                <h2>Updating...</h2>
+                <p>Please wait while we reload the application.</p>
+            </div>
+        </div>
+    ";
+
+    private string customCss = @"
+        @keyframes spin { to { transform: rotate(360deg); } }
+        h2 { margin: 0 0 1rem; }
+    ";
+}
+```
+
+**Important placeholder IDs for custom HTML:**
+- `reconnect-status` - Updated with status messages
+- `countdown-seconds` - Displays countdown timer
+- `manual-reload-btn` - Must have this ID for reload functionality
+
+### Circuit Options
+
+Customize circuit behavior in `Program.cs`:
 
 ```csharp
 builder.Services.Configure<CircuitOptions>(options =>

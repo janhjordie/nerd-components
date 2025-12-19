@@ -5,6 +5,8 @@
  * Follows official Microsoft guidance from:
  * https://learn.microsoft.com/en-us/aspnet/core/blazor/fundamentals/signalr
  * Works with MudBlazor 8.15+ and .NET 10
+ * 
+ * Customization: Call window.configureBlazorReconnection(options) before Blazor.start()
  */
 
 (() => {
@@ -14,24 +16,39 @@
     let isInitialLoad = true;
     let reconnectModal = null;
     let currentInterval = initialInterval;
+    
+    // Default configuration (can be overridden via window.configureBlazorReconnection)
+    let config = {
+        reconnectingHtml: null,
+        serverRestartHtml: null,
+        customCss: null,
+        spinnerUrl: null,
+        primaryColor: '#594AE2',
+        successColor: '#4CAF50'
+    };
 
-    // Show reconnection UI (simplified, no attempt counter)
-    function showReconnectingUI() {
-        if (isInitialLoad || reconnectModal) return;
-
-        reconnectModal = document.createElement('div');
-        reconnectModal.id = 'blazor-reconnect-modal';
-        reconnectModal.innerHTML = `
+    // Configuration API - call this before Blazor starts
+    window.configureBlazorReconnection = (options) => {
+        config = { ...config, ...options };
+        console.log('[Blazor] Reconnection dialog configured with custom options');
+    };
+    
+    // Generate default reconnecting HTML
+    function getDefaultReconnectingHtml() {
+        const spinnerSvg = config.spinnerUrl 
+            ? `<img src="${config.spinnerUrl}" style="width: 48px; height: 48px; margin: 0 auto 1rem; animation: spin 1s linear infinite;" alt="Reconnecting" />`
+            : `<svg style="width: 48px; height: 48px; margin: 0 auto 1rem; animation: spin 1s linear infinite;" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10" fill="none" stroke="${config.primaryColor}" stroke-width="3" 
+                        stroke-dasharray="31.4" stroke-dashoffset="10" stroke-linecap="round"/>
+               </svg>`;
+        
+        return `
             <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
                         background: rgba(0, 0, 0, 0.7); z-index: 9999; 
                         display: flex; align-items: center; justify-content: center;">
                 <div style="background: white; padding: 2rem; border-radius: 8px; 
                             max-width: 400px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                    <svg style="width: 48px; height: 48px; margin: 0 auto 1rem; animation: spin 1s linear infinite;" 
-                         viewBox="0 0 24 24">
-                        <circle cx="12" cy="12" r="10" fill="none" stroke="#594AE2" stroke-width="3" 
-                                stroke-dasharray="31.4" stroke-dashoffset="10" stroke-linecap="round"/>
-                    </svg>
+                    ${spinnerSvg}
                     <h3 style="margin: 0 0 0.5rem; color: #333; font-size: 1.25rem;">Connection Lost</h3>
                     <p id="reconnect-status" style="margin: 0 0 0.25rem; color: #666; font-size: 0.95rem;">
                         Reconnecting...
@@ -39,17 +56,58 @@
                     <p id="reconnect-countdown" style="margin: 0 0 1rem; color: #999; font-size: 0.85rem;">
                         Next attempt in <span id="countdown-seconds">1</span>s
                     </p>
-                    <button id="manual-reload-btn" style="background: #594AE2; color: white; border: none; 
+                    <button id="manual-reload-btn" style="background: ${config.primaryColor}; color: white; border: none; 
                                                            padding: 0.5rem 1.5rem; border-radius: 4px; 
                                                            cursor: pointer; font-size: 0.95rem;">
                         Reload Now
                     </button>
                 </div>
             </div>
-            <style>
-                @keyframes spin { to { transform: rotate(360deg); } }
-            </style>
+            ${config.customCss ? '' : `<style>@keyframes spin { to { transform: rotate(360deg); } }</style>`}
         `;
+    }
+    
+    // Generate default server restart HTML
+    function getDefaultServerRestartHtml() {
+        const spinnerSvg = config.spinnerUrl 
+            ? `<img src="${config.spinnerUrl}" style="width: 48px; height: 48px; margin: 0 auto 1rem; animation: spin 1s linear infinite;" alt="Reconnecting" />`
+            : `<svg style="width: 48px; height: 48px; margin: 0 auto 1rem; animation: spin 1s linear infinite;" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10" fill="none" stroke="${config.successColor}" stroke-width="3" 
+                        stroke-dasharray="31.4" stroke-dashoffset="10" stroke-linecap="round"/>
+               </svg>`;
+        
+        return `
+            <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
+                        background: rgba(0, 0, 0, 0.7); z-index: 9999; 
+                        display: flex; align-items: center; justify-content: center;">
+                <div style="background: white; padding: 2rem; border-radius: 8px; 
+                            max-width: 400px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    ${spinnerSvg}
+                    <h3 style="margin: 0 0 0.5rem; color: #333; font-size: 1.25rem;">Reconnecting...</h3>
+                    <p style="margin: 0 0 1rem; color: #666; font-size: 0.95rem;">
+                        Please wait a moment...
+                    </p>
+                </div>
+            </div>
+            ${config.customCss ? '' : `<style>@keyframes spin { to { transform: rotate(360deg); } }</style>`}
+        `;
+    }
+
+    // Show reconnection UI (simplified, no attempt counter)
+    function showReconnectingUI() {
+        if (isInitialLoad || reconnectModal) return;
+
+        reconnectModal = document.createElement('div');
+        reconnectModal.id = 'blazor-reconnect-modal';
+        reconnectModal.innerHTML = config.reconnectingHtml || getDefaultReconnectingHtml();
+        
+        // Inject custom CSS if provided
+        if (config.customCss) {
+            const style = document.createElement('style');
+            style.textContent = config.customCss;
+            reconnectModal.appendChild(style);
+        }
+        
         document.body.appendChild(reconnectModal);
 
         document.getElementById('manual-reload-btn')?.addEventListener('click', () => {
@@ -94,27 +152,15 @@
         
         const restartUI = document.createElement('div');
         restartUI.id = 'blazor-reconnect-modal';
-        restartUI.innerHTML = `
-            <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
-                        background: rgba(0, 0, 0, 0.7); z-index: 9999; 
-                        display: flex; align-items: center; justify-content: center;">
-                <div style="background: white; padding: 2rem; border-radius: 8px; 
-                            max-width: 400px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                    <svg style="width: 48px; height: 48px; margin: 0 auto 1rem; animation: spin 1s linear infinite;" 
-                         viewBox="0 0 24 24">
-                        <circle cx="12" cy="12" r="10" fill="none" stroke="#4CAF50" stroke-width="3" 
-                                stroke-dasharray="31.4" stroke-dashoffset="10" stroke-linecap="round"/>
-                    </svg>
-                    <h3 style="margin: 0 0 0.5rem; color: #333; font-size: 1.25rem;">Reconnecting...</h3>
-                    <p style="margin: 0 0 1rem; color: #666; font-size: 0.95rem;">
-                        Please wait a moment...
-                    </p>
-                </div>
-            </div>
-            <style>
-                @keyframes spin { to { transform: rotate(360deg); } }
-            </style>
-        `;
+        restartUI.innerHTML = config.serverRestartHtml || getDefaultServerRestartHtml();
+        
+        // Inject custom CSS if provided
+        if (config.customCss) {
+            const style = document.createElement('style');
+            style.textContent = config.customCss;
+            restartUI.appendChild(style);
+        }
+        
         document.body.appendChild(restartUI);
     }
 

@@ -1,8 +1,67 @@
+@using Microsoft.JSInterop
+@inject IJSRuntime JS
 @implements IAsyncDisposable
 
 <script src="_content/TheNerdCollective.Components.BlazorServerCircuitHandler/js/blazor-reconnect.js"></script>
 
 @code {
+    /// <summary>
+    /// Custom HTML for the reconnecting dialog. Use placeholder elements with IDs:
+    /// - reconnect-status: Status message element
+    /// - countdown-seconds: Countdown timer span
+    /// - manual-reload-btn: Reload button
+    /// </summary>
+    [Parameter]
+    public string? ReconnectingHtml { get; set; }
+
+    /// <summary>
+    /// Custom HTML for the server restart dialog (shown when circuit expires).
+    /// </summary>
+    [Parameter]
+    public string? ServerRestartHtml { get; set; }
+
+    /// <summary>
+    /// Custom CSS to inject into the dialog (animations, styling, etc.).
+    /// </summary>
+    [Parameter]
+    public string? CustomCss { get; set; }
+
+    /// <summary>
+    /// URL to a custom spinner/loading image. If not provided, uses SVG spinner.
+    /// </summary>
+    [Parameter]
+    public string? SpinnerUrl { get; set; }
+
+    /// <summary>
+    /// Primary color for reconnection UI (default: #594AE2).
+    /// </summary>
+    [Parameter]
+    public string PrimaryColor { get; set; } = "#594AE2";
+
+    /// <summary>
+    /// Success/restart color (default: #4CAF50).
+    /// </summary>
+    [Parameter]
+    public string SuccessColor { get; set; } = "#4CAF50";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var config = new
+            {
+                reconnectingHtml = ReconnectingHtml,
+                serverRestartHtml = ServerRestartHtml,
+                customCss = CustomCss,
+                spinnerUrl = SpinnerUrl,
+                primaryColor = PrimaryColor,
+                successColor = SuccessColor
+            };
+
+            await JS.InvokeVoidAsync("configureBlazorReconnection", config);
+        }
+    }
+
     /// <summary>
     /// Initializes the Blazor Server Circuit Reconnection Handler.
     /// This component loads the JavaScript reconnection handler that provides:
@@ -14,7 +73,11 @@
     /// Simply add this component to your App.razor or root layout:
     /// &lt;CircuitReconnectionHandler /&gt;
     /// 
-    /// The handler automatically starts when the app initializes and requires no additional configuration.
+    /// Or customize the dialog:
+    /// &lt;CircuitReconnectionHandler 
+    ///     PrimaryColor="#FF5722" 
+    ///     SpinnerUrl="/images/spinner.gif"
+    ///     CustomCss="@keyframes spin { to { transform: rotate(360deg); } }" /&gt;
     /// </summary>
     async ValueTask IAsyncDisposable.DisposeAsync()
     {
