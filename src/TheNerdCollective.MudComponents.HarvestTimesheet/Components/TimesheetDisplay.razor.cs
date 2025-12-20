@@ -208,4 +208,9 @@ public partial class TimesheetDisplay : ComponentBase
             await VerifyPassword();
         }
     }
+
+    private void OnPasswordChanged(string value)
+    {
+        _passwordInput = value;
+    }
 }
