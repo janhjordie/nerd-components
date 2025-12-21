@@ -556,18 +556,55 @@
                             reloadBtn.onclick = () => window.location.reload();
                         }
                         
-                        // Start reconnection countdown
+                        // Start actual reconnection attempts with exponential backoff
                         let attemptCount = 0;
-                        const attemptReconnect = () => {
+                        let reconnectInterval = initialInterval;
+                        let reconnectTimeout = null;
+                        let isPaused = false; // Paused when tab is not visible
+                        
+                        const attemptReconnect = async () => {
+                            if (isPaused) {
+                                console.log('[Blazor] Skipping attempt (tab is not visible)');
+                                scheduleNextAttempt();
+                                return;
+                            }
+                            
                             attemptCount++;
-                            const seconds = Math.min(maxInterval / 1000, Math.ceil(attemptCount / 2));
+                            console.log(`[Blazor] Reconnection attempt ${attemptCount} (interval: ${reconnectInterval}ms)`);
                             
-                            console.log(`[Blazor] Reconnection attempt ${attemptCount} (${seconds}s interval)`);
+                            try {
+                                const result = await Blazor.reconnect();
+                                
+                                if (result) {
+                                    console.log(`[Blazor] Successfully reconnected after ${attemptCount} attempts`);
+                                    hideReconnectUI();
+                                    return;
+                                }
+                            } catch (error) {
+                                console.log(`[Blazor] Attempt ${attemptCount} failed:`, error?.toString());
+                            }
                             
-                            // Update countdown
+                            // Check if modal still exists
+                            if (document.getElementById('components-reconnect-modal')) {
+                                scheduleNextAttempt();
+                            } else {
+                                console.log('[Blazor] Connection restored (default modal gone)');
+                                if (reconnectModal) {
+                                    reconnectModal.remove();
+                                    reconnectModal = null;
+                                }
+                            }
+                        };
+                        
+                        const scheduleNextAttempt = () => {
+                            if (reconnectTimeout) clearTimeout(reconnectTimeout);
+                            
+                            // Update countdown display
                             const countdownElement = document.getElementById('countdown-seconds');
                             if (countdownElement) {
-                                let countdown = seconds;
+                                let countdown = Math.ceil(reconnectInterval / 1000);
+                                countdownElement.textContent = countdown;
+                                
                                 const countdownInterval = setInterval(() => {
                                     countdown--;
                                     if (countdownElement && countdown > 0) {
@@ -578,22 +615,35 @@
                                 }, 1000);
                             }
                             
-                            // Check if default modal is gone (connection restored)
-                            setTimeout(() => {
-                                if (!document.getElementById('components-reconnect-modal')) {
-                                    console.log('[Blazor] Connection restored');
-                                    if (reconnectModal) {
-                                        reconnectModal.remove();
-                                        reconnectModal = null;
-                                    }
-                                } else {
-                                    // Try again
-                                    attemptReconnect();
+                            // Schedule next attempt
+                            reconnectTimeout = setTimeout(() => {
+                                // Exponential backoff: 1s → 2s → 3s → 5s (max)
+                                if (reconnectInterval < maxInterval) {
+                                    reconnectInterval = Math.min(reconnectInterval + 1000, maxInterval);
                                 }
-                            }, seconds * 1000);
+                                attemptReconnect();
+                            }, reconnectInterval);
                         };
                         
-                        attemptReconnect();
+                        // Handle tab visibility (pause/resume reconnection attempts)
+                        document.addEventListener('visibilitychange', () => {
+                            if (document.hidden) {
+                                console.log('[Blazor] Tab hidden, pausing reconnection attempts');
+                                isPaused = true;
+                                if (reconnectTimeout) {
+                                    clearTimeout(reconnectTimeout);
+                                    reconnectTimeout = null;
+                                }
+                            } else {
+                                console.log('[Blazor] Tab visible again, resuming reconnection attempts');
+                                isPaused = false;
+                                // Resume immediately
+                                attemptReconnect();
+                            }
+                        });
+                        
+                        // Start first attempt
+                        scheduleNextAttempt();
                     }
                 }
             } else if (!defaultModal && reconnectModal) {
