@@ -26,7 +26,6 @@ public partial class TimesheetDisplay : ComponentBase
     private string _passwordInput = string.Empty;
     private bool _passwordIncorrect = false;
     private string? _harvestError = null;
-    private ElementReference _passwordInputRef;
 
     /// <summary>
     /// Gets or sets the date to display timesheets for. Defaults to current month.
@@ -69,15 +68,6 @@ public partial class TimesheetDisplay : ComponentBase
         }
 
         _hasInitialized = true;
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender && !_passwordVerified && _passwordInputRef.Context != null)
-        {
-            await _passwordInputRef.FocusAsync();
-        }
-        await base.OnAfterRenderAsync(firstRender);
     }
 
     protected override Task OnParametersSetAsync()
@@ -228,11 +218,11 @@ public partial class TimesheetDisplay : ComponentBase
         if (args.Key == "Enter")
         {
             await VerifyPassword();
-            // Force focus back to input for next attempt if wrong password
+            // Focus back to input for next attempt if wrong password
             if (_passwordIncorrect)
             {
                 _passwordInput = string.Empty;
-                await _passwordInputRef.FocusAsync();
+                StateHasChanged();
             }
         }
     }
