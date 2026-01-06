@@ -146,7 +146,7 @@ public partial class TimesheetDisplay : ComponentBase
         .Where(t => t.TaskName?.Contains(UnbilledKeyword) ?? false)
         .Sum(t => t.Hours));
 
-    private decimal BillableHours => RoundHoursToInterval(TotalHours - UnbilledHours);
+    private decimal BillableHours => TotalHours - UnbilledHours;
 
     private decimal RoundHoursToInterval(decimal hours)
     {
