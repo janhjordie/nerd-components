@@ -719,6 +719,74 @@
         currentInterval = initialInterval;
     });
 
+    // 🧪 TESTING API - Expose methods for manual testing (defined early so it's always available)
+    window.BlazorReconnectionTest = {
+        disconnect: () => {
+            console.log('[Blazor Test] 🔌 Forcing circuit disconnect...');
+            try {
+                const blazor = window.Blazor;
+                if (blazor?._internal?.dotNetExports?.INTERNAL?.getConnection) {
+                    const connection = blazor._internal.dotNetExports.INTERNAL.getConnection();
+                    connection.stop();
+                    console.log('[Blazor Test] ✅ Circuit disconnected. Reconnection UI should appear.');
+                } else {
+                    console.error('[Blazor Test] ❌ Could not access Blazor connection. Make sure Blazor is started.');
+                }
+            } catch (err) {
+                console.error('[Blazor Test] ❌ Error disconnecting:', err);
+            }
+        },
+        goOffline: () => {
+            console.log('[Blazor Test] 📡 Simulating offline mode...');
+            window.dispatchEvent(new Event('offline'));
+            console.log('[Blazor Test] ✅ Offline event dispatched. UI should reflect offline state.');
+        },
+        goOnline: () => {
+            console.log('[Blazor Test] 📡 Simulating online mode...');
+            window.dispatchEvent(new Event('online'));
+            console.log('[Blazor Test] ✅ Online event dispatched. Reconnection should attempt.');
+        },
+        status: () => {
+            console.log('[Blazor Test] 📊 Current Status:', {
+                isOnline: navigator.onLine,
+                reconnectionStatus: reconnectionStatus,
+                config: config,
+                lastVersion: lastVersion,
+                initialVersion: initialVersion,
+                versionBannerVisible: !!versionBanner,
+                modalVisible: reconnectModal?.style?.display !== 'none'
+            });
+        },
+        refreshStatus: async () => {
+            console.log('[Blazor Test] 🔄 Refreshing reconnection status from server...');
+            const status = await checkReconnectionStatus();
+            console.log('[Blazor Test] ✅ Status refreshed:', status);
+            return status;
+        },
+        simulateVersionChange: (newVersion) => {
+            console.log(`[Blazor Test] 🎭 Simulating version change: ${initialVersion} → ${newVersion}`);
+            if (!initialVersion) {
+                console.warn('[Blazor Test] ⚠️ Initial version not set yet. Wait a moment after page load.');
+                return;
+            }
+            showVersionBanner(newVersion);
+        },
+        hideVersionBanner: () => {
+            console.log('[Blazor Test] 🙈 Hiding version banner');
+            hideVersionBanner();
+        },
+        stopMonitor: () => {
+            console.log('[Blazor Test] 🛑 Stopping connection health monitor');
+            stopConnectionMonitor();
+        },
+        startMonitor: () => {
+            console.log('[Blazor Test] ▶️  Starting connection health monitor');
+            startConnectionMonitor();
+        }
+    };
+
+    console.log('[CircuitHandler] 🧪 Testing API available: BlazorReconnectionTest.disconnect(), .goOffline(), .goOnline(), .status(), .refreshStatus(), .simulateVersionChange(), .hideVersionBanner(), .stopMonitor(), .startMonitor()');
+
     // Check if Blazor has already started (handles autostart scenarios)
     if (window.Blazor && typeof window.Blazor._internal !== 'undefined') {
         console.log('[CircuitHandler] Already started, hooking into existing reconnection system');
@@ -1017,117 +1085,4 @@
             event.preventDefault();
         }
     });
-
-    // 🧪 TESTING API - Expose methods for manual testing in browser console
-    window.BlazorReconnectionTest = {
-        /**
-         * Force disconnect the Blazor circuit to test reconnection UI
-         * Usage: BlazorReconnectionTest.disconnect()
-         */
-        disconnect: () => {
-            console.log('[Blazor Test] 🔌 Forcing circuit disconnect...');
-            try {
-                // Access the internal Blazor connection and stop it
-                const blazor = window.Blazor;
-                if (blazor?._internal?.dotNetExports?.INTERNAL?.getConnection) {
-                    const connection = blazor._internal.dotNetExports.INTERNAL.getConnection();
-                    connection.stop();
-                    console.log('[Blazor Test] ✅ Circuit disconnected. Reconnection UI should appear.');
-                } else {
-                    console.error('[Blazor Test] ❌ Could not access Blazor connection. Make sure Blazor is started.');
-                }
-            } catch (err) {
-                console.error('[Blazor Test] ❌ Error disconnecting:', err);
-            }
-        },
-
-        /**
-         * Simulate network going offline
-         * Usage: BlazorReconnectionTest.goOffline()
-         */
-        goOffline: () => {
-            console.log('[Blazor Test] 📡 Simulating offline mode...');
-            window.dispatchEvent(new Event('offline'));
-            console.log('[Blazor Test] ✅ Offline event dispatched. UI should reflect offline state.');
-        },
-
-        /**
-         * Simulate network coming back online
-         * Usage: BlazorReconnectionTest.goOnline()
-         */
-        goOnline: () => {
-            console.log('[Blazor Test] 📡 Simulating online mode...');
-            window.dispatchEvent(new Event('online'));
-            console.log('[Blazor Test] ✅ Online event dispatched. Reconnection should attempt.');
-        },
-
-        /**
-         * Show current reconnection status and configuration
-         * Usage: BlazorReconnectionTest.status()
-         */
-        status: () => {
-            console.log('[Blazor Test] 📊 Current Status:', {
-                isOnline: navigator.onLine,
-                reconnectionStatus: reconnectionStatus,
-                config: config,
-                lastVersion: lastVersion,
-                initialVersion: initialVersion,
-                versionBannerVisible: !!versionBanner,
-                modalVisible: reconnectModal?.style?.display !== 'none'
-            });
-        },
-
-        /**
-         * Force refresh the status from server
-         * Usage: BlazorReconnectionTest.refreshStatus()
-         */
-        refreshStatus: async () => {
-            console.log('[Blazor Test] 🔄 Refreshing reconnection status from server...');
-            const status = await checkReconnectionStatus();
-            console.log('[Blazor Test] ✅ Status refreshed:', status);
-            return status;
-        },
-
-        /**
-         * Simulate a version change to test the update banner
-         * Usage: BlazorReconnectionTest.simulateVersionChange('1.0.999')
-         */
-        simulateVersionChange: (newVersion) => {
-            console.log(`[Blazor Test] 🎭 Simulating version change: ${initialVersion} → ${newVersion}`);
-            if (!initialVersion) {
-                console.warn('[Blazor Test] ⚠️ Initial version not set yet. Wait a moment after page load.');
-                return;
-            }
-            showVersionBanner(newVersion);
-        },
-
-        /**
-         * Hide the version update banner
-         * Usage: BlazorReconnectionTest.hideVersionBanner()
-         */
-        hideVersionBanner: () => {
-            console.log('[Blazor Test] 🙈 Hiding version banner');
-            hideVersionBanner();
-        },
-
-        /**
-         * Stop connection health monitor
-         * Usage: BlazorReconnectionTest.stopMonitor()
-         */
-        stopMonitor: () => {
-            console.log('[Blazor Test] 🛑 Stopping connection health monitor');
-            stopConnectionMonitor();
-        },
-
-        /**
-         * Start connection health monitor
-         * Usage: BlazorReconnectionTest.startMonitor()
-         */
-        startMonitor: () => {
-            console.log('[Blazor Test] ▶️  Starting connection health monitor');
-            startConnectionMonitor();
-        }
-    };
-
-    console.log('[CircuitHandler] 🧪 Testing API available: BlazorReconnectionTest.disconnect(), .goOffline(), .goOnline(), .status(), .refreshStatus(), .simulateVersionChange(), .hideVersionBanner(), .stopMonitor(), .startMonitor()');
 })();
