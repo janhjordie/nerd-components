@@ -16,6 +16,7 @@
     let isInitialLoad = true;
     let reconnectModal = null;
     let currentInterval = initialInterval;
+    let isOffline = !navigator.onLine;
     
     // Read configuration from window.blazorReconnectionConfig (set before script loads)
     let config = {
@@ -267,12 +268,18 @@
     }
 
     // Show reconnection UI (simplified, no attempt counter)
-    function showReconnectingUI() {
+    async function showReconnectingUI() {
         if (isInitialLoad || reconnectModal) return;
 
         reconnectModal = document.createElement('div');
         reconnectModal.id = 'blazor-reconnect-modal';
-        reconnectModal.innerHTML = config.reconnectingHtml || getDefaultReconnectingHtml();
+        // Try to load status to decide which UI to show
+        try {
+            const status = await checkReconnectionStatus();
+            reconnectModal.innerHTML = getStatusHtml(status);
+        } catch {
+            reconnectModal.innerHTML = config.reconnectingHtml || getDefaultReconnectingHtml();
+        }
         
         // Inject custom CSS if provided
         if (config.customCss) {
@@ -420,12 +427,19 @@
 
                 if (isCanceled) return;
 
+                // Pause attempts while offline or tab hidden
+                if (isOffline || document.hidden) {
+                    const reason = isOffline ? 'offline' : 'tab hidden';
+                    console.log(`[Blazor] Skipping attempt (${reason})`);
+                    continue;
+                }
+
                 console.log(`[Blazor] Reconnect attempt ${attemptCount}/${showUIAfterAttempts} (${currentInterval}ms interval)`);
 
                 // Only show UI after 5 attempts (silent reconnection first)
                 if (attemptCount === showUIAfterAttempts) {
                     console.log('[Blazor] Showing reconnection UI after 5 silent attempts');
-                    showReconnectingUI();
+                    await showReconnectingUI();
                 }
 
                 try {
@@ -475,6 +489,40 @@
             }
         };
     };
+
+    // Network online/offline awareness to improve reliability
+    window.addEventListener('offline', () => {
+        isOffline = true;
+        console.log('[Blazor] Browser is offline; pausing reconnection attempts');
+        if (!reconnectModal && !isInitialLoad) {
+            // Show lightweight offline notice
+            reconnectModal = document.createElement('div');
+            reconnectModal.id = 'blazor-reconnect-modal';
+            reconnectModal.innerHTML = `
+                <div style='position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; display: flex; align-items: center; justify-content: center;'>
+                    <div style='background: white; padding: 2rem; border-radius: 8px; text-align: center; max-width: 420px;'>
+                        <h3 style='margin: 0 0 0.5rem; color: #333;'>No internet connection</h3>
+                        <p style='margin: 0; color: #666;'>We will reconnect automatically when you're back online.</p>
+                    </div>
+                </div>`;
+            document.body.appendChild(reconnectModal);
+        }
+    });
+    window.addEventListener('online', async () => {
+        isOffline = false;
+        console.log('[Blazor] Browser is online; resuming reconnection attempts');
+        // Replace offline notice with proper reconnection UI/status
+        if (reconnectModal) {
+            try {
+                const status = await checkReconnectionStatus();
+                reconnectModal.innerHTML = getStatusHtml(status);
+            } catch {
+                // keep existing UI
+            }
+        }
+        // Reset backoff for quicker retry after regaining connectivity
+        currentInterval = initialInterval;
+    });
 
     // Check if Blazor has already started (handles autostart scenarios)
     if (window.Blazor && typeof window.Blazor._internal !== 'undefined') {
@@ -563,6 +611,11 @@
                         let isPaused = false; // Paused when tab is not visible
                         
                         const attemptReconnect = async () => {
+                            if (isOffline) {
+                                console.log('[Blazor] Skipping attempt (offline)');
+                                scheduleNextAttempt();
+                                return;
+                            }
                             if (isPaused) {
                                 console.log('[Blazor] Skipping attempt (tab is not visible)');
                                 scheduleNextAttempt();

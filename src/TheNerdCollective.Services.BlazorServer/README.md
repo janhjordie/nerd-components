@@ -45,6 +45,7 @@ var app = builder.Build();
 ✅ **Graceful Shutdown** - Coordinated cleanup when app terminates  
 ✅ **Configurable Options** - Customize via `CircuitOptions` section  
 ✅ **Framework Agnostic** - Works with any Blazor Server host  
+✅ **Status Endpoint** - Optional reconnection status endpoint for deployment UX
 
 ## Configuration
 
@@ -62,6 +63,36 @@ builder.Services.Configure<CircuitOptions>(options =>
     // Enable detailed errors in development only
     options.DetailedErrors = builder.Environment.IsDevelopment();
 });
+
+## Reconnection Status Endpoint (optional)
+
+Expose a tiny JSON endpoint the frontend can poll during outages or deployments:
+
+```csharp
+using TheNerdCollective.Services.BlazorServer;
+
+// Default endpoint returns { status: "ok", version: "x.y.z" }
+app.MapBlazorReconnectionStatusEndpoint("/reconnection-status.json");
+
+// Or provide a custom factory to indicate deployments
+app.MapBlazorReconnectionStatusEndpoint("/reconnection-status.json", async ctx =>
+{
+  return new ReconnectionStatus
+  {
+    Status = "deploying",
+    DeploymentMessage = "We’re deploying new features…",
+    Features = new[] { "Performance improvements", "Bug fixes" },
+    EstimatedDurationMinutes = 3,
+    Version = "1.2.0"
+  };
+});
+```
+
+Then configure the component:
+
+```razor
+<CircuitReconnectionHandler StatusUrl="/reconnection-status.json" CheckStatus="true" />
+```
 ```
 
 ## Dependencies

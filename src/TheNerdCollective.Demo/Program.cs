@@ -1,5 +1,7 @@
 using MudBlazor.Services;
 using TheNerdCollective.Demo.Components;
+using TheNerdCollective.Services.BlazorServer;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,6 +28,17 @@ app.UseHttpsRedirection();
 app.UseAntiforgery();
 
 app.MapStaticAssets();
+// Map reconnection status endpoint for the reconnection UI
+app.MapBlazorReconnectionStatusEndpoint("/reconnection-status.json", async ctx =>
+{
+    var version = Assembly.GetEntryAssembly()?.GetName().Version?.ToString();
+    return await Task.FromResult(new ReconnectionStatus
+    {
+        Status = "ok",
+        ReconnectingMessage = "Reconnecting...",
+        Version = version
+    });
+});
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 

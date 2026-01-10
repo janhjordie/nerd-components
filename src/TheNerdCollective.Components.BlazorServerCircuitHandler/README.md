@@ -12,37 +12,61 @@ This package provides a drop-in Razor component that handles Blazor Server circu
 
 ## Quick Start
 
-### Installation
+### Install the package
 
 ```bash
 dotnet add package TheNerdCollective.Components.BlazorServerCircuitHandler
 ```
 
-### Setup
+### Recommended setup (App.razor or root layout)
 
-1. **Add to your root component** (`App.razor`):
+Use autostart=false so the handler can start Blazor with the custom reconnection logic. This yields the most reliable behavior.
 
 ```razor
 <body>
-    <Routes @rendermode="InteractiveServer" />
-    
-    <!-- IMPORTANT: Load blazor.web.js BEFORE CircuitReconnectionHandler -->
-    <script src="_framework/blazor.web.js" autostart="false"></script>
-    <CircuitReconnectionHandler @rendermode="InteractiveServer" />
-    
-    <!-- Other scripts after -->
-    <script src="_content/MudBlazor/MudBlazor.min.js"></script>
+  <Routes @rendermode="InteractiveServer" />
+
+  <!-- Optional: configure before start -->
+  <script>
+    window.blazorReconnectionConfig = {
+      statusUrl: '/reconnection-status.json',
+      checkStatus: true,
+      statusPollInterval: 5000
+    };
+  </script>
+
+  <!-- Load Blazor BEFORE the handler -->
+  <script src="_framework/blazor.web.js" autostart="false"></script>
+
+  <!-- Starts Blazor with robust reconnection -->
+  <CircuitReconnectionHandler @rendermode="InteractiveServer" />
+
+  <!-- Other scripts after -->
+  <script src="_content/MudBlazor/MudBlazor.min.js"></script>
 </body>
 ```
 
-⚠️ **Critical:** The `blazor.web.js` script must be loaded **before** the `CircuitReconnectionHandler` component. The handler calls `Blazor.start()` which requires Blazor to be already loaded.
+⚠️ Critical: `blazor.web.js` must load before the component, and with `autostart="false"` so the handler can call `Blazor.start()`.
 
-2. **Import in `_Imports.razor`**:
-```csharp
+Import once (e.g. `_Imports.razor`):
+
+```razor
 @using TheNerdCollective.Components.BlazorServerCircuitHandler
 ```
 
-3. **Done!** The component handles everything automatically.
+### Classic layout (_Host.cshtml)
+
+```html
+<script>
+  window.blazorReconnectionConfig = { checkStatus: true };
+</script>
+<script src="_framework/blazor.web.js" autostart="false"></script>
+<component type="typeof(CircuitReconnectionHandler)" render-mode="ServerPrerendered" />
+```
+
+### Fallback (autostart enabled)
+
+If your app must autostart Blazor, the handler detects the default reconnect modal and upgrades it. This works, but the autostart=false setup above is recommended.
 
 ## Features
 
@@ -53,6 +77,7 @@ dotnet add package TheNerdCollective.Components.BlazorServerCircuitHandler
 ✅ **Error Suppression** - Filters out MudBlazor and expected disconnection errors  
 ✅ **Graceful Fallback** - Auto-reload when circuits expire  
 ✅ **Zero Configuration** - Works out of the box  
+✅ **Offline-Aware** - Pauses while offline, resumes and retries when online
 
 ## How It Works
 
@@ -117,6 +142,24 @@ The handler uses sensible defaults and requires zero configuration:
 <script src="_framework/blazor.web.js" autostart="false"></script>
 <CircuitReconnectionHandler @rendermode="InteractiveServer" />
 ```
+
+### Status Endpoint (optional)
+
+For maximum reliability during deployments, expose a lightweight status endpoint the UI can poll. If you're using the `TheNerdCollective.Services.BlazorServer` package, map it like this:
+
+```csharp
+// Program.cs
+using TheNerdCollective.Services.BlazorServer;
+
+app.MapBlazorReconnectionStatusEndpoint("/reconnection-status.json");
+```
+
+Point the component to the endpoint (defaults to `/reconnection-status.json`):
+
+```razor
+<CircuitReconnectionHandler StatusUrl="/reconnection-status.json" CheckStatus="true" />
+```
+Recommended: return `deploying` during CI/CD to show a friendly deployment overlay and auto-reload when complete.
 
 ### Customizing Colors
 
@@ -201,6 +244,18 @@ For complete control over the dialog appearance, provide custom HTML:
 - `reconnect-status` - Updated with status messages
 - `countdown-seconds` - Displays countdown timer
 - `manual-reload-btn` - Must have this ID for reload functionality
+
+### Component Parameters
+
+- `ReconnectingHtml`: Custom HTML for reconnect UI.
+- `ServerRestartHtml`: Custom HTML when circuit expires.
+- `DeploymentHtml`: Custom HTML when status indicates deployment.
+- `CustomCss`: Inline CSS to style the dialog.
+- `SpinnerUrl`: Custom spinner image URL.
+- `PrimaryColor` / `SuccessColor`: Brand colors.
+- `StatusUrl`: Status/health endpoint (default: `/reconnection-status.json`).
+- `CheckStatus`: Enable status checks (default: `true`).
+- `StatusPollInterval`: Poll interval in ms (default: `5000`).
 
 ## Planned Deployment Support
 
@@ -404,6 +459,45 @@ Configure custom deployment HTML in App.razor:
     <script src="_content/TheNerdCollective.Components.BlazorServerCircuitHandler/js/blazor-reconnect.js"></script>
 </body>
 ```
+
+## Recommended Host Setup
+
+For best reliability during outages and deployments:
+
+1) Expose a tiny JSON status endpoint (in your host app):
+
+```csharp
+using TheNerdCollective.Services.BlazorServer;
+
+app.MapBlazorReconnectionStatusEndpoint("/reconnection-status.json");
+```
+
+2) Improve circuit retention (smoother reconnects):
+
+```csharp
+builder.Services.AddBlazorServerCircuitServices(builder.Configuration, builder.Environment);
+builder.Host.ConfigureBlazorServerCircuitShutdown();
+```
+
+3) Point the component at the endpoint:
+
+```razor
+<script src="_framework/blazor.web.js" autostart="false"></script>
+<CircuitReconnectionHandler CheckStatus="true" StatusUrl="/reconnection-status.json" />
+```
+
+## Troubleshooting
+
+- Overlay never shows or Blazor won’t start
+  - Ensure `_framework/blazor.web.js` is loaded before the component and uses `autostart="false"`.
+  - If you can’t change this, rely on the fallback autostart path.
+- Never recovers during deployment
+  - Serve `reconnection-status.json` from your app or an external store (e.g., Azure Blob) and set `StatusUrl`.
+  - Toggle `status: "deploying"` at deployment start and `ok` (or remove file) at completion.
+- Circuits expire too often
+  - Increase `DisconnectedCircuitRetentionPeriod` via `TheNerdCollective.Services.BlazorServer` for longer grace time.
+- Behind a proxy/load balancer
+  - Enable WebSockets and ensure idle/keep-alive timeouts aren’t too aggressive. Configure affinity if required.
 
 ### GitHub Actions Integration
 

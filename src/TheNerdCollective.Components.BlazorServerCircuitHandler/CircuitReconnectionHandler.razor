@@ -27,6 +27,13 @@
     public string? CustomCss { get; set; }
 
     /// <summary>
+    /// Optional custom HTML for deployment/maintenance mode dialog.
+    /// Used when status endpoint indicates a deployment is in progress.
+    /// </summary>
+    [Parameter]
+    public string? DeploymentHtml { get; set; }
+
+    /// <summary>
     /// URL to a custom spinner/loading image. If not provided, uses SVG spinner.
     /// </summary>
     [Parameter]
@@ -44,6 +51,25 @@
     [Parameter]
     public string SuccessColor { get; set; } = "#4CAF50";
 
+    /// <summary>
+    /// Optional status URL to check deployment/health status.
+    /// Defaults to "/reconnection-status.json" if not provided.
+    /// </summary>
+    [Parameter]
+    public string? StatusUrl { get; set; } = "/reconnection-status.json";
+
+    /// <summary>
+    /// Enable periodic status checks to improve UX during deployments.
+    /// </summary>
+    [Parameter]
+    public bool CheckStatus { get; set; } = true;
+
+    /// <summary>
+    /// Poll interval in milliseconds for checking status during deployments.
+    /// </summary>
+    [Parameter]
+    public int StatusPollInterval { get; set; } = 5000;
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -52,10 +78,14 @@
             {
                 reconnectingHtml = ReconnectingHtml,
                 serverRestartHtml = ServerRestartHtml,
+                deploymentHtml = DeploymentHtml,
                 customCss = CustomCss,
                 spinnerUrl = SpinnerUrl,
                 primaryColor = PrimaryColor,
-                successColor = SuccessColor
+                successColor = SuccessColor,
+                statusUrl = StatusUrl,
+                checkStatus = CheckStatus,
+                statusPollInterval = StatusPollInterval
             };
 
             await JS.InvokeVoidAsync("configureBlazorReconnection", config);
