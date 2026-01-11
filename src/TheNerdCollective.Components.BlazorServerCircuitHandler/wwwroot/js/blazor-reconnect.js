@@ -180,6 +180,19 @@
         
         console.log('[CircuitHandler] Starting version polling every', config.statusPollInterval, 'ms');
         
+        // Fetch initial version immediately (don't wait for polling interval)
+        (async () => {
+            try {
+                const status = await checkReconnectionStatus();
+                if (status && status.version && !initialVersion) {
+                    initialVersion = status.version;
+                    console.log('[CircuitHandler] Initial version:', initialVersion);
+                }
+            } catch (e) {
+                console.log('[CircuitHandler] Could not fetch initial version:', e.message);
+            }
+        })();
+        
         versionPollInterval = setInterval(async () => {
             const status = await checkReconnectionStatus();
             if (!status || !status.version) return;
