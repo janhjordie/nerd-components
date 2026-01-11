@@ -270,7 +270,7 @@
     // Adjust polling interval based on deployment status
     function adjustPollingInterval(status) {
         const wasDeploymentMode = isDeploymentMode;
-        isDeploymentMode = status && status.status === 'deploying';
+        isDeploymentMode = isDeploying(status);
         
         const targetInterval = isDeploymentMode ? config.statusPollInterval : config.normalPollInterval;
         
