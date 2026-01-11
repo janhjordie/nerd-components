@@ -237,9 +237,9 @@
                     console.log('[CircuitHandler] Initial version:', initialVersion);
                 }
                 
-                // Check if version changed AND deployment is complete (status != deploying)
-                // Only show banner after traffic switch, not during preparation
-                const deploymentComplete = status.status !== 'deploying';
+                // Check if version changed AND deployment is complete (status === 'normal')
+                // Only show banner after health job resets status to normal
+                const deploymentComplete = status.status === 'normal';
                 if (status.version && status.version !== initialVersion && !versionBanner && deploymentComplete) {
                     showVersionBanner(status.version);
                 }
