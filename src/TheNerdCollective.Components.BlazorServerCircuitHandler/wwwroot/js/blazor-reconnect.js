@@ -53,6 +53,8 @@
     let reconnectModal = null;
     let lastKnownStatus = null;
     let isInitialLoad = true;
+    let isModifyingDom = false;    // Prevent MutationObserver re-entrancy
+    let healthCheckInterval = null; // Health monitor interval
 
     // ===== UTILITY FUNCTIONS =====
     
@@ -397,30 +399,83 @@
     
     function setupReconnectModalObserver() {
         const observer = new MutationObserver(async () => {
+            // Skip if we're currently modifying DOM ourselves
+            if (isModifyingDom) return;
+            
             const defaultModal = document.getElementById('components-reconnect-modal');
             
-            if (defaultModal && !isInitialLoad) {
+            if (defaultModal && !isInitialLoad && !reconnectModal && !deploymentOverlay) {
                 // Blazor's default modal appeared - hide it and show ours
                 console.log('[CircuitHandler] Default reconnect modal detected');
-                defaultModal.style.display = 'none';
                 
-                const status = await fetchStatus();
-                
-                if (isDeploying(status)) {
-                    showDeploymentOverlay(status);
-                } else {
-                    showReconnectModal(status);
+                isModifyingDom = true;
+                try {
+                    defaultModal.style.display = 'none';
+                    
+                    const status = await fetchStatus();
+                    
+                    if (isDeploying(status)) {
+                        showDeploymentOverlay(status);
+                    } else {
+                        showReconnectModal(status);
+                    }
+                } finally {
+                    isModifyingDom = false;
                 }
             } else if (!defaultModal && (reconnectModal || deploymentOverlay)) {
                 // Default modal removed = connection restored
                 console.log('[CircuitHandler] Connection restored, hiding overlays');
-                hideReconnectModal();
-                hideDeploymentOverlay();
+                
+                isModifyingDom = true;
+                try {
+                    hideReconnectModal();
+                    hideDeploymentOverlay();
+                } finally {
+                    isModifyingDom = false;
+                }
             }
         });
         
         observer.observe(document.body, { childList: true, subtree: true });
         console.log('[CircuitHandler] Watching for Blazor reconnect modal');
+    }
+    
+    // ===== HEALTH MONITOR =====
+    // Periodic health logging for debugging
+    
+    function startHealthMonitor() {
+        if (healthCheckInterval) return;
+        
+        let healthCheckCount = 0;
+        
+        healthCheckInterval = setInterval(() => {
+            healthCheckCount++;
+            
+            let mode = '✅ Normal';
+            if (lastKnownStatus?.status) {
+                switch (lastKnownStatus.status) {
+                    case 'preparing': mode = '🔧 Preparing'; break;
+                    case 'deploying': mode = '🚀 Deploying'; break;
+                    case 'verifying': mode = '🔍 Verifying'; break;
+                    case 'switching': mode = '🔄 Switching'; break;
+                    case 'maintenance': mode = '🛠️ Maintenance'; break;
+                }
+            }
+            
+            const pollRate = currentPollInterval ? `${currentPollInterval / 1000}s` : 'stopped';
+            const version = initialVersion || 'pending';
+            
+            console.log(`[CircuitHandler] 💓 Health #${healthCheckCount} | Mode: ${mode} | Poll: ${pollRate} | Version: ${version} | Online: ${navigator.onLine}`);
+        }, 5000);
+        
+        console.log('[CircuitHandler] 🩺 Health monitor started (5s interval)');
+    }
+    
+    function stopHealthMonitor() {
+        if (healthCheckInterval) {
+            clearInterval(healthCheckInterval);
+            healthCheckInterval = null;
+        }
     }
 
     // ===== ERROR SUPPRESSION =====
@@ -539,6 +594,9 @@
             
             // Watch for Blazor's reconnect modal
             setupReconnectModalObserver();
+            
+            // Start health monitor for debugging
+            startHealthMonitor();
             
         }, 1000);
     }
