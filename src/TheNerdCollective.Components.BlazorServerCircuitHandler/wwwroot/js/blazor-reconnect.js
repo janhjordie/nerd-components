@@ -272,28 +272,23 @@
     // Connection health monitor
     let connectionMonitorInterval = null;
     let lastConnectionCheck = Date.now();
+    let healthCheckCount = 0;
     
     function startConnectionMonitor() {
         if (connectionMonitorInterval) return;
         
         console.log('[CircuitHandler] 🩺 Starting connection health monitor (5s interval)');
+        lastConnectionCheck = Date.now();
+        healthCheckCount = 0;
         
         connectionMonitorInterval = setInterval(() => {
             try {
-                const blazor = window.Blazor;
-                let connectionState = 'Unknown';
-                let connectionId = 'N/A';
-                
-                if (blazor?._internal?.dotNetExports?.INTERNAL?.getConnection) {
-                    const connection = blazor._internal.dotNetExports.INTERNAL.getConnection();
-                    connectionState = connection.connectionState || connection.state || 'Unknown';
-                    connectionId = connection.connectionId || 'N/A';
-                }
-                
+                healthCheckCount++;
                 const uptime = Math.floor((Date.now() - lastConnectionCheck) / 1000);
-                lastConnectionCheck = Date.now();
+                const mode = isDeploymentMode ? '🚀 Deploying' : '✅ Normal';
+                const pollRate = currentPollInterval ? `${currentPollInterval / 1000}s` : 'stopped';
                 
-                console.log(`[CircuitHandler] 💓 Health Check | State: ${connectionState} | ID: ${connectionId} | Version: ${initialVersion || 'pending'} | Online: ${navigator.onLine}`);
+                console.log(`[CircuitHandler] 💓 Health #${healthCheckCount} | Mode: ${mode} | Poll: ${pollRate} | Version: ${initialVersion || 'pending'} | Online: ${navigator.onLine}`);
             } catch (err) {
                 console.warn('[CircuitHandler] ⚠️ Health check error:', err.message);
             }
