@@ -1139,66 +1139,143 @@
         return;
     }
 
-    // Wait for Blazor object to be available, then start with custom reconnection handler
+    // ===== RELIABLE BLAZOR STARTUP =====
+    // This section ensures Blazor.start() is called exactly once, even if:
+    // - blazor.web.js hasn't loaded yet
+    // - The script runs before DOM is ready
+    // - There are timing issues between scripts
+    
+    let blazorStarted = false;
+    
     const startBlazorWithHandler = () => {
-        console.log('[CircuitHandler] Starting Blazor with custom reconnection handler...');
-        Blazor.start({
-            circuit: {
-                reconnectionHandler: {
-                    onConnectionDown: (options, error) => {
-                        if (isInitialLoad) return;
-                        console.log('[CircuitHandler] Connection down, starting infinite reconnection');
-                        startReconnectionProcess();
-                    },
-                    onConnectionUp: () => {
-                        if (isInitialLoad) return;
-                        console.log('[CircuitHandler] Connection restored');
-                        
-                        if (reconnectionProcess && reconnectionProcess.cancel) {
-                            reconnectionProcess.cancel();
-                        }
-                        
-                        hideReconnectUI();
-                    }
-                }
-            }
-        }).then(() => {
-            // Mark initial load complete after 1 second
+        if (blazorStarted) {
+            console.log('[CircuitHandler] Blazor.start() already called, skipping');
+            return;
+        }
+        
+        if (typeof window.Blazor === 'undefined') {
+            console.error('[CircuitHandler] Cannot start - Blazor is undefined');
+            return;
+        }
+        
+        if (typeof window.Blazor.start !== 'function') {
+            console.error('[CircuitHandler] Cannot start - Blazor.start is not a function');
+            return;
+        }
+        
+        // Check if Blazor has already been started by something else
+        if (window.Blazor._internal) {
+            console.log('[CircuitHandler] Blazor already started externally, entering monitoring mode');
+            blazorStarted = true;
+            // Just set up monitoring without calling start
             setTimeout(() => {
                 isInitialLoad = false;
-                console.log('[CircuitHandler] Initial connection established, infinite reconnection handler active');
-                
-                // Start version polling after connection is stable
+                console.log('[CircuitHandler] Monitoring mode active');
                 startVersionPolling();
-                
-                // Start connection health monitoring (for testing/debugging)
                 startConnectionMonitor();
             }, 1000);
-        });
+            return;
+        }
+        
+        blazorStarted = true;
+        console.log('[CircuitHandler] 🚀 Calling Blazor.start() now...');
+        
+        try {
+            Blazor.start({
+                circuit: {
+                    reconnectionHandler: {
+                        onConnectionDown: (options, error) => {
+                            if (isInitialLoad) return;
+                            console.log('[CircuitHandler] Connection down, starting infinite reconnection');
+                            startReconnectionProcess();
+                        },
+                        onConnectionUp: () => {
+                            if (isInitialLoad) return;
+                            console.log('[CircuitHandler] Connection restored');
+                            
+                            if (reconnectionProcess && reconnectionProcess.cancel) {
+                                reconnectionProcess.cancel();
+                            }
+                            
+                            hideReconnectUI();
+                        }
+                    }
+                }
+            }).then(() => {
+                console.log('[CircuitHandler] ✅ Blazor.start() completed successfully');
+                // Mark initial load complete after 1 second
+                setTimeout(() => {
+                    isInitialLoad = false;
+                    console.log('[CircuitHandler] Initial connection established, infinite reconnection handler active');
+                    
+                    // Start version polling after connection is stable
+                    startVersionPolling();
+                    
+                    // Start connection health monitoring (for testing/debugging)
+                    startConnectionMonitor();
+                }, 1000);
+            }).catch((err) => {
+                console.error('[CircuitHandler] ❌ Blazor.start() failed:', err);
+            });
+        } catch (err) {
+            console.error('[CircuitHandler] ❌ Exception calling Blazor.start():', err);
+            blazorStarted = false; // Allow retry
+        }
     };
 
-    // Check if Blazor is available now or wait for it
-    if (typeof window.Blazor !== 'undefined' && typeof window.Blazor.start === 'function') {
-        console.log('[CircuitHandler] Blazor object available, starting immediately');
-        startBlazorWithHandler();
+    const tryStartBlazor = () => {
+        console.log('[CircuitHandler] Checking Blazor availability...');
+        console.log('[CircuitHandler]   window.Blazor:', typeof window.Blazor);
+        console.log('[CircuitHandler]   Blazor.start:', typeof window.Blazor?.start);
+        console.log('[CircuitHandler]   Blazor._internal:', typeof window.Blazor?._internal);
+        
+        if (typeof window.Blazor !== 'undefined' && typeof window.Blazor.start === 'function') {
+            startBlazorWithHandler();
+            return true;
+        }
+        return false;
+    };
+
+    // Strategy 1: Try immediately (Blazor might already be loaded)
+    if (tryStartBlazor()) {
+        console.log('[CircuitHandler] Started immediately');
     } else {
-        console.log('[CircuitHandler] Waiting for Blazor object to be available...');
-        // Poll for Blazor object (blazor.web.js might still be loading)
-        const waitForBlazor = setInterval(() => {
-            if (typeof window.Blazor !== 'undefined' && typeof window.Blazor.start === 'function') {
-                clearInterval(waitForBlazor);
-                console.log('[CircuitHandler] Blazor object now available, starting');
-                startBlazorWithHandler();
+        console.log('[CircuitHandler] Blazor not ready, setting up watchers...');
+        
+        // Strategy 2: Poll every 50ms
+        let pollCount = 0;
+        const maxPolls = 200; // 10 seconds max
+        const pollInterval = setInterval(() => {
+            pollCount++;
+            if (tryStartBlazor()) {
+                console.log(`[CircuitHandler] Started after ${pollCount} polls (${pollCount * 50}ms)`);
+                clearInterval(pollInterval);
+            } else if (pollCount >= maxPolls) {
+                clearInterval(pollInterval);
+                console.error('[CircuitHandler] ❌ Timeout: Blazor never became available after 10 seconds');
+                console.error('[CircuitHandler] Check that blazor.web.js is loaded BEFORE this script');
             }
         }, 50);
         
-        // Safety timeout - if Blazor doesn't appear in 10 seconds, something is wrong
-        setTimeout(() => {
-            clearInterval(waitForBlazor);
-            if (typeof window.Blazor === 'undefined') {
-                console.error('[CircuitHandler] Blazor object never became available - check that blazor.web.js is loaded');
+        // Strategy 3: Also try on DOMContentLoaded (belt and suspenders)
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                console.log('[CircuitHandler] DOMContentLoaded fired, trying to start Blazor...');
+                if (!blazorStarted) {
+                    // Give a tiny delay for any remaining script initialization
+                    setTimeout(tryStartBlazor, 100);
+                }
+            });
+        }
+        
+        // Strategy 4: Also try on window load (last resort)
+        window.addEventListener('load', () => {
+            console.log('[CircuitHandler] Window load fired');
+            if (!blazorStarted) {
+                console.log('[CircuitHandler] Still not started, trying again...');
+                setTimeout(tryStartBlazor, 100);
             }
-        }, 10000);
+        });
     }
 
     // Handle unhandled promise rejections for circuit errors
