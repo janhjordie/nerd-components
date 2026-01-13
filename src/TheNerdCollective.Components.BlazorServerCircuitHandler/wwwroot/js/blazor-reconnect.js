@@ -52,6 +52,7 @@
     let isInitialLoad = true;
     let isModifyingDom = false;    // Prevent MutationObserver re-entrancy
     let healthCheckInterval = null; // Health monitor interval
+    let reconnectTimeout = null;   // Timeout to force reload if stuck in reconnect
 
     // ===== UTILITY FUNCTIONS =====
     
@@ -285,12 +286,57 @@
         document.getElementById('manual-reload-btn')?.addEventListener('click', () => {
             window.location.reload();
         });
+        
+        // Start health check - if server is up but we're stuck, force reload
+        startReconnectHealthCheck();
     }
 
     function hideReconnectModal() {
         if (reconnectModal) {
             reconnectModal.remove();
             reconnectModal = null;
+        }
+        stopReconnectHealthCheck();
+    }
+    
+    // Health check during reconnect: if server is responding but modal is stuck, force reload
+    function startReconnectHealthCheck() {
+        if (reconnectTimeout) return;
+        
+        console.log('[CircuitHandler] Starting reconnect health check (10s timeout)');
+        
+        reconnectTimeout = setTimeout(async () => {
+            if (!reconnectModal) return; // Already hidden, no need to check
+            
+            console.log('[CircuitHandler] Checking server health after reconnect timeout...');
+            
+            try {
+                // Check if server is responding
+                const response = await fetch('/_blazor/negotiate?negotiateVersion=1', { 
+                    method: 'POST',
+                    cache: 'no-cache' 
+                });
+                
+                if (response.ok) {
+                    console.log('[CircuitHandler] Server is healthy but circuit stuck - forcing reload');
+                    window.location.reload();
+                } else {
+                    console.log('[CircuitHandler] Server returned', response.status, '- waiting...');
+                    // Try again in 5 seconds
+                    reconnectTimeout = setTimeout(() => startReconnectHealthCheck(), 5000);
+                }
+            } catch (e) {
+                console.log('[CircuitHandler] Server not reachable:', e.message, '- waiting...');
+                // Try again in 5 seconds
+                reconnectTimeout = setTimeout(() => startReconnectHealthCheck(), 5000);
+            }
+        }, 10000); // Wait 10 seconds before first check
+    }
+    
+    function stopReconnectHealthCheck() {
+        if (reconnectTimeout) {
+            clearTimeout(reconnectTimeout);
+            reconnectTimeout = null;
         }
     }
 
