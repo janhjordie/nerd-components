@@ -212,6 +212,14 @@
             return;
         }
         
+        // Detect version deployment - component operations invalid
+        // This happens when a new version is deployed while user is connected
+        if (message.includes('The list of component operations is not valid')) {
+            console.log('[BlazorReconnect] Version deployment detected (invalid component operations), reloading...');
+            setTimeout(() => window.location.reload(), 2000);
+            return;
+        }
+        
         // Detect circuit expiry - trigger reload
         if (message.includes('circuit state could not be retrieved') ||
             (message.includes('circuit') && message.includes('expired'))) {
@@ -229,6 +237,14 @@
         if (isInitialLoad) return;
 
         const error = event.reason?.toString() || '';
+        
+        // Version deployment - component operations invalid
+        if (error.includes('The list of component operations is not valid')) {
+            console.log('[BlazorReconnect] Version deployment detected, reloading...');
+            event.preventDefault();
+            setTimeout(() => window.location.reload(), 2000);
+            return;
+        }
         
         // Circuit expired - reload
         if (error.includes('circuit state could not be retrieved') ||
