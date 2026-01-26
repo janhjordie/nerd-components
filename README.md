@@ -44,25 +44,31 @@ Integration client for GetHarvest API v2.
 - Service abstractions and configuration support
 - Used by the HarvestTimesheet UI
 
+### [TheNerdCollective.MudComponents.MudSwiper](src/TheNerdCollective.MudComponents.MudSwiper/README.md)
+MudBlazor-compatible Blazor carousel/slider component powered by Swiper.js.
+- Touch-enabled, responsive, and theme-aware
+- Pagination, navigation, auto-play, and looping support
+- Full MudBlazor integration and JS interop
+
 ## 🚀 Quick Start
 
 Each package has its own README with detailed setup instructions, examples, and API documentation. Start with the package that matches your needs:
 
 - **Building Blazor UI?** → [TheNerdCollective.Components](src/TheNerdCollective.Components/README.md)
 - **Need utility helpers?** → [TheNerdCollective.Helpers](src/TheNerdCollective.Helpers/README.md)
-- **Using MudBlazor?** → [TheNerdCollective.MudComponents](src/TheNerdCollective.MudComponents.MudQuillEditor/README.md)
+- **Using MudBlazor?** → [TheNerdCollective.MudComponents](src/TheNerdCollective.MudComponents.MudQuillEditor/README.md) or [MudSwiper](src/TheNerdCollective.MudComponents.MudSwiper/README.md)
 - **Setting up services?** → [TheNerdCollective.Services](src/TheNerdCollective.Services/README.md)
 
 ## 🎮 Try the Demo
 
-A demo app is available showcasing the MudQuillEditor component with interactive examples:
+A demo app is available showcasing the MudQuillEditor and MudSwiper components with interactive examples:
 
 ```bash
 cd src/TheNerdCollective.Demo
 dotnet run
 ```
 
-Visit `https://localhost:5001` to explore the MudQuillEditor features, test configurations, and see live previews.
+Visit `https://localhost:5001` (or the port shown in your terminal) to explore the MudQuillEditor and MudSwiper features, test configurations, and see live previews of both components.
 
 ## License
 
@@ -100,6 +106,3 @@ For detailed documentation and interactive demos, visit the [online demo applica
 Built with ❤️ by [The Nerd Collective Aps](https://www.thenerdcollective.dk/)
 
 By [Jan Hjørdie](https://github.com/janhjordie/) - [LinkedIn](https://www.linkedin.com/in/janhjordie/) | [Dev.to](https://dev.to/janhjordie)
-
-
-```
