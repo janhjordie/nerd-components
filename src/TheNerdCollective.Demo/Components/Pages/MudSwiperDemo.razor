@@ -46,7 +46,7 @@
 </MudText>
 
 <MudPaper Class="pa-6 mb-8">
-    <MudSwiper Slides="@slidesPerViewItems" 
+    <MudSwiper TSlide="string" Slides="@slidesPerViewItems" 
                SlidesPerView="3"
                SpaceBetween="30"
                ShowPagination="true"
@@ -65,7 +65,7 @@
 </MudText>
 
 <MudPaper Class="pa-6 mb-8">
-    <MudSwiper Slides="@galleryImages"
+    <MudSwiper TSlide="string" Slides="@galleryImages"
                SlidesPerView="1"
                ShowNavigation="true"
                ShowPagination="true"
@@ -85,24 +85,19 @@
     <MudGrid>
         <MudItem xs="12" md="8">
             <MudSwiper @ref="autoplaySwiper"
-                       Slides="@productsAsObjects"
+                       TSlide="Product"
+                       Slides="@products"
                        SlidesPerView="1"
                        AutoplayDelay="3000"
                        AutoplayPauseOnHover="true"
                        OnSlideChange="HandleSlideChange"
                        Height="300px">
-                <SlideTemplate Context="item">
-                    @{
-                        var product = item as Product;
-                        if (product != null)
-                        {
-                            <MudPaper Class="pa-6 h-100" Style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; display: flex; align-items: center; justify-content: center; flex-direction: column; border-radius: 4px;">
-                                <MudIcon Icon="@product.Icon" Style="font-size: 48px; margin-bottom: 16px;" />
-                                <MudText Typo="Typo.h6" Align="Align.Center">@product.Name</MudText>
-                                <MudText Typo="Typo.body2" Align="Align.Center" Class="mt-2">@product.Description</MudText>
-                            </MudPaper>
-                        }
-                    }
+                <SlideTemplate Context="product">
+                    <MudPaper Class="pa-6 h-100" Style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; display: flex; align-items: center; justify-content: center; flex-direction: column; border-radius: 4px;">
+                        <MudIcon Icon="@product.Icon" Style="font-size: 48px; margin-bottom: 16px;" />
+                        <MudText Typo="Typo.h6" Align="Align.Center">@product.Name</MudText>
+                        <MudText Typo="Typo.body2" Align="Align.Center" Class="mt-2">@product.Description</MudText>
+                    </MudPaper>
                 </SlideTemplate>
             </MudSwiper>
         </MudItem>
@@ -132,7 +127,7 @@
 </MudText>
 
 <MudPaper Class="pa-6 mb-8">
-    <MudSwiper Slides="@loopItems"
+    <MudSwiper TSlide="string" Slides="@loopItems"
                SlidesPerView="2"
                SpaceBetween="20"
                Loop="true"
@@ -217,11 +212,9 @@
 </div>
 
 @code {
-    private MudSwiper? autoplaySwiper;
+    private MudSwiper<Product>? autoplaySwiper;
     private int currentSlideIndex = 0;
 
-    // Convert products list to object enumerable for MudSwiper component
-    private IEnumerable<object> productsAsObjects => products.Cast<object>();
 
     private List<string> slidesPerViewItems = Enumerable.Range(1, 9)
         .Select(x => $"Slide {x}")

@@ -1,12 +1,13 @@
 @namespace TheNerdCollective.MudComponents.MudSwiper
 @using MudBlazor
+@typeparam TSlide
 @implements IAsyncDisposable
 @inject IJSRuntime JS
 
 <div class="mud-swiper-container" style="@ContainerStyle">
     <div class="swiper mud-swiper" @ref="SwiperElement">
         <div class="swiper-wrapper">
-            @foreach (var slide in Slides)
+            @foreach (var slide in Slides ?? Enumerable.Empty<TSlide>())
             {
                 <div class="swiper-slide mud-swiper-slide">
                     @if (SlideTemplate != null)
@@ -43,13 +44,13 @@
     /// The slides to display in the carousel.
     /// </summary>
     [Parameter]
-    public IEnumerable<object>? Slides { get; set; } = new List<object>();
+    public IEnumerable<TSlide>? Slides { get; set; } = new List<TSlide>();
 
     /// <summary>
     /// Template for rendering each slide. If not provided, ToString() is used.
     /// </summary>
     [Parameter]
-    public RenderFragment<object>? SlideTemplate { get; set; }
+    public RenderFragment<TSlide>? SlideTemplate { get; set; }
 
     /// <summary>
     /// Number of slides to display per view.

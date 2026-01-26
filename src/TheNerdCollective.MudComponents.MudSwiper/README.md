@@ -51,10 +51,49 @@ dotnet add package TheNerdCollective.MudComponents.MudSwiper
 
 ## Usage Examples
 
-### Basic Carousel with Text Slides
+### Basic Carousel with Strongly Typed Objects
+
+MudSwiper is a **generic component**, meaning you specify the type of slides when you use it:
 
 ```razor
-<MudSwiper Slides="@slides" Height="300px" />
+<MudSwiper TSlide="Product" Slides="@products" Height="300px">
+    <SlideTemplate Context="product">
+        <div>
+            <h3>@product.Name</h3>
+            <p>@product.Description</p>
+        </div>
+    </SlideTemplate>
+</MudSwiper>
+
+@code {
+    public class Product
+    {
+        public string Name { get; set; }
+        public string Description { get; set; }
+    }
+
+    private List<Product> products = new()
+    {
+        new Product { Name = "Item 1", Description = "First item" },
+        new Product { Name = "Item 2", Description = "Second item" }
+    };
+}
+```
+
+**Benefits of the generic approach:**
+- ✅ Full IntelliSense support for properties inside `SlideTemplate`
+- ✅ No need for type casting (`item as Product`)
+- ✅ Compile-time type safety
+- ✅ Works with any type: `TSlide="string"`, `TSlide="MyCustomType"`, etc.
+
+### Text Slides (Simple String Type)
+
+```razor
+<MudSwiper TSlide="string" Slides="@slides" Height="300px">
+    <SlideTemplate Context="text">
+        <div>@text</div>
+    </SlideTemplate>
+</MudSwiper>
 
 @code {
     private List<string> slides = new()
@@ -71,7 +110,7 @@ dotnet add package TheNerdCollective.MudComponents.MudSwiper
 ### Multiple Slides Per View (Slides Per View Demo)
 
 ```razor
-<MudSwiper Slides="@items" 
+<MudSwiper TSlide="string" Slides="@items" 
            SlidesPerView="3"
            SpaceBetween="30"
            ShowPagination="true"
@@ -91,7 +130,7 @@ dotnet add package TheNerdCollective.MudComponents.MudSwiper
 ### Image Carousel with Navigation
 
 ```razor
-<MudSwiper Slides="@images"
+<MudSwiper TSlide="string" Slides="@images"
            ShowPagination="true"
            ShowNavigation="true"
            Height="400px">
@@ -116,6 +155,7 @@ dotnet add package TheNerdCollective.MudComponents.MudSwiper
 <div>
     <p>Current Slide: <strong>@currentSlide</strong></p>
     <MudSwiper @ref="swiperComponent"
+               TSlide="Product"
                Slides="@products"
                SlidesPerView="1"
                AutoplayDelay="5000"
@@ -135,7 +175,7 @@ dotnet add package TheNerdCollective.MudComponents.MudSwiper
 </div>
 
 @code {
-    private MudSwiper? swiperComponent;
+    private MudSwiper<Product>? swiperComponent;
     private int currentSlide = 0;
 
     private List<Product> products = new()
