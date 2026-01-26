@@ -142,6 +142,30 @@
     </MudSwiper>
 </MudPaper>
 
+<MudText Typo="Typo.h5" GutterBottom="true" Class="mt-6 mb-3">Demo 5: Responsive Breakpoints</MudText>
+<MudText Typo="Typo.body2" Class="mb-4">
+    Resize your browser to see the carousel adapt! Desktop shows 4 slides, tablet shows 3, small screens show 2, mobile shows 1.
+</MudText>
+
+<MudPaper Class="pa-6 mb-8">
+    <MudSwiper TSlide="Product" 
+               Slides="@products"
+               SlidesPerView="4"
+               SpaceBetween="20"
+               Breakpoints="@responsiveBreakpoints"
+               ShowPagination="true"
+               ShowNavigation="true"
+               Height="280px">
+        <SlideTemplate Context="product">
+            <MudPaper Class="pa-4 h-100" Elevation="2" Style="display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <MudIcon Icon="@product.Icon" Style="font-size: 48px; margin-bottom: 12px;" />
+                <MudText Typo="Typo.subtitle2" Align="Align.Center">@product.Name</MudText>
+                <MudText Typo="Typo.caption" Align="Align.Center" Class="mt-2">@product.Description</MudText>
+            </MudPaper>
+        </SlideTemplate>
+    </MudSwiper>
+</MudPaper>
+
 <MudText Typo="Typo.h5" GutterBottom="true" Class="mt-6 mb-3">API Reference</MudText>
 <MudPaper Class="pa-4">
     <MudText Typo="Typo.subtitle2" GutterBottom="true">Key Parameters</MudText>
@@ -255,6 +279,15 @@
     private List<string> loopItems = Enumerable.Range(1, 6)
         .Select(x => $"Item {x}")
         .ToList();
+
+    // Responsive breakpoints: 4 slides on desktop, 3 on tablet, 2 on small, 1 on mobile
+    private Dictionary<int, dynamic> responsiveBreakpoints = new()
+    {
+        { 1024, new { slidesPerView = 4, spaceBetween = 20 } },
+        { 768, new { slidesPerView = 3, spaceBetween = 15 } },
+        { 480, new { slidesPerView = 2, spaceBetween = 10 } },
+        { 0, new { slidesPerView = 1, spaceBetween = 5 } }
+    };
 
     private Task HandleSlideChange(int index)
     {

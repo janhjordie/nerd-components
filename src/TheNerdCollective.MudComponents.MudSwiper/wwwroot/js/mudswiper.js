@@ -67,6 +67,7 @@ export async function initSwiper(element, options) {
             ...(options.pagination && { pagination: options.pagination }),
             ...(options.navigation && { navigation: options.navigation }),
             ...(options.autoplay && { autoplay: options.autoplay }),
+            ...(options.breakpoints && { breakpoints: options.breakpoints }),
         };
 
         // Add event listeners if callback references are provided
