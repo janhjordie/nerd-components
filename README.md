@@ -4,15 +4,66 @@ A comprehensive collection of production-ready libraries and components for .NET
 
 ## 📦 Packages
 
-This monorepo includes six curated NuGet packages:
+This monorepo includes multiple curated NuGet packages:
 
-### [TheNerdCollective.Components](src/TheNerdCollective.Components/README.md)
+### UI Components
+
+#### [TheNerdCollective.Components](src/TheNerdCollective.Components/README.md)
 The main Blazor components library bundling MudQuillEditor and other UI components.
 - **Rich-text editor** (MudQuillEditor) powered by Quill 2.0
 - Additional utility components for Blazor applications
 - Seamless MudBlazor integration
 
-### [TheNerdCollective.Helpers](src/TheNerdCollective.Helpers/README.md)
+#### [TheNerdCollective.MudComponents.MudQuillEditor](src/TheNerdCollective.MudComponents.MudQuillEditor/README.md)
+Specialized package providing MudBlazor-compatible rich-text editor.
+- **MudQuillEditor** - Rich-text editor with dark/light theme support
+- Configurable toolbar and customizable height
+- Read-only mode and placeholder text support
+- Two-way data binding with `@bind-Value`
+
+#### [TheNerdCollective.MudComponents.MudSwiper](src/TheNerdCollective.MudComponents.MudSwiper/README.md)
+MudBlazor-compatible Blazor carousel/slider component powered by Swiper.js.
+- Touch-enabled, responsive, and theme-aware
+- Pagination, navigation, auto-play, and looping support
+- Responsive breakpoints for mobile/tablet/desktop
+- Full MudBlazor integration and JS interop
+
+#### [TheNerdCollective.MudComponents.HarvestTimesheet](src/TheNerdCollective.MudComponents.HarvestTimesheet/README.md)
+MudBlazor component for displaying and managing Harvest timesheets.
+- Month navigation, summaries, and billable vs. unbilled tracking
+- Depends on TheNerdCollective.Integrations.Harvest
+
+### Blazor Utilities
+
+#### [TheNerdCollective.Blazor.Reconnect](src/TheNerdCollective.Blazor.Reconnect/README.md)
+Professional reconnection UI for Blazor Server applications.
+- Polished UX for circuit disconnection/reconnection
+- Health check monitoring and automatic reload
+- Non-invasive integration
+
+#### [TheNerdCollective.Blazor.VersionMonitor](src/TheNerdCollective.Blazor.VersionMonitor/README.md)
+Automatic version update detection for Blazor Server apps.
+- Polls status endpoint for new deployments
+- User-friendly update notifications
+- Network-aware polling
+
+#### [TheNerdCollective.Blazor.SessionMonitor](src/TheNerdCollective.Blazor.SessionMonitor/README.md)
+Track and monitor active Blazor Server sessions/circuits for production monitoring.
+- Real-time session count and historical metrics
+- REST API endpoints for monitoring dashboards
+- Find optimal deployment windows with zero active sessions
+- Perfect for deployment automation and capacity planning
+
+### Infrastructure & Services
+
+#### [TheNerdCollective.Services](src/TheNerdCollective.Services/README.md)
+Foundational services library with abstractions and utilities for scalable applications.
+- Azure Blob Storage service integration
+- Dependency injection extensions
+- Configuration options support
+- Type-safe configuration patterns
+
+#### [TheNerdCollective.Helpers](src/TheNerdCollective.Helpers/README.md)
 Lightweight utility library with essential helper methods for common operations.
 - File I/O operations
 - Date/time formatting and manipulation
@@ -20,44 +71,36 @@ Lightweight utility library with essential helper methods for common operations.
 - CSV processing and handling
 - String and MIME type extensions
 
-### [TheNerdCollective.MudComponents](src/TheNerdCollective.MudComponents.MudQuillEditor/README.md)
-Specialized package providing MudBlazor-compatible components.
-- **MudQuillEditor** - Rich-text editor with dark/light theme support
-- Configurable toolbar and customizable height
-- Read-only mode and placeholder text support
-- Two-way data binding with `@bind-Value`
+### Integrations
 
-### [TheNerdCollective.Services](src/TheNerdCollective.Services/README.md)
-Foundational services library with abstractions and utilities for scalable applications.
-- Azure Blob Storage service integration
-- Dependency injection extensions
-- Configuration options support
-- Type-safe configuration patterns
-
-### [TheNerdCollective.MudComponents.HarvestTimesheet](src/TheNerdCollective.MudComponents.HarvestTimesheet/README.md)
-MudBlazor component for displaying and managing Harvest timesheets.
-- Month navigation, summaries, and billable vs. unbilled tracking
-- Depends on TheNerdCollective.Integrations.Harvest
-
-### [TheNerdCollective.Integrations.Harvest](src/TheNerdCollective.Integrations.Harvest/README.md)
+#### [TheNerdCollective.Integrations.Harvest](src/TheNerdCollective.Integrations.Harvest/README.md)
 Integration client for GetHarvest API v2.
 - Service abstractions and configuration support
 - Used by the HarvestTimesheet UI
 
-### [TheNerdCollective.MudComponents.MudSwiper](src/TheNerdCollective.MudComponents.MudSwiper/README.md)
-MudBlazor-compatible Blazor carousel/slider component powered by Swiper.js.
-- Touch-enabled, responsive, and theme-aware
-- Pagination, navigation, auto-play, and looping support
-- Full MudBlazor integration and JS interop
+#### [TheNerdCollective.Integrations.GitHub](src/TheNerdCollective.Integrations.GitHub/README.md)
+GitHub API v3 integration for workflow management.
+- List, cancel, and rerun workflow runs
+- Filter by status, branch, event type
+- Access workflow run attempts
+
+#### [TheNerdCollective.Integrations.AzurePipelines](src/TheNerdCollective.Integrations.AzurePipelines/README.md)
+Azure Pipelines API integration for pipeline orchestration.
+- List, queue, and manage pipeline runs
+- Pass variables to pipeline runs
+- Query pipeline and run details
 
 ## 🚀 Quick Start
 
 Each package has its own README with detailed setup instructions, examples, and API documentation. Start with the package that matches your needs:
 
 - **Building Blazor UI?** → [TheNerdCollective.Components](src/TheNerdCollective.Components/README.md)
+- **Need a carousel/slider?** → [MudSwiper](src/TheNerdCollective.MudComponents.MudSwiper/README.md)
 - **Need utility helpers?** → [TheNerdCollective.Helpers](src/TheNerdCollective.Helpers/README.md)
-- **Using MudBlazor?** → [TheNerdCollective.MudComponents](src/TheNerdCollective.MudComponents.MudQuillEditor/README.md) or [MudSwiper](src/TheNerdCollective.MudComponents.MudSwiper/README.md)
+- **Using MudBlazor?** → [TheNerdCollective.MudComponents.MudQuillEditor](src/TheNerdCollective.MudComponents.MudQuillEditor/README.md)
 - **Setting up services?** → [TheNerdCollective.Services](src/TheNerdCollective.Services/README.md)
+- **Monitoring Blazor Server?** → [SessionMonitor](src/TheNerdCollective.Blazor.SessionMonitor/README.md)
+- **Better reconnection UX?** → [Blazor.Reconnect](src/TheNerdCollective.Blazor.Reconnect/README.md)
 
 ## 🎮 Try the Demo
 

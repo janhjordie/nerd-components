@@ -139,6 +139,20 @@ Without this, the new package won't auto-publish to NuGet!
 - **Status Endpoint**: JSON file at `/reconnection-status.json` with `version` field
 - **Deployment Aware**: Optional deployment phase info (status, ETA)
 
+#### **TheNerdCollective.Blazor.SessionMonitor** (Session Tracking)
+- **Role**: Track active Blazor Server circuits/sessions for production monitoring
+- **Key Service**: `SessionMonitorService` with `ISessionMonitorService` interface
+- **Pattern**: CircuitHandler tracking session lifecycle, concurrent collections for thread-safety
+- **Metrics**: Active sessions, peak sessions, total started/ended, average duration
+- **API Endpoints**: 5 REST endpoints via `MapSessionMonitoringEndpoints()`
+  - `/api/session-monitor/current` - Real-time metrics
+  - `/api/session-monitor/history` - Historical snapshots (10k max)
+  - `/api/session-monitor/active-circuits` - List of circuit IDs
+  - `/api/session-monitor/deployment-windows` - Find optimal deploy times
+  - `/api/session-monitor/can-deploy` - Check if safe to deploy
+- **Use Cases**: Deployment automation, capacity planning, production monitoring
+- **Setup**: `AddSessionMonitoring()` + `MapSessionMonitoringEndpoints()`
+
 ---
 
 ## Common Development Patterns
@@ -232,6 +246,7 @@ await blobService.UploadAsync("container", "file.txt", stream);
 | Package | Primary Use | When to Use |
 |---------|------------|------------|
 | Components | Blazor UI + MudQuillEditor | Building MudBlazor-based UIs with rich-text |
+| MudSwiper | Carousel/slider component | Adding touch-enabled, responsive carousels to Blazor apps |
 | Helpers | File, Date, CSV, Zip utilities | Common .NET operations without dependencies |
 | Services | Azure Blob, DI extensions | Cloud storage + scalable service abstractions |
 | Harvest | Timesheet API access | Integrating GetHarvest data into .NET apps |
@@ -239,6 +254,7 @@ await blobService.UploadAsync("container", "file.txt", stream);
 | AzurePipelines | Pipeline orchestration | Querying/running Azure DevOps pipelines |
 | Reconnect | Circuit reconnection UI | Better UX for Blazor Server disconnects |
 | VersionMonitor | Update notifications | Notifying users of deployed version changes |
+| SessionMonitor | Session tracking & monitoring | Production monitoring, deployment automation, capacity planning |
 
 ---
 
