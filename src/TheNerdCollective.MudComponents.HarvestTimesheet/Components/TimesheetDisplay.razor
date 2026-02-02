@@ -118,7 +118,7 @@
                         <MudTd>@context.Notes</MudTd>
                         <MudTd Style="text-align: right;">
                             <MudText Typo="Typo.body2" Color="Color.Primary">
-                                <strong>@FormatHours(context.RoundedHours)</strong>
+                                <strong>@context.RoundedHours.ToString("F2")</strong>
                             </MudText>
                         </MudTd>
                     </RowTemplate>
