@@ -169,6 +169,58 @@ Without this, the new package won't auto-publish to NuGet!
 - 🔍 **Verify versions** - Use `grep_search` to find all `<Version>` tags before committing
 - ⏱️ **Monitor publishing** - Check GitHub Actions run and NuGet.org within minutes
 
+---
+
+## ⚠️ CRITICAL: Breaking Changes Documentation Rule
+
+**This is a public NuGet repository. ALL breaking changes MUST be documented in the affected package's README.md**
+
+When creating a MAJOR version bump (breaking changes), you MUST:
+
+1. **Add a warning banner at the TOP of the package README**:
+   ```markdown
+   > ⚠️ **BREAKING CHANGE** in v2.0.0
+   > [See breaking changes section](#breaking-changes-v200) for migration guide
+   ```
+
+2. **Add a "Breaking Changes" section at the BOTTOM of the README** with:
+   - Version number (e.g., `## Breaking Changes (v2.0.0)`)
+   - List of what changed (removed methods, renamed properties, etc.)
+   - Migration guide with before/after examples
+   - Impact assessment (which methods/properties affected)
+   - Any deprecation schedule or timeline
+
+3. **Example structure**:
+   ```markdown
+   ## Breaking Changes (v2.0.0)
+   
+   ### Removed Methods
+   - `GetDataAsync()` → Use `RetrieveDataAsync()` instead
+   
+   ### Renamed Properties
+   - `ConnectionString` → `ConnectionUri`
+   
+   ### Migration Guide
+   **Before:**
+   ```csharp
+   var data = await service.GetDataAsync();
+   ```
+   
+   **After:**
+   ```csharp
+   var data = await service.RetrieveDataAsync();
+   ```
+   ```
+
+4. **Anchor links**: Use markdown anchors so top warning links to bottom section:
+   - Warning uses: `[See breaking changes](#breaking-changes-v200)`
+   - Section uses: `## Breaking Changes (v2.0.0)` (auto-generates `#breaking-changes-v200`)
+
+**Why this matters:**
+- NuGet consumers rely on clear documentation to upgrade safely
+- Prevents silent failures and unexpected breaking changes
+- Professional, accessible communication about architectural decisions
+- Demonstrates code maturity and consideration for downstream users
 
 ---
 
