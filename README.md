@@ -1,5 +1,7 @@
 # The Nerd Collective - Components Library
 
+> **📤 Quick Push**: `git add . && git commit -m "chore: nerd-components update" && git push origin main`
+
 A comprehensive collection of production-ready libraries and components for .NET 10+ applications, including Blazor components, utility helpers, service abstractions, and UI components built on MudBlazor.
 
 ## 📦 Packages
@@ -102,6 +104,48 @@ Each package has its own README with detailed setup instructions, examples, and 
 - **Monitoring Blazor Server?** → [SessionMonitor](src/TheNerdCollective.Blazor.SessionMonitor/README.md)
 - **Better reconnection UX?** → [Blazor.Reconnect](src/TheNerdCollective.Blazor.Reconnect/README.md)
 
+## 🔗 Integration Guide
+
+Use nerd-components as a git submodule in your projects for easy updates and maintenance.
+
+### Setup (One-time in your project)
+
+```bash
+git submodule add https://github.com/janhjordie/nerd-components.git 00-nerd-components
+```
+
+This clones the nerd-components into a `00-nerd-components` folder at your project root.
+
+### Using Components in Your Project
+
+Reference the packages from the submodule in your `.csproj` files:
+
+```xml
+<ItemGroup>
+  <ProjectReference Include="../../00-nerd-components/src/TheNerdCollective.Helpers/TheNerdCollective.Helpers.csproj" />
+  <ProjectReference Include="../../00-nerd-components/src/TheNerdCollective.Services/TheNerdCollective.Services.csproj" />
+  <!-- Add other packages as needed -->
+</ItemGroup>
+```
+
+### Keep Components Updated
+
+```bash
+git submodule update --remote
+```
+
+### Contributing Back
+
+Improved helpers, services, or components? Make them publicly available:
+
+1. **Create** the feature locally in your project
+2. **Move** it to the appropriate package folder in nerd-components (or create a new public package)
+3. **Update** its namespace to `TheNerdCollective.*`
+4. **Push** to [nerd-components repo](https://github.com/janhjordie/nerd-components)
+5. **Publish** to [NuGet.org](https://nuget.org) via GitHub Actions
+
+Over time, nerd-components becomes a richer, reusable foundation across all your projects.
+
 ## 🎮 Try the Demo
 
 A demo app is available showcasing the MudQuillEditor and MudSwiper components with interactive examples:
@@ -126,7 +170,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## Support
 
 For issues, feature requests, or questions:
-- 🐛 [GitHub Issues](https://github.com/janhjordie/MudQuillEditor/issues)
+- 🐛 [GitHub Issues](https://github.com/janhjordie/nerd-components/issues)
 - 💬 GitHub Discussions
 - 📧 Contact: [The Nerd Collective](https://www.thenerdcollective.dk/)
 
