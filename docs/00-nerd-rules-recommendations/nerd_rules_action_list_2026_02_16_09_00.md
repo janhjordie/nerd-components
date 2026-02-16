@@ -18,12 +18,36 @@ Priority: Must complete in current sprint to maintain code quality and security.
   - Estimated: **2-3 hours**
   - Risk if delayed: Regressions go undetected
 
-- [ ] **#2-CR** Implement Polly retry policy in integration services  
-  - Add: NuGet package `Polly`
-  - Update: GitHubService, HarvestService, AzurePipelinesService
-  - Config: 3x retry, exponential backoff, 429/500/503 handling
-  - Estimated: **1-2 hours**
-  - Risk if delayed: Service cascading failures, poor resilience
+- [x] **#2-CR** Implement Polly retry policy in integration services ✅ COMPLETED
+  - **Completed**: 2026-02-16
+  - **Implementation Details**:
+    - ✅ Added Polly 8.4.2 NuGet package to all three integration services
+    - ✅ Added Polly.Extensions.Http 3.0.0 for HttpClient integration
+    - ✅ Configured retry policies in service registration extensions:
+      - GitHubService: `AddGitHubIntegration()`
+      - HarvestService: `AddHarvestIntegration()`
+      - AzurePipelinesService: `AddAzurePipelinesIntegration()`
+  - **Retry Configuration**:
+    - ✅ 3 retry attempts with exponential backoff
+    - ✅ Backoff timing: 2, 4, 8 seconds between retries
+    - ✅ Handles HTTP 429 (Rate Limit) explicitly
+    - ✅ Handles transient errors (500, 502, 503, 504)
+    - ✅ Automatic network timeout detection
+    - ✅ Full XML documentation of retry behavior in code
+  - **Files Modified**:
+    - ✅ `TheNerdCollective.Integrations.GitHub/TheNerdCollective.Integrations.GitHub.csproj`
+    - ✅ `TheNerdCollective.Integrations.GitHub/Extensions/ServiceCollectionExtensions.cs`
+    - ✅ `TheNerdCollective.Integrations.Harvest/TheNerdCollective.Integrations.Harvest.csproj`
+    - ✅ `TheNerdCollective.Integrations.Harvest/Extensions/ServiceCollectionExtensions.cs`
+    - ✅ `TheNerdCollective.Integrations.AzurePipelines/TheNerdCollective.Integrations.AzurePipelines.csproj`
+    - ✅ `TheNerdCollective.Integrations.AzurePipelines/Extensions/ServiceCollectionExtensions.cs`
+  - **Verification**: All packages compile with 0 warnings, 0 errors
+  - **Benefits**:
+    - Improved resilience against temporary API failures
+    - Prevents service cascading failures
+    - Rate limiting handled gracefully
+    - Exponential backoff reduces server load during recovery
+  - **Effort**: 1.5 hours ✅
 
 - [ ] **#3-CR** Add security validation to service options
   - Files: GitHubOptions.cs, HarvestOptions.cs, AzurePipelinesOptions.cs
@@ -255,10 +279,10 @@ Maintenance and housekeeping to keep codebase clean.
 
 **Phase 1 - CRITICAL** (Target: Current Sprint)
 ```
-Progress: 0/3 items
+Progress: 1/3 items ✅
 
 ☐ #1-CR  Add test infrastructure
-☐ #2-CR  Implement Polly retry policy
+☑ #2-CR  Implement Polly retry policy  ✅
 ☐ #3-CR  Security validation for options
 ```
 
