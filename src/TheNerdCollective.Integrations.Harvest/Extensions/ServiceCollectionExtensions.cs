@@ -3,6 +3,8 @@
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Polly;
+using Polly.Extensions.Http;
 
 namespace TheNerdCollective.Integrations.Harvest.Extensions;
 
@@ -33,6 +35,11 @@ public static class ServiceCollectionExtensions
     /// <code>
     /// services.AddHarvestIntegration(configuration);
     /// </code>
+    /// 
+    /// Includes automatic retry policy with exponential backoff (3x retry) for transient failures:
+    /// - HTTP 429 (Too Many Requests)
+    /// - HTTP 500, 502, 503, 504 (Server Errors)
+    /// - Network timeouts
     /// </remarks>
     /// <exception cref="ArgumentNullException">Thrown when services or configuration is null.</exception>
     public static IServiceCollection AddHarvestIntegration(
@@ -43,8 +50,37 @@ public static class ServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(configuration);
 
         services.Configure<HarvestOptions>(configuration.GetSection("Harvest"));
-        services.AddHttpClient<HarvestService>();
+        
+        // Configure HttpClient with Polly retry policy
+        services
+            .AddHttpClient<HarvestService>()
+            .AddPolicyHandler(GetRetryPolicy());
 
         return services;
+    }
+
+    /// <summary>
+    /// Creates a Polly retry policy for transient HTTP errors with exponential backoff.
+    /// </summary>
+    /// <remarks>
+    /// Policy handles:
+    /// - 3 retry attempts
+    /// - Exponential backoff: 2^n seconds (2, 4, 8 seconds)
+    /// - HTTP 429 (Rate Limit), 500 (Internal Server Error), 502 (Bad Gateway), 503 (Service Unavailable), 504 (Gateway Timeout)
+    /// - Transient network errors (timeouts, connection refused, etc.)
+    /// </remarks>
+    private static IAsyncPolicy<HttpResponseMessage> GetRetryPolicy()
+    {
+        return HttpPolicyExtensions
+            .HandleTransientHttpError()
+            .OrResult(r => r.StatusCode == System.Net.HttpStatusCode.TooManyRequests) // 429
+            .WaitAndRetryAsync(
+                retryCount: 3,
+                sleepDurationProvider: retryAttempt =>
+                    TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)), // 2, 4, 8 seconds
+                onRetry: (outcome, timespan, retryCount, context) =>
+                {
+                    // Optional: Add logging here for monitoring
+                });
     }
 }
