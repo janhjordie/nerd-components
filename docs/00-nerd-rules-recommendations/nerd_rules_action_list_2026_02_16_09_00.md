@@ -122,28 +122,31 @@ Improve code quality, maintainability, and developer experience. Plan for next s
 
 - [ ] **#6-REC** Standardize DTOs and model classes
   - **Files**: All model files in integration packages
-    - `TheNerdCollective.Integrations.GitHub/Models/*.cs`
-    - `TheNerdCollective.Integrations.Harvest/Models/*.cs`
-    - `TheNerdCollective.Integrations.AzurePipelines/Models/*.cs`
-  - **Issue**: Inconsistent naming conventions, null-safety patterns, JSON mapping attributes
+    - `TheNerdCollective.Integrations.GitHub/Models/WorkflowRun.cs`, `WorkflowRunsResponse.cs`
+    - `TheNerdCollective.Integrations.Harvest/Models/HarvestModels.cs` (consolidated)
+    - `TheNerdCollective.Integrations.AzurePipelines/Models/PipelineRun.cs`, `PipelineRunsResponse.cs`
+  - **Current State Analysis**:
+    - ✅ GitHub models: Have `[JsonPropertyName]` attributes, proper PascalCase
+    - ❌ **Harvest models: MISSING `[JsonPropertyName]` attributes (CRITICAL)**
+    - ✅ AzurePipelines models: Have `[JsonPropertyName]` attributes, proper PascalCase
+    - ❌ ALL packages: Missing `#nullable enable` directive at file top
   - **Actions Required**:
-    - ✅ Add `#nullable enable` directive to all model files (null-safety enforcement)
-    - ✅ Apply PascalCase consistently to all properties and classes
-    - ✅ Add `[JsonPropertyName("fieldName")]` attributes for API response mapping
-    - ✅ Remove redundant JsonSerialize attributes where not needed
-    - ✅ Document properties with XML comments (`/// <summary>`)
-    - ✅ Ensure consistent use of nullable reference types (string vs string?)
+    - 🔴 **CRITICAL**: Add `[JsonPropertyName("snake_case_field_name")]` to ALL Harvest model properties (fixes API deserialization)
+    - ✅ Add `#nullable enable` directive to top of ALL model files
+    - ✅ Ensure consistent PascalCase for all properties (already compliant)
+    - ✅ Document properties with XML comments where missing (`/// <summary>`)
+    - ✅ Use proper nullable reference types (string vs string?, int?)
   - **Verification**:
     - Build with 0 warnings
-    - Verify JSON deserialization still works for all API responses
-    - Run integration tests (when available)
+    - Test Harvest API deserialization with real responses (verify properties map correctly)
+    - Run all integration tests (when available)
   - **Estimated**: **1 hour**
   - **Benefits**:
-    - Consistent codebase appearance and maintainability
-    - Stronger null-safety guarantees
-    - Proper API response mapping with explicit `[JsonPropertyName]`
-    - Clear developer experience for consumers
-  - **Status**: Ready to implement
+    - Strong null-safety guarantees across all models
+    - Proper API response mapping (especially critical for Harvest)
+    - Consistent codebase appearance
+    - Better intellisense and developer experience
+  - **Status**: Ready to implement (Harvest requires immediate attention)
 
 - [ ] **#7-REC** Unified logging strategy across packages
   - All services should accept `ILogger<T>` via DI
