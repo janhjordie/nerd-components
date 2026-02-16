@@ -46,12 +46,15 @@ Location: `docs/00-nerd-rules-submodule/` (git submodule)
 
 ### Technology-Specific Standards
 
-**Detected & Enabled**:
-- 🔧 `14-blazor-standards.md` - Blazor Server standards (This project uses Blazor)
-- 🔧 `15-efcore-standards.md` - EF Core standards (This project uses EF Core)
-- 🔧 `17-background-jobs-standards.md` - Background job standards (if applicable)
+**Detected & Enabled** (from 2026-02-16 Scan):
+- ✅ `14-blazor-standards.md` - Blazor Server/WASM components (15+ .razor files detected)
+- ✅ `04-api-design-standards.md` - HttpClient patterns in integration services
+- ✅ `05-architectural-patterns.md` - Dependency injection, service registration
+- ⚠️ `06-testing-standards.md` - **CRITICAL GAP**: No test infrastructure exists
 
-To scan the entire project for other relevant standards, run: **"use nerd rules"** or **"check nerd rules"**
+For detailed analysis results, see: [docs/00-nerd-rules-recommendations/nerd_rules_scan_report_2026_02_16_09_00.md](docs/00-nerd-rules-recommendations/nerd_rules_scan_report_2026_02_16_09_00.md)
+
+For prioritized action items, see: [docs/00-nerd-rules-recommendations/nerd_rules_action_list_2026_02_16_09_00.md](docs/00-nerd-rules-recommendations/nerd_rules_action_list_2026_02_16_09_00.md)
 
 ---
 
