@@ -121,32 +121,31 @@ Improve code quality, maintainability, and developer experience. Plan for next s
   - **Effort**: 1.5 hours ✅
 
 - [ ] **#6-REC** Standardize DTOs and model classes
-  - **Files**: All model files in integration packages
-    - `TheNerdCollective.Integrations.GitHub/Models/WorkflowRun.cs`, `WorkflowRunsResponse.cs`
-    - `TheNerdCollective.Integrations.Harvest/Models/HarvestModels.cs` (consolidated)
-    - `TheNerdCollective.Integrations.AzurePipelines/Models/PipelineRun.cs`, `PipelineRunsResponse.cs`
-  - **Current State Analysis**:
-    - ✅ GitHub models: Have `[JsonPropertyName]` attributes, proper PascalCase
-    - ❌ **Harvest models: MISSING `[JsonPropertyName]` attributes (CRITICAL)**
-    - ✅ AzurePipelines models: Have `[JsonPropertyName]` attributes, proper PascalCase
-    - ❌ ALL packages: Missing `#nullable enable` directive at file top
-  - **Actions Required**:
-    - 🔴 **CRITICAL**: Add `[JsonPropertyName("snake_case_field_name")]` to ALL Harvest model properties (fixes API deserialization)
-    - ✅ Add `#nullable enable` directive to top of ALL model files
-    - ✅ Ensure consistent PascalCase for all properties (already compliant)
-    - ✅ Document properties with XML comments where missing (`/// <summary>`)
-    - ✅ Use proper nullable reference types (string vs string?, int?)
+  - **Files to Fix**:
+    - `TheNerdCollective.Integrations.GitHub/Models/WorkflowRun.cs`
+    - `TheNerdCollective.Integrations.GitHub/Models/WorkflowRunsResponse.cs`
+    - `TheNerdCollective.Integrations.Harvest/Models/HarvestModels.cs`
+    - `TheNerdCollective.Integrations.AzurePipelines/Models/PipelineRun.cs`
+    - `TheNerdCollective.Integrations.AzurePipelines/Models/PipelineRunsResponse.cs`
+  - **Action Checklist**:
+    - [ ] Add `#nullable enable` directive at top of ALL model files
+    - [ ] **CRITICAL: Add `[JsonPropertyName("snake_case_field_name")]` to ALL Harvest model properties** (fixes API deserialization)
+    - [ ] Verify GitHub models already have `[JsonPropertyName]` attributes (already compliant)
+    - [ ] Verify AzurePipelines models already have `[JsonPropertyName]` attributes (already compliant)
+    - [ ] Add XML comments (`/// <summary>`) to all public properties
+    - [ ] Ensure proper use of nullable reference types (string vs string?, int? vs int)
+    - [ ] Run `dotnet build` - verify 0 warnings
+    - [ ] Test Harvest API deserialization with real responses
   - **Verification**:
-    - Build with 0 warnings
-    - Test Harvest API deserialization with real responses (verify properties map correctly)
-    - Run all integration tests (when available)
+    - Build with 0 warnings, 0 errors
+    - Confirm Harvest timestamp/decimal properties deserialize correctly from API
   - **Estimated**: **1 hour**
   - **Benefits**:
     - Strong null-safety guarantees across all models
     - Proper API response mapping (especially critical for Harvest)
     - Consistent codebase appearance
     - Better intellisense and developer experience
-  - **Status**: Ready to implement (Harvest requires immediate attention)
+  - **Priority**: Ready to implement (Harvest deserialization fix is critical)
 
 - [ ] **#7-REC** Unified logging strategy across packages
   - All services should accept `ILogger<T>` via DI
