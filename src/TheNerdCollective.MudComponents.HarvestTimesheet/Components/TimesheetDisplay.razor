@@ -171,7 +171,7 @@
                             <MudExpansionPanels MultiExpansion="true" Elevation="0">
                                 @foreach (var entry in Timesheets)
                                 {
-                                    <MudExpansionPanel Text="@($"{entry.SpentDate:dd/MM/yyyy} - {entry.ProjectName} - {entry.TaskName}")" InitiallyExpanded="true">
+                                    <MudExpansionPanel Text="@($"{entry.SpentDate:dd/MM/yyyy} - {entry.ProjectName} - {entry.TaskName}")">
                                         <pre class="mud-pre" style="white-space: pre-wrap; word-break: break-word;">@entry.RawEntryJson</pre>
                                     </MudExpansionPanel>
                                 }
