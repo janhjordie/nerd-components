@@ -121,12 +121,29 @@ Improve code quality, maintainability, and developer experience. Plan for next s
   - **Effort**: 1.5 hours ✅
 
 - [ ] **#6-REC** Standardize DTOs and model classes
-  - Files: All model files in integration packages
-  - Issue: Inconsistent naming conventions, null-safety patterns
-  - Action: Apply PascalCase consistently, use `#nullable enable`
-  - Add: `[JsonPropertyName]` attributes for API mapping
-  - Estimated: **1 hour**
-  - Status: Ready to implement
+  - **Files**: All model files in integration packages
+    - `TheNerdCollective.Integrations.GitHub/Models/*.cs`
+    - `TheNerdCollective.Integrations.Harvest/Models/*.cs`
+    - `TheNerdCollective.Integrations.AzurePipelines/Models/*.cs`
+  - **Issue**: Inconsistent naming conventions, null-safety patterns, JSON mapping attributes
+  - **Actions Required**:
+    - ✅ Add `#nullable enable` directive to all model files (null-safety enforcement)
+    - ✅ Apply PascalCase consistently to all properties and classes
+    - ✅ Add `[JsonPropertyName("fieldName")]` attributes for API response mapping
+    - ✅ Remove redundant JsonSerialize attributes where not needed
+    - ✅ Document properties with XML comments (`/// <summary>`)
+    - ✅ Ensure consistent use of nullable reference types (string vs string?)
+  - **Verification**:
+    - Build with 0 warnings
+    - Verify JSON deserialization still works for all API responses
+    - Run integration tests (when available)
+  - **Estimated**: **1 hour**
+  - **Benefits**:
+    - Consistent codebase appearance and maintainability
+    - Stronger null-safety guarantees
+    - Proper API response mapping with explicit `[JsonPropertyName]`
+    - Clear developer experience for consumers
+  - **Status**: Ready to implement
 
 - [ ] **#7-REC** Unified logging strategy across packages
   - All services should accept `ILogger<T>` via DI
