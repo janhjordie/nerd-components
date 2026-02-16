@@ -33,6 +33,7 @@ dotnet pack src/TheNerdCollective.Services -c Release
 ---
 
 ## 🚀 TRIGGER: Update NuGet Package Versions
+**Aliases**: "push to nuget", "update nuget" - all trigger the same workflow
 
 **When you've made changes to packages and need to publish them:**
 
