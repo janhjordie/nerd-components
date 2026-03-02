@@ -1,23 +1,37 @@
 /**
  * Blazor Server Reconnection Handler
- * TheNerdCollective.Blazor.Reconnect v1.5.2
+ * TheNerdCollective.Blazor.Reconnect v1.6.0
  *
  * Minimal, non-invasive circuit handler that:
- * - Shows a custom reconnect modal when the Blazor circuit is lost
+ * - Silent grace period (showDelayMilliseconds, default 500ms): modal is NOT shown
+ *            immediately when the circuit drops. Blazor is already retrying in the
+ *            background. If it reconnects within the grace period the user sees nothing.
+ *            This eliminates the flash-of-reconnect-screen on brief network hiccups,
+ *            tab wakes, and short iOS screen locks where the circuit is still alive.
  * - Phase 1: Blazor circuit retry loop (effectively infinite — maxRetries=1000)
  * - Phase 2: server-alive ping starts IN PARALLEL after serverPingStartDelayMs
  *            (default 3s = one retry interval). Uses AbortController to cancel
  *            any in-flight fetch the instant Blazor reconnects the circuit.
  *            circuitReconnected guard prevents reload if hide() fires just
  *            before a ping response lands.
- * - visibilitychange: when the user returns to the tab and the modal is showing,
- *            fires an immediate one-shot health check (bypasses start delay + interval
- *            wait — discovery collapses to one network RTT, ~100–300ms).
+ * - visibilitychange: when the user returns to the tab and the modal is showing (or
+ *            the grace period is active), fires an immediate one-shot health check
+ *            (bypasses start delay + interval wait — discovery collapses to one
+ *            network RTT, ~100–300ms). Also attempts Blazor.reconnect() immediately.
  * - pageshow (persisted): iOS bfcache — reloads immediately for a fresh circuit.
  * - Polls Blazor's reconnect state every 250ms (reliable, no MutationObserver races)
  * - Re-hooks Blazor's reconnectionHandler every 5s so it survives server restarts
  * - Suppresses noisy console errors during disconnection
  * - Works out of the box with sensible defaults — fully customisable
+ *
+ * iOS screen-lock behaviour explained:
+ *   Short lock (< ~60s):  JS frozen → `visibilitychange` fires on wake → immediate
+ *                         Blazor.reconnect() + health ping → resolved in ~200–500ms.
+ *                         Grace period absorbs the reconnect; no modal shown if fast enough.
+ *   Long lock / memory pressure: iOS kills WKWebView → full page reload on return.
+ *                         Nothing to reconnect — fresh circuit from scratch. This is
+ *                         the "never a reconnect, always a reload" case you observed.
+ *   bfcache (back/fwd swipe): `pageshow` persisted=true → immediate location.reload().
  *
  * Works with Blazor's default startup (no autostart="false" needed!)
  *
@@ -42,9 +56,26 @@
         logoUrl: null,         // URL to a logo shown above the spinner (e.g. '/_content/MyApp/logo.png')
         spinnerUrl: null,      // URL to a custom spinner image — replaces the SVG spinner
 
+        // Grace period: how long to wait before showing the modal after the circuit drops.
+        // During this window Blazor is silently retrying in the background. If it reconnects
+        // within the grace period the user sees nothing at all — no flash, no disruption.
+        // Set to 0 to show the modal immediately (old behaviour).
+        showDelayMilliseconds: 500,
+
         // Phase 1: circuit retry behaviour (effectively infinite — Phase 2 is the real exit)
         maxRetries: 1000,                 // Effectively infinite: Phase 2 (server ping) triggers reload, not retry exhaustion
-        retryIntervalMilliseconds: 3000,  // ms between each Phase 1 retry attempt
+        // Retry interval: use Blazor's rapid-then-backoff default pattern.
+        // Array.prototype.at.bind([...]) returns undefined after the last entry → retries stop.
+        // [0]      = immediate first retry (Blazor fires this before show() in most cases,
+        //            but having 0 here ensures the first UI-visible attempt is instant)
+        // [500]    = 500ms   (within grace period, invisible to user)
+        // [1000]   = 1s
+        // [2000]   = 2s
+        // [3000]   = 3s
+        // [5000…]  = 5s, 10s … (long-tail / server restart scenario)
+        // If you prefer a flat interval, set retryIntervalMilliseconds to a number (e.g. 2000)
+        // instead of the array form.
+        retryIntervalMilliseconds: [0, 500, 1000, 2000, 3000, 5000, 10000, 15000, 20000, 30000],
 
         // Phase 2: server-alive polling — starts IN PARALLEL with Phase 1 after a short delay.
         // If the server responds while Phase 1 is still running, reload immediately.
@@ -83,7 +114,7 @@
 
     console.log('[BlazorReconnect] Initializing with config:', config);
 
-    const VERSION = 'v1.5.2';
+    const VERSION = 'v1.6.0';
 
     // ===== STATE =====
     let reconnectModal = null;
@@ -91,6 +122,10 @@
     let retryAttempt = 0;
     let retryCountdownSecs = 0;
     let retryTimer = null;
+
+    // Grace period: timer that delays modal appearance after show() is called.
+    // Cancelled (→ no modal) if hide() fires during the grace window.
+    let showDelayTimer = null;
 
     // Phase 2 state
     let serverPingTimer = null;
@@ -390,10 +425,19 @@
         el.textContent = countdown;
     }
 
+    function getRetryIntervalMs(attempt) {
+        const ri = config.retryIntervalMilliseconds;
+        if (Array.isArray(ri)) {
+            // Blazor backoff array — use last value indefinitely once exhausted
+            return ri[Math.min(attempt, ri.length - 1)];
+        }
+        return typeof ri === 'number' ? ri : 3000;
+    }
+
     function startRetryCountdown() {
         stopRetryCountdown(); // clear any previous timer
         retryAttempt = 1;
-        retryCountdownSecs = Math.max(1, Math.round(config.retryIntervalMilliseconds / 1000));
+        retryCountdownSecs = Math.max(1, Math.round(getRetryIntervalMs(retryAttempt) / 1000));
         updateRetryStatus();
 
         retryTimer = setInterval(() => {
@@ -408,7 +452,7 @@
                     showFailedModal();
                     return;
                 }
-                retryCountdownSecs = Math.max(1, Math.round(config.retryIntervalMilliseconds / 1000));
+                retryCountdownSecs = Math.max(1, Math.round(getRetryIntervalMs(retryAttempt) / 1000));
             }
             updateRetryStatus();
         }, 1000);
@@ -425,7 +469,38 @@
 
     // ===== RECONNECT MODAL =====
 
-    function showReconnectModal() {
+    function cancelShowDelay() {
+        if (showDelayTimer) {
+            clearTimeout(showDelayTimer);
+            showDelayTimer = null;
+        }
+    }
+
+    // Called when Blazor fires show() — may be delayed by grace period.
+    function scheduleShowReconnectModal() {
+        if (reconnectModal || showDelayTimer) return; // already showing or scheduled
+
+        const delay = config.showDelayMilliseconds || 0;
+        if (delay <= 0) {
+            showReconnectModal();
+            return;
+        }
+
+        console.log(`[BlazorReconnect] Circuit dropped — waiting ${delay}ms grace period before showing UI`);
+        // Start Phase 2 ping immediately (in parallel with grace period) so server
+        // availability is detected as quickly as possible even if Blazor reconnects.
+        circuitReconnected = false;
+        startServerPing(config.serverPingStartDelayMilliseconds);
+
+        showDelayTimer = setTimeout(() => {
+            showDelayTimer = null;
+            if (!reconnectModal) {
+                showReconnectModal(/* pingAlreadyStarted= */ true);
+            }
+        }, delay);
+    }
+
+    function showReconnectModal(pingAlreadyStarted = false) {
         if (reconnectModal) return;
 
         console.log('[BlazorReconnect] Showing reconnect UI');
@@ -459,14 +534,23 @@
         startRetryCountdown();
 
         // Phase 2: start server ping after a short delay IN PARALLEL with Phase 1.
-        // Reset the circuit-restored guard so a stale true from a previous disconnect cycle
-        // cannot suppress the next reload. AbortController ensures any in-flight fetch from
-        // the previous cycle is already cancelled before this point.
-        circuitReconnected = false;
-        startServerPing(config.serverPingStartDelayMilliseconds);
+        // If we arrived here from scheduleShowReconnectModal(), Phase 2 is already running
+        // (pingAlreadyStarted=true). Otherwise start it now.
+        if (!pingAlreadyStarted) {
+            circuitReconnected = false;
+            startServerPing(config.serverPingStartDelayMilliseconds);
+        }
     }
 
     function hideReconnectModal() {
+        // Cancel grace period if hide() fires before the timer expires
+        // (circuit reconnected within the silent window — user sees nothing)
+        if (showDelayTimer) {
+            console.log('[BlazorReconnect] ✅ Circuit restored within grace period — no modal was shown');
+            cancelShowDelay();
+            stopServerPing(true);
+            return;
+        }
         if (reconnectModal) {
             console.log('[BlazorReconnect] Connection restored, hiding modal');
             stopRetryCountdown();
@@ -537,8 +621,11 @@
         if (Blazor.defaultReconnectionHandler.reconnectionOptions) {
             Blazor.defaultReconnectionHandler.reconnectionOptions.maxRetries =
                 config.maxRetries;
+            // Support both flat ms number and backoff array (Blazor accepts both)
             Blazor.defaultReconnectionHandler.reconnectionOptions.retryIntervalMilliseconds =
-                config.retryIntervalMilliseconds;
+                Array.isArray(config.retryIntervalMilliseconds)
+                    ? Array.prototype.at.bind(config.retryIntervalMilliseconds)
+                    : config.retryIntervalMilliseconds;
         }
 
         Blazor.defaultReconnectionHandler._reconnectionDisplay = {
@@ -546,7 +633,7 @@
             show() {
                 console.log('[BlazorReconnect] ↓ disconnected (Blazor hook)');
                 suppressDefaultModal();
-                showReconnectModal();
+                scheduleShowReconnectModal();
             },
             hide() {
                 console.log('[BlazorReconnect] ↑ reconnected (Blazor hook)');
@@ -601,9 +688,9 @@
         console.log(`[BlazorReconnect] State (poll): ${lastPollState} → ${state}`);
         lastPollState = state;
 
-        if (state === 'disconnected' && !reconnectModal) {
+        if (state === 'disconnected' && !reconnectModal && !showDelayTimer) {
             suppressDefaultModal();
-            showReconnectModal();
+            scheduleShowReconnectModal();
 
         } else if (state === 'failed') {
             suppressDefaultModal();
@@ -717,6 +804,7 @@
         status: () => {
             console.log('[BlazorReconnect] Status:', {
                 modalVisible: !!reconnectModal,
+                gracePeriodActive: !!showDelayTimer,
                 isInitialLoad,
                 hooked,
                 circuitState: getCircuitState(),
@@ -725,7 +813,8 @@
                 serverPingAttempt
             });
         },
-        showModal: () => showReconnectModal(),
+        showModal: () => scheduleShowReconnectModal(),
+        showModalNow: () => showReconnectModal(),   // skip grace period for testing
         hideModal: () => hideReconnectModal(),
         showFailedModal: () => showFailedModal(),   // test Phase 2 directly
         stopServerPing: () => stopServerPing(),
@@ -750,11 +839,33 @@
 
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState !== 'visible') return;
-        if (!reconnectModal) return;
         if (isInitialLoad) return;
         if (circuitReconnected) return;
 
-        console.log('[BlazorReconnect] Tab visible — firing immediate health check');
+        // Respond even if we are still in the grace period (showDelayTimer active)
+        // — the circuit might be waiting for us to attempt reconnect.
+        const disconnectDetected = !!reconnectModal || !!showDelayTimer;
+        if (!disconnectDetected) return;
+
+        console.log('[BlazorReconnect] Tab visible after disconnect — attempting Blazor.reconnect() + immediate health check');
+
+        // 1. Attempt the Blazor circuit reconnect immediately (fast path: ~200-500ms if alive).
+        //    This runs in parallel with the fetch ping below.
+        if (window.Blazor?.reconnect) {
+            Blazor.reconnect().then(result => {
+                if (result) {
+                    console.log('[BlazorReconnect] Blazor.reconnect() succeeded on visibility restore');
+                    // hideReconnectModal() will be called by Blazor's hide() callback
+                } else {
+                    console.log('[BlazorReconnect] Blazor.reconnect() returned false (circuit expired) — awaiting reload via ping');
+                }
+            }).catch(() => {
+                // Not connected yet — ping will handle reload
+            });
+        }
+
+        // 2. Fire an immediate server ping (health check) to detect if the server is
+        //    reachable and trigger a reload as fast as possible.
         fireImmediatePing();
     });
 

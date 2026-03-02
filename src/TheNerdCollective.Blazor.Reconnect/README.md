@@ -83,6 +83,9 @@ window.blazorReconnectConfig = {
 | `primaryColor` | `string` | `'#594AE2'` | Button and spinner colour |
 | `logoUrl` | `string\|null` | `null` | URL to a logo shown above the spinner |
 | `spinnerUrl` | `string\|null` | `null` | URL to a custom spinner image (replaces SVG) |
+| `showDelayMilliseconds` | `number` | `500` | **Grace period**: how long to wait silently after the circuit drops before showing the modal. During this window Blazor is already retrying in the background. If the circuit reconnects within the grace period, no modal is ever shown. Set to `0` for old immediate behaviour. |
+| `maxRetries` | `number` | `1000` | Max Phase 1 retry attempts (Phase 2 server ping is the real exit) |
+| `retryIntervalMilliseconds` | `number\|number[]` | `[0,500,1000,2000,3000,5000,10000,15000,20000,30000]` | Retry interval(s) in ms. An array enables rapid-first backoff (recommended). A plain number uses a flat interval. |
 | `title` | `string` | `'Connection lost'` | Modal heading |
 | `subtitle` | `string` | `'The connection was interrupted…'` | Sub-heading text |
 | `statusText` | `string` | `'Reconnecting…'` | Small status line |
