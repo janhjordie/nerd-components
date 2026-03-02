@@ -1,6 +1,6 @@
 /**
  * Blazor Server Reconnection Handler
- * TheNerdCollective.Blazor.Reconnect v1.5.0
+ * TheNerdCollective.Blazor.Reconnect v1.5.2
  *
  * Minimal, non-invasive circuit handler that:
  * - Shows a custom reconnect modal when the Blazor circuit is lost
@@ -10,6 +10,10 @@
  *            any in-flight fetch the instant Blazor reconnects the circuit.
  *            circuitReconnected guard prevents reload if hide() fires just
  *            before a ping response lands.
+ * - visibilitychange: when the user returns to the tab and the modal is showing,
+ *            fires an immediate one-shot health check (bypasses start delay + interval
+ *            wait — discovery collapses to one network RTT, ~100–300ms).
+ * - pageshow (persisted): iOS bfcache — reloads immediately for a fresh circuit.
  * - Polls Blazor's reconnect state every 250ms (reliable, no MutationObserver races)
  * - Re-hooks Blazor's reconnectionHandler every 5s so it survives server restarts
  * - Suppresses noisy console errors during disconnection
@@ -79,7 +83,7 @@
 
     console.log('[BlazorReconnect] Initializing with config:', config);
 
-    const VERSION = 'v1.5.1';
+    const VERSION = 'v1.5.2';
 
     // ===== STATE =====
     let reconnectModal = null;
@@ -313,6 +317,67 @@
             serverPingStartTimer = setTimeout(begin, delay);
         } else {
             begin();
+        }
+    }
+
+    // ===== IMMEDIATE PING (triggered by visibility restore) =====
+    //
+    // Fires a single one-shot health check RIGHT NOW, bypassing the Phase 2 start
+    // delay and the current interval position. Used by the visibilitychange handler
+    // so discovery time collapses to one network RTT when the user returns to the tab.
+    async function fireImmediatePing() {
+        if (!config.serverPingEnabled) return;
+        if (circuitReconnected) return;
+
+        console.log('[BlazorReconnect] Immediate health check (visibility restore)');
+
+        // Cancel any pending start-delay — Phase 2 is starting right now
+        if (serverPingStartTimer) {
+            clearTimeout(serverPingStartTimer);
+            serverPingStartTimer = null;
+        }
+
+        // Abort any in-flight fetch from the regular interval so we don't double-reload
+        if (serverPingAbortController) {
+            serverPingAbortController.abort();
+            serverPingAbortController = null;
+        }
+
+        const ctrl = new AbortController();
+        serverPingAbortController = ctrl;
+        try {
+            const resp = await fetch(config.serverPingUrl, {
+                cache: 'no-store',
+                signal: ctrl.signal
+            });
+            serverPingAbortController = null;
+
+            if (circuitReconnected) {
+                console.log('[BlazorReconnect] Immediate ping resolved but circuit already restored — skipping reload');
+                return;
+            }
+
+            if (resp.ok) {
+                stopServerPing();
+                console.log(`[BlazorReconnect] Immediate ping OK (${resp.status}) — server is reachable`);
+                if (config.autoReloadOnServerBack) {
+                    console.log('[BlazorReconnect] Auto-reloading page');
+                    window.location.reload();
+                } else {
+                    showServerBackPrompt();
+                }
+            } else {
+                // Server reachable but non-2xx (e.g. degraded health) — let normal polling continue
+                console.log(`[BlazorReconnect] Immediate ping non-OK (${resp.status}) — continuing polling`);
+                // Restart regular interval if it was cleared above
+                if (!serverPingTimer) startServerPing(0);
+            }
+        } catch (err) {
+            serverPingAbortController = null;
+            if (err.name === 'AbortError') return; // cancelled by stopServerPing() — circuit restored
+            // Server unreachable — ensure regular polling is running
+            console.log('[BlazorReconnect] Immediate ping failed (server unreachable) — continuing polling');
+            if (!serverPingTimer) startServerPing(0);
         }
     }
 
@@ -663,10 +728,43 @@
         showModal: () => showReconnectModal(),
         hideModal: () => hideReconnectModal(),
         showFailedModal: () => showFailedModal(),   // test Phase 2 directly
-        stopServerPing: () => stopServerPing()
+        stopServerPing: () => stopServerPing(),
+        immediatePing: () => fireImmediatePing()    // simulate visibility-restore ping
     };
 
-    console.log('[BlazorReconnect] Testing API: BlazorReconnect.status(), .showModal(), .hideModal(), .showFailedModal(), .stopServerPing()');
+    console.log('[BlazorReconnect] Testing API: BlazorReconnect.status(), .showModal(), .hideModal(), .showFailedModal(), .stopServerPing(), .immediatePing()');
+
+    // ===== VISIBILITY / FOCUS EVENTS =====
+    //
+    // On iOS Safari, JavaScript is frozen when the user switches apps or locks the screen.
+    // The WebSocket (SignalR) is silently dropped. When the user returns to the browser tab,
+    // JS resumes — but the reconnect modal is already visible and Phase 2 may be waiting
+    // for its start-delay or the next poll interval (up to 8 seconds total with defaults).
+    //
+    // These handlers fire the moment the tab becomes visible again, collapsing discovery
+    // time to a single network RTT (~100–300ms). If the server is up, the page reloads
+    // immediately. If not, normal polling continues.
+    //
+    // visibilitychange  — reliable on iOS Safari 14.5+, Android Chrome, all modern desktop
+    // pageshow (persisted) — iOS bfcache: page restored from cache, circuit is dead → reload
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState !== 'visible') return;
+        if (!reconnectModal) return;
+        if (isInitialLoad) return;
+        if (circuitReconnected) return;
+
+        console.log('[BlazorReconnect] Tab visible — firing immediate health check');
+        fireImmediatePing();
+    });
+
+    // iOS bfcache: when the user navigates back/forward and the page is restored from
+    // the browser's cache, all Blazor state is dead-on-arrival. Force a fresh load.
+    window.addEventListener('pageshow', (event) => {
+        if (!event.persisted) return; // normal load — nothing to do
+        console.log('[BlazorReconnect] Page restored from bfcache (persisted=true) — reloading for fresh circuit');
+        window.location.reload();
+    });
 
     // ===== INITIALIZATION =====
 

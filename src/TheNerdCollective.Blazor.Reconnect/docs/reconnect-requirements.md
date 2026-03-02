@@ -1,7 +1,7 @@
 # Reconnection Requirements & Behaviour Specification
 
 **Package**: `TheNerdCollective.Blazor.Reconnect`  
-**Last updated**: 2026-03-02 | **Current version**: `1.5.0`
+**Last updated**: 2026-03-02 | **Current version**: `1.5.2`
 
 > **Core principle**: The component must **never permanently give up**. Showing a dead "Unable to reconnect" screen while the server is running is unacceptable. The reconnect handler operates in two phases: (1) try to resume the circuit, (2) if the circuit is gone, poll until the server is reachable and then reload automatically.
 
@@ -97,6 +97,8 @@ If the window expires → the circuit is garbage-collected → reconnect attempt
 - [x] The "failed" UI must update to communicate "Still trying to reach the server…" rather than implying the situation is permanent.
 - [x] `maxRetries` and `retryIntervalMilliseconds` must be configurable so the total Phase 1 window can be tuned to match `DisconnectedCircuitRetentionPeriod`.
 - [x] Phase 2 polling must also be configurable and must default to **enabled**.
+- [x] **`visibilitychange` event** — when the user returns to the tab and the reconnect modal is showing, an immediate one-shot health check fires instantly (bypassing `serverPingStartDelayMilliseconds` and the current interval position). Discovery time collapses to one network RTT (~100–300 ms) instead of up to 8 seconds with defaults.
+- [x] **`pageshow` bfcache reload** — when iOS restores the page from its back/forward cache (`event.persisted === true`), the page reloads immediately to obtain a fresh Blazor circuit. Without this, the page appears to load but the circuit is dead and the modal never fires.
 
 **Recommended alignment**:
 ```
@@ -288,5 +290,5 @@ window.blazorReconnectConfig = {
 
 - [ ] **Expose `onReconnecting` / `onReconnected` / `onFailed` / `onServerBack` JS callbacks** so host apps can add custom telemetry or analytics.
 - [ ] **Persist `circuitId` server-side** (via `CircuitHandler`) for session continuity diagnostics — log when a circuit is resumed vs. when a new one is created.
-- [ ] **iOS PWA / Home Screen apps**: When added to the iOS home screen, the app runs in a standalone WebView. The backgrounding behaviour is more aggressive. Phase 2 is especially important here. Needs testing.
+- [x] **iOS PWA / Home Screen apps** (partially addressed): `visibilitychange` fires correctly in PWA standalone mode. `pageshow` bfcache reload also applies. Aggressive backgrounding behaviour may still need testing for very long sessions.
 - [ ] **Phase 2 with no `/health` endpoint**: Consider falling back to polling the app root (`/`) or a signalr negotiate endpoint if `/health` is not available.
