@@ -1,6 +1,6 @@
 /**
  * Blazor Server Reconnection Handler
- * TheNerdCollective.Blazor.Reconnect v1.6.0
+ * TheNerdCollective.Blazor.Reconnect v1.6.1
  *
  * Minimal, non-invasive circuit handler that:
  * - Silent grace period (showDelayMilliseconds, default 500ms): modal is NOT shown
@@ -9,15 +9,16 @@
  *            This eliminates the flash-of-reconnect-screen on brief network hiccups,
  *            tab wakes, and short iOS screen locks where the circuit is still alive.
  * - Phase 1: Blazor circuit retry loop (effectively infinite — maxRetries=1000)
- * - Phase 2: server-alive ping starts IN PARALLEL after serverPingStartDelayMs
- *            (default 3s = one retry interval). Uses AbortController to cancel
- *            any in-flight fetch the instant Blazor reconnects the circuit.
- *            circuitReconnected guard prevents reload if hide() fires just
- *            before a ping response lands.
- * - visibilitychange: when the user returns to the tab and the modal is showing (or
- *            the grace period is active), fires an immediate one-shot health check
- *            (bypasses start delay + interval wait — discovery collapses to one
- *            network RTT, ~100–300ms). Also attempts Blazor.reconnect() immediately.
+ * - Phase 2: server-alive ping starts IN PARALLEL. When woken from screen lock
+ *            (wokenFromVisibility=true) Phase 2 starts with 0ms delay the instant
+ *            Blazor reports the drop. Otherwise uses serverPingStartDelayMs (default 3s).
+ *            Uses AbortController to cancel any in-flight fetch the instant Blazor
+ *            reconnects the circuit. circuitReconnected guard prevents reload if hide()
+ *            fires just before a ping response lands.
+ * - visibilitychange: ALWAYS calls Blazor.reconnect() on visibility restore (not gated
+ *            on disconnectDetected — v1.6.0 bug that caused 5s delay on iPhone wake).
+ *            Also sets wokenFromVisibility=true so scheduleShowReconnectModal() uses
+ *            pingDelay=0. If disconnect already visible, fires immediate one-shot ping.
  * - pageshow (persisted): iOS bfcache — reloads immediately for a fresh circuit.
  * - Polls Blazor's reconnect state every 250ms (reliable, no MutationObserver races)
  * - Re-hooks Blazor's reconnectionHandler every 5s so it survives server restarts
@@ -26,11 +27,12 @@
  *
  * iOS screen-lock behaviour explained:
  *   Short lock (< ~60s):  JS frozen → `visibilitychange` fires on wake → immediate
- *                         Blazor.reconnect() + health ping → resolved in ~200–500ms.
+ *                         Blazor.reconnect() called regardless of disconnect state.
+ *                         wokenFromVisibility=true → when Blazor fires show() Phase 2
+ *                         starts immediately (0ms) → reload in ~200–800ms total.
  *                         Grace period absorbs the reconnect; no modal shown if fast enough.
  *   Long lock / memory pressure: iOS kills WKWebView → full page reload on return.
- *                         Nothing to reconnect — fresh circuit from scratch. This is
- *                         the "never a reconnect, always a reload" case you observed.
+ *                         Nothing to reconnect — fresh circuit from scratch.
  *   bfcache (back/fwd swipe): `pageshow` persisted=true → immediate location.reload().
  *
  * Works with Blazor's default startup (no autostart="false" needed!)
@@ -114,7 +116,7 @@
 
     console.log('[BlazorReconnect] Initializing with config:', config);
 
-    const VERSION = 'v1.6.0';
+    const VERSION = 'v1.6.1';
 
     // ===== STATE =====
     let reconnectModal = null;
@@ -126,6 +128,12 @@
     // Grace period: timer that delays modal appearance after show() is called.
     // Cancelled (→ no modal) if hide() fires during the grace window.
     let showDelayTimer = null;
+
+    // Set to true by the visibilitychange handler when the user returns to the tab.
+    // Causes scheduleShowReconnectModal() to start Phase 2 immediately (0ms delay)
+    // instead of waiting serverPingStartDelayMilliseconds, which eliminates the
+    // 3–5s lag after iPhone screen lock.
+    let wokenFromVisibility = false;
 
     // Phase 2 state
     let serverPingTimer = null;
@@ -487,10 +495,16 @@
         }
 
         console.log(`[BlazorReconnect] Circuit dropped — waiting ${delay}ms grace period before showing UI`);
-        // Start Phase 2 ping immediately (in parallel with grace period) so server
-        // availability is detected as quickly as possible even if Blazor reconnects.
+        // Start Phase 2 ping in parallel with the grace period.
+        // If the user just woke from screen-lock (wokenFromVisibility=true), skip the
+        // start delay entirely so the ping fires the moment Blazor reports a drop.
+        // This eliminates the 3–5s lag on typical short iPhone screen locks.
+        const pingDelay = wokenFromVisibility ? 0 : config.serverPingStartDelayMilliseconds;
+        if (wokenFromVisibility) {
+            console.log('[BlazorReconnect] Woken from visibility — Phase 2 starting immediately (0ms delay)');
+        }
         circuitReconnected = false;
-        startServerPing(config.serverPingStartDelayMilliseconds);
+        startServerPing(pingDelay);
 
         showDelayTimer = setTimeout(() => {
             showDelayTimer = null;
@@ -543,6 +557,10 @@
     }
 
     function hideReconnectModal() {
+        // Circuit restored — clear the visibility flag so the next disconnect
+        // (if not visibility-triggered) uses the normal Phase 2 start delay.
+        wokenFromVisibility = false;
+
         // Cancel grace period if hide() fires before the timer expires
         // (circuit reconnected within the silent window — user sees nothing)
         if (showDelayTimer) {
@@ -842,16 +860,19 @@
         if (isInitialLoad) return;
         if (circuitReconnected) return;
 
-        // Respond even if we are still in the grace period (showDelayTimer active)
-        // — the circuit might be waiting for us to attempt reconnect.
-        const disconnectDetected = !!reconnectModal || !!showDelayTimer;
-        if (!disconnectDetected) return;
+        // Mark that we woke from a visibility change. scheduleShowReconnectModal() uses
+        // this to start Phase 2 (server ping) immediately (0ms) rather than waiting
+        // serverPingStartDelayMilliseconds, which would add 3s to the recovery time.
+        // Auto-resets after 5s in case show() never fires (circuit stayed healthy).
+        wokenFromVisibility = true;
+        setTimeout(() => { wokenFromVisibility = false; }, 5000);
 
-        console.log('[BlazorReconnect] Tab visible after disconnect — attempting Blazor.reconnect() + immediate health check');
-
-        // 1. Attempt the Blazor circuit reconnect immediately (fast path: ~200-500ms if alive).
-        //    This runs in parallel with the fetch ping below.
+        // 1. ALWAYS attempt Blazor circuit reconnect on visibility restore.
+        //    This is safe to call even when the circuit is healthy — it's a no-op in that case.
+        //    Previously this was gated on disconnectDetected, so it was skipped entirely when
+        //    the screen woke up before Blazor had a chance to detect the dead circuit.
         if (window.Blazor?.reconnect) {
+            console.log('[BlazorReconnect] Visibility restore — calling Blazor.reconnect()');
             Blazor.reconnect().then(result => {
                 if (result) {
                     console.log('[BlazorReconnect] Blazor.reconnect() succeeded on visibility restore');
@@ -864,9 +885,18 @@
             });
         }
 
-        // 2. Fire an immediate server ping (health check) to detect if the server is
-        //    reachable and trigger a reload as fast as possible.
-        fireImmediatePing();
+        // 2. If a disconnect is ALREADY visible (modal or grace period active), fire an
+        //    immediate health ping to reload as fast as possible.
+        //    If the disconnect is NOT yet detected (common case on cold wake — Blazor hasn't
+        //    noticed the dead socket yet), scheduleShowReconnectModal() will start Phase 2
+        //    immediately when Blazor fires show(), thanks to wokenFromVisibility=true above.
+        const disconnectDetected = !!reconnectModal || !!showDelayTimer;
+        if (disconnectDetected) {
+            console.log('[BlazorReconnect] Visibility restore with active disconnect — immediate health check');
+            fireImmediatePing();
+        } else {
+            console.log('[BlazorReconnect] Visibility restore — Blazor.reconnect() fired; Phase 2 will start immediately if disconnect is detected');
+        }
     });
 
     // iOS bfcache: when the user navigates back/forward and the page is restored from

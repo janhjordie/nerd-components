@@ -1,5 +1,7 @@
 # TheNerdCollective.Blazor.Reconnect
 
+**v1.6.1** — Fixes 5-second reconnect delay after iPhone screen lock ([#wokenFromVisibility](#ios--mobile-behaviour))
+
 A lightweight, project-agnostic Blazor Server circuit reconnection handler. Works out of the box with sensible English defaults and is fully customisable for branding, localisation, and styling.
 
 ## Features
@@ -96,8 +98,10 @@ On **iOS Safari**, JavaScript is frozen when the user locks the screen or switch
 
 iOS freezes JS but keeps the WKWebView alive. When the user returns:
 1. `visibilitychange` fires (`document.visibilityState === 'visible'`)
-2. This library immediately calls **`Blazor.reconnect()`** in parallel with a health ping
-3. If the circuit is still alive on the server, reconnect resolves in ~200–500ms
+2. This library **always** calls **`Blazor.reconnect()`** immediately (regardless of whether a disconnect has been detected yet — v1.6.0 gated this on `disconnectDetected`, causing a 5-second delay)
+3. `wokenFromVisibility` flag is set → when Blazor fires `show()` a moment later, **Phase 2 server ping starts immediately** (0ms delay instead of the normal 3s delay)
+4. If the circuit is still alive on the server, Blazor's own reconnect resolves in ~200–500ms with no modal shown
+5. If the circuit is expired, the health ping returns and triggers a reload in ~300–800ms total
 4. The grace period absorbs the reconnect — **the user sees no modal at all**
 
 ### Scenario B — Long lock or memory pressure (the common case)
@@ -138,7 +142,7 @@ When a reconnect is possible (Scenario A), the process requires:
 
 | Scenario | iOS action | Library response |
 |---|---|---|
-| Short lock (< ~60s) | JS frozen, WKWebView alive | `visibilitychange` → `Blazor.reconnect()` + ping → silent recovery |
+| Short lock (< ~60s) | JS frozen, WKWebView alive | `visibilitychange` → `Blazor.reconnect()` (always) + `wokenFromVisibility=true` → Phase 2 starts at 0ms → reload/recovery in ~300–800ms |
 | Long lock / memory pressure | WKWebView killed | Full page reload by Safari — circuit starts fresh |
 | bfcache (swipe back/forward) | Page restored from cache | `pageshow` persisted → forced `location.reload()` |
 
