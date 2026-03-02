@@ -1,13 +1,13 @@
 # TheNerdCollective.Blazor.Reconnect
 
-**v1.6.1** — Fixes 5-second reconnect delay after iPhone screen lock ([#wokenFromVisibility](#ios--mobile-behaviour))
+**v1.6.2** — Silent-first: 5s grace period + immediate /health ping. Modal only appears if recovery takes longer than 5s.
 
 A lightweight, project-agnostic Blazor Server circuit reconnection handler. Works out of the box with sensible English defaults and is fully customisable for branding, localisation, and styling.
 
 ## Features
 
+✅ **Silent-first** — 5-second grace period with immediate /health ping. Modal only shown if recovery takes > 5s (server genuinely down or deploying)  
 ✅ **Zero config** — drop in one `<script>` tag and it just works  
-✅ **Silent grace period** — no flash of reconnect UI on brief hiccups or quick wakes (configurable, default 500ms)  
 ✅ **Rapid-first backoff** — first retry is instant, then gradually backs off; matches Blazor's built-in strategy  
 ✅ **iOS/mobile aware** — handles screen lock, bfcache, and tab freeze correctly (see [iOS behaviour](#ios--mobile-behaviour))  
 ✅ **Project-agnostic** — neutral English defaults, all text is configurable  
@@ -55,26 +55,22 @@ That's it. A clean "Connection lost" modal will appear whenever the circuit drop
        │
        ▼
 ┌─────────────────────────────────────────────────────────────┐
-│  Grace period (default 500ms)                               │
-│  Blazor retries silently in background.                     │
-│  If hide() fires → timer cancelled, user sees nothing. ✅   │
+│  Grace period (default 5000ms) + Phase 2 ping (0ms delay)  │
+│  Blazor retries + /health polled every 2s in background.    │
+│  If hide() fires OR /health 2xx → silent recovery. ✅       │
+│  User sees NOTHING unless recovery takes > 5s.              │
 └─────────────────────────┬───────────────────────────────────┘
-                          │ timer expires
+                          │ 5s elapsed, still disconnected
                           ▼
 ┌─────────────────────────────────────────────────────────────┐
-│  Phase 1 — Circuit retry loop (rapid-first backoff)         │
+│  Phase 1 — Circuit retry loop (modal shown)                 │
 │  · Retry at: 0ms, 500ms, 1s, 2s, 3s, 5s, 10s, 15s, 20s…   │
 │  · Modal shown with countdown                               │
 │  · hide() fires → modal dismissed, all timers cancelled     │
 └─────────────────────────┬───────────────────────────────────┘
-                          │ in parallel after 3s
-                          ▼
-┌─────────────────────────────────────────────────────────────┐
-│  Phase 2 — Server-alive ping (parallel with Phase 1)        │
-│  · Polls /health every 5s                                   │
-│  · 2xx response → auto-reload (server is back)              │
-│  · AbortController cancels in-flight fetch if circuit       │
-│    reconnects during a ping                                 │
+│  Phase 2 still running (started at 0ms on disconnect)       │
+│  · /health 2xx → auto-reload (server is back)               │
+│  · AbortController cancels in-flight fetch on circuit restore│
 └─────────────────────────────────────────────────────────────┘
 
  Primary hook: Blazor.defaultReconnectionHandler._reconnectionDisplay
@@ -98,11 +94,10 @@ On **iOS Safari**, JavaScript is frozen when the user locks the screen or switch
 
 iOS freezes JS but keeps the WKWebView alive. When the user returns:
 1. `visibilitychange` fires (`document.visibilityState === 'visible'`)
-2. This library **always** calls **`Blazor.reconnect()`** immediately (regardless of whether a disconnect has been detected yet — v1.6.0 gated this on `disconnectDetected`, causing a 5-second delay)
-3. `wokenFromVisibility` flag is set → when Blazor fires `show()` a moment later, **Phase 2 server ping starts immediately** (0ms delay instead of the normal 3s delay)
-4. If the circuit is still alive on the server, Blazor's own reconnect resolves in ~200–500ms with no modal shown
-5. If the circuit is expired, the health ping returns and triggers a reload in ~300–800ms total
-4. The grace period absorbs the reconnect — **the user sees no modal at all**
+2. This library **always** calls **`Blazor.reconnect()`** immediately
+3. `wokenFromVisibility` flag is set — Phase 2 ping was already started at 0ms when Blazor fired `show()`
+4. If the circuit is still alive on the server, Blazor's own reconnect resolves in ~200–500ms — completely silent (within 5s grace period)
+5. If the circuit is expired, the health ping returns and triggers a silent reload in ~300–800ms total
 
 ### Scenario B — Long lock or memory pressure (the common case)
 
@@ -165,9 +160,14 @@ window.blazorReconnectConfig = {
 | `primaryColor` | `string` | `'#594AE2'` | Button and spinner colour |
 | `logoUrl` | `string\|null` | `null` | URL to a logo shown above the spinner |
 | `spinnerUrl` | `string\|null` | `null` | URL to a custom spinner image (replaces SVG) |
-| `showDelayMilliseconds` | `number` | `500` | **Grace period**: how long to wait silently after the circuit drops before showing the modal. During this window Blazor is already retrying in the background. If the circuit reconnects within the grace period, no modal is ever shown. Set to `0` for old immediate behaviour. |
+| `showDelayMilliseconds` | `number` | `5000` | **Grace period**: how long to wait silently after the circuit drops before showing the modal. During this window Blazor retries + Phase 2 ping run in background. If reconnected or reloaded → completely silent. Default `5000` (5s). Set to `0` for immediate modal. |
 | `maxRetries` | `number` | `1000` | Max Phase 1 retry attempts (Phase 2 server ping is the real exit) |
 | `retryIntervalMilliseconds` | `number\|number[]` | `[0,500,1000,2000,3000,5000,10000,15000,20000,30000]` | Retry interval(s) in ms. An array enables rapid-first backoff (recommended). A plain number uses a flat interval. |
+| `serverPingEnabled` | `boolean` | `true` | Enable Phase 2 server ping |
+| `serverPingUrl` | `string` | `'/health'` | URL polled to check server availability |
+| `serverPingStartDelayMilliseconds` | `number` | `0` | Delay before Phase 2 starts. Default `0` = ping starts the instant the circuit drops. |
+| `serverPingIntervalMilliseconds` | `number` | `2000` | ms between ping attempts |
+| `autoReloadOnServerBack` | `boolean` | `true` | `true` = auto-reload when server responds; `false` = show a "server is back" prompt |
 | `title` | `string` | `'Connection lost'` | Modal heading |
 | `subtitle` | `string` | `'The connection was interrupted…'` | Sub-heading text |
 | `statusText` | `string` | `'Reconnecting…'` | Small status line |

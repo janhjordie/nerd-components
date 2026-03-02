@@ -1,39 +1,46 @@
 /**
  * Blazor Server Reconnection Handler
- * TheNerdCollective.Blazor.Reconnect v1.6.1
+ * TheNerdCollective.Blazor.Reconnect v1.6.2
  *
- * Minimal, non-invasive circuit handler that:
- * - Silent grace period (showDelayMilliseconds, default 500ms): modal is NOT shown
- *            immediately when the circuit drops. Blazor is already retrying in the
- *            background. If it reconnects within the grace period the user sees nothing.
- *            This eliminates the flash-of-reconnect-screen on brief network hiccups,
- *            tab wakes, and short iOS screen locks where the circuit is still alive.
+ * Silent-first design: the modal is NEVER shown within the first 5 seconds.
+ * During this window Blazor retries the circuit AND the /health endpoint is polled
+ * immediately. If either succeeds the user sees nothing — no flash, no disruption.
+ * The modal only appears if 5 seconds elapse with no recovery, which reliably
+ * indicates a genuine server restart / deployment rather than a momentary hiccup.
+ *
+ * - Silent grace period (showDelayMilliseconds, default 5000ms): modal is held
+ *            back while Blazor retries + Phase 2 ping run in background.
+ *            If reconnected / reloaded within 5s → completely invisible to user.
  * - Phase 1: Blazor circuit retry loop (effectively infinite — maxRetries=1000)
- * - Phase 2: server-alive ping starts IN PARALLEL. When woken from screen lock
- *            (wokenFromVisibility=true) Phase 2 starts with 0ms delay the instant
- *            Blazor reports the drop. Otherwise uses serverPingStartDelayMs (default 3s).
- *            Uses AbortController to cancel any in-flight fetch the instant Blazor
- *            reconnects the circuit. circuitReconnected guard prevents reload if hide()
- *            fires just before a ping response lands.
- * - visibilitychange: ALWAYS calls Blazor.reconnect() on visibility restore (not gated
- *            on disconnectDetected — v1.6.0 bug that caused 5s delay on iPhone wake).
- *            Also sets wokenFromVisibility=true so scheduleShowReconnectModal() uses
- *            pingDelay=0. If disconnect already visible, fires immediate one-shot ping.
+ * - Phase 2: server-alive ping starts IMMEDIATELY (serverPingStartDelayMs=0) the
+ *            instant the circuit drops, in parallel with Phase 1. AbortController
+ *            cancels any in-flight fetch the instant Blazor reconnects the circuit.
+ *            circuitReconnected guard prevents reload if hide() fires just before
+ *            a ping response lands. A 2xx during the grace period triggers a reload
+ *            before the modal is ever shown.
+ * - visibilitychange: ALWAYS calls Blazor.reconnect() on visibility restore.
+ *            Sets wokenFromVisibility=true for diagnostics. If disconnect already
+ *            visible, fires an additional immediate one-shot ping.
  * - pageshow (persisted): iOS bfcache — reloads immediately for a fresh circuit.
  * - Polls Blazor's reconnect state every 250ms (reliable, no MutationObserver races)
  * - Re-hooks Blazor's reconnectionHandler every 5s so it survives server restarts
  * - Suppresses noisy console errors during disconnection
- * - Works out of the box with sensible defaults — fully customisable
  *
- * iOS screen-lock behaviour explained:
- *   Short lock (< ~60s):  JS frozen → `visibilitychange` fires on wake → immediate
- *                         Blazor.reconnect() called regardless of disconnect state.
- *                         wokenFromVisibility=true → when Blazor fires show() Phase 2
- *                         starts immediately (0ms) → reload in ~200–800ms total.
- *                         Grace period absorbs the reconnect; no modal shown if fast enough.
- *   Long lock / memory pressure: iOS kills WKWebView → full page reload on return.
- *                         Nothing to reconnect — fresh circuit from scratch.
- *   bfcache (back/fwd swipe): `pageshow` persisted=true → immediate location.reload().
+ * Timeline for any disconnect:
+ *   0ms      — circuit drops, Blazor fires show()
+ *   0ms      — Phase 2 /health ping starts immediately
+ *   0–4999ms — Blazor retries + /health polling; user sees nothing
+ *              If hide() fires → modal cancelled, done ✅
+ *              If /health 2xx → window.location.reload(), done ✅
+ *   5000ms   — grace period expires → modal shown
+ *              (only reached if server is genuinely down / deploying)
+ *
+ * iOS screen-lock (short lock < ~60s):
+ *   visibilitychange → Blazor.reconnect() + wokenFromVisibility=true
+ *   Blazor fires show() → Phase 2 already running at 0ms
+ *   Server responds → reload in ~300–800ms, user sees nothing ✅
+ * iOS long lock / memory pressure: WKWebView killed → full page reload by Safari.
+ * bfcache (back/fwd swipe): pageshow persisted=true → immediate location.reload().
  *
  * Works with Blazor's default startup (no autostart="false" needed!)
  *
@@ -59,10 +66,11 @@
         spinnerUrl: null,      // URL to a custom spinner image — replaces the SVG spinner
 
         // Grace period: how long to wait before showing the modal after the circuit drops.
-        // During this window Blazor is silently retrying in the background. If it reconnects
-        // within the grace period the user sees nothing at all — no flash, no disruption.
-        // Set to 0 to show the modal immediately (old behaviour).
-        showDelayMilliseconds: 500,
+        // During this window Blazor retries + Phase 2 /health ping run in background.
+        // If reconnected or reloaded within this window the user sees nothing at all.
+        // Default 5000ms: covers typical server restarts and iOS screen-lock wakes.
+        // Set to 0 to show the modal immediately.
+        showDelayMilliseconds: 5000,
 
         // Phase 1: circuit retry behaviour (effectively infinite — Phase 2 is the real exit)
         maxRetries: 1000,                 // Effectively infinite: Phase 2 (server ping) triggers reload, not retry exhaustion
@@ -83,10 +91,10 @@
         // If the server responds while Phase 1 is still running, reload immediately.
         serverPingEnabled: true,
         serverPingUrl: '/health',                   // Any 2xx response triggers reload
-        serverPingStartDelayMilliseconds: 3000,     // Start pinging after 1 failed retry (3s = retryIntervalMilliseconds).
-                                                    // This is safe because stopServerPing() uses AbortController to
-                                                    // cancel any in-flight fetch if Blazor reconnects the circuit.
-        serverPingIntervalMilliseconds: 5000,       // ms between ping attempts
+        serverPingStartDelayMilliseconds: 0,        // Start pinging immediately when the circuit drops.
+                                                    // stopServerPing() uses AbortController to cancel any
+                                                    // in-flight fetch the instant Blazor reconnects.
+        serverPingIntervalMilliseconds: 2000,       // ms between ping attempts (fast polling inside grace period)
         autoReloadOnServerBack: true,               // true = auto-reload; false = show a prompt
 
         // Text labels — override for localisation or branding
@@ -116,7 +124,7 @@
 
     console.log('[BlazorReconnect] Initializing with config:', config);
 
-    const VERSION = 'v1.6.1';
+    const VERSION = 'v1.6.2';
 
     // ===== STATE =====
     let reconnectModal = null;
@@ -495,16 +503,11 @@
         }
 
         console.log(`[BlazorReconnect] Circuit dropped — waiting ${delay}ms grace period before showing UI`);
-        // Start Phase 2 ping in parallel with the grace period.
-        // If the user just woke from screen-lock (wokenFromVisibility=true), skip the
-        // start delay entirely so the ping fires the moment Blazor reports a drop.
-        // This eliminates the 3–5s lag on typical short iPhone screen locks.
-        const pingDelay = wokenFromVisibility ? 0 : config.serverPingStartDelayMilliseconds;
-        if (wokenFromVisibility) {
-            console.log('[BlazorReconnect] Woken from visibility — Phase 2 starting immediately (0ms delay)');
-        }
+        // Phase 2 ping starts immediately (serverPingStartDelayMilliseconds=0).
+        // A 2xx /health response during the grace period triggers window.location.reload()
+        // before the modal is ever shown — completely silent recovery.
         circuitReconnected = false;
-        startServerPing(pingDelay);
+        startServerPing(config.serverPingStartDelayMilliseconds);
 
         showDelayTimer = setTimeout(() => {
             showDelayTimer = null;
