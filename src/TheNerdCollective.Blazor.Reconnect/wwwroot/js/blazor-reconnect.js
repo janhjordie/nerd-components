@@ -1,6 +1,6 @@
 /**
  * Blazor Server Reconnection Handler
- * TheNerdCollective.Blazor.Reconnect v1.7.0
+ * TheNerdCollective.Blazor.Reconnect v1.8.0
  *
  * Silent-first design: the modal is NEVER shown within the first 5 seconds.
  * During this window Blazor retries the circuit AND the /health endpoint is polled
@@ -65,7 +65,6 @@
     const config = {
         // Colors (used in the default built-in UI)
         primaryColor: '#594AE2',
-        successColor: '#4CAF50',
 
         // Branding
         logoUrl: null,         // URL to a logo shown above the spinner (e.g. '/_content/MyApp/logo.png')
@@ -130,7 +129,7 @@
 
     console.log('[BlazorReconnect] Initializing with config:', config);
 
-    const VERSION = 'v1.7.0';
+    const VERSION = 'v1.8.0';
 
     // ===== SCROLL POSITION PRESERVATION =====
     //
@@ -154,11 +153,21 @@
         try {
             const saved = localStorage.getItem(SCROLL_STORAGE_KEY);
             if (saved === null) return;
+            // Disable browser's own scroll restoration so it doesn't race with ours.
+            // This is set once here and left as 'manual' for the page lifetime — Blazor
+            // Server pages don't benefit from browser scroll restoration anyway.
+            if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
             localStorage.removeItem(SCROLL_STORAGE_KEY);
             const y = parseInt(saved, 10);
             if (!isNaN(y) && y > 0) {
-                window.scrollTo({ top: y, behavior: 'instant' });
-                console.log(`[BlazorReconnect] Scroll position restored: ${y}px`);
+                // Use double rAF: first rAF = layout complete, second rAF = paint complete.
+                // Ensures scroll height reflects full rendered content before we scroll.
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        window.scrollTo({ top: y, behavior: 'instant' });
+                        console.log(`[BlazorReconnect] Scroll position restored: ${y}px`);
+                    });
+                });
             }
         } catch (e) {
             // localStorage may be unavailable
@@ -183,9 +192,9 @@
     let showDelayTimer = null;
 
     // Set to true by the visibilitychange handler when the user returns to the tab.
-    // Causes scheduleShowReconnectModal() to start Phase 2 immediately (0ms delay)
-    // instead of waiting serverPingStartDelayMilliseconds, which eliminates the
-    // 3–5s lag after iPhone screen lock.
+    // scheduleShowReconnectModal() reads this to bypass serverPingStartDelayMilliseconds
+    // and start Phase 2 at 0ms instead, collapsing discovery time to one network RTT
+    // after iPhone screen lock. Auto-resets to false after 5s (or on hide).
     let wokenFromVisibility = false;
 
     // Phase 2 state
@@ -221,11 +230,12 @@
             <div style='position: fixed; top: 0; left: 0; right: 0; bottom: 0;
                         background: rgba(0, 0, 0, 0.7); z-index: 9999;
                         display: flex; align-items: center; justify-content: center;'>
-                <div style='background: white; padding: 2rem; border-radius: 8px;
+                <div role='alertdialog' aria-modal='true' aria-labelledby='blazor-reconnect-title'
+                     tabindex='-1' style='background: white; padding: 2rem; border-radius: 8px;
                             max-width: 400px; width: 90%; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);'>
                     ${createLogoHtml()}
                     ${createSpinnerSvg()}
-                    <h3 style='margin: 0 0 0.5rem; color: #333; font-size: 1.25rem;'>${config.title}</h3>
+                    <h3 id='blazor-reconnect-title' style='margin: 0 0 0.5rem; color: #333; font-size: 1.25rem;'>${config.title}</h3>
                     <p style='margin: 0 0 0.25rem; color: #666; font-size: 0.95rem;'>${config.subtitle}</p>
                     <p id='blazor-reconnect-status' style='margin: 0 0 1rem; color: #999; font-size: 0.85rem;'>${config.statusText}</p>
                     <button id='manual-reload-btn'
@@ -257,7 +267,8 @@
                 <div style='position: fixed; top: 0; left: 0; right: 0; bottom: 0;
                             background: rgba(0, 0, 0, 0.7); z-index: 9999;
                             display: flex; align-items: center; justify-content: center;'>
-                    <div style='background: white; padding: 2rem; border-radius: 8px;
+                    <div role='alertdialog' aria-modal='true' aria-labelledby='blazor-ping-title'
+                         tabindex='-1' style='background: white; padding: 2rem; border-radius: 8px;
                                 max-width: 400px; width: 90%; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);'>
                         ${createLogoHtml()}
                         ${pulseIcon}
@@ -313,7 +324,7 @@
 
     function updatePingStatus() {
         const el = document.getElementById('blazor-ping-status');
-        if (el) el.textContent = 'Checking server availability\u2026';
+        if (el) el.textContent = `Checking server availability\u2026 (attempt ${serverPingAttempt})`;
     }
 
     function showServerBackPrompt() {
@@ -555,10 +566,13 @@
 
         console.log(`[BlazorReconnect] Circuit dropped — waiting ${delay}ms grace period before showing UI`);
         // Phase 2 ping starts immediately (serverPingStartDelayMilliseconds=0).
+        // If wokenFromVisibility=true we always bypass any configured delay and start immediately,
+        // collapsing discovery time to one network RTT after screen-wake.
         // A 2xx /health response during the grace period triggers window.location.reload()
         // before the modal is ever shown — completely silent recovery.
         circuitReconnected = false;
-        startServerPing(config.serverPingStartDelayMilliseconds);
+        const pingDelay = wokenFromVisibility ? 0 : config.serverPingStartDelayMilliseconds;
+        startServerPing(pingDelay);
 
         showDelayTimer = setTimeout(() => {
             showDelayTimer = null;
@@ -594,6 +608,9 @@
         }
 
         document.body.appendChild(reconnectModal);
+
+        // Move focus to the dialog so screen readers announce the connection loss.
+        reconnectModal.querySelector('[role=alertdialog]')?.focus();
 
         document.getElementById('manual-reload-btn')?.addEventListener('click', () => {
             window.location.reload();
@@ -652,6 +669,9 @@
         reconnectModal.id = 'blazor-reconnect-modal';
         reconnectModal.innerHTML = getFailedHtml();
         document.body.appendChild(reconnectModal);
+
+        // Move focus to the dialog for screen reader accessibility.
+        reconnectModal.querySelector('[role=alertdialog]')?.focus();
 
         document.getElementById('manual-reload-btn')?.addEventListener('click', () => {
             window.location.reload();
@@ -827,6 +847,7 @@
         // This happens when a new version is deployed while user is connected
         if (message.includes('The list of component operations is not valid')) {
             console.log('[BlazorReconnect] Version deployment detected (invalid component operations), reloading...');
+            saveScrollPosition();
             setTimeout(() => window.location.reload(), 2000);
             return;
         }
@@ -835,6 +856,7 @@
         if (message.includes('circuit state could not be retrieved') ||
             (message.includes('circuit') && message.includes('expired'))) {
             console.log('[BlazorReconnect] Circuit expired, reloading...');
+            saveScrollPosition();
             setTimeout(() => window.location.reload(), 2000);
             return;
         }
@@ -853,6 +875,7 @@
         if (error.includes('The list of component operations is not valid')) {
             console.log('[BlazorReconnect] Version deployment detected, reloading...');
             event.preventDefault();
+            saveScrollPosition();
             setTimeout(() => window.location.reload(), 2000);
             return;
         }
@@ -862,6 +885,7 @@
             (error.includes('circuit') && error.includes('expired'))) {
             console.log('[BlazorReconnect] Circuit expired, reloading...');
             event.preventDefault();
+            saveScrollPosition();
             setTimeout(() => window.location.reload(), 2000);
             return;
         }
@@ -886,7 +910,9 @@
                 circuitState: getCircuitState(),
                 reconnectModalEl: !!document.getElementById('components-reconnect-modal'),
                 serverPingActive: !!serverPingTimer,
-                serverPingAttempt
+                serverPingAttempt,
+                wokenFromVisibility,
+                scrollPositionSaved: (() => { try { return localStorage.getItem('__blazor_reconnect_scroll') !== null; } catch { return false; } })()
             });
         },
         showModal: () => scheduleShowReconnectModal(),
@@ -965,13 +991,24 @@
         window.location.reload();
     });
 
+    // Network restore: fires the instant the browser detects network connectivity.
+    // Collapses detection latency to one RTT — no need to wait for the next 2s ping interval.
+    // Works on Android Chrome, Desktop Chrome/Firefox/Edge. iOS Safari support is partial
+    // but the visibilitychange handler already covers the iOS case.
+    window.addEventListener('online', () => {
+        if (isInitialLoad) return;
+        const disconnectDetected = !!reconnectModal || !!showDelayTimer;
+        if (!disconnectDetected) return; // circuit is healthy, nothing to do
+        console.log('[BlazorReconnect] Network restored (online event) — immediate health check');
+        fireImmediatePing();
+    });
+
     // ===== INITIALIZATION =====
 
     function init() {
         // Restore scroll position if this is a reconnect-triggered reload.
-        // Uses setTimeout(0) to run after Blazor's synchronous startup, giving
-        // the framework time to complete initial rendering before we scroll.
-        setTimeout(restoreScrollPosition, 0);
+        // restoreScrollPosition() uses double rAF internally to wait for full layout.
+        restoreScrollPosition();
 
         console.log('[BlazorReconnect] ✅ Initialized');
 

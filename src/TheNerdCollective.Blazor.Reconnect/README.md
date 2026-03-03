@@ -1,13 +1,15 @@
 # TheNerdCollective.Blazor.Reconnect
 
-**v1.7.0** — Silent-first: 5s grace period + immediate /health ping + scroll position preservation. Modal only appears if recovery takes longer than 5s.
+**v1.8.0** — Silent-first: 5s grace period + immediate /health ping + scroll position preservation + accessibility + network-restore detection. Modal only appears if recovery takes longer than 5s.
 
 A lightweight, project-agnostic Blazor Server circuit reconnection handler. Works out of the box with sensible English defaults and is fully customisable for branding, localisation, and styling.
 
 ## Features
 
 ✅ **Silent-first** — 5-second grace period with immediate /health ping. Modal only shown if recovery takes > 5s (server genuinely down or deploying)  
-✅ **Scroll position preserved** — saves scroll position to `localStorage` when the circuit drops; restores it after the reload and immediately removes the key  
+✅ **Scroll position preserved** — saves scroll position to `localStorage` when the circuit drops (including hot-deploy reloads); restores after reload with correct timing; cleans up immediately  
+✅ **Accessible** — modal uses `role="alertdialog"`, `aria-modal`, correct `aria-labelledby`, and moves focus on show — screen readers announce the connection loss  
+✅ **Network-restore aware** — reacts instantly to the browser `online` event (WiFi reconnect, tunnel exit, airplane mode off)  
 ✅ **Zero config** — drop in one `<script>` tag and it just works  
 ✅ **Rapid-first backoff** — first retry is instant, then gradually backs off; matches Blazor's built-in strategy  
 ✅ **iOS/mobile aware** — handles screen lock, bfcache, and tab freeze correctly (see [iOS behaviour](#ios--mobile-behaviour))  
