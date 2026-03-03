@@ -1,6 +1,6 @@
 /**
  * Blazor Server Reconnection Handler
- * TheNerdCollective.Blazor.Reconnect v1.6.2
+ * TheNerdCollective.Blazor.Reconnect v1.7.0
  *
  * Silent-first design: the modal is NEVER shown within the first 5 seconds.
  * During this window Blazor retries the circuit AND the /health endpoint is polled
@@ -43,6 +43,12 @@
  * bfcache (back/fwd swipe): pageshow persisted=true → immediate location.reload().
  *
  * Works with Blazor's default startup (no autostart="false" needed!)
+ *
+ * Scroll position preservation:
+ *   When the circuit drops, the current scroll position is saved to localStorage
+ *   (key: __blazor_reconnect_scroll). After the page reloads, scroll is restored
+ *   and the key is immediately removed. If Blazor reconnects without a reload,
+ *   the key is cleaned up by hide().
  *
  * Usage:
  *   <script src="_framework/blazor.web.js"></script>
@@ -124,7 +130,46 @@
 
     console.log('[BlazorReconnect] Initializing with config:', config);
 
-    const VERSION = 'v1.6.2';
+    const VERSION = 'v1.7.0';
+
+    // ===== SCROLL POSITION PRESERVATION =====
+    //
+    // Saves window.scrollY to localStorage the instant the circuit drops.
+    // Survives window.location.reload() so the user lands back at the same position.
+    // Key is deleted immediately after restoration (or on circuit-restore without reload).
+
+    const SCROLL_STORAGE_KEY = '__blazor_reconnect_scroll';
+
+    function saveScrollPosition() {
+        try {
+            const y = Math.round(window.scrollY);
+            localStorage.setItem(SCROLL_STORAGE_KEY, String(y));
+            console.log(`[BlazorReconnect] Scroll position saved: ${y}px`);
+        } catch (e) {
+            // localStorage may be unavailable (private browsing, storage quota, etc.)
+        }
+    }
+
+    function restoreScrollPosition() {
+        try {
+            const saved = localStorage.getItem(SCROLL_STORAGE_KEY);
+            if (saved === null) return;
+            localStorage.removeItem(SCROLL_STORAGE_KEY);
+            const y = parseInt(saved, 10);
+            if (!isNaN(y) && y > 0) {
+                window.scrollTo({ top: y, behavior: 'instant' });
+                console.log(`[BlazorReconnect] Scroll position restored: ${y}px`);
+            }
+        } catch (e) {
+            // localStorage may be unavailable
+        }
+    }
+
+    function clearScrollPosition() {
+        try {
+            localStorage.removeItem(SCROLL_STORAGE_KEY);
+        } catch (e) {}
+    }
 
     // ===== STATE =====
     let reconnectModal = null;
@@ -494,6 +539,12 @@
 
     // Called when Blazor fires show() — may be delayed by grace period.
     function scheduleShowReconnectModal() {
+        // Save scroll position as the VERY FIRST action when the circuit drops.
+        // Only saves on the first call per disconnect (guard below prevents double-saving).
+        if (!reconnectModal && !showDelayTimer) {
+            saveScrollPosition();
+        }
+
         if (reconnectModal || showDelayTimer) return; // already showing or scheduled
 
         const delay = config.showDelayMilliseconds || 0;
@@ -560,6 +611,10 @@
     }
 
     function hideReconnectModal() {
+        // Circuit restored without a reload — clear the saved scroll key so it
+        // doesn't accidentally restore on the next unrelated page load.
+        clearScrollPosition();
+
         // Circuit restored — clear the visibility flag so the next disconnect
         // (if not visibility-triggered) uses the normal Phase 2 start delay.
         wokenFromVisibility = false;
@@ -913,6 +968,11 @@
     // ===== INITIALIZATION =====
 
     function init() {
+        // Restore scroll position if this is a reconnect-triggered reload.
+        // Uses setTimeout(0) to run after Blazor's synchronous startup, giving
+        // the framework time to complete initial rendering before we scroll.
+        setTimeout(restoreScrollPosition, 0);
+
         console.log('[BlazorReconnect] ✅ Initialized');
 
         // Attempt to hook Blazor.defaultReconnectionHandler as primary mechanism.
