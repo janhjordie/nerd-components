@@ -128,7 +128,8 @@ window.mudQuillEditor = window.mudQuillEditor || (function () {
                 el.style.flexDirection = 'column';
                 el.style.maxHeight = options.maxHeight;
                 el.style.minHeight = (options && options.minHeight) || 'auto';
-                el.style.overflow = 'hidden';
+                // Must be visible (not hidden) so the Quill link tooltip can escape the container bounds
+                el.style.overflow = 'visible';
                 el.style.border = 'none';
                 
                 // Toolbar takes natural height
@@ -136,12 +137,14 @@ window.mudQuillEditor = window.mudQuillEditor || (function () {
                 
                 // Container fills remaining space and scrolls
                 container.style.flex = '1 1 auto';
-                container.style.overflow = 'hidden';
+                // visible so .ql-tooltip (absolutely positioned) is not clipped
+                container.style.overflow = 'visible';
                 
                 // Editor content scrolls internally
                 const editorContentEl = container.querySelector('.ql-editor');
                 if (editorContentEl) {
                     editorContentEl.style.overflow = 'auto';
+                    editorContentEl.style.maxHeight = 'calc(' + options.maxHeight + ' - 44px)';
                 }
             }
 
