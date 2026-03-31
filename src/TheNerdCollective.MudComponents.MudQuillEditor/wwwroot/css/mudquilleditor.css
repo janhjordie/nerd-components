@@ -1,6 +1,24 @@
+.mud-quill-editor-shell {
+    width: 100%;
+}
+
+.mud-quill-editor-toggle-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 8px;
+}
+
 .mud-quill-editor {
     position: relative;
     box-sizing: border-box;
+}
+
+.mud-quill-editor-hidden {
+    display: none;
+}
+
+.mud-quill-editor-source {
+    width: 100%;
 }
 
 /* Light theme */

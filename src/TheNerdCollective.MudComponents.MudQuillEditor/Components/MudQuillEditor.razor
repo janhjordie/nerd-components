@@ -1,5 +1,36 @@
+@using MudBlazor
 @namespace TheNerdCollective.MudComponents
 @implements IAsyncDisposable
 
-<div id="@_elementId" class="mud-quill-editor"></div>
+<div class="mud-quill-editor-shell">
+	@if (EnableHtmlToggle)
+	{
+		<div class="mud-quill-editor-toggle-row">
+			<MudSwitch T="bool"
+					   Value="@_isHtmlMode"
+					   ValueChanged="@OnHtmlModeChangedAsync"
+					   Color="Color.Primary"
+					   Label="HTML source" />
+		</div>
+	}
+
+	<div id="@_elementId" class="@EditorCssClass"></div>
+
+	@if (_isHtmlMode)
+	{
+		<MudTextField T="string"
+					  Value="@_sourceValue"
+					  ValueChanged="@OnSourceValueChangedAsync"
+					  Label="HTML"
+					  Placeholder="Edit raw HTML"
+					  Variant="Variant.Outlined"
+					  Margin="Margin.Dense"
+					  Lines="12"
+					  AutoGrow="true"
+					  Immediate="true"
+					  TextUpdateSuppression="false"
+					  Disabled="@ReadOnly"
+					  Class="mud-quill-editor-source" />
+	}
+</div>
 

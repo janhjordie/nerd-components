@@ -16,7 +16,14 @@ public partial class MudQuillEditor : IAsyncDisposable
     private string _elementId = $"mud-quill-{Guid.NewGuid():N}";
     private DotNetObjectReference<MudQuillEditor>? _objRef;
     private bool _initialized;
+    private bool _isHtmlMode;
     private object? _previousToolbar;
+    private string _sourceValue = string.Empty;
+    private string _lastKnownValue = string.Empty;
+
+    private string EditorCssClass => _isHtmlMode
+        ? "mud-quill-editor mud-quill-editor-hidden"
+        : "mud-quill-editor";
 
     /// <summary>
     /// Gets or sets the HTML content of the editor.
@@ -57,6 +64,11 @@ public partial class MudQuillEditor : IAsyncDisposable
     /// Gets or sets the placeholder text shown when editor is empty.
     /// </summary>
     [Parameter] public string? Placeholder { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether users can switch between rich text and raw HTML editing.
+    /// </summary>
+    [Parameter] public bool EnableHtmlToggle { get; set; }
 
     // === INLINE FORMATS ===
 
@@ -186,13 +198,22 @@ public partial class MudQuillEditor : IAsyncDisposable
 
     protected override async Task OnParametersSetAsync()
     {
+        var currentValue = Value ?? string.Empty;
+        _sourceValue = currentValue;
+
         if (_initialized)
         {
             // Update read-only state
             await JS.InvokeVoidAsync("mudQuillEditor.setReadOnly", _elementId, ReadOnly);
-            
+
             // Update placeholder
             await JS.InvokeVoidAsync("mudQuillEditor.setPlaceholder", _elementId, Placeholder ?? string.Empty);
+
+            if (!_isHtmlMode && currentValue != _lastKnownValue)
+            {
+                await JS.InvokeVoidAsync("mudQuillEditor.setHtml", _elementId, currentValue);
+                _lastKnownValue = currentValue;
+            }
         }
 
         await base.OnParametersSetAsync();
@@ -211,11 +232,13 @@ public partial class MudQuillEditor : IAsyncDisposable
             while (attempt < maxAttempts && !_initialized)
             {
                 attempt++;
-                
+
                 try
                 {
                     await JS.InvokeVoidAsync("mudQuillEditor.initialize", _elementId, _objRef, new { readOnly = ReadOnly, theme = Theme, value = Value, minHeight = MinHeight, maxHeight = MaxHeight, toolbar = Toolbar, placeholder = Placeholder, formats = BuildFormatsArray() });
                     _initialized = true;
+                    _previousToolbar = Toolbar;
+                    _lastKnownValue = Value ?? string.Empty;
                     break;
                 }
                 catch
@@ -235,7 +258,7 @@ public partial class MudQuillEditor : IAsyncDisposable
                 _previousToolbar = Toolbar;
                 await JS.InvokeVoidAsync("mudQuillEditor.dispose", _elementId);
                 _initialized = false;
-                
+
                 if (_objRef == null)
                     _objRef = DotNetObjectReference.Create(this);
 
@@ -243,6 +266,7 @@ public partial class MudQuillEditor : IAsyncDisposable
                 {
                     await JS.InvokeVoidAsync("mudQuillEditor.initialize", _elementId, _objRef, new { readOnly = ReadOnly, theme = Theme, value = Value, minHeight = MinHeight, maxHeight = MaxHeight, toolbar = Toolbar, placeholder = Placeholder, formats = BuildFormatsArray() });
                     _initialized = true;
+                    _lastKnownValue = Value ?? string.Empty;
                 }
                 catch
                 {
@@ -328,6 +352,8 @@ public partial class MudQuillEditor : IAsyncDisposable
         if (!_initialized) return;
         await JS.InvokeVoidAsync("mudQuillEditor.setHtml", _elementId, html ?? string.Empty);
         Value = html;
+        _sourceValue = html ?? string.Empty;
+        _lastKnownValue = _sourceValue;
         await ValueChanged.InvokeAsync(Value);
     }
 
@@ -347,10 +373,37 @@ public partial class MudQuillEditor : IAsyncDisposable
     public async Task NotifyValueChanged(string html)
     {
         Value = html;
+        _sourceValue = html ?? string.Empty;
+        _lastKnownValue = _sourceValue;
         await ValueChanged.InvokeAsync(Value);
     }
 
-/// <summary>
+    private async Task OnHtmlModeChangedAsync(bool isHtmlMode)
+    {
+        if (_isHtmlMode == isHtmlMode)
+            return;
+
+        if (isHtmlMode)
+        {
+            _sourceValue = await GetHtmlAsync() ?? Value ?? string.Empty;
+            _lastKnownValue = _sourceValue;
+            _isHtmlMode = true;
+            return;
+        }
+
+        _isHtmlMode = false;
+        await SetHtmlAsync(_sourceValue);
+    }
+
+    private async Task OnSourceValueChangedAsync(string? value)
+    {
+        _sourceValue = value ?? string.Empty;
+        Value = _sourceValue;
+        _lastKnownValue = _sourceValue;
+        await ValueChanged.InvokeAsync(Value);
+    }
+
+    /// <summary>
     /// Disposes the editor and cleans up resources.
     /// </summary>
     public async ValueTask DisposeAsync()
@@ -373,6 +426,7 @@ public partial class MudQuillEditor : IAsyncDisposable
             finally
             {
                 _objRef?.Dispose();
-            }        }
+            }
+        }
     }
 }

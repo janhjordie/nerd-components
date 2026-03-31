@@ -19,13 +19,13 @@ dotnet add package TheNerdCollective.MudComponents
 1. **Add Script Reference** in `App.razor`:
 ```html
 <head>
-    <script src="_content/TheNerdCollective.MudComponents.MudQuillEditor/js/mudquilleditor.js"></script>
+    <script src=@Assets["_content/TheNerdCollective.MudComponents/js/mudquilleditor.js"]></script>
 </head>
 ```
 
 2. **Import in `_Imports.razor`**:
 ```csharp
-@using TheNerdCollective.MudComponents.MudQuillEditor
+@using TheNerdCollective.MudComponents
 ```
 
 ### Basic Usage
@@ -49,6 +49,7 @@ dotnet add package TheNerdCollective.MudComponents
 - **Configurable Toolbar** - Enable/disable formatting features dynamically
 - **Placeholder Text** - Guide users with custom placeholder messages
 - **Read-Only Mode** - Display content without editing capabilities
+- **HTML Source Toggle** - Let users switch between Quill rich text and raw HTML editing
 - **Auto-loads Quill from CDN** - No bundling needed, handles dependencies automatically
 - **Full Async/Await Support** - Modern async APIs throughout
 
@@ -57,6 +58,7 @@ dotnet add package TheNerdCollective.MudComponents
 ```razor
 <MudQuillEditor @bind-Value="Content"
                 ReadOnly="@IsReadOnly"
+                EnableHtmlToggle="true"
                 Placeholder="@EditorPlaceholder"
                 MinHeight="200px"
                 MaxHeight="500px"
