@@ -31,9 +31,12 @@ public static class ServiceCollectionExtensions
         // Configure Circuit Options to handle long-running sessions and prevent abrupt disconnections
         services.Configure<CircuitOptions>(options =>
         {
-            // Reduce timeout for inactive circuits for faster development shutdown (default: 3 minutes)
-            // In production, increase to 10-30 minutes: TimeSpan.FromMinutes(10)
-            options.DisconnectedCircuitRetentionPeriod = CircuitDefaults.DisconnectedCircuitRetentionPeriod;
+            // Dev: 5s for fast teardown (CircuitDefaults default).
+            // Production: 3 minutes so users survive brief network blips,
+            // LB re-routes, and Container Apps health-probe failovers.
+            options.DisconnectedCircuitRetentionPeriod = environment.IsDevelopment()
+                ? CircuitDefaults.DisconnectedCircuitRetentionPeriod
+                : TimeSpan.FromMinutes(3);
 
             // Maximum number of circuits to retain per session
             options.DisconnectedCircuitMaxRetained = CircuitDefaults.DisconnectedCircuitMaxRetained;
