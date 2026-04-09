@@ -11,14 +11,14 @@ public class SessionMonitorService : ISessionMonitorService
     private readonly ConcurrentDictionary<string, CircuitSession> _activeSessions = new();
     private readonly ConcurrentQueue<SessionSnapshot> _history = new();
     private readonly object _statsLock = new();
-    
+
     private long _totalSessionsStarted;
     private long _totalSessionsEnded;
     private int _peakSessions;
     private long _totalDisconnects;
     private long _totalReconnects;
     private readonly DateTime _trackingStartedAt = DateTime.UtcNow;
-    
+
     private const int MaxHistorySize = 10000; // Keep last 10k snapshots
     private DateTime _lastSnapshotTime = DateTime.UtcNow;
     private int _lastSnapshotCount;
@@ -32,7 +32,7 @@ public class SessionMonitorService : ISessionMonitorService
         };
 
         _activeSessions.TryAdd(circuitId, session);
-        
+
         lock (_statsLock)
         {
             _totalSessionsStarted++;
@@ -51,7 +51,7 @@ public class SessionMonitorService : ISessionMonitorService
         if (_activeSessions.TryRemove(circuitId, out var session))
         {
             session.EndedAt = DateTime.UtcNow;
-            
+
             lock (_statsLock)
             {
                 _totalSessionsEnded++;
@@ -122,7 +122,7 @@ public class SessionMonitorService : ISessionMonitorService
     public IEnumerable<SessionSnapshot> GetHistory(DateTime? since = null, int maxCount = 100)
     {
         var snapshots = _history.ToArray();
-        
+
         if (since.HasValue)
         {
             snapshots = snapshots.Where(s => s.Timestamp >= since.Value).ToArray();

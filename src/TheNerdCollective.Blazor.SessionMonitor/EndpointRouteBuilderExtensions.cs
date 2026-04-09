@@ -18,7 +18,7 @@ public static class EndpointRouteBuilderExtensions
     /// <param name="pattern">Base URL pattern (default: "/api/session-monitor").</param>
     /// <returns>The endpoint route builder for chaining.</returns>
     public static IEndpointRouteBuilder MapSessionMonitoringEndpoints(
-        this IEndpointRouteBuilder endpoints, 
+        this IEndpointRouteBuilder endpoints,
         string pattern = "/api/session-monitor")
     {
         var jsonOptions = new JsonSerializerOptions
@@ -76,9 +76,9 @@ public static class EndpointRouteBuilderExtensions
         {
             var metrics = monitor.GetCurrentMetrics();
             var canDeploy = metrics.ActiveSessions <= maxActiveSessions;
-            
-            return Results.Json(new 
-            { 
+
+            return Results.Json(new
+            {
                 canDeploy,
                 currentActiveSessions = metrics.ActiveSessions,
                 disconnectedSessions = metrics.DisconnectedSessions,
