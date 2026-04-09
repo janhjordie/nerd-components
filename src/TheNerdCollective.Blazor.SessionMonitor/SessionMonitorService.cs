@@ -15,6 +15,8 @@ public class SessionMonitorService : ISessionMonitorService
     private long _totalSessionsStarted;
     private long _totalSessionsEnded;
     private int _peakSessions;
+    private long _totalDisconnects;
+    private long _totalReconnects;
     private readonly DateTime _trackingStartedAt = DateTime.UtcNow;
     
     private const int MaxHistorySize = 10000; // Keep last 10k snapshots
@@ -59,12 +61,41 @@ public class SessionMonitorService : ISessionMonitorService
         }
     }
 
+    internal void OnConnectionDown(string circuitId)
+    {
+        if (_activeSessions.TryGetValue(circuitId, out var session))
+        {
+            session.DisconnectedAt = DateTime.UtcNow;
+            lock (_statsLock)
+            {
+                _totalDisconnects++;
+            }
+        }
+    }
+
+    internal void OnConnectionUp(string circuitId)
+    {
+        if (_activeSessions.TryGetValue(circuitId, out var session))
+        {
+            if (session.DisconnectedAt.HasValue)
+            {
+                var duration = DateTime.UtcNow - session.DisconnectedAt.Value;
+                session.LastDisconnectDuration = duration;
+                session.DisconnectedAt = null;
+                lock (_statsLock)
+                {
+                    _totalReconnects++;
+                }
+            }
+        }
+    }
+
     public SessionMetrics GetCurrentMetrics()
     {
         var currentCount = _activeSessions.Count;
-        var completedSessions = _activeSessions.Values
-            .Where(s => s.EndedAt.HasValue)
-            .ToList();
+        var sessions = _activeSessions.Values.ToList();
+        var completedSessions = sessions.Where(s => s.EndedAt.HasValue).ToList();
+        var disconnectedSessions = sessions.Where(s => s.DisconnectedAt.HasValue).ToList();
 
         double? avgDuration = null;
         if (completedSessions.Any())
@@ -80,7 +111,11 @@ public class SessionMonitorService : ISessionMonitorService
             PeakSessions = _peakSessions,
             TotalSessionsStarted = _totalSessionsStarted,
             TotalSessionsEnded = _totalSessionsEnded,
-            AverageSessionDurationSeconds = avgDuration
+            AverageSessionDurationSeconds = avgDuration,
+            DisconnectedSessions = disconnectedSessions.Count,
+            TotalDisconnects = _totalDisconnects,
+            TotalReconnects = _totalReconnects,
+            TrackingSince = _trackingStartedAt
         };
     }
 
@@ -192,5 +227,7 @@ public class SessionMonitorService : ISessionMonitorService
         public string CircuitId { get; set; } = "";
         public DateTime StartedAt { get; set; }
         public DateTime? EndedAt { get; set; }
+        public DateTime? DisconnectedAt { get; set; }
+        public TimeSpan? LastDisconnectDuration { get; set; }
     }
 }

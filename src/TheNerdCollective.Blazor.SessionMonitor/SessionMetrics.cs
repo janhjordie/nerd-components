@@ -34,4 +34,25 @@ public class SessionMetrics
     /// Average session duration in seconds (if available).
     /// </summary>
     public double? AverageSessionDurationSeconds { get; set; }
+
+    /// <summary>
+    /// Number of circuits currently in disconnected-but-retained state
+    /// (WebSocket dropped, server holding circuit in retention window).
+    /// </summary>
+    public int DisconnectedSessions { get; set; }
+
+    /// <summary>
+    /// Total number of WebSocket disconnects since tracking began.
+    /// </summary>
+    public long TotalDisconnects { get; set; }
+
+    /// <summary>
+    /// Total number of successful reconnects since tracking began.
+    /// </summary>
+    public long TotalReconnects { get; set; }
+
+    /// <summary>
+    /// When session tracking started (process start time).
+    /// </summary>
+    public DateTime TrackingSince { get; set; }
 }

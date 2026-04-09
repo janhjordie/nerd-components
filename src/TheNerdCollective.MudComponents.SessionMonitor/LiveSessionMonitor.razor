@@ -1,0 +1,187 @@
+@using TheNerdCollective.Blazor.SessionMonitor
+@using MudBlazor
+@implements IDisposable
+@inject ISessionMonitorService SessionMonitor
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="py-4">
+    <MudStack Spacing="3">
+        <!-- Header with auto-refresh indicator -->
+        <MudStack Row="true" Class="align-center">
+            <MudIcon Icon="@Icons.Material.Filled.Monitor" Size="Size.Large" Color="Color.Primary" />
+            <MudText Typo="Typo.h4">Live Session Monitor</MudText>
+            <MudSpacer />
+            <MudStack Row="true" Spacing="2" Class="align-center">
+                <DeploymentSafetyIndicator />
+                <MudChip T="string" Color="Color.Default" Size="Size.Small" Variant="Variant.Outlined"
+                         Icon="@Icons.Material.Filled.Update">
+                    @(_autoRefresh ? $"Live ({RefreshIntervalSeconds}s)" : "Paused")
+                </MudChip>
+                <MudIconButton Icon="@(_autoRefresh ? Icons.Material.Filled.Pause : Icons.Material.Filled.PlayArrow)"
+                               Size="Size.Small" Color="Color.Primary"
+                               OnClick="ToggleAutoRefresh" />
+                <MudIconButton Icon="@Icons.Material.Filled.Refresh" Size="Size.Small"
+                               OnClick="Refresh" />
+            </MudStack>
+        </MudStack>
+
+        <!-- Quick metrics bar -->
+        <QuickMetricsBar ShowRefreshButton="false" />
+
+        <!-- Real-time cards -->
+        <MudGrid>
+            <MudItem xs="12" sm="6" md="3">
+                <SessionMetricsCard Title="Active Sessions"
+                                    Value="@_metrics.ActiveSessions.ToString()"
+                                    Color="Color.Primary"
+                                    Icon="@Icons.Material.Filled.Cloud" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <SessionMetricsCard Title="Disconnected (Retained)"
+                                    Value="@_metrics.DisconnectedSessions.ToString()"
+                                    Color="@(_metrics.DisconnectedSessions > 0 ? Color.Warning : Color.Success)"
+                                    Icon="@Icons.Material.Filled.SignalWifiStatusbarConnectedNoInternet4" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <SessionMetricsCard Title="Peak Sessions"
+                                    Value="@_metrics.PeakSessions.ToString()"
+                                    Color="Color.Warning"
+                                    Icon="@Icons.Material.Filled.TrendingUp" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudPaper Class="pa-4" Elevation="1">
+                    <MudStack Spacing="2">
+                        <MudStack Row="true" Class="align-center">
+                            <MudIcon Icon="@Icons.Material.Filled.SwapHoriz" Color="Color.Info" Size="Size.Medium" />
+                            <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Reconnect Rate</MudText>
+                        </MudStack>
+                        <MudText Typo="Typo.h4" Color="Color.Info">@ReconnectRate</MudText>
+                    </MudStack>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+
+        <!-- Disconnect/Reconnect stats -->
+        <MudPaper Class="pa-4" Elevation="1">
+            <MudStack Row="true" Spacing="6" Class="align-center flex-wrap">
+                <MudStack Row="true" Spacing="1" Class="align-center">
+                    <MudIcon Icon="@Icons.Material.Filled.LinkOff" Color="Color.Error" Size="Size.Small" />
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Total Disconnects:</MudText>
+                    <MudText Typo="Typo.body1"><b>@_metrics.TotalDisconnects</b></MudText>
+                </MudStack>
+                <MudDivider Vertical="true" FlexItem="true" />
+                <MudStack Row="true" Spacing="1" Class="align-center">
+                    <MudIcon Icon="@Icons.Material.Filled.Link" Color="Color.Success" Size="Size.Small" />
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Total Reconnects:</MudText>
+                    <MudText Typo="Typo.body1"><b>@_metrics.TotalReconnects</b></MudText>
+                </MudStack>
+                <MudDivider Vertical="true" FlexItem="true" />
+                <MudStack Row="true" Spacing="1" Class="align-center">
+                    <MudIcon Icon="@Icons.Material.Filled.Login" Color="Color.Success" Size="Size.Small" />
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Total Started:</MudText>
+                    <MudText Typo="Typo.body1"><b>@_metrics.TotalSessionsStarted</b></MudText>
+                </MudStack>
+                <MudDivider Vertical="true" FlexItem="true" />
+                <MudStack Row="true" Spacing="1" Class="align-center">
+                    <MudIcon Icon="@Icons.Material.Filled.Logout" Color="Color.Info" Size="Size.Small" />
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Total Ended:</MudText>
+                    <MudText Typo="Typo.body1"><b>@_metrics.TotalSessionsEnded</b></MudText>
+                </MudStack>
+                <MudDivider Vertical="true" FlexItem="true" />
+                <MudStack Row="true" Spacing="1" Class="align-center">
+                    <MudIcon Icon="@Icons.Material.Filled.Schedule" Color="Color.Default" Size="Size.Small" />
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Tracking since:</MudText>
+                    <MudText Typo="Typo.body1"><b>@_metrics.TrackingSince.ToLocalTime().ToString("g")</b></MudText>
+                </MudStack>
+            </MudStack>
+        </MudPaper>
+
+        @if (_metrics.AverageSessionDurationSeconds.HasValue)
+        {
+            <MudPaper Class="pa-4" Elevation="1">
+                <MudStack Row="true" Class="align-center" Spacing="2">
+                    <MudIcon Icon="@Icons.Material.Filled.Timer" Size="Size.Medium" />
+                    <MudStack Spacing="0">
+                        <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Average Session Duration</MudText>
+                        <MudText Typo="Typo.h6">@FormatDuration(_metrics.AverageSessionDurationSeconds.Value)</MudText>
+                    </MudStack>
+                </MudStack>
+            </MudPaper>
+        }
+
+        <!-- Tabs for detail views -->
+        <MudTabs Outlined="true" ApplyEffectsToContainer="true">
+            <MudTabPanel Text="Active Circuits" Icon="@Icons.Material.Filled.Lan">
+                <SessionDetailsTable />
+            </MudTabPanel>
+            <MudTabPanel Text="Session History" Icon="@Icons.Material.Filled.History">
+                <SessionHistoryChart />
+            </MudTabPanel>
+            <MudTabPanel Text="Deployment Windows" Icon="@Icons.Material.Filled.Timeline">
+                <DeploymentWindowsTable />
+            </MudTabPanel>
+        </MudTabs>
+
+        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="text-center">
+            Last updated: @_metrics.Timestamp.ToLocalTime().ToString("G")
+        </MudText>
+    </MudStack>
+</MudContainer>
+
+@code {
+    private SessionMetrics _metrics = new();
+    private Timer? _refreshTimer;
+    private bool _autoRefresh = true;
+
+    [Parameter] public int RefreshIntervalSeconds { get; set; } = 5;
+
+    private string ReconnectRate =>
+        _metrics.TotalDisconnects > 0
+            ? $"{(double)_metrics.TotalReconnects / _metrics.TotalDisconnects * 100:F0}%"
+            : "—";
+
+    protected override void OnInitialized()
+    {
+        Refresh();
+        StartAutoRefresh();
+    }
+
+    private void Refresh()
+    {
+        _metrics = SessionMonitor.GetCurrentMetrics();
+    }
+
+    private void ToggleAutoRefresh()
+    {
+        _autoRefresh = !_autoRefresh;
+        if (_autoRefresh)
+            StartAutoRefresh();
+        else
+            StopAutoRefresh();
+    }
+
+    private void StartAutoRefresh()
+    {
+        StopAutoRefresh();
+        _refreshTimer = new Timer(_ =>
+        {
+            Refresh();
+            InvokeAsync(StateHasChanged);
+        }, null, TimeSpan.FromSeconds(RefreshIntervalSeconds), TimeSpan.FromSeconds(RefreshIntervalSeconds));
+    }
+
+    private void StopAutoRefresh()
+    {
+        _refreshTimer?.Dispose();
+        _refreshTimer = null;
+    }
+
+    private static string FormatDuration(double seconds)
+    {
+        var ts = TimeSpan.FromSeconds(seconds);
+        if (ts.TotalMinutes < 1) return $"{ts.Seconds}s";
+        if (ts.TotalHours < 1) return $"{ts.Minutes}m {ts.Seconds}s";
+        return $"{ts.Hours}h {ts.Minutes}m";
+    }
+
+    public void Dispose() => StopAutoRefresh();
+}

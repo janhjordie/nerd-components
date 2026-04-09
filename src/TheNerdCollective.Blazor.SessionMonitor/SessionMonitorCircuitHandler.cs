@@ -28,13 +28,13 @@ public class SessionMonitorCircuitHandler : CircuitHandler
 
     public override Task OnConnectionDownAsync(Circuit circuit, CancellationToken cancellationToken)
     {
-        // Connection down doesn't mean circuit closed - just temporary disconnect
+        _monitorService.OnConnectionDown(circuit.Id);
         return Task.CompletedTask;
     }
 
     public override Task OnConnectionUpAsync(Circuit circuit, CancellationToken cancellationToken)
     {
-        // Connection restored
+        _monitorService.OnConnectionUp(circuit.Id);
         return Task.CompletedTask;
     }
 }

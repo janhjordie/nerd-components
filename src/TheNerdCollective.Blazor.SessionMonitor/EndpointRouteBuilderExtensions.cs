@@ -81,6 +81,7 @@ public static class EndpointRouteBuilderExtensions
             { 
                 canDeploy,
                 currentActiveSessions = metrics.ActiveSessions,
+                disconnectedSessions = metrics.DisconnectedSessions,
                 threshold = maxActiveSessions,
                 timestamp = DateTime.UtcNow
             }, jsonOptions);
