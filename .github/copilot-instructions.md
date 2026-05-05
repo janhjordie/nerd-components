@@ -2,11 +2,12 @@
 
 ## Project Overview
 
-**TheNerdCollective.Components** is a .NET 10+ monorepo containing **15+ independent NuGet packages** organized by domain:
+**TheNerdCollective.Components** is a .NET 10+ monorepo containing **16+ independent NuGet packages** organized by domain:
 
 - **UI/Component Packages**: MudQuillEditor (rich-text editor), MudSwiper (carousel), HarvestTimesheet, SessionMonitor (session monitoring UI), MudComponents base
 - **Infrastructure Packages**: Services (Azure Blob, DI extensions), Helpers (utility methods)
 - **Integration Packages**: Harvest (timesheet API), GitHub (workflow management), AzurePipelines (pipeline management)
+- **CLI Tools**: Trello CLI for card checklist and progress-comment workflows
 - **Blazor Utilities**: Reconnect (circuit reconnection UI), VersionMonitor (update detection), SessionMonitor (session tracking service), BlazorServerCircuitHandler (deprecated)
 
 **Key Architecture Pattern**: Each package is independently versioned and published to NuGet. Packages have clear domain boundaries and can be adopted individually.

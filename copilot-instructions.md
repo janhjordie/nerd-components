@@ -56,6 +56,10 @@ For detailed analysis results, see: [docs/00-nerd-rules-recommendations/nerd_rul
 
 For prioritized action items, see: [docs/00-nerd-rules-recommendations/nerd_rules_action_list_2026_02_16_09_00.md](docs/00-nerd-rules-recommendations/nerd_rules_action_list_2026_02_16_09_00.md)
 
+## Package Note
+
+- `src/TheNerdCollective.Cli.Trello/` is the first CLI-focused package in this SDK and should stay intentionally small, script-friendly, and environment-variable driven.
+
 ---
 
 ## Important Copilot Instructions

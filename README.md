@@ -8,6 +8,15 @@ A comprehensive collection of production-ready libraries and components for .NET
 
 This monorepo includes multiple curated NuGet packages:
 
+### CLI Tools
+
+#### [TheNerdCollective.Cli.Trello](src/TheNerdCollective.Cli.Trello/README.md)
+Minimal Trello CLI for dev-task workflow automation.
+- Ensure card checklists exist
+- Add checklist items for work slices
+- Mark items complete or incomplete
+- Add progress comments to a Trello card
+
 ### UI Components
 
 #### [TheNerdCollective.Components](src/TheNerdCollective.Components/README.md)
@@ -110,6 +119,7 @@ Each package has its own README with detailed setup instructions, examples, and 
 - **Need utility helpers?** → [TheNerdCollective.Helpers](src/TheNerdCollective.Helpers/README.md)
 - **Using MudBlazor?** → [TheNerdCollective.MudComponents.MudQuillEditor](src/TheNerdCollective.MudComponents.MudQuillEditor/README.md)
 - **Setting up services?** → [TheNerdCollective.Services](src/TheNerdCollective.Services/README.md)
+- **Automating Trello task logs?** → [Trello CLI](src/TheNerdCollective.Cli.Trello/README.md)
 - **Monitoring Blazor Server sessions?** → [SessionMonitor Service](src/TheNerdCollective.Blazor.SessionMonitor/README.md) (API) or [SessionMonitor Components](src/TheNerdCollective.MudComponents.SessionMonitor/README.md) (UI)
 - **Better reconnection UX?** → [Blazor.Reconnect](src/TheNerdCollective.Blazor.Reconnect/README.md)
 - **Version update notifications?** → [Blazor.VersionMonitor](src/TheNerdCollective.Blazor.VersionMonitor/README.md)
