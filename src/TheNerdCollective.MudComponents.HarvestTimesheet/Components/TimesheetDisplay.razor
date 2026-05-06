@@ -56,9 +56,9 @@
         {
             <MudPaper Class="pa-6 mb-6">
                 <MudSelect T="string" MultiSelection="true" SelectAll="true" SelectAllText="Select All Projects"
-                           @bind-SelectedValues="_selectedProjects" Label="Filter by Projects" 
+                           SelectedValues="_selectedProjects" SelectedValuesChanged="OnSelectedProjectsChanged" Label="Filter by Projects" 
                            Variant="Variant.Outlined" HelperText="Select projects to display"
-                           Dense="true" MultiSelectionTextFunc="@(new Func<List<string>, string>(GetProjectsDisplayText))">
+                           Dense="true" MultiSelectionTextFunc="GetProjectsDisplayText">
                     @foreach (var project in AvailableProjects)
                     {
                         <MudSelectItem T="string" Value="@project">@project</MudSelectItem>

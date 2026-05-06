@@ -19,7 +19,7 @@ public partial class TimesheetDisplay : ComponentBase
 
     private List<TimesheetEntry> Timesheets = new();
     private List<string> AvailableProjects = new();
-    private IEnumerable<string> _selectedProjects = new List<string>();
+    private IReadOnlyCollection<string> _selectedProjects = new List<string>();
     private DateTime? SelectedDate = DateTime.Now;
     private bool IsLoading = false;
     private readonly List<long> _appliedProjectIds = new();
@@ -166,12 +166,34 @@ public partial class TimesheetDisplay : ComponentBase
 
     private decimal GetFilteredBillableHours() => GetFilteredTotalHours() - GetFilteredUnbilledHours();
 
-    private string GetProjectsDisplayText(List<string> selected)
+    private Task OnSelectedProjectsChanged(IEnumerable<string> selectedProjects)
+    {
+        _selectedProjects = selectedProjects.OfType<string>().ToList();
+        return Task.CompletedTask;
+    }
+
+    private Task OnSelectedProjectsChanged(IReadOnlyCollection<string> selectedProjects)
+    {
+        _selectedProjects = selectedProjects.OfType<string>().ToList();
+        return Task.CompletedTask;
+    }
+
+    private static string GetProjectsDisplayText(List<string> selected)
+    {
+        return GetProjectsDisplayTextCore(selected);
+    }
+
+    private static string GetProjectsDisplayText(IReadOnlyList<string> selected)
+    {
+        return GetProjectsDisplayTextCore(selected);
+    }
+
+    private static string GetProjectsDisplayTextCore(IReadOnlyCollection<string> selected)
     {
         return selected.Count switch
         {
             0 => "No projects selected",
-            1 => selected[0],
+            1 => selected.First(),
             _ => $"{selected.Count} projects selected"
         };
     }
