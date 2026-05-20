@@ -1,6 +1,6 @@
 /**
  * Blazor Server Reconnection Handler
- * TheNerdCollective.Blazor.Reconnect v1.10.1
+ * TheNerdCollective.Blazor.Reconnect v1.11.0
  *
  * Silent-first design: the modal is NEVER shown within the first 5 seconds.
  * During this window Blazor retries the circuit AND the /health endpoint is polled
@@ -68,6 +68,7 @@
  *
  * Optional config (set BEFORE loading this script):
  *   window.blazorReconnectConfig = { primaryColor: '#007bff', logoUrl: '/_content/MyApp/logo.png' };
+ *   window.blazorReconnectionConfig = { ... } // accepted as a compatibility alias
  */
 
 (() => {
@@ -123,6 +124,10 @@
         // Default false keeps the existing time-based behaviour for backward compatibility.
         requireFailedPingBeforeModal: false,
 
+        // Keep the primary reconnect UI visible even after Blazor exhausts its own reconnect loop.
+        // Phase 2 server ping continues indefinitely and reloads automatically when the app is back.
+        keepReconnectingUiOnFailure: false,
+
         // Text labels — override for localisation or branding
         title: 'Connection lost',
         subtitle: 'The connection was interrupted. Attempting to reconnect\u2026',
@@ -151,13 +156,14 @@
         onFailed: null,        // () => void — Phase 1 exhausted; Phase 2 UI is shown
         onServerBack: null,    // () => void — Phase 2 ping succeeded (server is reachable again)
 
-        // Override with user config
-        ...(window.blazorReconnectConfig || {})
+        // Override with user config. Accept both the documented name and the older
+        // reconnection alias so host apps can migrate without silent breakage.
+        ...(window.blazorReconnectConfig || window.blazorReconnectionConfig || {})
     };
 
     console.log('[BlazorReconnect] Initializing with config:', config);
 
-    const VERSION = 'v1.10.1';
+    const VERSION = 'v1.11.0';
 
     // ===== SCROLL POSITION PRESERVATION =====
     //
@@ -380,8 +386,21 @@
     // ===== PHASE 2: SERVER PING =====
 
     function updatePingStatus() {
-        const el = document.getElementById('blazor-ping-status');
+        const el = document.getElementById('blazor-ping-status') || document.getElementById('blazor-reconnect-status');
         if (el) el.textContent = `Checking server availability\u2026 (attempt ${serverPingAttempt})`;
+    }
+
+    function keepPrimaryReconnectModalActive() {
+        stopRetryCountdown();
+
+        if (!reconnectModal) {
+            showReconnectModal(/* pingAlreadyStarted= */ true);
+        }
+
+        const status = document.getElementById('blazor-reconnect-status');
+        if (status) {
+            status.textContent = 'Checking server availability\u2026';
+        }
     }
 
     function showServerBackPrompt() {
@@ -618,9 +637,19 @@
             if (retryCountdownSecs <= 0) {
                 retryAttempt++;
                 if (retryAttempt > config.maxRetries) {
+                    stopRetryCountdown();
+                    if (config.keepReconnectingUiOnFailure) {
+                        console.log('[BlazorReconnect] Own maxRetries reached — keeping primary reconnect UI active');
+                        fireCallback('onFailed');
+                        keepPrimaryReconnectModalActive();
+                        if (!serverPingTimer && !serverPingStartTimer) {
+                            startServerPing(0);
+                        }
+                        return;
+                    }
+
                     // Our own failsafe: Blazor may not have fired failed() yet
                     // (e.g. if reconnectionOptions patching didn't take effect).
-                    stopRetryCountdown();
                     console.log('[BlazorReconnect] Own maxRetries reached — showing failed UI');
                     showFailedModal();
                     return;
@@ -839,10 +868,12 @@
         if (Blazor.defaultReconnectionHandler.reconnectionOptions) {
             Blazor.defaultReconnectionHandler.reconnectionOptions.maxRetries =
                 config.maxRetries;
-            // Support both flat ms number and backoff array (Blazor accepts both)
+            // Support both flat ms number and backoff array.
+            // When an array is used, keep returning the last interval indefinitely so
+            // Blazor continues retrying instead of stopping when the array is exhausted.
             Blazor.defaultReconnectionHandler.reconnectionOptions.retryIntervalMilliseconds =
                 Array.isArray(config.retryIntervalMilliseconds)
-                    ? Array.prototype.at.bind(config.retryIntervalMilliseconds)
+                    ? (previousAttempts) => config.retryIntervalMilliseconds[Math.min(previousAttempts, config.retryIntervalMilliseconds.length - 1)]
                     : config.retryIntervalMilliseconds;
         }
 
@@ -853,12 +884,28 @@
                 suppressDefaultModal();
                 scheduleShowReconnectModal();
             },
+            update() {
+                // .NET 10 may call update(...) on the reconnect display between show/hide ticks.
+                // The custom handler already drives its own retry UI, so this only needs to exist.
+                suppressDefaultModal();
+            },
             hide() {
                 console.log('[BlazorReconnect] ↑ reconnected (Blazor hook)');
                 restoreDefaultModal();
                 hideReconnectModal();
             },
             failed() {
+                if (config.keepReconnectingUiOnFailure) {
+                    console.log('[BlazorReconnect] ✗ circuit failed (Blazor hook) — keeping primary reconnect UI active');
+                    suppressDefaultModal();
+                    fireCallback('onFailed');
+                    keepPrimaryReconnectModalActive();
+                    if (!serverPingTimer && !serverPingStartTimer) {
+                        startServerPing(0);
+                    }
+                    return;
+                }
+
                 // All retries exhausted — show a static "failed" UI.
                 // Do NOT auto-reload: that creates an infinite reload loop if the
                 // server is still down. The user clicks "Reload page" when ready.

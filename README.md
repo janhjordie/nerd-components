@@ -60,6 +60,8 @@ Professional reconnection UI for Blazor Server applications.
 - Polished UX for circuit disconnection/reconnection
 - Health check monitoring and automatic reload
 - Non-invasive integration
+- Release notes: [CHANGELOG](src/TheNerdCollective.Blazor.Reconnect/CHANGELOG.md)
+- Publish checklist: [RELEASE-COMMIT-CHECKLIST](src/TheNerdCollective.Blazor.Reconnect/RELEASE-COMMIT-CHECKLIST.md)
 
 #### [TheNerdCollective.Blazor.VersionMonitor](src/TheNerdCollective.Blazor.VersionMonitor/README.md)
 Automatic version update detection for Blazor Server apps.

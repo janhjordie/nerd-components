@@ -1,8 +1,11 @@
 # TheNerdCollective.Blazor.Reconnect
 
-**v1.10.1** — Silent-first: 5s grace period + immediate /health ping + scroll position preservation + accessibility + network-restore detection + Page Lifecycle freeze/resume + desktop window-focus + lifecycle callbacks + `requireFailedPingBeforeModal` for always-on deployments. Modal only appears if recovery takes longer than 5s — and with ACA/always-on it only appears if the server is genuinely failing health checks.
+**v1.11.0** — Silent-first: 5s grace period + immediate /health ping + scroll position preservation + accessibility + network-restore detection + Page Lifecycle freeze/resume + desktop window-focus + lifecycle callbacks + `requireFailedPingBeforeModal` for always-on deployments. New in `v1.11.0`: .NET 10 `update(...)` compatibility, support for both `window.blazorReconnectConfig` and `window.blazorReconnectionConfig`, and optional `keepReconnectingUiOnFailure` so the primary reconnect dialog can stay active indefinitely while health checks continue.
 
 A lightweight, project-agnostic Blazor Server circuit reconnection handler. Works out of the box with sensible English defaults and is fully customisable for branding, localisation, and styling.
+
+- Release notes: [CHANGELOG.md](CHANGELOG.md)
+- Publish checklist: [RELEASE-COMMIT-CHECKLIST.md](RELEASE-COMMIT-CHECKLIST.md)
 
 ## Features
 
@@ -53,6 +56,24 @@ dotnet add package TheNerdCollective.Blazor.Reconnect
 ```
 
 That's it. A clean "Connection lost" modal will appear whenever the circuit drops, and disappear automatically when it reconnects.
+
+### BilletSalg / always-reconnect profile
+
+For BilletSalg-style deployments where the custom reconnect UI should remain the active experience for the whole outage window, use:
+
+```html
+<script>
+    const reconnectConfig = {
+        requireFailedPingBeforeModal: true,
+        keepReconnectingUiOnFailure: true
+    };
+
+    window.blazorReconnectConfig = reconnectConfig;
+    window.blazorReconnectionConfig = reconnectConfig;
+</script>
+```
+
+This keeps the primary The Nerd Collective reconnect dialog active instead of switching to the fallback "Waiting for server…" phase, while `/health` polling continues indefinitely until the app can auto-reload.
 
 ---
 
@@ -161,6 +182,8 @@ window.blazorReconnectConfig = {
 };
 ```
 
+`window.blazorReconnectionConfig` is also accepted as a compatibility alias for host apps that already use that name.
+
 ### Full option reference
 
 | Option | Type | Default | Description |
@@ -176,6 +199,7 @@ window.blazorReconnectConfig = {
 | `serverPingStartDelayMilliseconds` | `number` | `0` | Delay before Phase 2 starts. Default `0` = ping starts the instant the circuit drops. |
 | `serverPingIntervalMilliseconds` | `number` | `2000` | ms between ping attempts |
 | `autoReloadOnServerBack` | `boolean` | `true` | `true` = auto-reload when server responds; `false` = show a "server is back" prompt |
+| `keepReconnectingUiOnFailure` | `boolean` | `false` | Keep the primary reconnect dialog active even after Blazor exhausts its reconnect loop. Useful when the branded reconnect UI should stay visible indefinitely while `/health` polling continues. |
 | `title` | `string` | `'Connection lost'` | Modal heading |
 | `subtitle` | `string` | `'The connection was interrupted…'` | Sub-heading text |
 | `statusText` | `string` | `'Reconnecting…'` | Small status line |
@@ -211,6 +235,17 @@ window.blazorReconnectConfig = {
     requireFailedPingBeforeModal: true  // modal only appears if /health actually fails
 };
 ```
+
+### Keep the primary reconnect dialog visible indefinitely
+
+```javascript
+window.blazorReconnectConfig = {
+    requireFailedPingBeforeModal: true,
+    keepReconnectingUiOnFailure: true
+};
+```
+
+This keeps the branded reconnect dialog active instead of switching to the fallback failed-phase copy while `/health` polling continues.
 
 With this single line the full deploy flow is:
 1. Container restarted → circuit drops → `/health` hits new replica → 200 in ~100ms → `safeReload()` silently
