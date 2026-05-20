@@ -163,7 +163,7 @@
 
     console.log('[BlazorReconnect] Initializing with config:', config);
 
-    const VERSION = 'v1.11.0';
+    const VERSION = 'v1.12.0';
 
     // ===== SCROLL POSITION PRESERVATION =====
     //
@@ -806,6 +806,16 @@
     }
 
     function showFailedModal() {
+        if (config.keepReconnectingUiOnFailure) {
+            console.log('[BlazorReconnect] Phase 1 exhausted — keeping primary reconnect UI active');
+            fireCallback('onFailed');
+            keepPrimaryReconnectModalActive();
+            if (!serverPingTimer && !serverPingStartTimer) {
+                startServerPing(0);
+            }
+            return;
+        }
+
         const phase2Active = config.serverPingEnabled;
         console.log(`[BlazorReconnect] Phase 1 exhausted — switching to ${phase2Active ? 'Phase 2 (server ping)' : 'static failed'} UI`);
         stopRetryCountdown();
@@ -847,14 +857,23 @@
 
     let hooked = false;
 
+    function ensureDefaultModalSuppressed() {
+        if (document.getElementById('blazor-reconnect-default-modal-suppression')) return;
+
+        const style = document.createElement('style');
+        style.id = 'blazor-reconnect-default-modal-suppression';
+        style.textContent = '#components-reconnect-modal { display: none !important; }';
+        document.head.appendChild(style);
+    }
+
     function suppressDefaultModal() {
+        ensureDefaultModalSuppressed();
         const el = document.getElementById('components-reconnect-modal');
         if (el) el.style.display = 'none';
     }
 
     function restoreDefaultModal() {
-        const el = document.getElementById('components-reconnect-modal');
-        if (el) el.style.display = '';
+        suppressDefaultModal();
     }
 
     function tryHookBlazorHandler() {
@@ -959,8 +978,16 @@
 
         } else if (state === 'failed') {
             suppressDefaultModal();
-            showFailedModal();
-            console.log('[BlazorReconnect] Circuit expired (poll) — showing failed UI');
+            if (config.keepReconnectingUiOnFailure) {
+                keepPrimaryReconnectModalActive();
+                if (!serverPingTimer && !serverPingStartTimer) {
+                    startServerPing(0);
+                }
+                console.log('[BlazorReconnect] Circuit expired (poll) — keeping primary reconnect UI active');
+            } else {
+                showFailedModal();
+                console.log('[BlazorReconnect] Circuit expired (poll) — showing failed UI');
+            }
 
         } else if (state === 'connected' && reconnectModal) {
             restoreDefaultModal();
@@ -1229,6 +1256,8 @@
     // ===== INITIALIZATION =====
 
     function init() {
+        ensureDefaultModalSuppressed();
+
         // Restore scroll position if this is a reconnect-triggered reload.
         // restoreScrollPosition() uses double rAF internally to wait for full layout.
         restoreScrollPosition();

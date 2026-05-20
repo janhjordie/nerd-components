@@ -2,6 +2,12 @@
 
 All notable changes to `TheNerdCollective.Blazor.Reconnect` should be documented in this file.
 
+## 1.12.0 - 2026-05-20
+
+- Hardened the reconnect failure path so `keepReconnectingUiOnFailure` also keeps the primary The Nerd Collective reconnect dialog active when Blazor's polling fallback observes a failed state.
+- Permanently suppresses the built-in `#components-reconnect-modal` so host apps no longer risk showing Blazor's default reconnect overlay alongside the custom reconnect experience.
+- Verified BilletSalg's public and admin hosts with fixed 5-second retry and health-ping intervals so reconnect keeps probing indefinitely until the app is back.
+
 ## 1.11.0 - 2026-05-20
 
 - Added .NET 10 reconnect display compatibility by implementing `update(...)` on the custom reconnect display hook.

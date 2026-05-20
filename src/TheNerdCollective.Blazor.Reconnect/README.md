@@ -1,6 +1,6 @@
 # TheNerdCollective.Blazor.Reconnect
 
-**v1.11.0** — Silent-first: 5s grace period + immediate /health ping + scroll position preservation + accessibility + network-restore detection + Page Lifecycle freeze/resume + desktop window-focus + lifecycle callbacks + `requireFailedPingBeforeModal` for always-on deployments. New in `v1.11.0`: .NET 10 `update(...)` compatibility, support for both `window.blazorReconnectConfig` and `window.blazorReconnectionConfig`, and optional `keepReconnectingUiOnFailure` so the primary reconnect dialog can stay active indefinitely while health checks continue.
+**v1.12.0** — Silent-first: 5s grace period + immediate /health ping + scroll position preservation + accessibility + network-restore detection + Page Lifecycle freeze/resume + desktop window-focus + lifecycle callbacks + `requireFailedPingBeforeModal` for always-on deployments. New in `v1.12.0`: the built-in Blazor reconnect overlay is suppressed permanently, `keepReconnectingUiOnFailure` also covers the polling fallback path, and BilletSalg now runs the TNC reconnect experience with fixed 5-second retry and health-ping intervals indefinitely.
 
 A lightweight, project-agnostic Blazor Server circuit reconnection handler. Works out of the box with sensible English defaults and is fully customisable for branding, localisation, and styling.
 
@@ -64,8 +64,11 @@ For BilletSalg-style deployments where the custom reconnect UI should remain the
 ```html
 <script>
     const reconnectConfig = {
+        maxRetries: Number.MAX_SAFE_INTEGER,
+        retryIntervalMilliseconds: 5000,
         requireFailedPingBeforeModal: true,
-        keepReconnectingUiOnFailure: true
+        keepReconnectingUiOnFailure: true,
+        serverPingIntervalMilliseconds: 5000
     };
 
     window.blazorReconnectConfig = reconnectConfig;
@@ -73,7 +76,7 @@ For BilletSalg-style deployments where the custom reconnect UI should remain the
 </script>
 ```
 
-This keeps the primary The Nerd Collective reconnect dialog active instead of switching to the fallback "Waiting for server…" phase, while `/health` polling continues indefinitely until the app can auto-reload.
+This keeps the primary The Nerd Collective reconnect dialog active instead of switching to the fallback "Waiting for server…" phase, while `/health` polling continues indefinitely every 5 seconds until the app can auto-reload.
 
 ---
 
