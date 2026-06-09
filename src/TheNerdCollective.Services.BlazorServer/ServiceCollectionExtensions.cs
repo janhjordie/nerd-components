@@ -44,8 +44,8 @@ public static class ServiceCollectionExtensions
             // Timeout for JS interop calls (default: 1 minute)
             options.JSInteropDefaultCallTimeout = CircuitDefaults.JSInteropDefaultCallTimeout;
 
-            // Increase detailed errors in development for debugging
-            options.DetailedErrors = environment.IsDevelopment();
+            // Respect appsettings DetailedErrors on all environments (not only Development).
+            options.DetailedErrors = environment.IsDevelopment() || configuration.GetValue<bool>("DetailedErrors");
         });
 
         return services;
