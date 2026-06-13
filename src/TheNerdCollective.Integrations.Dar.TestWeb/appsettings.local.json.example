@@ -1,0 +1,10 @@
+{
+  "TheNerdCollective": {
+    "Dar": {
+      "ApiKey": "din-datafordeler-api-noegle",
+      "Adressevaelger": {
+        "Token": "adressevaelger123"
+      }
+    }
+  }
+}

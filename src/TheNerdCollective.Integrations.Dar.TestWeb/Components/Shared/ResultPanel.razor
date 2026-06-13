@@ -1,0 +1,36 @@
+@using TheNerdCollective.Integrations.Dar.TestWeb.Services
+
+@if (Data is null)
+{
+    <section class="result-panel result-panel--empty">
+        <h3>@Title</h3>
+        <p>Ingen data</p>
+    </section>
+}
+else
+{
+    <details class="result-panel" open="@Open">
+        <summary>
+            <span class="result-panel__title">@Title</span>
+            @if (!string.IsNullOrWhiteSpace(Subtitle))
+            {
+                <span class="result-panel__subtitle">@Subtitle</span>
+            }
+        </summary>
+        <pre class="result-panel__json">@JsonDisplaySerializer.Serialize(Data)</pre>
+    </details>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public required string Title { get; set; }
+
+    [Parameter]
+    public string? Subtitle { get; set; }
+
+    [Parameter]
+    public object? Data { get; set; }
+
+    [Parameter]
+    public bool Open { get; set; }
+}

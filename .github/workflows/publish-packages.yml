@@ -8,6 +8,7 @@ on:
       - 'src/**/*.csproj'
       - 'src/**/*.cs'
       - 'src/**/*.razor'
+      - 'src/**/README.md'
       - '.github/workflows/publish-packages.yml'
 
 permissions:
@@ -45,6 +46,7 @@ jobs:
             ["TheNerdCollective.Integrations.GitHub"]="src/TheNerdCollective.Integrations.GitHub"
             ["TheNerdCollective.Integrations.AzurePipelines"]="src/TheNerdCollective.Integrations.AzurePipelines"
             ["TheNerdCollective.Cli.Trello"]="src/TheNerdCollective.Cli.Trello"
+            ["TheNerdCollective.Integrations.Dar"]="src/TheNerdCollective.Integrations.Dar"
             ["TheNerdCollective.MudComponents.MudQuillEditor"]="src/TheNerdCollective.MudComponents.MudQuillEditor"
             ["TheNerdCollective.MudComponents.MudSwiper"]="src/TheNerdCollective.MudComponents.MudSwiper"
             ["TheNerdCollective.MudComponents.HarvestTimesheet"]="src/TheNerdCollective.MudComponents.HarvestTimesheet"

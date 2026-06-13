@@ -112,6 +112,13 @@ Azure Pipelines API integration for pipeline orchestration.
 - Pass variables to pipeline runs
 - Query pipeline and run details
 
+#### [TheNerdCollective.Integrations.Dar](src/TheNerdCollective.Integrations.Dar/README.md)
+GraphQL client for Danish **DAR** (addresses) and **BBR** (buildings, units, floors) via [Datafordeler](https://datafordeler.dk/), plus **address autocomplete** via Adressevælger.
+- Address lookup with KVHX/DAWA-format output
+- Typed services for buildings, units, floors, stairwells, land parcels, and property relations
+- .NET Standard 2.0 — works across .NET Framework and modern .NET
+- Includes Blazor test web and integration tests
+
 ## 🚀 Quick Start
 
 Each package has its own README with detailed setup instructions, examples, and API documentation. Start with the package that matches your needs:

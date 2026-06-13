@@ -1,0 +1,181 @@
+﻿@page "/"
+@rendermode InteractiveServer
+@inject DarLookupOrchestrator Orchestrator
+
+<PageTitle>DAR/BBR test</PageTitle>
+
+<div class="page">
+    <header class="page-header">
+        <h1>TheNerdCollective.Integrations.Dar test</h1>
+        <p>Manuel test af alle DAR- og BBR-services via Datafordeler GraphQL v3.</p>
+    </header>
+
+    <section class="card">
+        <h2>Adresse-autocomplete</h2>
+        <p class="section-intro">Fri-tekst søgning via Adressevælger. Vælg en adresse for at udfylde felterne nedenfor.</p>
+        <AddressAutocomplete OnAddressSelected="ApplyAutocompleteSelectionAsync" />
+    </section>
+
+    <section class="card">
+        <h2>Adresseopslag (BBR test)</h2>
+        <EditForm Model="_request" OnValidSubmit="RunLookupAsync" FormName="lookupForm">
+            <DataAnnotationsValidator />
+
+            <div class="form-grid">
+                <label>
+                    Vej og husnummer
+                    <InputText @bind-Value="_request.StreetAndNumber" class="input" />
+                </label>
+                <label>
+                    Postnummer
+                    <InputText @bind-Value="_request.PostalCode" class="input" />
+                </label>
+                <label>
+                    By (valgfri)
+                    <InputText @bind-Value="_request.City" class="input" />
+                </label>
+            </div>
+
+            <div class="actions">
+                <button type="submit" class="button button--primary" disabled="@(_isLoading || _configurationError is not null)">
+                    @(_isLoading ? "Henter..." : "Test alle services")
+                </button>
+            </div>
+        </EditForm>
+    </section>
+
+    @if (!string.IsNullOrWhiteSpace(_configurationError))
+    {
+        <section class="alert alert--warning">
+            <strong>Konfiguration:</strong> @_configurationError
+        </section>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(_errorMessage))
+    {
+        <section class="alert alert--error">
+            <strong>Fejl:</strong> @_errorMessage
+        </section>
+    }
+
+    @if (_result is not null)
+    {
+        <section class="summary card">
+            <h2>Opsummering</h2>
+            <dl class="summary-grid">
+                <div>
+                    <dt>Varighed</dt>
+                    <dd>@_result.Duration.TotalMilliseconds.ToString("0") ms</dd>
+                </div>
+                <div>
+                    <dt>Adresse</dt>
+                    <dd>@_result.Adresseopslag?.Adgangsadresse</dd>
+                </div>
+                <div>
+                    <dt>KVHX</dt>
+                    <dd>@_result.Adresseopslag?.KvHxInput.KvhxId</dd>
+                </div>
+                <div>
+                    <dt>Bygning</dt>
+                    <dd>@_result.Bygning?.Bygningsnummer</dd>
+                </div>
+                <div>
+                    <dt>Enheder</dt>
+                    <dd>@_result.Enheder.Count</dd>
+                </div>
+                <div>
+                    <dt>Etager</dt>
+                    <dd>@_result.Etager.Count</dd>
+                </div>
+                <div>
+                    <dt>Opgange</dt>
+                    <dd>@_result.Opgange.Count</dd>
+                </div>
+                <div>
+                    <dt>Tekniske anlæg</dt>
+                    <dd>@_result.TekniskeAnlaeg.Count</dd>
+                </div>
+                <div>
+                    <dt>Ejendomsrelationer</dt>
+                    <dd>@_result.Ejendomsrelationer.Count</dd>
+                </div>
+            </dl>
+        </section>
+
+        <section class="results">
+            <h2>Service-resultater</h2>
+
+            <ResultPanel Title="Dar.Adresseopslag" Subtitle="AdresseopslagResult" Data="_result.Adresseopslag" Open="true" />
+            <ResultPanel Title="Dar.Adresseopslag.KvHxInput" Subtitle="KvHxInputDto" Data="_result.Adresseopslag?.KvHxInput" />
+            <ResultPanel Title="Dar.Husnummer" Subtitle="HusnummerLookupResult" Data="_result.Husnummer" />
+            <ResultPanel Title="Bbr.Bygning" Subtitle="BygningDto" Data="_result.Bygning" Open="true" />
+            <ResultPanel Title="Bbr.Enhed" Subtitle="@($"{_result.Enheder.Count} enheder")" Data="_result.Enheder" />
+            <ResultPanel Title="Bbr.Etage" Subtitle="@($"{_result.Etager.Count} etager")" Data="_result.Etager" />
+            <ResultPanel Title="Bbr.Opgang" Subtitle="@($"{_result.Opgange.Count} opgange")" Data="_result.Opgange" />
+            <ResultPanel Title="Bbr.TekniskAnlaeg" Subtitle="@($"{_result.TekniskeAnlaeg.Count} anlæg")" Data="_result.TekniskeAnlaeg" />
+            <ResultPanel Title="Bbr.Grund" Subtitle="GrundDto" Data="_result.Grund" />
+            <ResultPanel Title="Bbr.Grund.Jordstykker" Subtitle="@($"{_result.GrundJordstykker.Count} jordstykker")" Data="_result.GrundJordstykker" />
+            <ResultPanel Title="Bbr.Ejendomsrelation (bygning)" Subtitle="@($"{_result.BygningEjendomsrelationer.Count} relationer")" Data="_result.BygningEjendomsrelationer" />
+            <ResultPanel Title="Bbr.Ejendomsrelation.Resolve" Subtitle="@($"{_result.Ejendomsrelationer.Count} relationer")" Data="_result.Ejendomsrelationer" Open="true" />
+        </section>
+    }
+</div>
+
+@code {
+    private readonly DarLookupRequest _request = new();
+    private DarFullLookupResult? _result;
+    private string? _errorMessage;
+    private string? _configurationError;
+    private bool _isLoading;
+
+    protected override void OnInitialized()
+    {
+        _configurationError = Orchestrator.ConfigurationError;
+    }
+
+    private async Task ApplyAutocompleteSelectionAsync(DanishAddressAutocompleteResult selection)
+    {
+        if (selection.IsCompleteAddress)
+        {
+            _request.StreetAndNumber = string.IsNullOrWhiteSpace(selection.AddressLine2)
+                ? selection.AddressLine1
+                : $"{selection.AddressLine1}, {selection.AddressLine2}";
+            _request.PostalCode = selection.PostalCode;
+            _request.City = selection.City;
+        }
+        else
+        {
+            _request.StreetAndNumber = selection.AddressLine1;
+            _request.PostalCode = selection.PostalCode;
+            _request.City = selection.City;
+        }
+
+        await Task.CompletedTask;
+    }
+
+    private async Task RunLookupAsync()
+    {
+        _errorMessage = null;
+        _result = null;
+        _isLoading = true;
+
+        try
+        {
+            _result = await Orchestrator.LookupAllAsync(_request);
+        }
+        catch (DatafordelerApiException ex) when (ex.ResponseBody.Contains("DAF-AUTH-0005", StringComparison.Ordinal))
+        {
+            _errorMessage =
+                "IP-adressen er ikke whitelisted i Datafordeler Administration (DAF-AUTH-0005). " +
+                "Tilføj din udgående IP under https://administration.datafordeler.dk/";
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = ex.Message;
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+}

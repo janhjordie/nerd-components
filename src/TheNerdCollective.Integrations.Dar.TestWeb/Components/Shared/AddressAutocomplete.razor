@@ -1,0 +1,126 @@
+@inject DarRuntime Runtime
+
+<div class="autocomplete">
+    <label>
+        Søg dansk adresse
+        <input class="input"
+               type="search"
+               placeholder="Fx Vestergade 23 eller Århusvej 69a, 3000 Helsingør"
+               autocomplete="off"
+               value="@_searchText"
+               @oninput="OnSearchInputAsync"
+               @onfocus="() => _isOpen = _results.Count > 0" />
+    </label>
+
+    @if (_isSearching)
+    {
+        <p class="autocomplete__hint">Søger...</p>
+    }
+    else if (!string.IsNullOrWhiteSpace(_searchText) && _searchText.Length >= 2 && _results.Count == 0 && _hasSearched)
+    {
+        <p class="autocomplete__hint">Ingen adresser fundet. Prøv vejnavn og husnummer.</p>
+    }
+
+    @if (_isOpen && _results.Count > 0)
+    {
+        <ul class="autocomplete__list" role="listbox">
+            @foreach (var result in _results)
+            {
+                <li role="option">
+                    <button type="button"
+                            class="autocomplete__option"
+                            @onclick="() => SelectResultAsync(result)">
+                        <span class="autocomplete__title">@result.DisplayName</span>
+                        @if (!result.IsCompleteAddress)
+                        {
+                            <span class="autocomplete__meta">Delvis match — vælg en fuld adresse for BBR-opslag</span>
+                        }
+                    </button>
+                </li>
+            }
+        </ul>
+    }
+
+    @if (_selected is not null)
+    {
+        <p class="autocomplete__selected">
+            Valgt: <strong>@_selected.DisplayName</strong>
+            @if (!string.IsNullOrWhiteSpace(_selected.LocalId))
+            {
+                <span class="autocomplete__meta">(@_selected.LocalId)</span>
+            }
+        </p>
+    }
+</div>
+
+@code {
+    [Parameter] public EventCallback<DanishAddressAutocompleteResult> OnAddressSelected { get; set; }
+
+    private string _searchText = string.Empty;
+    private IReadOnlyList<DanishAddressAutocompleteResult> _results = Array.Empty<DanishAddressAutocompleteResult>();
+    private DanishAddressAutocompleteResult? _selected;
+    private CancellationTokenSource? _debounceCts;
+    private int _searchSerial;
+    private bool _isSearching;
+    private bool _isOpen;
+    private bool _hasSearched;
+
+    private async Task OnSearchInputAsync(ChangeEventArgs args)
+    {
+        _searchText = args.Value?.ToString() ?? string.Empty;
+        _selected = null;
+        _hasSearched = false;
+
+        if (_searchText.Trim().Length < 2)
+        {
+            _results = Array.Empty<DanishAddressAutocompleteResult>();
+            _isOpen = false;
+            return;
+        }
+
+        _debounceCts?.Cancel();
+        _debounceCts?.Dispose();
+        _debounceCts = new CancellationTokenSource();
+        var token = _debounceCts.Token;
+        var searchSerial = Interlocked.Increment(ref _searchSerial);
+
+        try
+        {
+            await Task.Delay(300, token);
+            _isSearching = true;
+            StateHasChanged();
+
+            var autocomplete = Runtime.CreateAutocomplete();
+            var results = await autocomplete.SearchAsync(_searchText, token);
+
+            if (searchSerial != _searchSerial || token.IsCancellationRequested)
+            {
+                return;
+            }
+
+            _results = results;
+            _hasSearched = true;
+            _isOpen = results.Count > 0;
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        finally
+        {
+            if (searchSerial == _searchSerial)
+            {
+                _isSearching = false;
+                StateHasChanged();
+            }
+        }
+    }
+
+    private async Task SelectResultAsync(DanishAddressAutocompleteResult result)
+    {
+        _selected = result;
+        _searchText = result.DisplayName;
+        _isOpen = false;
+        await OnAddressSelected.InvokeAsync(result);
+    }
+}
