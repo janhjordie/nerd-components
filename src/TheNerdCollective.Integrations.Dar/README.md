@@ -1,6 +1,8 @@
 # TheNerdCollective.Integrations.Dar
 
-Typed .NET-klient til **DAR** (adresser) og **BBR** (bygninger, enheder, etager m.m.) via [Datafordeler](https://datafordeler.dk/) GraphQL v3.
+Typed .NET-klient til danske adresser og bygningsdata — bygget som erstatning for integrationer mod **DAWA**, som udfases.
+
+Pakken bruger [Datafordeler](https://datafordeler.dk/) til struktureret adgang til **DAR** (adresser) og **BBR** (bygninger, enheder, etager m.m.) via GraphQL v3, og [adressevaelger.dk](https://adressevaelger.dk) til fri-tekst adresse-autocomplete i DAR. Adressevælger er Klimadatastyrelsens officielle erstatning for DAWA Autocomplete; Datafordeler er den nye adgang til de samme grunddata (DAR/BBR), som tidligere ofte hentedes via DAWA.
 
 Pakken targeter **.NET Standard 2.0** og kan bruges fra .NET Framework 4.6.1+ og moderne .NET.
 
