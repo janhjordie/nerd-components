@@ -1,3 +1,5 @@
+Built with ❤️ for Sverre Lorenzen — en gave til hans 60-års fødselsdag.
+
 # TheNerdCollective.Integrations.Dar
 
 Typed .NET-klient til danske adresser og bygningsdata — bygget som erstatning for integrationer mod **DAWA**, som udfases.
@@ -419,7 +421,7 @@ Kræver whitelisted IP — ellers springes testen over ved `DAF-AUTH-0005`.
 
 ## Versionering
 
-**Nuværende version:** `1.1.0`
+**Nuværende version:** `1.1.1`
 
 Publiceres til [NuGet.org](https://www.nuget.org/packages/TheNerdCollective.Integrations.Dar) via GitHub Actions ved push til `main`.
 
