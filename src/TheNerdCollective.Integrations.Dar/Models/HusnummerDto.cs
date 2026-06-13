@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace TheNerdCollective.Integrations.Dar.Models;
 
-/// <summary>DAR husnummer (adgangspunkt til BBR-data).</summary>
+/// <summary>Native DAR_Husnummer-entitet fra Datafordeler (foretræk frem for <see cref="KvHxInputDto"/>).</summary>
 public sealed record HusnummerDto : DarEntityDto
 {
     [JsonPropertyName("adgangsadressebetegnelse")]

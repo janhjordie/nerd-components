@@ -2,7 +2,10 @@ using System.Text.Json.Serialization;
 
 namespace TheNerdCollective.Integrations.Dar.Models;
 
-/// <summary>KVHX-input til downstream-systemer (DAWA-format).</summary>
+/// <summary>
+/// KVHX-input i DAWA-format — kun til bagudkompatibilitet med legacy downstream-systemer.
+/// Foretræk <see cref="DarAdresseopslagDto"/> / <see cref="HusnummerDto"/> i ny kode.
+/// </summary>
 public sealed record KvHxInputDto
 {
     [JsonPropertyName("adressebetegnelse")]
@@ -14,6 +17,7 @@ public sealed record KvHxInputDto
     [JsonPropertyName("husnummer")]
     public required string Husnummer { get; init; }
 
+    /// <summary>DAWA <c>id</c> — svarer til DAR <c>id_lokalId</c> (<see cref="DarEntityDto.IdLokalId"/>).</summary>
     [JsonPropertyName("id")]
     public required string Id { get; init; }
 

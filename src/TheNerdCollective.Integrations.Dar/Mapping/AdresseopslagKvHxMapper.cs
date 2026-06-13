@@ -7,6 +7,7 @@ namespace TheNerdCollective.Integrations.Dar.Mapping
     [Mapper]
     internal static partial class AdresseopslagKvHxMapper
     {
+        /// <summary>Mapper native DAR-data til legacy DAWA/KVHX-format.</summary>
         internal static KvHxInputDto Map(
             HusnummerDto husnummer,
             string adgangsadresse,

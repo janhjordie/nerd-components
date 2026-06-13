@@ -28,6 +28,7 @@ namespace TheNerdCollective.Integrations.Dar.Services.Dar
 
             return new HusnummerLookupResult
             {
+                Dar = result.Dar,
                 Husnummer = result.Husnummer,
                 Adgangsadresse = result.Adgangsadresse,
                 HusnummerId = result.HusnummerId,

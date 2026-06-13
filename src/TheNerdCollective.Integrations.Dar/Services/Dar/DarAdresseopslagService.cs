@@ -78,8 +78,15 @@ namespace TheNerdCollective.Integrations.Dar.Services.Dar
                 husnummer.NavngivenVej,
                 cancellationToken).ConfigureAwait(false);
 
+            var dar = new DarAdresseopslagDto
+            {
+                Husnummer = husnummer,
+                Vejnavn = vejnavn
+            };
+
             return new AdresseopslagResult
             {
+                Dar = dar,
                 Husnummer = husnummer,
                 Adgangsadresse = adgangsadresse,
                 HusnummerId = husnummerId,

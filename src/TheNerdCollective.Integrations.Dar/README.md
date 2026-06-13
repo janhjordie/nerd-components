@@ -163,7 +163,7 @@ app.MapGet("/bbr/etager", async (DarServices services, string vej, string postnr
     return Results.Ok(new
     {
         adresse.Adgangsadresse,
-        kvHx = adresse.KvHxInput,
+        dar = adresse.Dar,
         bygning.Bygningsnummer,
         Etager = etager.Select(e => new
         {
@@ -185,8 +185,8 @@ app.MapGet("/bbr/etager", async (DarServices services, string vej, string postnr
 DarServices
 ├── Dar
 │   ├── Autocomplete    → fri-tekst adressesøgning (Adressevælger / DAR REST)
-│   ├── Adresseopslag   → fuldt DAR-opslag + KvHxInput
-│   └── Husnummer       → DAR husnummer uden KvHxInput
+│   ├── Adresseopslag   → native DAR-resultat + valgfri KvHxInput (DAWA legacy)
+│   └── Husnummer       → native DAR husnummer uden KvHxInput
 └── Bbr
     ├── Bygning
     ├── Enhed
@@ -206,13 +206,13 @@ DarServices
 var adresse = await services.Dar.Adresseopslag.LookupAsync("Århusvej 69a", "3000", "Helsingør");
 // eller: await services.Dar.Adresseopslag.LookupAsync("Århusvej 69a, 3000 Helsingør");
 
-var kvHx = adresse.KvHxInput;
-// fx kvHx.KvhxId == "02179781__69A______"
+var husnummerId = adresse.Dar.Husnummer.IdLokalId!;
+// samme UUID som DAWA id / KvHxInput.Id — brug Dar i ny kode
 
 // 2. BBR: hent bygning
 var bygning = !string.IsNullOrWhiteSpace(adresse.BygningId)
     ? await services.Bbr.Bygning.GetByIdAsync(adresse.BygningId)
-    : await services.Bbr.Bygning.GetByHusnummerIdAsync(adresse.HusnummerId);
+    : await services.Bbr.Bygning.GetByHusnummerIdAsync(husnummerId);
 
 var bygningId = bygning.IdLokalId!;
 
@@ -254,13 +254,59 @@ Typisk brug i UI: debounce 300 ms, minimum 2 tegn, vis kun forslag hvor `IsCompl
 | `LookupAsync(streetAndNumber, postalCode, city?, ct?)` | Opslag på vej/husnummer + postnummer |
 | `LookupAsync(fullAddress, ct?)` | Opslag på fuld adresse, fx `"Århusvej 69a, 3000 Helsingør"` |
 
-Returnerer `AdresseopslagResult` med bl.a. `Adgangsadresse`, `HusnummerId`, `BygningId` og `KvHxInput`.
+Returnerer `AdresseopslagResult` med bl.a. `Dar` (native DAR), `HusnummerId`, `BygningId` og valgfri `KvHxInput` (DAWA legacy).
 
 #### `services.Dar.Husnummer`
 
 | Metode | Returnerer |
 |---|---|
-| `FindByAddressAsync(streetAndNumber, postalCode, ct?)` | `HusnummerLookupResult` (uden KvHxInput) |
+| `FindByAddressAsync(streetAndNumber, postalCode, ct?)` | `HusnummerLookupResult` med native `Dar` (uden KvHxInput) |
+
+### DAR-resultat (anbefalet)
+
+`AdresseopslagResult.Dar` (`DarAdresseopslagDto`) er det **native DAR-resultat** fra Datafordeler — brug dette i nye integrationer:
+
+- `Dar.Husnummer` — fuld `DAR_Husnummer`-entitet med `id_lokalId`, `adgangsadressebetegnelse`, `husnummertekst`, `status` m.m.
+- `Dar.Vejnavn` — resolved vejnavn fra `DAR_NavngivenVej`
+- `HusnummerId` / `Dar.Husnummer.IdLokalId` — samme UUID som tidligere DAWA `id`
+
+Eksempel:
+
+```json
+{
+  "husnummer": {
+    "id_lokalId": "0a3f507b-4642-32b8-e044-0003ba298018",
+    "adgangsadressebetegnelse": "Askeholm 12, 8700 Horsens",
+    "husnummertekst": "12",
+    "kommunekode": "0615",
+    "status": "3",
+    "adgangTilBygning": "..."
+  },
+  "vejnavn": "Askeholm"
+}
+```
+
+### KvHxInput (DAWA-format, legacy)
+
+`AdresseopslagResult.KvHxInput` mappes via Mapperly fra DAR-data og findes **kun til bagudkompatibilitet** med eksisterende downstream-systemer der forventer DAWA/KVHX-format. **Foretræk `Dar` i ny kode** — property kan fjernes når DAWA er helt udfaset.
+
+Eksempel for **Askeholm 12, 8700 Horsens**:
+
+```json
+{
+  "adressebetegnelse": "Askeholm 12, 8700 Horsens",
+  "esrejendomsnr": "0",
+  "husnummer": "12",
+  "id": "0a3f50bb-33f7-32b8-e044-0003ba298018",
+  "komunekode": "0615",
+  "kvhxId": "06150330__12_______",
+  "postnummer": "8700",
+  "vejkode": "0330",
+  "vejnavn": "Askeholm"
+}
+```
+
+`kvhxId` bygges i DAWA-format (19 tegn). Property-navnet `komunekode` følger eksisterende downstream-kontrakt. `Id` svarer til DAR `id_lokalId`.
 
 ### BBR
 
@@ -281,28 +327,6 @@ Alle BBR-services tager `bygningId` (`id_lokalId`) som udgangspunkt, undtagen `G
 
 `ResolveAsync` samler BFE-numre ud fra bygning-relationer og evt. `grund.bestemtFastEjendom`.
 
-### KvHxInput (DAWA-format)
-
-`AdresseopslagResult.KvHxInput` mappes via Mapperly fra DAR-data og er klar til downstream-systemer.
-
-Eksempel for **Askeholm 12, 8700 Horsens**:
-
-```json
-{
-  "adressebetegnelse": "Askeholm 12, 8700 Horsens",
-  "esrejendomsnr": "0",
-  "husnummer": "12",
-  "id": "0a3f50bb-33f7-32b8-e044-0003ba298018",
-  "komunekode": "0615",
-  "kvhxId": "06150330__12_______",
-  "postnummer": "8700",
-  "vejkode": "0330",
-  "vejnavn": "Askeholm"
-}
-```
-
-`kvhxId` bygges i DAWA-format (19 tegn). Property-navnet `komunekode` følger eksisterende downstream-kontrakt.
-
 ### DTO-modeller
 
 Namespace: `TheNerdCollective.Integrations.Dar.Models`
@@ -310,9 +334,10 @@ Namespace: `TheNerdCollective.Integrations.Dar.Models`
 | DTO | Beskrivelse |
 |---|---|
 | `DanishAddressAutocompleteResult` | Autocomplete-forslag fra Adressevælger |
-| `AdresseopslagResult` | Adresseopslag inkl. `KvHxInput` |
-| `HusnummerLookupResult` | Husnummer uden KvHxInput |
-| `KvHxInputDto` | KVHX i DAWA-format |
+| `AdresseopslagResult` | Adresseopslag med native `Dar` + valgfri `KvHxInput` (legacy) |
+| `DarAdresseopslagDto` | Native DAR-resultat (`Husnummer` + `Vejnavn`) |
+| `HusnummerLookupResult` | Husnummer med native `Dar` (uden KvHxInput) |
+| `KvHxInputDto` | KVHX i DAWA-format (legacy bagudkompatibilitet) |
 | `HusnummerDto` | DAR husnummer |
 | `BygningDto` | Bygning, arealer, grund-reference |
 | `EnhedDto` | Boliger/enheder |
@@ -421,7 +446,7 @@ Kræver whitelisted IP — ellers springes testen over ved `DAF-AUTH-0005`.
 
 ## Versionering
 
-**Nuværende version:** `1.1.1`
+**Nuværende version:** `1.2.0`
 
 Publiceres til [NuGet.org](https://www.nuget.org/packages/TheNerdCollective.Integrations.Dar) via GitHub Actions ved push til `main`.
 

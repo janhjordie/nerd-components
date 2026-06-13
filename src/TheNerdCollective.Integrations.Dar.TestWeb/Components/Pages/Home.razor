@@ -72,7 +72,11 @@
                     <dd>@_result.Adresseopslag?.Adgangsadresse</dd>
                 </div>
                 <div>
-                    <dt>KVHX</dt>
+                    <dt>DAR id_lokalId</dt>
+                    <dd>@_result.Adresseopslag?.Dar.Husnummer.IdLokalId</dd>
+                </div>
+                <div>
+                    <dt>KVHX (legacy)</dt>
                     <dd>@_result.Adresseopslag?.KvHxInput.KvhxId</dd>
                 </div>
                 <div>
@@ -105,8 +109,9 @@
         <section class="results">
             <h2>Service-resultater</h2>
 
-            <ResultPanel Title="Dar.Adresseopslag" Subtitle="AdresseopslagResult" Data="_result.Adresseopslag" Open="true" />
-            <ResultPanel Title="Dar.Adresseopslag.KvHxInput" Subtitle="KvHxInputDto" Data="_result.Adresseopslag?.KvHxInput" />
+            <ResultPanel Title="Dar.Adresseopslag.Dar" Subtitle="DarAdresseopslagDto (native DAR)" Data="_result.Adresseopslag?.Dar" Open="true" />
+            <ResultPanel Title="Dar.Adresseopslag" Subtitle="AdresseopslagResult" Data="_result.Adresseopslag" />
+            <ResultPanel Title="Dar.Adresseopslag.KvHxInput" Subtitle="KvHxInputDto (DAWA legacy)" Data="_result.Adresseopslag?.KvHxInput" />
             <ResultPanel Title="Dar.Husnummer" Subtitle="HusnummerLookupResult" Data="_result.Husnummer" />
             <ResultPanel Title="Bbr.Bygning" Subtitle="BygningDto" Data="_result.Bygning" Open="true" />
             <ResultPanel Title="Bbr.Enhed" Subtitle="@($"{_result.Enheder.Count} enheder")" Data="_result.Enheder" />

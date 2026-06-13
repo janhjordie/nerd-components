@@ -104,6 +104,7 @@ public sealed class DarServicesIntegrationTests
         Assert.Equal(adresse.BygningId, husnummer.BygningId);
 
         var kvHx = adresse.KvHxInput;
+        Assert.Equal(adresse.HusnummerId, adresse.Dar.Husnummer.IdLokalId);
         Assert.Equal(adresse.HusnummerId, kvHx.Id);
         Assert.Equal(IntegrationTestEnvironment.TestPostalCode, kvHx.Postnummer);
         Assert.Equal("0", kvHx.Esrejendomsnr);
