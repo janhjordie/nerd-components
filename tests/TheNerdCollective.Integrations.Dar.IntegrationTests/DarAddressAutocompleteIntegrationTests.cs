@@ -11,7 +11,7 @@ public sealed class DarAddressAutocompleteIntegrationTests
     {
         using var httpClient = new HttpClient();
         var autocomplete = DarClientFactory.CreateAutocomplete(
-            new AdressevaelgerOptions { Token = "adressevaelger123" },
+            new DarAutocompleteOptions { Token = "adressevaelger123" },
             httpClient);
 
         var results = await autocomplete.SearchAsync("Århusvej 69");

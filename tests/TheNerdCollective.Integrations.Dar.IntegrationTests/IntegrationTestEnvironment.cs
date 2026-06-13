@@ -39,7 +39,7 @@ internal static class IntegrationTestEnvironment
 
     internal static DarServices CreateServices() =>
         DarClientFactory.Create(
-            new DatafordelerOptions { ApiKey = ApiKey },
+            new DarOptions { ApiKey = ApiKey },
             new HttpClient());
 
     private static bool IsUsableApiKey(string? apiKey)
@@ -69,7 +69,7 @@ internal static class IntegrationTestEnvironment
         using var document = JsonDocument.Parse(File.ReadAllText(testWebConfigPath));
         if (!document.RootElement.TryGetProperty("TheNerdCollective", out var theNerdCollective)
             || !theNerdCollective.TryGetProperty("Dar", out var dar)
-            || !dar.TryGetProperty(nameof(DatafordelerOptions.ApiKey), out var apiKey))
+            || !dar.TryGetProperty(nameof(DarOptions.ApiKey), out var apiKey))
         {
             return null;
         }

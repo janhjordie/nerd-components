@@ -8,8 +8,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Configuration
     .AddJsonFile("appsettings.local.json", optional: true, reloadOnChange: true);
 
-builder.Services.Configure<DatafordelerOptions>(
-    builder.Configuration.GetSection(DatafordelerOptions.SectionName));
+builder.Services.Configure<DarOptions>(
+    builder.Configuration.GetSection(DarOptions.SectionName));
 
 builder.Services.AddHttpClient("Datafordeler");
 builder.Services.AddHttpClient("Adressevaelger", client =>

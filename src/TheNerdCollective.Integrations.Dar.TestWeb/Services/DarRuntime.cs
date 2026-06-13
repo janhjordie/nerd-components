@@ -6,7 +6,7 @@ using Microsoft.Extensions.Options;
 
 namespace TheNerdCollective.Integrations.Dar.TestWeb.Services;
 
-public sealed class DarRuntime(IOptions<DatafordelerOptions> options, IHttpClientFactory httpClientFactory)
+public sealed class DarRuntime(IOptions<DarOptions> options, IHttpClientFactory httpClientFactory)
 {
     public string? ConfigurationError
     {
@@ -27,5 +27,5 @@ public sealed class DarRuntime(IOptions<DatafordelerOptions> options, IHttpClien
         DarClientFactory.Create(options.Value, httpClientFactory.CreateClient("Datafordeler"));
 
     public DarAddressAutocompleteService CreateAutocomplete() =>
-        new(options.Value.Adressevaelger, httpClientFactory.CreateClient("Adressevaelger"));
+        new(options.Value.Autocomplete, httpClientFactory.CreateClient("Adressevaelger"));
 }

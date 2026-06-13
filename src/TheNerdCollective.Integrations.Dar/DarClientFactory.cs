@@ -18,7 +18,7 @@ namespace TheNerdCollective.Integrations.Dar
         /// Opretter kun autocomplete-service (kræver ikke Datafordeler API-nøgle).
         /// </summary>
         public static DarAddressAutocompleteService CreateAutocomplete(
-            AdressevaelgerOptions options,
+            DarAutocompleteOptions options,
             HttpClient? httpClient = null)
         {
             if (options == null)
@@ -32,7 +32,7 @@ namespace TheNerdCollective.Integrations.Dar
         /// <summary>
         /// Opretter <see cref="DarServices"/> med separate services pr. dataområde.
         /// </summary>
-        public static DarServices Create(DatafordelerOptions options, HttpClient? httpClient = null)
+        public static DarServices Create(DarOptions options, HttpClient? httpClient = null)
         {
             if (options == null)
             {
@@ -51,7 +51,7 @@ namespace TheNerdCollective.Integrations.Dar
             var dar = new DarRegister(
                 new DarAdresseopslagService(accessor),
                 new DarHusnummerService(accessor),
-                new DarAddressAutocompleteService(options.Adressevaelger, client));
+                new DarAddressAutocompleteService(options.Autocomplete, client));
 
             var bbr = new BbrServices(
                 new BbrBygningService(accessor),

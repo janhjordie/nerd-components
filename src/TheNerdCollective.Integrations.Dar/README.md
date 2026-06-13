@@ -24,49 +24,68 @@ dotnet add package TheNerdCollective.Integrations.Dar
 
 ### 2. Konfigurer
 
-**DAR/BBR (Datafordeler GraphQL)** — kun API-nøgle påkrævet:
+Sektion: **`TheNerdCollective:Dar`**.
+
+Pakken bruger **to adgangskanaler til DAR** (Danmarks Adresseregister) — samme register, samme `id_lokalId`, men forskellige API'er:
+
+| Kanal | Host | Config | Formål |
+|---|---|---|---|
+| [Datafordeler](https://datafordeler.dk/) GraphQL | `graphql.datafordeler.dk` | `ApiKey` | Struktureret DAR + BBR (opslag, bygning, etager …) |
+| [Adressevælger](https://adressevaelger.dk) REST | `adressevaelger.dk` | `AutocompleteToken` | Fri-tekst søgning i DAR (DAWA-autocomplete-erstatning) |
+
+**Adressevælger udstiller DAR** — ikke et separat register. Klimadatastyrelsen (som driver DAR) beskriver Adressevælger som et API der *«udelukkende vil tilbyde søgning i adresser og vejnavne … som det er angivet i Danmarks Adresseregister»* ([dokumentation](https://confluence.sdfi.dk/pages/viewpage.action?pageId=234782998)). Attributterne mapper direkte til DAR-entiteter (`DAR_Husnummer`, `DAR_Adresse`, `DAR_NavngivenVej` …), og opdateringer er tilgængelige dagen efter ændringer i DAR ([opdateringsfrekvens](https://confluence.sdfi.dk/pages/viewpage.action?pageId=234782998)).
+
+DAR distribueres via flere kanaler — bl.a. Datafordeler og Dataforsyningen ([KDS](https://www.klimadatastyrelsen.dk/data/danmarks-adresseregister)). Adressevælger er KDS' **dedikerede søge-API** på eget domæne; Datafordeler GraphQL er den **strukturerede adgang** til DAR (og kryds-register til BBR m.m.). KDS anbefaler typisk: søg via Adressevælger → brug `id_lokalId` videre i Datafordeler GraphQL ([fonetisk søgning](https://confluence.sdfi.dk/pages/viewpage.action?pageId=244318431)).
+
+**Fuld opsætning** (DAR/BBR + autocomplete):
 
 ```json
 {
   "TheNerdCollective": {
     "Dar": {
       "ApiKey": "din-datafordeler-api-noegle",
-      "Adressevaelger": {
-        "BaseUrl": "https://adressevaelger.dk",
-        "Token": "adressevaelger123"
-      }
+      "AutocompleteToken": "adressevaelger123"
     }
   }
 }
 ```
 
+**Kun autocomplete** (ingen Datafordeler-nøgle):
+
+```json
+{
+  "TheNerdCollective": {
+    "Dar": {
+      "AutocompleteToken": "adressevaelger123"
+    }
+  }
+}
+```
+
+Nested form (`Autocomplete: { Token }`) virker også — nyttigt hvis der senere kommer flere autocomplete-indstillinger.
+
 | Indstilling | Påkrævet | Default | Formål |
 |---|---|---|---|
 | `ApiKey` | Ja (for DAR/BBR) | — | Datafordeler GraphQL |
+| `AutocompleteToken` | Ja (for autocomplete) | — | Adressevælger (DAR-søgning) |
 | `BbrGraphQlUrl` | Nej | `https://graphql.datafordeler.dk/BBR/v3` | Override BBR-endpoint |
 | `DarGraphQlUrl` | Nej | `https://graphql.datafordeler.dk/DAR/v3` | Override DAR-endpoint |
-| `Adressevaelger:Token` | Ja (for autocomplete) | — | Adressevælger REST API |
-| `Adressevaelger:BaseUrl` | Nej | `https://adressevaelger.dk` | Override autocomplete-endpoint |
-
-Konfigurationssektion: **`TheNerdCollective:Dar`**.
-
-Autocomplete kan bruges **uden** Datafordeler API-nøgle — kun `Adressevaelger:Token` er nødvendig.
 
 > **Om `"Token": "adressevaelger123"`**
 >
-> Dette er Klimadatastyrelsens **midlertidige offentlige demo-token** til [Adressevælger](https://adressevaelger.dk) — ikke en hemmelighed du skal ansøge om endnu.
+> Dette er Klimadatastyrelsens **midlertidige offentlige demo-token** til Adressevælger — ikke en hemmelighed du skal ansøge om endnu.
 >
 > Datafordeler er **ikke klar** med rigtig brugerstyring og egne tokens til Adressevælger på nuværende tidspunkt. Ifølge [Klimadatastyrelsens dokumentation](https://confluence.sdfi.dk/pages/viewpage.action?pageId=234782998) bliver *Brugerstyring først tilgængelig efter, at DAWA er lukket*.
 >
-> Indtil da kan du bruge demo-tokenet `adressevaelger123`, som også fremgår af eksemplerne i [Adressevælger – fonetisk søgning](https://confluence.sdfi.dk/pages/viewpage.action?pageId=244318431). Du behøver altså **ikke** oprette en egen token hos Datafordeler endnu — sæt blot demo-tokenet i config (eller lad TestWeb-defaults stå).
+> Indtil da kan du bruge demo-tokenet `adressevaelger123`, som også fremgår af eksemplerne i [Adressevælger – fonetisk søgning](https://confluence.sdfi.dk/pages/viewpage.action?pageId=244318431). Du behøver altså **ikke** oprette en egen token endnu.
 >
-> Når rigtig token-udstedelse er tilgængelig, skal `Adressevaelger:Token` opdateres til jeres egen token; API'et forventes at fungere på samme måde.
+> Når rigtig token-udstedelse er tilgængelig, skal `AutocompleteToken` opdateres til jeres egen token.
 
 Gem hemmeligheder i User Secrets, miljøvariabler eller `appsettings.local.json` — **ikke** i git:
 
 ```bash
 export TheNerdCollective__Dar__ApiKey="din-datafordeler-api-noegle"
-export TheNerdCollective__Dar__Adressevaelger__Token="adressevaelger123"
+export TheNerdCollective__Dar__AutocompleteToken="adressevaelger123"
 ```
 
 ### 3. Brug
@@ -75,7 +94,7 @@ export TheNerdCollective__Dar__Adressevaelger__Token="adressevaelger123"
 using TheNerdCollective.Integrations.Dar;
 using TheNerdCollective.Integrations.Dar.Configuration;
 
-var options = new DatafordelerOptions
+var options = new DarOptions
 {
     ApiKey = configuration["TheNerdCollective:Dar:ApiKey"]!
 };
@@ -93,7 +112,7 @@ var etager = await services.Bbr.Etage.GetByBygningIdAsync(bygning.IdLokalId!);
 ```csharp
 using var httpClient = new HttpClient();
 var autocomplete = DarClientFactory.CreateAutocomplete(
-    new AdressevaelgerOptions { Token = "adressevaelger123" },
+    new DarAutocompleteOptions { Token = "adressevaelger123" },
     httpClient);
 
 var forslag = await autocomplete.SearchAsync("Århusvej 69");
@@ -115,14 +134,14 @@ foreach (var adresse in forslag)
 ## ASP.NET Core
 
 ```csharp
-builder.Services.Configure<DatafordelerOptions>(
-    builder.Configuration.GetSection(DatafordelerOptions.SectionName));
+builder.Services.Configure<DarOptions>(
+    builder.Configuration.GetSection(DarOptions.SectionName));
 
 builder.Services.AddHttpClient("Datafordeler");
 
 builder.Services.AddScoped<DarServices>(sp =>
 {
-    var options = sp.GetRequiredService<IOptions<DatafordelerOptions>>().Value;
+    var options = sp.GetRequiredService<IOptions<DarOptions>>().Value;
     var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient("Datafordeler");
     return DarClientFactory.Create(options, httpClient);
 });
@@ -161,7 +180,7 @@ app.MapGet("/bbr/etager", async (DarServices services, string vej, string postnr
 ```
 DarServices
 ├── Dar
-│   ├── Autocomplete    → fri-tekst adressesøgning (Adressevælger)
+│   ├── Autocomplete    → fri-tekst adressesøgning (Adressevælger / DAR REST)
 │   ├── Adresseopslag   → fuldt DAR-opslag + KvHxInput
 │   └── Husnummer       → DAR husnummer uden KvHxInput
 └── Bbr
@@ -214,7 +233,7 @@ var ejendomsrelationer = await services.Bbr.Ejendomsrelation.ResolveAsync(bygnin
 
 #### `services.Dar.Autocomplete`
 
-Fri-tekst adressesøgning via [Adressevælger](https://adressevaelger.dk) (samme tilgang som Voices247).
+Fri-tekst adressesøgning i DAR via [Adressevælger](https://adressevaelger.dk) (Klimadatastyrelsens REST-API — samme tilgang som Voices247).
 
 | Metode | Beskrivelse |
 |---|---|
@@ -398,7 +417,7 @@ Kræver whitelisted IP — ellers springes testen over ved `DAF-AUTH-0005`.
 
 ## Versionering
 
-**Nuværende version:** `1.0.0`
+**Nuværende version:** `1.1.0`
 
 Publiceres til [NuGet.org](https://www.nuget.org/packages/TheNerdCollective.Integrations.Dar) via GitHub Actions ved push til `main`.
 

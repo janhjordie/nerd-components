@@ -39,9 +39,9 @@ namespace TheNerdCollective.Integrations.Dar.Services.Dar
         private static readonly ConcurrentDictionary<string, CacheEntry> SearchCache = new();
 
         private readonly HttpClient _httpClient;
-        private readonly AdressevaelgerOptions _options;
+        private readonly DarAutocompleteOptions _options;
 
-        public DarAddressAutocompleteService(AdressevaelgerOptions options, HttpClient httpClient)
+        public DarAddressAutocompleteService(DarAutocompleteOptions options, HttpClient httpClient)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
             _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
@@ -70,9 +70,7 @@ namespace TheNerdCollective.Integrations.Dar.Services.Dar
                 return cachedResults;
             }
 
-            var baseUrl = string.IsNullOrWhiteSpace(_options.BaseUrl)
-                ? "https://adressevaelger.dk"
-                : _options.BaseUrl;
+            var baseUrl = _options.EffectiveBaseUrl;
 
             var searchUnit = ShouldSearchUnits(normalizedSearchText);
             var unitHint = ExtractUnitHint(normalizedSearchText);
