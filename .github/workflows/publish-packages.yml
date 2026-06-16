@@ -130,36 +130,6 @@ jobs:
             dotnet nuget push "$nupkg" --source https://api.nuget.org/v3/index.json --api-key "$TOKEN" --skip-duplicate
           done
 
-      - name: Ensure package is listed on NuGet
-        env:
-          NUGET_SECRET: ${{ secrets.NUGET }}
-        run: |
-          set -euo pipefail
-          PACKAGE_ID="${{ matrix.package.name }}"
-          VERSION="${{ steps.version.outputs.version }}"
-          PACKAGE_ID_LOWER=$(echo "$PACKAGE_ID" | tr '[:upper:]' '[:lower:]')
-
-          # NuGet shows "(Latest)" only for the highest semver among *listed* versions.
-          # New uploads may sit unlisted during validation — relist via API when ready.
-          # Requires API key scope: Unlist (covers relist). See nuget.org/account/apikeys.
-          echo "Ensuring ${PACKAGE_ID} ${VERSION} is listed on nuget.org..."
-          for attempt in $(seq 1 36); do
-            if curl -fsS "https://api.nuget.org/v3-flatcontainer/${PACKAGE_ID_LOWER}/${VERSION}/${PACKAGE_ID_LOWER}.${VERSION}.nupkg" -o /dev/null; then
-              HTTP_CODE=$(curl -sS -o /dev/null -w "%{http_code}" \
-                -X POST "https://www.nuget.org/api/v2/package/${PACKAGE_ID}/${VERSION}" \
-                -H "X-NuGet-ApiKey: ${NUGET_SECRET}")
-              echo "Relist response: HTTP ${HTTP_CODE}"
-              if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "204" ]; then
-                echo "${PACKAGE_ID} ${VERSION} is listed — will appear as Latest when indexed."
-                exit 0
-              fi
-            fi
-            echo "Attempt ${attempt}/36 — package not ready yet, waiting 10s..."
-            sleep 10
-          done
-          echo "Timed out waiting to list ${PACKAGE_ID} ${VERSION}. Check Manage packages on nuget.org." >&2
-          exit 1
-
       - name: Create Git Tag
         run: |
           git config user.name "GitHub Actions"

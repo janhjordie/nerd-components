@@ -15,7 +15,7 @@ Pakken targeter **.NET Standard 2.0** og kan bruges fra .NET Framework 4.6.1+ og
 - **BBR-data** via separate services (bygning, enheder, etager, opgange, grund, ejendomsrelationer)
 - **Lazy by design** — kald kun de services du har brug for; intet hentes automatisk
 - **Typed DTO'er** med fleksibel JSON-deserialisering mod Datafordeler
-- **Azure Functions guide** med HTTP API og Postman collection — se [AZURE-FUNCTIONS-API.md](https://github.com/janhjordie/TheNerdCollective.Components/blob/main/src/TheNerdCollective.Integrations.Dar/AZURE-FUNCTIONS-API.md)
+- **Azure Functions guide** med HTTP API og Postman collection — se [AZURE-FUNCTIONS-API.md](AZURE-FUNCTIONS-API.md)
 
 ---
 
@@ -186,12 +186,12 @@ app.MapGet("/bbr/etager", async (DarServices services, string vej, string postnr
 
 Vil du eksponere **samme data som TestWeb** via HTTP — fx til Postman eller downstream-systemer?
 
-Se **[AZURE-FUNCTIONS-API.md](https://github.com/janhjordie/TheNerdCollective.Components/blob/main/src/TheNerdCollective.Integrations.Dar/AZURE-FUNCTIONS-API.md)** for komplet guide med:
+Se **[AZURE-FUNCTIONS-API.md](AZURE-FUNCTIONS-API.md)** (inkluderet i pakken) for komplet guide med:
 
-- **16 HTTP-endpoints** — ét per panel på [TestWeb Home-siden](https://github.com/janhjordie/TheNerdCollective.Components/blob/main/src/TheNerdCollective.Integrations.Dar.TestWeb/Components/Pages/Home.razor) (DAR, BBR, opsummering + samlet opslag)
+- **16 HTTP-endpoints** — ét per panel på TestWeb Home-siden (DAR, BBR, opsummering + samlet opslag)
 - Kopiér-klar sample-kode til .NET 8 isolated worker
 - Konfiguration via `local.settings.json` og Azure Application settings
-- **[Postman collection](https://github.com/janhjordie/TheNerdCollective.Components/blob/main/src/TheNerdCollective.Integrations.Dar/postman/TheNerdCollective.Integrations.Dar.postman_collection.json)** med alle requests
+- Postman collection med alle requests (se repo-mappen `postman/`)
 
 Hovedendpoint **`GET /api/lookup/full?vej=...&postnr=...&by=...`** returnerer samme JSON som *Test alle services*. Granulære endpoints som `/api/bbr/etager` returnerer det samme som det tilsvarende panel.
 
