@@ -8,13 +8,14 @@
     <RootNamespace>TheNerdCollective.Integrations.Dar</RootNamespace>
     <AssemblyName>TheNerdCollective.Integrations.Dar</AssemblyName>
     <PackageId>TheNerdCollective.Integrations.Dar</PackageId>
-    <Version>1.3.6</Version>
+    <Version>1.3.7</Version>
     <Authors>The Nerd Collective</Authors>
     <Title>TheNerdCollective.Integrations.Dar</Title>
     <Description>GraphQL-klient til DAR og BBR via Datafordeler (adresseopslag, bygning, etager/kælder, enheder m.m.).</Description>
     <PackageTags>DAR;BBR;Datafordeler;GraphQL;Grunddata</PackageTags>
-    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <RepositoryUrl>https://github.com/janhjordie/nerd-components</RepositoryUrl>
+    <License>Apache-2.0</License>
+    <LicenseExpression>Apache-2.0</LicenseExpression>
+    <RepositoryUrl>https://github.com/janhjordie/TheNerdCollective.Components</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <NoWarn>$(NoWarn);CS1591</NoWarn>
     <IsPackable>true</IsPackable>
