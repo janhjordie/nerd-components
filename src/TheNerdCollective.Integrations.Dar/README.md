@@ -177,6 +177,130 @@ app.MapGet("/bbr/etager", async (DarServices services, string vej, string postnr
 
 ---
 
+## Azure Functions (.NET 8)
+
+Eksempel med **isolated worker** (`dotnet-isolated`), DI og konfiguration via `local.settings.json` lokalt og **Application settings** i Azure.
+
+### Pakker
+
+```bash
+dotnet add package Microsoft.Azure.Functions.Worker
+dotnet add package Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore
+dotnet add package Microsoft.Azure.Functions.Worker.Sdk
+dotnet add package TheNerdCollective.Integrations.Dar
+```
+
+### `local.settings.json` (lokal udvikling — commit **ikke** filen)
+
+Azure Functions læser indstillinger fra `Values`. Brug `__` som nesting-separator (svarer til `TheNerdCollective:Dar`):
+
+```json
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
+    "TheNerdCollective__Dar__ApiKey": "din-datafordeler-api-noegle",
+    "TheNerdCollective__Dar__AutocompleteToken": "adressevaelger123"
+  }
+}
+```
+
+Tilføj `local.settings.json` til `.gitignore`. Opret evt. `local.settings.json.example` med placeholders til teamet.
+
+I **Azure Portal** (Function App → Configuration → Application settings) sættes de samme nøgler — eller brug Key Vault-references.
+
+### `Program.cs` (DI)
+
+```csharp
+using Microsoft.Azure.Functions.Worker;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using TheNerdCollective.Integrations.Dar;
+using TheNerdCollective.Integrations.Dar.Configuration;
+using TheNerdCollective.Integrations.Dar.Services;
+
+var host = new HostBuilder()
+    .ConfigureFunctionsWebApplication()
+    .ConfigureServices((context, services) =>
+    {
+        services.Configure<DarOptions>(
+            context.Configuration.GetSection(DarOptions.SectionName));
+
+        services.AddHttpClient("Datafordeler");
+        services.AddHttpClient("Adressevaelger", client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(15);
+        });
+
+        services.AddScoped<DarServices>(sp =>
+        {
+            var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<DarOptions>>().Value;
+            var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient("Datafordeler");
+            return DarClientFactory.Create(options, httpClient);
+        });
+    })
+    .Build();
+
+host.Run();
+```
+
+### HTTP-trigger eksempel
+
+```csharp
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Azure.Functions.Worker;
+using TheNerdCollective.Integrations.Dar.Services;
+
+namespace MyDarFunctionApp;
+
+public sealed class BbrLookupFunction(DarServices darServices)
+{
+    [Function("BbrEtager")]
+    public async Task<IActionResult> Run(
+        [HttpTrigger(AuthorizationLevel.Function, "get", Route = "bbr/etager")] HttpRequest req,
+        CancellationToken cancellationToken)
+    {
+        var vej = req.Query["vej"].ToString();
+        var postnr = req.Query["postnr"].ToString();
+
+        if (string.IsNullOrWhiteSpace(vej) || string.IsNullOrWhiteSpace(postnr))
+        {
+            return new BadRequestObjectResult("Query params 'vej' og 'postnr' er påkrævet.");
+        }
+
+        var adresse = await darServices.Dar.Adresseopslag.LookupAsync(vej, postnr, cancellationToken: cancellationToken);
+        var husnummerId = adresse.Dar.Husnummer.IdLokalId!;
+        var bygning = await darServices.Bbr.Bygning.GetByHusnummerIdAsync(husnummerId, cancellationToken);
+        var etager = await darServices.Bbr.Etage.GetByBygningIdAsync(bygning.IdLokalId!, cancellationToken);
+
+        return new OkObjectResult(new
+        {
+            adresse.Adgangsadresse,
+            husnummerId,
+            bygning.Bygningsnummer,
+            Etager = etager.Select(e => new
+            {
+                e.BygningensEtagebetegnelse,
+                e.SamletArealAfEtage,
+                e.IsKaelder
+            })
+        });
+    }
+}
+```
+
+Kald lokalt efter `func start`:
+
+```bash
+curl "http://localhost:7071/api/bbr/etager?vej=Århusvej%2069a&postnr=3000"
+```
+
+**Bemærk:** Function App'ens **udgående IP** skal whitelists i [Datafordeler Administration](https://administration.datafordeler.dk/) — brug de offentlige outbound IP'er for consumption/premium plan, eller NAT gateway / static IP på VNet-integreret app.
+
+---
+
 ## Arkitektur
 
 `DarClientFactory.Create()` returnerer `DarServices` — en facade opdelt efter register:
@@ -446,7 +570,7 @@ Kræver whitelisted IP — ellers springes testen over ved `DAF-AUTH-0005`.
 
 ## Versionering
 
-**Nuværende version:** `1.2.0`
+**Nuværende version:** `1.2.1`
 
 Publiceres til [NuGet.org](https://www.nuget.org/packages/TheNerdCollective.Integrations.Dar) via GitHub Actions ved push til `main`.
 
