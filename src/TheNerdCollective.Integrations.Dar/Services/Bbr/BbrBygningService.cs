@@ -34,8 +34,8 @@ namespace TheNerdCollective.Integrations.Dar.Services.Bbr
             return DarJsonSerializer.DeserializeRequired<BygningDto>(node);
         }
 
-        /// <summary>Henter første bygning knyttet til et DAR husnummer.</summary>
-        public async Task<BygningDto> GetByHusnummerIdAsync(
+        /// <summary>Henter alle bygninger knyttet til et DAR husnummer.</summary>
+        public async Task<IReadOnlyList<BygningDto>> GetAllByHusnummerIdAsync(
             string husnummerId,
             CancellationToken cancellationToken = default)
         {
@@ -51,7 +51,16 @@ namespace TheNerdCollective.Integrations.Dar.Services.Bbr
                 throw new InvalidOperationException($"Husnummer \"{husnummerId}\" har intet tilknyttet BBR-bygning.");
             }
 
-            return DarJsonSerializer.DeserializeRequired<BygningDto>(nodes[0]);
+            return DarJsonSerializer.DeserializeList<BygningDto>(nodes);
+        }
+
+        /// <summary>Henter første bygning knyttet til et DAR husnummer.</summary>
+        public async Task<BygningDto> GetByHusnummerIdAsync(
+            string husnummerId,
+            CancellationToken cancellationToken = default)
+        {
+            var bygninger = await GetAllByHusnummerIdAsync(husnummerId, cancellationToken).ConfigureAwait(false);
+            return bygninger[0];
         }
     }
 }

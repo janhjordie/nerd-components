@@ -80,8 +80,8 @@
                     <dd>@_result.Adresseopslag?.KvHxInput.KvhxId</dd>
                 </div>
                 <div>
-                    <dt>Bygning</dt>
-                    <dd>@_result.Bygning?.Bygningsnummer</dd>
+                    <dt>Bygninger</dt>
+                    <dd>@FormatBygninger(_result.Bygninger)</dd>
                 </div>
                 <div>
                     <dt>Enheder</dt>
@@ -113,7 +113,7 @@
             <ResultPanel Title="Dar.Adresseopslag" Subtitle="AdresseopslagResult" Data="_result.Adresseopslag" />
             <ResultPanel Title="Dar.Adresseopslag.KvHxInput" Subtitle="KvHxInputDto (DAWA legacy)" Data="_result.Adresseopslag?.KvHxInput" />
             <ResultPanel Title="Dar.Husnummer" Subtitle="HusnummerLookupResult" Data="_result.Husnummer" />
-            <ResultPanel Title="Bbr.Bygning" Subtitle="BygningDto" Data="_result.Bygning" Open="true" />
+            <ResultPanel Title="Bbr.Bygning" Subtitle="@($"{_result.Bygninger.Count} bygninger")" Data="_result.Bygninger" Open="true" />
             <ResultPanel Title="Bbr.Enhed" Subtitle="@($"{_result.Enheder.Count} enheder")" Data="_result.Enheder" />
             <ResultPanel Title="Bbr.Etage" Subtitle="@($"{_result.Etager.Count} etager")" Data="_result.Etager" />
             <ResultPanel Title="Bbr.Opgang" Subtitle="@($"{_result.Opgange.Count} opgange")" Data="_result.Opgange" />
@@ -137,6 +137,11 @@
     {
         _configurationError = Orchestrator.ConfigurationError;
     }
+
+    private static string FormatBygninger(IReadOnlyList<BygningDto> bygninger) =>
+        bygninger.Count == 0
+            ? "-"
+            : string.Join(", ", bygninger.Select(b => b.Bygningsnummer ?? b.IdLokalId ?? "?"));
 
     private async Task ApplyAutocompleteSelectionAsync(DanishAddressAutocompleteResult selection)
     {

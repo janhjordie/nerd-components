@@ -1,0 +1,188 @@
+{
+  "info": {
+    "_postman_id": "d4r-bbr-nerd-collective-api",
+    "name": "TheNerdCollective.Integrations.Dar",
+    "description": "HTTP API til DAR/BBR via Azure Functions — ét endpoint per panel på TestWeb Home-siden.\n\nGuide: ../AZURE-FUNCTIONS-API.md\n\nEnvironment:\n- baseUrl (fx http://localhost:7071/api)\n- functionKey (Azure Functions key; tom ved Anonymous lokalt)\n- vej, postnr, by, searchQuery",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "apikey",
+    "apikey": [
+      { "key": "key", "value": "code", "type": "string" },
+      { "key": "value", "value": "{{functionKey}}", "type": "string" },
+      { "key": "in", "value": "query", "type": "string" }
+    ]
+  },
+  "item": [
+    {
+      "name": "Lookup",
+      "description": "Samlet opslag og opsummering — svarer til knappen \"Test alle services\" og Opsummering-sektionen.",
+      "item": [
+        {
+          "name": "Full lookup (Test alle services)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{baseUrl}}/lookup/full?vej={{vej}}&postnr={{postnr}}&by={{by}}",
+            "description": "DarFullLookupResult — alle paneler i én response."
+          }
+        },
+        {
+          "name": "Summary (Opsummering)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{baseUrl}}/lookup/summary?vej={{vej}}&postnr={{postnr}}&by={{by}}",
+            "description": "Tællere og nøgletal — svarer til Opsummering øverst på Home-siden."
+          }
+        }
+      ]
+    },
+    {
+      "name": "DAR",
+      "description": "DAR-paneler fra Home.razor + autocomplete.",
+      "item": [
+        {
+          "name": "Autocomplete (Adresse-autocomplete)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{baseUrl}}/dar/autocomplete?q={{searchQuery}}",
+            "description": "Fri-tekst søgning via Adressevælger. Kræver AutocompleteToken."
+          }
+        },
+        {
+          "name": "Adresseopslag.Dar (native DAR)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{baseUrl}}/dar/adresseopslag/dar?vej={{vej}}&postnr={{postnr}}&by={{by}}",
+            "description": "Panel: Dar.Adresseopslag.Dar — DarAdresseopslagDto."
+          }
+        },
+        {
+          "name": "Adresseopslag",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{baseUrl}}/dar/adresseopslag?vej={{vej}}&postnr={{postnr}}&by={{by}}",
+            "description": "Panel: Dar.Adresseopslag — AdresseopslagResult."
+          }
+        },
+        {
+          "name": "Adresseopslag.KvHxInput (DAWA legacy)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{baseUrl}}/dar/adresseopslag/kvhx?vej={{vej}}&postnr={{postnr}}&by={{by}}",
+            "description": "Panel: Dar.Adresseopslag.KvHxInput — KvHxInputDto."
+          }
+        },
+        {
+          "name": "Husnummer",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{baseUrl}}/dar/husnummer?vej={{vej}}&postnr={{postnr}}&by={{by}}",
+            "description": "Panel: Dar.Husnummer — HusnummerLookupResult."
+          }
+        }
+      ]
+    },
+    {
+      "name": "BBR",
+      "description": "BBR-paneler fra Home.razor — alle kræver vej + postnr (+ valgfri by).",
+      "item": [
+        {
+          "name": "Bygninger",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{baseUrl}}/bbr/bygninger?vej={{vej}}&postnr={{postnr}}&by={{by}}",
+            "description": "Panel: Bbr.Bygning — alle BygningDto på adressen."
+          }
+        },
+        {
+          "name": "Enheder",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{baseUrl}}/bbr/enheder?vej={{vej}}&postnr={{postnr}}&by={{by}}",
+            "description": "Panel: Bbr.Enhed — EnhedDto[]."
+          }
+        },
+        {
+          "name": "Etager",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{baseUrl}}/bbr/etager?vej={{vej}}&postnr={{postnr}}&by={{by}}",
+            "description": "Panel: Bbr.Etage — EtageDto[] inkl. IsKaelder."
+          }
+        },
+        {
+          "name": "Opgange",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{baseUrl}}/bbr/opgange?vej={{vej}}&postnr={{postnr}}&by={{by}}",
+            "description": "Panel: Bbr.Opgang — OpgangDto[]."
+          }
+        },
+        {
+          "name": "Tekniske anlæg",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{baseUrl}}/bbr/tekniske-anlaeg?vej={{vej}}&postnr={{postnr}}&by={{by}}",
+            "description": "Panel: Bbr.TekniskAnlaeg — TekniskAnlaegDto[]."
+          }
+        },
+        {
+          "name": "Grund",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{baseUrl}}/bbr/grund?vej={{vej}}&postnr={{postnr}}&by={{by}}",
+            "description": "Panel: Bbr.Grund — GrundDto."
+          }
+        },
+        {
+          "name": "Grund — jordstykker",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{baseUrl}}/bbr/grund/jordstykker?vej={{vej}}&postnr={{postnr}}&by={{by}}",
+            "description": "Panel: Bbr.Grund.Jordstykker — GrundJordstykkeDto[]."
+          }
+        },
+        {
+          "name": "Ejendomsrelation (bygning)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{baseUrl}}/bbr/ejendomsrelation/bygning?vej={{vej}}&postnr={{postnr}}&by={{by}}",
+            "description": "Panel: Bbr.Ejendomsrelation (bygning) — BygningEjendomsrelationDto[]."
+          }
+        },
+        {
+          "name": "Ejendomsrelation.Resolve",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{baseUrl}}/bbr/ejendomsrelation?vej={{vej}}&postnr={{postnr}}&by={{by}}",
+            "description": "Panel: Bbr.Ejendomsrelation.Resolve — EjendomsrelationDto[] inkl. BFE."
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:7071/api" },
+    { "key": "functionKey", "value": "" },
+    { "key": "vej", "value": "Århusvej 69a" },
+    { "key": "postnr", "value": "3000" },
+    { "key": "by", "value": "Helsingør" },
+    { "key": "searchQuery", "value": "Århusvej 69" }
+  ]
+}

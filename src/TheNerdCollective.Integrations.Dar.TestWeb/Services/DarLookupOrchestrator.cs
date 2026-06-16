@@ -32,29 +32,40 @@ public sealed class DarLookupOrchestrator(DarRuntime runtime)
             request.PostalCode,
             cancellationToken);
 
-        var bygning = !string.IsNullOrWhiteSpace(adresseopslag.BygningId)
-            ? await services.Bbr.Bygning.GetByIdAsync(adresseopslag.BygningId, cancellationToken)
-            : await services.Bbr.Bygning.GetByHusnummerIdAsync(adresseopslag.HusnummerId, cancellationToken);
+        var bygninger = await services.Bbr.Bygning.GetAllByHusnummerIdAsync(
+            adresseopslag.HusnummerId,
+            cancellationToken);
 
-        var bygningId = bygning.IdLokalId
-            ?? throw new InvalidOperationException("Bygning mangler id_lokalId.");
-
-        var enheder = await services.Bbr.Enhed.GetByBygningIdAsync(bygningId, cancellationToken);
-        var etager = await services.Bbr.Etage.GetByBygningIdAsync(bygningId, cancellationToken);
-        var opgange = await services.Bbr.Opgang.GetByBygningIdAsync(bygningId, cancellationToken);
-        var tekniskeAnlaeg = await services.Bbr.TekniskAnlaeg.GetByBygningIdAsync(bygningId, cancellationToken);
+        var enheder = new List<EnhedDto>();
+        var etager = new List<EtageDto>();
+        var opgange = new List<OpgangDto>();
+        var tekniskeAnlaeg = new List<TekniskAnlaegDto>();
+        var bygningEjendomsrelationer = new List<BygningEjendomsrelationDto>();
 
         GrundDto? grund = null;
-        IReadOnlyList<GrundJordstykkeDto> grundJordstykker = [];
-        if (!string.IsNullOrWhiteSpace(bygning.Grund))
+        var grundJordstykker = new List<GrundJordstykkeDto>();
+        var behandledeGrunde = new HashSet<string>(StringComparer.Ordinal);
+
+        foreach (var bygning in bygninger)
         {
-            grund = await services.Bbr.Grund.GetByIdAsync(bygning.Grund, cancellationToken);
-            grundJordstykker = await services.Bbr.Grund.GetJordstykkerByGrundIdAsync(bygning.Grund, cancellationToken);
+            var bygningId = bygning.IdLokalId
+                ?? throw new InvalidOperationException("Bygning mangler id_lokalId.");
+
+            enheder.AddRange(await services.Bbr.Enhed.GetByBygningIdAsync(bygningId, cancellationToken));
+            etager.AddRange(await services.Bbr.Etage.GetByBygningIdAsync(bygningId, cancellationToken));
+            opgange.AddRange(await services.Bbr.Opgang.GetByBygningIdAsync(bygningId, cancellationToken));
+            tekniskeAnlaeg.AddRange(await services.Bbr.TekniskAnlaeg.GetByBygningIdAsync(bygningId, cancellationToken));
+            bygningEjendomsrelationer.AddRange(
+                await services.Bbr.Ejendomsrelation.GetByBygningIdAsync(bygningId, cancellationToken));
+
+            if (!string.IsNullOrWhiteSpace(bygning.Grund) && behandledeGrunde.Add(bygning.Grund))
+            {
+                grund ??= await services.Bbr.Grund.GetByIdAsync(bygning.Grund, cancellationToken);
+                grundJordstykker.AddRange(
+                    await services.Bbr.Grund.GetJordstykkerByGrundIdAsync(bygning.Grund, cancellationToken));
+            }
         }
 
-        var bygningEjendomsrelationer = await services.Bbr.Ejendomsrelation.GetByBygningIdAsync(
-            bygningId,
-            cancellationToken);
         var ejendomsrelationer = await services.Bbr.Ejendomsrelation.ResolveAsync(
             bygningEjendomsrelationer,
             grund,
@@ -67,7 +78,7 @@ public sealed class DarLookupOrchestrator(DarRuntime runtime)
             Duration = stopwatch.Elapsed,
             Adresseopslag = adresseopslag,
             Husnummer = husnummer,
-            Bygning = bygning,
+            Bygninger = bygninger,
             Enheder = enheder,
             Etager = etager,
             Opgange = opgange,

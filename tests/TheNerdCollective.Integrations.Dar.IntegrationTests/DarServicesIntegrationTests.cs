@@ -50,33 +50,42 @@ public sealed class DarServicesIntegrationTests
             IntegrationTestEnvironment.TestStreetAndNumber,
             IntegrationTestEnvironment.TestPostalCode);
 
-        var bygning = !string.IsNullOrWhiteSpace(adresseopslag.BygningId)
-            ? await services.Bbr.Bygning.GetByIdAsync(adresseopslag.BygningId)
-            : await services.Bbr.Bygning.GetByHusnummerIdAsync(adresseopslag.HusnummerId);
+        var bygninger = await services.Bbr.Bygning.GetAllByHusnummerIdAsync(adresseopslag.HusnummerId);
 
-        var bygningId = bygning.IdLokalId
-            ?? throw new InvalidOperationException("Bygning mangler id_lokalId.");
-
-        var enheder = await services.Bbr.Enhed.GetByBygningIdAsync(bygningId);
-        var etager = await services.Bbr.Etage.GetByBygningIdAsync(bygningId);
-        var opgange = await services.Bbr.Opgang.GetByBygningIdAsync(bygningId);
-        var tekniskeAnlaeg = await services.Bbr.TekniskAnlaeg.GetByBygningIdAsync(bygningId);
+        var enheder = new List<EnhedDto>();
+        var etager = new List<EtageDto>();
+        var opgange = new List<OpgangDto>();
+        var tekniskeAnlaeg = new List<TekniskAnlaegDto>();
+        var bygningEjendomsrelationer = new List<BygningEjendomsrelationDto>();
 
         GrundDto? grund = null;
-        IReadOnlyList<GrundJordstykkeDto> grundJordstykker = [];
-        if (!string.IsNullOrWhiteSpace(bygning.Grund))
+        var grundJordstykker = new List<GrundJordstykkeDto>();
+        var behandledeGrunde = new HashSet<string>(StringComparer.Ordinal);
+
+        foreach (var bygning in bygninger)
         {
-            grund = await services.Bbr.Grund.GetByIdAsync(bygning.Grund);
-            grundJordstykker = await services.Bbr.Grund.GetJordstykkerByGrundIdAsync(bygning.Grund);
+            var bygningId = bygning.IdLokalId
+                ?? throw new InvalidOperationException("Bygning mangler id_lokalId.");
+
+            enheder.AddRange(await services.Bbr.Enhed.GetByBygningIdAsync(bygningId));
+            etager.AddRange(await services.Bbr.Etage.GetByBygningIdAsync(bygningId));
+            opgange.AddRange(await services.Bbr.Opgang.GetByBygningIdAsync(bygningId));
+            tekniskeAnlaeg.AddRange(await services.Bbr.TekniskAnlaeg.GetByBygningIdAsync(bygningId));
+            bygningEjendomsrelationer.AddRange(await services.Bbr.Ejendomsrelation.GetByBygningIdAsync(bygningId));
+
+            if (!string.IsNullOrWhiteSpace(bygning.Grund) && behandledeGrunde.Add(bygning.Grund))
+            {
+                grund ??= await services.Bbr.Grund.GetByIdAsync(bygning.Grund);
+                grundJordstykker.AddRange(await services.Bbr.Grund.GetJordstykkerByGrundIdAsync(bygning.Grund));
+            }
         }
 
-        var bygningEjendomsrelationer = await services.Bbr.Ejendomsrelation.GetByBygningIdAsync(bygningId);
         var ejendomsrelationer = await services.Bbr.Ejendomsrelation.ResolveAsync(bygningEjendomsrelationer, grund);
 
         return new IntegrationTestContext(
             adresseopslag,
             husnummer,
-            bygning,
+            bygninger,
             enheder,
             etager,
             opgange,
@@ -118,11 +127,14 @@ public sealed class DarServicesIntegrationTests
 
     private static void AssertBbrBygningService(IntegrationTestContext context)
     {
-        var bygning = context.Bygning;
-        Assert.False(string.IsNullOrWhiteSpace(bygning.IdLokalId));
-        Assert.False(string.IsNullOrWhiteSpace(bygning.Bygningsnummer));
-        Assert.NotNull(bygning.Opfoerelsesaar);
-        Assert.NotNull(bygning.SamletBygningsareal);
+        Assert.NotEmpty(context.Bygninger);
+        Assert.All(context.Bygninger, bygning =>
+        {
+            Assert.False(string.IsNullOrWhiteSpace(bygning.IdLokalId));
+            Assert.False(string.IsNullOrWhiteSpace(bygning.Bygningsnummer));
+            Assert.NotNull(bygning.Opfoerelsesaar);
+            Assert.NotNull(bygning.SamletBygningsareal);
+        });
     }
 
     private static void AssertBbrEnhedService(IntegrationTestContext context)
@@ -134,10 +146,11 @@ public sealed class DarServicesIntegrationTests
     private static void AssertBbrEtageService(IntegrationTestContext context)
     {
         Assert.NotEmpty(context.Etager);
+        var bygningIds = context.Bygninger.Select(b => b.IdLokalId).ToHashSet(StringComparer.Ordinal);
         Assert.All(context.Etager, etage =>
         {
             Assert.False(string.IsNullOrWhiteSpace(etage.IdLokalId));
-            Assert.Equal(context.Bygning.IdLokalId, etage.Bygning);
+            Assert.Contains(etage.Bygning, bygningIds);
         });
     }
 
@@ -154,9 +167,9 @@ public sealed class DarServicesIntegrationTests
 
     private static void AssertBbrGrundService(IntegrationTestContext context)
     {
-        Assert.False(string.IsNullOrWhiteSpace(context.Bygning.Grund));
+        Assert.Contains(context.Bygninger, bygning => !string.IsNullOrWhiteSpace(bygning.Grund));
         Assert.NotNull(context.Grund);
-        Assert.Equal(context.Bygning.Grund, context.Grund!.IdLokalId);
+        Assert.Contains(context.Bygninger, bygning => bygning.Grund == context.Grund!.IdLokalId);
         Assert.NotEmpty(context.GrundJordstykker);
     }
 
@@ -166,7 +179,7 @@ public sealed class DarServicesIntegrationTests
         Assert.NotNull(context.Ejendomsrelationer);
 
         // BFE hentes typisk via grund.bestemtFastEjendom — bygning-relationer kan være tomme.
-        if (!string.IsNullOrWhiteSpace(context.Bygning.Grund))
+        if (context.Bygninger.Any(bygning => !string.IsNullOrWhiteSpace(bygning.Grund)))
         {
             Assert.NotEmpty(context.Ejendomsrelationer);
             Assert.Contains(context.Ejendomsrelationer, relation => relation.BfeNummer.HasValue);
@@ -176,7 +189,7 @@ public sealed class DarServicesIntegrationTests
     private sealed record IntegrationTestContext(
         AdresseopslagResult Adresseopslag,
         HusnummerLookupResult Husnummer,
-        BygningDto Bygning,
+        IReadOnlyList<BygningDto> Bygninger,
         IReadOnlyList<EnhedDto> Enheder,
         IReadOnlyList<EtageDto> Etager,
         IReadOnlyList<OpgangDto> Opgange,

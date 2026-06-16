@@ -10,7 +10,9 @@ public sealed class DarFullLookupResult
 
     public HusnummerLookupResult? Husnummer { get; init; }
 
-    public BygningDto? Bygning { get; init; }
+    public BygningDto? Bygning => Bygninger.Count > 0 ? Bygninger[0] : null;
+
+    public IReadOnlyList<BygningDto> Bygninger { get; init; } = [];
 
     public IReadOnlyList<EnhedDto> Enheder { get; init; } = [];
 

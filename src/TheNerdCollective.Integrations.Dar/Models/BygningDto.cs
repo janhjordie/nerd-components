@@ -125,6 +125,96 @@ public sealed record BygningDto : DarEntityDto
     [JsonPropertyName("byg094Revisionsdato")]
     public string? Revisionsdato { get; init; }
 
+    [JsonPropertyName("byg111StormraadetsOversvoemmelsesSelvrisiko")]
+    public string? StormraadetsOversvoemmelsesSelvrisiko { get; init; }
+
+    [JsonPropertyName("byg112DatoForRegistreringFraStormraadet")]
+    public string? DatoForRegistreringFraStormraadet { get; init; }
+
+    [JsonPropertyName("byg113Byggeskadeforsikringsselskab")]
+    public string? Byggeskadeforsikringsselskab { get; init; }
+
+    [JsonPropertyName("byg114DatoForByggeskadeforsikring")]
+    public string? DatoForByggeskadeforsikring { get; init; }
+
+    [JsonPropertyName("byg119Udledningstilladelse")]
+    public string? Udledningstilladelse { get; init; }
+
+    [JsonPropertyName("byg121OmfattetAfByggeskadeforsikring")]
+    public string? OmfattetAfByggeskadeforsikring { get; init; }
+
+    [JsonPropertyName("byg122Gyldighedsdato")]
+    public string? Gyldighedsdato { get; init; }
+
+    [JsonPropertyName("byg123MedlemskabAfSpildevandsforsyning")]
+    public string? MedlemskabAfSpildevandsforsyning { get; init; }
+
+    [JsonPropertyName("byg124PaabudVedrSpildevandsafledning")]
+    public string? PaabudVedrSpildevandsafledning { get; init; }
+
+    [JsonPropertyName("byg125FristVedrSpildevandsafledning")]
+    public string? FristVedrSpildevandsafledning { get; init; }
+
+    [JsonPropertyName("byg126TilladelseTilUdtraeden")]
+    public string? TilladelseTilUdtraeden { get; init; }
+
+    [JsonPropertyName("byg127DatoForTilladelseTilUdtraeden")]
+    public string? DatoForTilladelseTilUdtraeden { get; init; }
+
+    [JsonPropertyName("byg128TilladelseTilAlternativBortskaffelseEllerAfledning")]
+    public string? TilladelseTilAlternativBortskaffelseEllerAfledning { get; init; }
+
+    [JsonPropertyName("byg129DatoForTilladelseTilAlternativBortskaffelseEllerAfledning")]
+    public string? DatoForTilladelseTilAlternativBortskaffelseEllerAfledning { get; init; }
+
+    [JsonPropertyName("byg130ArealAfUdvendigEfterisolering")]
+    public decimal? ArealAfUdvendigEfterisolering { get; init; }
+
+    [JsonPropertyName("byg131DispensationFritagelseIftKollektivVarmeforsyning")]
+    public string? DispensationFritagelseIftKollektivVarmeforsyning { get; init; }
+
+    [JsonPropertyName("byg132DatoForDispensationFritagelseIftKollektivVarmeforsyning")]
+    public string? DatoForDispensationFritagelseIftKollektivVarmeforsyning { get; init; }
+
+    [JsonPropertyName("byg133KildeTilKoordinatsaet")]
+    public string? KildeTilKoordinatsaet { get; init; }
+
+    [JsonPropertyName("byg134KvalitetAfKoordinatsaet")]
+    public string? KvalitetAfKoordinatsaet { get; init; }
+
+    [JsonPropertyName("byg135SupplerendeOplysningOmKoordinatsaet")]
+    public string? SupplerendeOplysningOmKoordinatsaet { get; init; }
+
+    [JsonPropertyName("byg136PlaceringPaaSoeterritorie")]
+    public string? PlaceringPaaSoeterritorie { get; init; }
+
+    [JsonPropertyName("byg137BanedanmarkBygvaerksnummer")]
+    public string? BanedanmarkBygvaerksnummer { get; init; }
+
+    [JsonPropertyName("byg140ServitutForUdlejningsEjendomDato")]
+    public string? ServitutForUdlejningsEjendomDato { get; init; }
+
+    [JsonPropertyName("byg150Gulvbelaegning")]
+    public string? Gulvbelaegning { get; init; }
+
+    [JsonPropertyName("byg151Frihoejde")]
+    public decimal? Frihoejde { get; init; }
+
+    [JsonPropertyName("byg152AabenLukketKonstruktion")]
+    public string? AabenLukketKonstruktion { get; init; }
+
+    [JsonPropertyName("byg153Konstruktionsforhold")]
+    public string? Konstruktionsforhold { get; init; }
+
+    [JsonPropertyName("byg301TypeAfFlytning")]
+    public string? TypeAfFlytning { get; init; }
+
+    [JsonPropertyName("byg302Tilflytterkommune")]
+    public string? Tilflytterkommune { get; init; }
+
+    [JsonPropertyName("byg403OevrigeBemaerkningerFraStormraadet")]
+    public string? OevrigeBemaerkningerFraStormraadet { get; init; }
+
     [JsonPropertyName("byg404Koordinat")]
     public KoordinatDto? Koordinat { get; init; }
 

@@ -54,7 +54,7 @@ public static class GraphQlQueries
     public static string GetBygningByHusnummer => $$"""
         query GetBygningByHusnummer($husnummerId: String!, $virkningstid: DafDateTime, $registreringstid: DafDateTime) {
           BBR_Bygning(
-            first: 10
+            first: 50
             virkningstid: $virkningstid
             registreringstid: $registreringstid
             where: { husnummer: { eq: $husnummerId } }
