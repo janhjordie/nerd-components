@@ -123,9 +123,30 @@ jobs:
             echo "No token available (NUGET secret)" >&2
             exit 1
           fi
+          PACKAGE_ID="${{ matrix.package.name }}"
+          VERSION="${{ steps.version.outputs.version }}"
+          shopt -s nullglob
           for nupkg in artifacts/*.nupkg; do
+            case "$nupkg" in
+              *.snupkg) continue ;;
+            esac
             dotnet nuget push "$nupkg" --source https://api.nuget.org/v3/index.json --api-key "$TOKEN" --skip-duplicate
           done
+          for snupkg in artifacts/*.snupkg; do
+            dotnet nuget push "$snupkg" --source https://www.nuget.org/api/v2/symbolpackage --api-key "$TOKEN" --skip-duplicate
+          done
+          echo "Waiting for $PACKAGE_ID $VERSION to appear on nuget.org..."
+          PACKAGE_ID_LOWER=$(echo "$PACKAGE_ID" | tr '[:upper:]' '[:lower:]')
+          for attempt in $(seq 1 18); do
+            if curl -fsS "https://api.nuget.org/v3-flatcontainer/${PACKAGE_ID_LOWER}/${VERSION}/${PACKAGE_ID_LOWER}.${VERSION}.nupkg" -o /dev/null; then
+              echo "Verified: $PACKAGE_ID $VERSION is available on nuget.org"
+              exit 0
+            fi
+            echo "Not indexed yet (attempt $attempt/18) — waiting 10s..."
+            sleep 10
+          done
+          echo "Package push reported success but $PACKAGE_ID $VERSION was not indexed within 3 minutes." >&2
+          exit 1
 
       - name: Create Git Tag
         run: |
