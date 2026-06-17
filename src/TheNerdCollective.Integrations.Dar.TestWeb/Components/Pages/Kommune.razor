@@ -1,0 +1,336 @@
+@page "/kommune"
+@rendermode InteractiveServer
+@inject DarRuntime Runtime
+@inject IJSRuntime Js
+@implements IAsyncDisposable
+
+<PageTitle>Kommune</PageTitle>
+
+<div class="page">
+    <header class="page-header">
+        <h1>Kommune</h1>
+        <p>
+            Test af <code>Dar.Kommune</code> — liste og opslag ud fra browser-koordinater.
+            Datafordeler <a href="https://confluence.sdfi.dk/pages/viewpage.action?pageId=199984259" target="_blank" rel="noopener">DAGI GraphQL</a>
+            forsøges først; ved tomme svar bruges
+            <a href="https://dawadocs.dataforsyningen.dk/dok/api/kommune" target="_blank" rel="noopener">DAWA</a>
+            (gratis, ingen API-nøgle).
+        </p>
+        <p class="section-intro">
+            Kommune-listen caches i 24 timer. Koordinat-opslag bruger DAWA reverse geocoding når GraphQL er tom.
+        </p>
+    </header>
+
+    @if (!string.IsNullOrWhiteSpace(_configurationError))
+    {
+        <section class="alert alert--warning">
+            <strong>Konfiguration:</strong> @_configurationError
+        </section>
+    }
+    else
+    {
+        <section class="card">
+            <div class="tab-bar" role="tablist" aria-label="Kommunevalg">
+                <button type="button"
+                        class="tab @(_mode == SelectionMode.List ? "tab--active" : null)"
+                        role="tab"
+                        aria-selected="@(_mode == SelectionMode.List)"
+                        @onclick="() => _mode = SelectionMode.List">
+                    Kommune
+                </button>
+                <button type="button"
+                        class="tab @(_mode == SelectionMode.Location ? "tab--active" : null)"
+                        role="tab"
+                        aria-selected="@(_mode == SelectionMode.Location)"
+                        @onclick="() => _mode = SelectionMode.Location">
+                    Din lokation
+                </button>
+            </div>
+
+            @if (_mode == SelectionMode.List)
+            {
+                <div class="tab-panel" role="tabpanel">
+                    <h2>Vælg kommune</h2>
+                    <p class="section-intro">Henter alle kommuner med <code>GetAllAsync()</code>.</p>
+
+                    <div class="actions actions--inline">
+                        <button type="button"
+                                class="button button--primary"
+                                disabled="@_isLoadingList"
+                                @onclick="LoadKommunerAsync">
+                            @(_isLoadingList ? "Henter..." : "Hent kommuner")
+                        </button>
+                        @if (_kommuner.Count > 0)
+                        {
+                            <span class="meta-pill">@_kommuner.Count kommuner</span>
+                        }
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(_listMethodCall))
+                    {
+                        <MethodCallHint Text="@_listMethodCall" />
+                    }
+
+                    @if (_kommuner.Count > 0)
+                    {
+                        <label class="kommune-select">
+                            Vælg kommune
+                            <select class="input"
+                                    value="@_selectedKommuneId"
+                                    @onchange="OnKommuneSelected">
+                                <option value="">— Vælg —</option>
+                                @foreach (var kommune in _kommuner)
+                                {
+                                    <option value="@kommune.IdLokalId">@kommune.Navn (@kommune.Kommunekode)</option>
+                                }
+                            </select>
+                        </label>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="tab-panel" role="tabpanel">
+                    <h2>Din lokation</h2>
+                    <p class="section-intro">
+                        Bruger browserens geolocation (WGS84 latitude/longitude) og kalder
+                        <code>FindByCoordinatesAsync()</code>.
+                    </p>
+
+                    <div class="actions">
+                        <button type="button"
+                                class="button button--primary"
+                                disabled="@_isResolvingLocation"
+                                @onclick="ResolveLocationAsync">
+                            @(_isResolvingLocation ? "Finder kommune..." : "Brug min position")
+                        </button>
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(_locationMethodCall))
+                    {
+                        <MethodCallHint Text="@_locationMethodCall" />
+                    }
+
+                    @if (_latitude is not null && _longitude is not null)
+                    {
+                        <dl class="summary-grid location-grid">
+                            <div>
+                                <dt>Latitude</dt>
+                                <dd>@_latitude.Value.ToString("0.######")</dd>
+                            </div>
+                            <div>
+                                <dt>Longitude</dt>
+                                <dd>@_longitude.Value.ToString("0.######")</dd>
+                            </div>
+                            @if (_accuracyMeters is not null)
+                            {
+                                <div>
+                                    <dt>Nøjagtighed</dt>
+                                    <dd>±@_accuracyMeters.Value.ToString("0") m</dd>
+                                </div>
+                            }
+                        </dl>
+                    }
+                </div>
+            }
+        </section>
+
+        @if (!string.IsNullOrWhiteSpace(_errorMessage))
+        {
+            <section class="alert alert--error">
+                <strong>Fejl:</strong> @_errorMessage
+            </section>
+        }
+
+        @if (_selectedKommune is not null)
+        {
+            <section class="summary card">
+                <h2>Valgt kommune</h2>
+                <dl class="summary-grid">
+                    <div>
+                        <dt>Navn</dt>
+                        <dd>@_selectedKommune.Navn</dd>
+                    </div>
+                    <div>
+                        <dt>Kommunekode</dt>
+                        <dd>@_selectedKommune.Kommunekode</dd>
+                    </div>
+                    <div>
+                        <dt>id_lokalId</dt>
+                        <dd>@_selectedKommune.IdLokalId</dd>
+                    </div>
+                </dl>
+            </section>
+
+            <ResultPanel Title="Dar.Kommune (valgt)" Subtitle="KommuneDto" MethodCall="@_selectedKommuneMethodCall" Data="_selectedKommune" Open="true" />
+        }
+
+        @if (_locationKommune is not null)
+        {
+            <section class="summary card">
+                <h2>Kommune fra position</h2>
+                <dl class="summary-grid">
+                    <div>
+                        <dt>Navn</dt>
+                        <dd>@_locationKommune.Navn</dd>
+                    </div>
+                    <div>
+                        <dt>Kommunekode</dt>
+                        <dd>@_locationKommune.Kommunekode</dd>
+                    </div>
+                    <div>
+                        <dt>id_lokalId</dt>
+                        <dd>@_locationKommune.IdLokalId</dd>
+                    </div>
+                </dl>
+            </section>
+
+            <ResultPanel Title="Dar.Kommune.FindByCoordinatesAsync" Subtitle="KommuneDto" MethodCall="@_locationMethodCall" Data="_locationKommune" Open="true" />
+        }
+
+        @if (_kommuner.Count > 0)
+        {
+            <ResultPanel Title="Dar.Kommune.GetAllAsync" Subtitle="@($"{_kommuner.Count} kommuner")" MethodCall="@_listMethodCall" Data="_kommuner" />
+        }
+    }
+</div>
+
+@code {
+    private const string GetAllMethodCall =
+        "var services = DarClientFactory.Create(darOptions, httpClient);\n" +
+        "var kommuner = await services.Dar.Kommune.GetAllAsync();";
+
+    private enum SelectionMode
+    {
+        List,
+        Location
+    }
+
+    private sealed record GeoPosition(double Latitude, double Longitude, double Accuracy);
+
+    private SelectionMode _mode = SelectionMode.List;
+    private IReadOnlyList<KommuneDto> _kommuner = Array.Empty<KommuneDto>();
+    private string? _selectedKommuneId;
+    private KommuneDto? _selectedKommune;
+    private KommuneDto? _locationKommune;
+    private double? _latitude;
+    private double? _longitude;
+    private double? _accuracyMeters;
+    private string? _configurationError;
+    private string? _errorMessage;
+    private string? _listMethodCall;
+    private string? _locationMethodCall;
+    private string? _selectedKommuneMethodCall;
+    private bool _isLoadingList;
+    private bool _isResolvingLocation;
+    private IJSObjectReference? _geoModule;
+
+    protected override void OnInitialized()
+    {
+        _configurationError = Runtime.ConfigurationError;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _geoModule = await Js.InvokeAsync<IJSObjectReference>("import", "./js/geolocation.js");
+        }
+    }
+
+    private async Task LoadKommunerAsync()
+    {
+        _errorMessage = null;
+        _isLoadingList = true;
+
+        try
+        {
+            var services = Runtime.CreateServices();
+            _kommuner = await services.Dar.Kommune.GetAllAsync();
+            _listMethodCall = GetAllMethodCall;
+        }
+        catch (DatafordelerApiException ex) when (ex.ResponseBody.Contains("DAF-AUTH-0005", StringComparison.Ordinal))
+        {
+            _errorMessage =
+                "IP-adressen er ikke whitelisted i Datafordeler Administration (DAF-AUTH-0005). " +
+                "Tilføj din udgående IP under https://administration.datafordeler.dk/";
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = ex.Message;
+        }
+        finally
+        {
+            _isLoadingList = false;
+        }
+    }
+
+    private void OnKommuneSelected(ChangeEventArgs args)
+    {
+        _selectedKommuneId = args.Value?.ToString();
+        _selectedKommune = _kommuner.FirstOrDefault(k => k.IdLokalId == _selectedKommuneId);
+        _selectedKommuneMethodCall = _selectedKommune is null
+            ? null
+            : $"// Valgt fra kommuner returneret af GetAllAsync()\n" +
+              $"var kommune = kommuner.First(k => k.IdLokalId == {MethodCallFormatter.CsString(_selectedKommune.IdLokalId)});\n" +
+              $"// {MethodCallFormatter.CsString(_selectedKommune.Navn)} ({MethodCallFormatter.CsString(_selectedKommune.Kommunekode)})";
+        _errorMessage = null;
+    }
+
+    private async Task ResolveLocationAsync()
+    {
+        if (_geoModule is null)
+        {
+            _errorMessage = "Geolocation-modulet er ikke klar endnu. Prøv igen om et øjeblik.";
+            return;
+        }
+
+        _errorMessage = null;
+        _locationKommune = null;
+        _isResolvingLocation = true;
+
+        try
+        {
+            var position = await _geoModule.InvokeAsync<GeoPosition>("getCurrentPosition");
+            _latitude = position.Latitude;
+            _longitude = position.Longitude;
+            _accuracyMeters = position.Accuracy;
+
+            var services = Runtime.CreateServices();
+            _locationKommune = await services.Dar.Kommune.FindByCoordinatesAsync(
+                position.Latitude,
+                position.Longitude);
+            _locationMethodCall =
+                "var services = DarClientFactory.Create(darOptions, httpClient);\n" +
+                $"var kommune = await services.Dar.Kommune.FindByCoordinatesAsync(\n" +
+                $"    {MethodCallFormatter.Number(position.Latitude)},\n" +
+                $"    {MethodCallFormatter.Number(position.Longitude)});";
+        }
+        catch (JSException ex)
+        {
+            _errorMessage = ex.Message;
+        }
+        catch (DatafordelerApiException ex) when (ex.ResponseBody.Contains("DAF-AUTH-0005", StringComparison.Ordinal))
+        {
+            _errorMessage =
+                "IP-adressen er ikke whitelisted i Datafordeler Administration (DAF-AUTH-0005). " +
+                "Tilføj din udgående IP under https://administration.datafordeler.dk/";
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = ex.Message;
+        }
+        finally
+        {
+            _isResolvingLocation = false;
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_geoModule is not null)
+        {
+            await _geoModule.DisposeAsync();
+        }
+    }
+}

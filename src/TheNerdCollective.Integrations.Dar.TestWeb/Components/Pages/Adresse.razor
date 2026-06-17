@@ -1,23 +1,24 @@
-﻿@page "/"
+@page "/adresse"
 @rendermode InteractiveServer
 @inject DarLookupOrchestrator Orchestrator
 
-<PageTitle>DAR/BBR test</PageTitle>
+<PageTitle>Adresse & BBR</PageTitle>
 
 <div class="page">
     <header class="page-header">
-        <h1>TheNerdCollective.Integrations.Dar test</h1>
-        <p>Manuel test af alle DAR- og BBR-services via Datafordeler GraphQL v3.</p>
+        <h1>Adresse & BBR</h1>
+        <p>Autocomplete, adresseopslag og fuld BBR-kæde via Datafordeler GraphQL.</p>
     </header>
 
     <section class="card">
         <h2>Adresse-autocomplete</h2>
-        <p class="section-intro">Fri-tekst søgning via Adressevælger. Vælg en adresse for at udfylde felterne nedenfor.</p>
+        <p class="section-intro">Fri-tekst søgning via Adressevælger (<code>SearchAsync</code>). Vælg en adresse for at udfylde felterne nedenfor.</p>
         <AddressAutocomplete OnAddressSelected="ApplyAutocompleteSelectionAsync" />
     </section>
 
     <section class="card">
         <h2>Adresseopslag (BBR test)</h2>
+        <p class="section-intro">Kører hele BBR-kæden via <code>Dar.Adresseopslag.LookupAsync</code>, <code>Dar.Husnummer.FindByAddressAsync</code> og <code>Bbr.*</code>-services. Kodeeksempler vises efter opslag.</p>
         <EditForm Model="_request" OnValidSubmit="RunLookupAsync" FormName="lookupForm">
             <DataAnnotationsValidator />
 
@@ -109,19 +110,26 @@
         <section class="results">
             <h2>Service-resultater</h2>
 
-            <ResultPanel Title="Dar.Adresseopslag.Dar" Subtitle="DarAdresseopslagDto (native DAR)" Data="_result.Adresseopslag?.Dar" Open="true" />
-            <ResultPanel Title="Dar.Adresseopslag" Subtitle="AdresseopslagResult" Data="_result.Adresseopslag" />
-            <ResultPanel Title="Dar.Adresseopslag.KvHxInput" Subtitle="KvHxInputDto (DAWA legacy)" Data="_result.Adresseopslag?.KvHxInput" />
-            <ResultPanel Title="Dar.Husnummer" Subtitle="HusnummerLookupResult" Data="_result.Husnummer" />
-            <ResultPanel Title="Bbr.Bygning" Subtitle="@($"{_result.Bygninger.Count} bygninger")" Data="_result.Bygninger" Open="true" />
-            <ResultPanel Title="Bbr.Enhed" Subtitle="@($"{_result.Enheder.Count} enheder")" Data="_result.Enheder" />
-            <ResultPanel Title="Bbr.Etage" Subtitle="@($"{_result.Etager.Count} etager")" Data="_result.Etager" />
-            <ResultPanel Title="Bbr.Opgang" Subtitle="@($"{_result.Opgange.Count} opgange")" Data="_result.Opgange" />
-            <ResultPanel Title="Bbr.TekniskAnlaeg" Subtitle="@($"{_result.TekniskeAnlaeg.Count} anlæg")" Data="_result.TekniskeAnlaeg" />
-            <ResultPanel Title="Bbr.Grund" Subtitle="GrundDto" Data="_result.Grund" />
-            <ResultPanel Title="Bbr.Grund.Jordstykker" Subtitle="@($"{_result.GrundJordstykker.Count} jordstykker")" Data="_result.GrundJordstykker" />
-            <ResultPanel Title="Bbr.Ejendomsrelation (bygning)" Subtitle="@($"{_result.BygningEjendomsrelationer.Count} relationer")" Data="_result.BygningEjendomsrelationer" />
-            <ResultPanel Title="Bbr.Ejendomsrelation.Resolve" Subtitle="@($"{_result.Ejendomsrelationer.Count} relationer")" Data="_result.Ejendomsrelationer" Open="true" />
+            @if (_methodCalls is not null)
+            {
+                <div class="method-call--overview">
+                    <MethodCallHint Text="@_methodCalls.Overview" />
+                </div>
+            }
+
+            <ResultPanel Title="Dar.Adresseopslag.Dar" Subtitle="DarAdresseopslagDto (native DAR)" MethodCall="@_methodCalls?.AdresseopslagDar" Data="_result.Adresseopslag?.Dar" Open="true" />
+            <ResultPanel Title="Dar.Adresseopslag" Subtitle="AdresseopslagResult" MethodCall="@_methodCalls?.Adresseopslag" Data="_result.Adresseopslag" />
+            <ResultPanel Title="Dar.Adresseopslag.KvHxInput" Subtitle="KvHxInputDto (DAWA legacy)" MethodCall="@_methodCalls?.KvHxInput" Data="_result.Adresseopslag?.KvHxInput" />
+            <ResultPanel Title="Dar.Husnummer" Subtitle="HusnummerLookupResult" MethodCall="@_methodCalls?.Husnummer" Data="_result.Husnummer" />
+            <ResultPanel Title="Bbr.Bygning" Subtitle="@($"{_result.Bygninger.Count} bygninger")" MethodCall="@_methodCalls?.Bygning" Data="_result.Bygninger" Open="true" />
+            <ResultPanel Title="Bbr.Enhed" Subtitle="@($"{_result.Enheder.Count} enheder")" MethodCall="@_methodCalls?.Enhed" Data="_result.Enheder" />
+            <ResultPanel Title="Bbr.Etage" Subtitle="@($"{_result.Etager.Count} etager")" MethodCall="@_methodCalls?.Etage" Data="_result.Etager" />
+            <ResultPanel Title="Bbr.Opgang" Subtitle="@($"{_result.Opgange.Count} opgange")" MethodCall="@_methodCalls?.Opgang" Data="_result.Opgange" />
+            <ResultPanel Title="Bbr.TekniskAnlaeg" Subtitle="@($"{_result.TekniskeAnlaeg.Count} anlæg")" MethodCall="@_methodCalls?.TekniskAnlaeg" Data="_result.TekniskeAnlaeg" />
+            <ResultPanel Title="Bbr.Grund" Subtitle="GrundDto" MethodCall="@_methodCalls?.Grund" Data="_result.Grund" />
+            <ResultPanel Title="Bbr.Grund.Jordstykker" Subtitle="@($"{_result.GrundJordstykker.Count} jordstykker")" MethodCall="@_methodCalls?.GrundJordstykker" Data="_result.GrundJordstykker" />
+            <ResultPanel Title="Bbr.Ejendomsrelation (bygning)" Subtitle="@($"{_result.BygningEjendomsrelationer.Count} relationer")" MethodCall="@_methodCalls?.BygningEjendomsrelation" Data="_result.BygningEjendomsrelationer" />
+            <ResultPanel Title="Bbr.Ejendomsrelation.Resolve" Subtitle="@($"{_result.Ejendomsrelationer.Count} relationer")" MethodCall="@_methodCalls?.Ejendomsrelation" Data="_result.Ejendomsrelationer" Open="true" />
         </section>
     }
 </div>
@@ -129,6 +137,7 @@
 @code {
     private readonly DarLookupRequest _request = new();
     private DarFullLookupResult? _result;
+    private DarLookupMethodCalls.LookupMethodCalls? _methodCalls;
     private string? _errorMessage;
     private string? _configurationError;
     private bool _isLoading;
@@ -167,11 +176,13 @@
     {
         _errorMessage = null;
         _result = null;
+        _methodCalls = null;
         _isLoading = true;
 
         try
         {
             _result = await Orchestrator.LookupAllAsync(_request);
+            _methodCalls = DarLookupMethodCalls.Build(_request, _result);
         }
         catch (DatafordelerApiException ex) when (ex.ResponseBody.Contains("DAF-AUTH-0005", StringComparison.Ordinal))
         {

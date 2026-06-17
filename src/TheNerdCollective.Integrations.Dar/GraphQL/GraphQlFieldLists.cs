@@ -406,6 +406,12 @@ public static class GraphQlFieldLists
         virkningTil
         """;
 
+    public const string Kommuneinddeling = """
+        id_lokalId
+        navn
+        kommunekode
+        """;
+
     public const string Husnummer = """
         adgangsadressebetegnelse
         adgangspunkt

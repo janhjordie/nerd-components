@@ -1,6 +1,20 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
 
 <div class="layout">
+    <header class="site-header">
+        <div class="site-header__inner">
+            <a class="site-brand" href="/adresse">DAR test</a>
+            <nav class="site-nav" aria-label="Hovednavigation">
+                <NavLink class="site-nav__link" href="/adresse" Match="NavLinkMatch.Prefix">
+                    Adresse & BBR
+                </NavLink>
+                <NavLink class="site-nav__link" href="/kommune" Match="NavLinkMatch.Prefix">
+                    Kommune
+                </NavLink>
+            </nav>
+        </div>
+    </header>
+
     <main class="layout__main">
         @Body
     </main>

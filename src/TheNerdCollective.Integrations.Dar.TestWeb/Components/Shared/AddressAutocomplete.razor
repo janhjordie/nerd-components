@@ -51,6 +51,11 @@
             }
         </p>
     }
+
+    @if (!string.IsNullOrWhiteSpace(_searchMethodCall))
+    {
+        <MethodCallHint Text="@_searchMethodCall" />
+    }
 </div>
 
 @code {
@@ -64,6 +69,7 @@
     private bool _isSearching;
     private bool _isOpen;
     private bool _hasSearched;
+    private string? _searchMethodCall;
 
     private async Task OnSearchInputAsync(ChangeEventArgs args)
     {
@@ -101,6 +107,9 @@
             _results = results;
             _hasSearched = true;
             _isOpen = results.Count > 0;
+            _searchMethodCall =
+                "var autocomplete = DarClientFactory.CreateAutocomplete(autocompleteOptions, httpClient);\n" +
+                $"var results = await autocomplete.SearchAsync({MethodCallFormatter.CsString(_searchText.Trim())});";
         }
         catch (OperationCanceledException)
         {

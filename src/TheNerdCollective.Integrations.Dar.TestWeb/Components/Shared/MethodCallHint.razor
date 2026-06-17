@@ -1,0 +1,11 @@
+@if (!string.IsNullOrWhiteSpace(Text))
+{
+    <div class="method-call">
+        <span class="method-call__label">Kald i kode</span>
+        <pre class="method-call__code"><code>@Text</code></pre>
+    </div>
+}
+
+@code {
+    [Parameter] public string? Text { get; set; }
+}

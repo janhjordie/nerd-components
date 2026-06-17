@@ -15,5 +15,5 @@ fi
 
 sleep 1
 
-echo "Starting TestWeb on http://localhost:${PORT} ..."
-dotnet run --launch-profile http
+echo "Starting TestWeb on http://localhost:${PORT} (hot reload) ..."
+dotnet watch run --launch-profile http

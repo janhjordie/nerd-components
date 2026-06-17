@@ -17,6 +17,10 @@ else
                 <span class="result-panel__subtitle">@Subtitle</span>
             }
         </summary>
+        @if (!string.IsNullOrWhiteSpace(MethodCall))
+        {
+            <MethodCallHint Text="@MethodCall" />
+        }
         <pre class="result-panel__json">@JsonDisplaySerializer.Serialize(Data)</pre>
     </details>
 }
@@ -27,6 +31,9 @@ else
 
     [Parameter]
     public string? Subtitle { get; set; }
+
+    [Parameter]
+    public string? MethodCall { get; set; }
 
     [Parameter]
     public object? Data { get; set; }

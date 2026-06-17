@@ -23,11 +23,13 @@ namespace TheNerdCollective.Integrations.Dar.Services
         public DarRegister(
             DarAdresseopslagService adresseopslag,
             DarHusnummerService husnummer,
-            DarAddressAutocompleteService autocomplete)
+            DarAddressAutocompleteService autocomplete,
+            DarKommuneService kommune)
         {
             Adresseopslag = adresseopslag;
             Husnummer = husnummer;
             Autocomplete = autocomplete;
+            Kommune = kommune;
         }
 
         public DarAdresseopslagService Adresseopslag { get; }
@@ -35,6 +37,8 @@ namespace TheNerdCollective.Integrations.Dar.Services
         public DarHusnummerService Husnummer { get; }
 
         public DarAddressAutocompleteService Autocomplete { get; }
+
+        public DarKommuneService Kommune { get; }
     }
 
     /// <summary>BBR-services (bygning, enheder, etager m.m.).</summary>

@@ -13,6 +13,7 @@ Pakken targeter **.NET Standard 2.0** og kan bruges fra .NET Framework 4.6.1+ og
 - **Adresse-autocomplete** via Adressevælger (fri-tekst dansk adressesøgning)
 - **Adressedetaljer efter autocomplete** — koordinater (WGS84 + ETRS89), kommune m.m. via Adressevælger id-opslag
 - **Adresseopslag** i DAR med KVHX/DAWA-format output
+- **Kommuner (DAGI)** — liste af alle kommuner og opslag ud fra WGS84-koordinater (`GetAllAsync`, `FindByCoordinatesAsync`); **DAWA-fallback** mens Datafordeler DAGI GraphQL returnerer tomme resultater
 - **BBR-data** via separate services (bygning, enheder, etager, opgange, grund, ejendomsrelationer)
 - **Lazy by design** — kald kun de services du har brug for; intet hentes automatisk
 - **Typed DTO'er** med fleksibel JSON-deserialisering mod Datafordeler
@@ -215,7 +216,8 @@ DarServices
 ├── Dar
 │   ├── Autocomplete    → fonetisk søgning + id-opslag (koordinater) via Adressevælger
 │   ├── Adresseopslag   → native DAR-resultat + valgfri KvHxInput (DAWA legacy)
-│   └── Husnummer       → native DAR husnummer uden KvHxInput
+│   ├── Husnummer       → native DAR husnummer uden KvHxInput
+│   └── Kommune         → DAGI kommuner (GraphQL + DAWA/WFS/REST-fallback)
 └── Bbr
     ├── Bygning
     ├── Enhed
@@ -336,6 +338,63 @@ Returnerer `AdresseopslagResult` med bl.a. `Dar` (native DAR), `HusnummerId`, `B
 |---|---|
 | `FindByAddressAsync(streetAndNumber, postalCode, ct?)` | `HusnummerLookupResult` med native `Dar` (uden KvHxInput) |
 
+#### `services.Dar.Kommune`
+
+Kommuner via **DAGI** (`DAGI_Kommuneinddeling`, [GraphQL v2](https://graphql.datafordeler.dk/DAGI/v2)) — se [GraphQL (DAGI)](https://confluence.sdfi.dk/pages/viewpage.action?pageId=199984259). GraphQL bruger **samme API-nøgle** som DAR/BBR.
+
+> **DAWA-fallback (vigtigt)**  
+> Datafordeler DAGI GraphQL returnerer i praksis ofte **tomme resultater**, indtil registeret er fuldt udrullet på GraphQL.  
+> Indtil da bruger pakken automatisk **[DAWA](https://dawadocs.dataforsyningen.dk/dok/api/kommune)** (`api.dataforsyningen.dk`) som fallback — **gratis, ingen API-nøgle**, samme DAGI-grunddata (`dagi_id`, `kode`, `navn`).  
+> Når GraphQL engang returnerer data, forsøges GraphQL **først**; DAWA bruges kun hvis GraphQL er tom (eller returnerer for få kommuner til liste-opslag).  
+> Slå DAWA fra med `Dagi:EnableDawaFallback: false` hvis du kun vil bruge Datafordeler-kanaler.
+
+**Fallback-rækkefølge**
+
+| Metode | Rækkefølge når GraphQL er tom |
+|---|---|
+| `GetAllAsync` | DAWA liste → WFS (API-nøgle) → fejl |
+| `FindByCoordinatesAsync` | DAWA reverse (`/kommuner/reverse`, WGS84) → REST DAGI punkt (valgfri tjenestebruger) → fejl |
+| `FindByEtrs89Async` | DAWA reverse (EPSG:25832) → REST DAGI punkt → fejl |
+
+Kommune-listen caches i 24 timer som standard (`Dagi:KommuneListCacheDuration`). DAWA-listen hentes med paginering (`side` / `per_side`).
+
+```json
+"TheNerdCollective": {
+  "Dar": {
+    "ApiKey": "...",
+    "Dagi": {
+      "EnableDawaFallback": true,
+      "DawaBaseUrl": "https://api.dataforsyningen.dk",
+      "RestUsername": "",
+      "RestPassword": "",
+      "KommuneListCacheDuration": "24:00:00"
+    }
+  }
+}
+```
+
+| Metode | Beskrivelse |
+|---|---|
+| `GetAllAsync(ct?)` | Alle aktuelle kommuner (`id_lokalId`, `navn`, `kommunekode`), sorteret efter navn |
+| `FindByCoordinatesAsync(latitude, longitude, ct?)` | Finder kommune for WGS84-koordinater (EPSG:4326), fx fra `navigator.geolocation` |
+| `FindByEtrs89Async(easting, northing, ct?)` | Samme opslag med ETRS89 UTM 32N (EPSG:25832) |
+
+Eksempel (kommune-dropdown + “Din lokation”):
+
+```csharp
+// Dropdown: hent alle kommuner (GraphQL → DAWA → WFS)
+var kommuner = await services.Dar.Kommune.GetAllAsync();
+
+// Browser-geolocation → kommune (GraphQL → DAWA reverse → REST)
+var position = await GetBrowserPositionAsync(); // latitude / longitude (WGS84)
+var kommune = await services.Dar.Kommune.FindByCoordinatesAsync(
+    position.Latitude,
+    position.Longitude);
+// kommune.Navn fx "København", kommune.Kommunekode fx "0101"
+```
+
+Returnerer `KommuneDto` med `IdLokalId`, `Navn` og `Kommunekode`.
+
 ### DAR-resultat (anbefalet)
 
 `AdresseopslagResult.Dar` (`DarAdresseopslagDto`) er det **native DAR-resultat** fra Datafordeler — brug dette i nye integrationer:
@@ -413,6 +472,7 @@ Namespace: `TheNerdCollective.Integrations.Dar.Models`
 | `AdresseopslagResult` | Adresseopslag med native `Dar` + valgfri `KvHxInput` (legacy) |
 | `DarAdresseopslagDto` | Native DAR-resultat (`Husnummer` + `Vejnavn`) |
 | `HusnummerLookupResult` | Husnummer med native `Dar` (uden KvHxInput) |
+| `KommuneDto` | Kommune (`id_lokalId`, `navn`, `kommunekode`) fra DAGI/DAWA |
 | `KvHxInputDto` | KVHX i DAWA-format (legacy bagudkompatibilitet) |
 | `HusnummerDto` | DAR husnummer |
 | `BygningDto` | Bygning, arealer, grund-reference |
@@ -522,7 +582,7 @@ Kræver whitelisted IP — ellers springes testen over ved `DAF-AUTH-0005`.
 
 ## Versionering
 
-**Nuværende version:** `1.3.8`
+**Nuværende version:** `1.4.2`
 
 Publiceres til [NuGet.org](https://www.nuget.org/packages/TheNerdCollective.Integrations.Dar) via GitHub Actions ved push til `main`.
 

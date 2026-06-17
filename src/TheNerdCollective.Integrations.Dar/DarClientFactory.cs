@@ -46,12 +46,17 @@ namespace TheNerdCollective.Integrations.Dar
 
             var client = httpClient ?? new HttpClient();
             var graphQlClient = new DatafordelerGraphQlClient(client, options.ApiKey);
-            var accessor = new GraphQlDataAccessor(graphQlClient, options.BbrGraphQlUrl, options.DarGraphQlUrl);
+            var accessor = new GraphQlDataAccessor(
+                graphQlClient,
+                options.BbrGraphQlUrl,
+                options.DarGraphQlUrl,
+                options.DagiGraphQlUrl);
 
             var dar = new DarRegister(
                 new DarAdresseopslagService(accessor),
                 new DarHusnummerService(accessor),
-                new DarAddressAutocompleteService(options.Autocomplete, client));
+                new DarAddressAutocompleteService(options.Autocomplete, client),
+                new DarKommuneService(accessor, client, options.ApiKey, options.Dagi));
 
             var bbr = new BbrServices(
                 new BbrBygningService(accessor),

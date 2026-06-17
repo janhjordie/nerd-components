@@ -185,4 +185,48 @@ public static class GraphQlQueries
           }
         }
         """;
+
+    public static string GetAllKommuner => $$"""
+        # DAGI_Kommuneinddeling — alle kommuner (kræver virkningstid/registreringstid)
+        # https://confluence.sdfi.dk/pages/viewpage.action?pageId=199984259
+        query GetAllKommuner($virkningstid: DafDateTime, $registreringstid: DafDateTime, $after: String) {
+          DAGI_Kommuneinddeling(
+            first: 100
+            after: $after
+            virkningstid: $virkningstid
+            registreringstid: $registreringstid
+          ) {
+            nodes {
+              {{GraphQlFieldLists.Kommuneinddeling}}
+            }
+            pageInfo {
+              hasNextPage
+              endCursor
+            }
+          }
+        }
+        """;
+
+    public static string FindKommuneByPoint => $$"""
+        # DAGI_Kommuneinddeling — geometri.contains (EPSG:25832), jf. Datafordeler DAGI-vejledning
+        query FindKommuneByPoint($wkt: String!, $virkningstid: DafDateTime, $registreringstid: DafDateTime) {
+          DAGI_Kommuneinddeling(
+            first: 1
+            virkningstid: $virkningstid
+            registreringstid: $registreringstid
+            where: {
+              geometri: {
+                contains: {
+                  crs: 25832
+                  wkt: $wkt
+                }
+              }
+            }
+          ) {
+            nodes {
+              {{GraphQlFieldLists.Kommuneinddeling}}
+            }
+          }
+        }
+        """;
 }

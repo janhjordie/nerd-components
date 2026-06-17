@@ -2,7 +2,11 @@
   "TheNerdCollective": {
     "Dar": {
       "ApiKey": "din-datafordeler-api-noegle",
-      "AutocompleteToken": "adressevaelger123"
+      "AutocompleteToken": "adressevaelger123",
+      "Dagi": {
+        "RestUsername": "",
+        "RestPassword": ""
+      }
     }
   }
 }
