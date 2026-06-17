@@ -11,4 +11,5 @@ public sealed record DanishAddressAutocompleteResult(
     string City,
     string AddressLine2 = "",
     bool IsCompleteAddress = true,
-    string ResultType = "");
+    string ResultType = "",
+    string? HusnummerId = null);

@@ -31,20 +31,6 @@ namespace TheNerdCollective.Integrations.Dar.Services.Dar.Internal
             };
         }
 
-        internal static DanishAddressDetailResult FromAdresse(JsonElement adresse)
-        {
-            var husnummer = adresse.GetProperty("husnummer");
-            var result = FromHusnummer(husnummer);
-
-            return result with
-            {
-                AdresseId = adresse.GetProperty("id_lokalid").GetString(),
-                Betegnelse = adresse.GetProperty("adressebetegnelse").GetString() ?? result.Betegnelse,
-                Etagebetegnelse = ReadOptionalString(adresse, "etagebetegnelse"),
-                Doerbetegnelse = ReadOptionalString(adresse, "doerbetegnelse")
-            };
-        }
-
         private static (double Easting, double Northing, string Crs) ReadCoordinates(JsonElement adgangspunkt)
         {
             if (adgangspunkt.TryGetProperty("koordinater", out var koordinater)
@@ -79,10 +65,5 @@ namespace TheNerdCollective.Integrations.Dar.Services.Dar.Internal
 
         private static JsonElement? TryGetProperty(JsonElement element, string propertyName) =>
             element.TryGetProperty(propertyName, out var value) ? value : null;
-
-        private static string? ReadOptionalString(JsonElement element, string propertyName) =>
-            element.TryGetProperty(propertyName, out var value) && value.ValueKind != JsonValueKind.Null
-                ? value.GetString()
-                : null;
     }
 }
