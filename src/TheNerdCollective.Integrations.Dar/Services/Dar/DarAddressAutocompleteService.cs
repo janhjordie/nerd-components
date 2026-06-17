@@ -128,11 +128,11 @@ namespace TheNerdCollective.Integrations.Dar.Services.Dar
         /// Henter udvidede adressedata (koordinater m.m.) via Adressevælger id-opslag.
         /// </summary>
         /// <param name="localId"><see cref="DanishAddressAutocompleteResult.LocalId"/> fra fonetisk søgning.</param>
-        /// <param name="resultType"><see cref="DanishAddressAutocompleteResult.ResultType"/> — <c>husnummer</c> eller <c>adresse</c>.</param>
+        /// <param name="resultType"><see cref="DanishAddressAutocompleteResult.ResultType"/> — <c>husnummer</c> eller <c>adresse</c>. Tom værdi behandles som <c>husnummer</c>.</param>
         /// <param name="husnummerId">Valgfrit husnummer-id fra autocomplete (påkrævet for <c>adresse</c> når <paramref name="localId"/> er en adresse-id).</param>
         public async Task<DanishAddressDetailResult> GetDetailsAsync(
             string localId,
-            string resultType,
+            string? resultType = null,
             string? husnummerId = null,
             CancellationToken cancellationToken = default)
         {
@@ -146,14 +146,16 @@ namespace TheNerdCollective.Integrations.Dar.Services.Dar
                 throw new InvalidOperationException("Adressevælger-token mangler.");
             }
 
-            if (!IsSupportedDetailResultType(resultType))
+            var normalizedResultType = NormalizeDetailResultType(resultType, localId, husnummerId);
+
+            if (!IsSupportedDetailResultType(normalizedResultType))
             {
                 throw new InvalidOperationException(
                     $"Adressevælger id-opslag understøttes ikke for type '{resultType}'. " +
                     "Vælg et autocomplete-resultat med type 'husnummer' eller 'adresse'.");
             }
 
-            var detailId = ResolveDetailId(localId, resultType, husnummerId);
+            var detailId = ResolveDetailId(localId, normalizedResultType, husnummerId);
             var requestUri = BuildDetailUri(_options.EffectiveBaseUrl, "husnumre", detailId, _options.Token);
             using var response = await _httpClient.GetAsync(requestUri, cancellationToken).ConfigureAwait(false);
             var payload = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
@@ -255,6 +257,22 @@ namespace TheNerdCollective.Integrations.Dar.Services.Dar
         private static bool IsSupportedDetailResultType(string? resultType) =>
             string.Equals(resultType, "husnummer", StringComparison.OrdinalIgnoreCase)
             || string.Equals(resultType, "adresse", StringComparison.OrdinalIgnoreCase);
+
+        private static string NormalizeDetailResultType(string? resultType, string localId, string? husnummerId)
+        {
+            if (!string.IsNullOrWhiteSpace(resultType))
+            {
+                return resultType.Trim();
+            }
+
+            if (!string.IsNullOrWhiteSpace(husnummerId)
+                && !string.Equals(husnummerId, localId, StringComparison.OrdinalIgnoreCase))
+            {
+                return "adresse";
+            }
+
+            return "husnummer";
+        }
 
         private static string ResolveDetailId(string localId, string? resultType, string? husnummerId)
         {

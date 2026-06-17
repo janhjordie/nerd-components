@@ -55,4 +55,50 @@ public sealed class DarAddressAutocompleteDetailIntegrationTests
         Assert.True(details.Easting > 0);
         Assert.True(details.Northing > 0);
     }
+
+    [Fact]
+    public async Task GetDetailsAsync_default_husnummer_naar_resultType_mangler()
+    {
+        using var httpClient = new HttpClient();
+        var autocomplete = DarClientFactory.CreateAutocomplete(
+            new DarAutocompleteOptions { Token = "adressevaelger123" },
+            httpClient);
+
+        var results = await autocomplete.SearchAsync("Århusvej 69a 3000");
+        var selection = results.FirstOrDefault(r =>
+            r.IsCompleteAddress
+            && string.Equals(r.ResultType, "husnummer", StringComparison.OrdinalIgnoreCase));
+
+        Assert.NotNull(selection);
+
+        var details = await autocomplete.GetDetailsAsync(selection.LocalId);
+
+        Assert.Equal(selection.LocalId, details.HusnummerId);
+        Assert.True(details.Easting > 0);
+    }
+
+    [Fact]
+    public async Task GetDetailsAsync_default_adresse_naar_resultType_mangler_men_husnummerId_findes()
+    {
+        using var httpClient = new HttpClient();
+        var autocomplete = DarClientFactory.CreateAutocomplete(
+            new DarAutocompleteOptions { Token = "adressevaelger123" },
+            httpClient);
+
+        var results = await autocomplete.SearchAsync("Baldersgade 45");
+        var selection = results.FirstOrDefault(r =>
+            r.IsCompleteAddress
+            && string.Equals(r.ResultType, "adresse", StringComparison.OrdinalIgnoreCase)
+            && r.DisplayName.Contains("2. th", StringComparison.OrdinalIgnoreCase));
+
+        Assert.NotNull(selection);
+        Assert.False(string.IsNullOrWhiteSpace(selection.HusnummerId));
+
+        var details = await autocomplete.GetDetailsAsync(
+            selection.LocalId,
+            husnummerId: selection.HusnummerId);
+
+        Assert.Equal(selection.HusnummerId, details.HusnummerId);
+        Assert.True(details.Easting > 0);
+    }
 }

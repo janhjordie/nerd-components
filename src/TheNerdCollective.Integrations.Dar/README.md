@@ -296,7 +296,7 @@ Fri-tekst adressesøgning i DAR via [Adressevælger](https://adressevaelger.dk) 
 |---|---|
 | `SearchAsync(searchText, ct?)` | Fonetisk søgning — returnerer op til 10 forslag |
 | `GetDetailsAsync(selection, ct?)` | Id-opslag på et autocomplete-resultat (anbefalet) |
-| `GetDetailsAsync(localId, resultType, husnummerId?, ct?)` | Id-opslag med felter fra søgning |
+| `GetDetailsAsync(localId, resultType?, husnummerId?, ct?)` | Id-opslag med felter fra søgning — tom `resultType` behandles som `husnummer` |
 
 **Søgning (`SearchAsync`)**
 
@@ -353,7 +353,7 @@ var detaljer = await services.Dar.Autocomplete.GetDetailsAsync(valgt);
 Assert.Equal(valgt.HusnummerId, detaljer.HusnummerId);
 ```
 
-`GetDetailsAsync` virker for `ResultType` `husnummer` og `adresse` — ikke for vejnavn-forslag. Ved manuelt kald med `GetDetailsAsync(localId, resultType, …)` skal `husnummerId` medsendes for type `adresse`. Kræver kun Adressevælger-token.
+`GetDetailsAsync` virker for `ResultType` `husnummer` og `adresse` — ikke for vejnavn-forslag. Tom eller manglende `resultType` behandles som `husnummer`; hvis `husnummerId` afviger fra `localId`, infereres `adresse`. Kræver kun Adressevælger-token.
 
 #### `services.Dar.Adresseopslag`
 
@@ -730,7 +730,7 @@ Kræver whitelisted IP — ellers springes testen over ved `DAF-AUTH-0005`.
 
 ## Versionering
 
-**Nuværende version:** `1.5.2`
+**Nuværende version:** `1.5.3`
 
 Publiceres til [NuGet.org](https://www.nuget.org/packages/TheNerdCollective.Integrations.Dar) via GitHub Actions ved push til `main`.
 
