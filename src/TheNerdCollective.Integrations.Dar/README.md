@@ -249,7 +249,7 @@ var husnummerId = detaljer.HusnummerId;
 var bygninger = await services.Bbr.Bygning.GetAllByHusnummerIdAsync(husnummerId);
 ```
 
-Ved enhedssøgning (fx `1. th`, `2. tv`) supplerer `SearchAsync` med `/adresser/soeg` og kan returnere `ResultType` `adresse`. Brug altid `GetDetailsAsync(valgt)` — servicen resolver husnummer-id automatisk.
+Ved konkret husnummer (fx `Baldersgade 45`) eller enhedssøgning (fx `2. th`) supplerer `SearchAsync` med `/adresser/soeg` og viser enheder (`ResultType` `adresse`). Brug altid `GetDetailsAsync(valgt)` — servicen resolver husnummer-id automatisk.
 
 ### Direkte adresseopslag (uden autocomplete)
 
@@ -303,7 +303,7 @@ Fri-tekst adressesøgning i DAR via [Adressevælger](https://adressevaelger.dk) 
 | Adressevælger-endpoint | Hvornår | Resultat-typer |
 |---|---|---|
 | `GET /husnumre/soeg` | Altid (primær søgning) | `husnummer`, `vejnavn`, `navngivenvejpostnummer` |
-| `GET /adresser/soeg` | Kun når søgeteksten ligner enhed (fx `1. th`, `2. tv`) | `adresse` (med `husnummerId` i svaret) |
+| `GET /adresser/soeg` | Når søgningen rammer et husnummer, eller teksten ligner enhed (fx `1. th`, `2. tv`) | `adresse` (med `husnummerId` i svaret) |
 
 `SearchAsync` returnerer `DanishAddressAutocompleteResult`:
 
@@ -730,7 +730,7 @@ Kræver whitelisted IP — ellers springes testen over ved `DAF-AUTH-0005`.
 
 ## Versionering
 
-**Nuværende version:** `1.5.1`
+**Nuværende version:** `1.5.2`
 
 Publiceres til [NuGet.org](https://www.nuget.org/packages/TheNerdCollective.Integrations.Dar) via GitHub Actions ved push til `main`.
 

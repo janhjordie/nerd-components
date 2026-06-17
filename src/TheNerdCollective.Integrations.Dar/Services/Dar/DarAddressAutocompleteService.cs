@@ -79,8 +79,11 @@ namespace TheNerdCollective.Integrations.Dar.Services.Dar
             var husnummerFunds = await FetchFundsAsync(
                 baseUrl, _options.Token, "husnumre", normalizedSearchText, cancellationToken);
 
+            var hasHusnummerMatch = husnummerFunds.Any(IsHusnummerFund);
+            var includeAdresseSearch = searchUnit || hasHusnummerMatch;
+
             List<AdressevaelgerFund> allFunds = husnummerFunds;
-            if (searchUnit)
+            if (includeAdresseSearch)
             {
                 var adresseFunds = await FetchFundsAsync(
                     baseUrl, _options.Token, "adresser", normalizedSearchText, cancellationToken);
@@ -90,7 +93,8 @@ namespace TheNerdCollective.Integrations.Dar.Services.Dar
                 }
             }
 
-            var results = BuildResults(allFunds, searchUnit, unitHint);
+            var preferUnits = searchUnit || hasHusnummerMatch;
+            var results = BuildResults(allFunds, preferUnits, unitHint);
 
             if (results.Count > 0)
             {
@@ -306,6 +310,9 @@ namespace TheNerdCollective.Integrations.Dar.Services.Dar
 
             return fund.Title.IndexOf(unitHint, StringComparison.OrdinalIgnoreCase) >= 0 ? 0 : 1;
         }
+
+        private static bool IsHusnummerFund(AdressevaelgerFund fund) =>
+            string.Equals(fund.Type, "husnummer", StringComparison.OrdinalIgnoreCase);
 
         private static bool IsAutocompleteResult(AdressevaelgerFund fund) =>
             string.Equals(fund.Type, "husnummer", StringComparison.OrdinalIgnoreCase)
