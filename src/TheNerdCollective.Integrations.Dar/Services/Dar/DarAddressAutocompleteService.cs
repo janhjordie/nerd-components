@@ -11,6 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using TheNerdCollective.Integrations.Dar.Configuration;
 using TheNerdCollective.Integrations.Dar.Models;
+using TheNerdCollective.Integrations.Dar.Services.Dar.Internal;
 
 namespace TheNerdCollective.Integrations.Dar.Services.Dar
 {
@@ -99,6 +100,82 @@ namespace TheNerdCollective.Integrations.Dar.Services.Dar
             return results;
         }
 
+        /// <summary>
+        /// Henter udvidede adressedata (koordinater m.m.) for et autocomplete-resultat via Adressevælger id-opslag.
+        /// </summary>
+        /// <param name="selection">Resultat fra <see cref="SearchAsync"/> med <see cref="DanishAddressAutocompleteResult.IsCompleteAddress"/>.</param>
+        public Task<DanishAddressDetailResult> GetDetailsAsync(
+            DanishAddressAutocompleteResult selection,
+            CancellationToken cancellationToken = default)
+        {
+            if (selection == null)
+            {
+                throw new ArgumentNullException(nameof(selection));
+            }
+
+            return GetDetailsAsync(selection.LocalId, selection.ResultType, cancellationToken);
+        }
+
+        /// <summary>
+        /// Henter udvidede adressedata (koordinater m.m.) via Adressevælger id-opslag.
+        /// </summary>
+        /// <param name="localId"><see cref="DanishAddressAutocompleteResult.LocalId"/> fra fonetisk søgning.</param>
+        /// <param name="resultType"><see cref="DanishAddressAutocompleteResult.ResultType"/> — <c>husnummer</c> eller <c>adresse</c>.</param>
+        public async Task<DanishAddressDetailResult> GetDetailsAsync(
+            string localId,
+            string resultType,
+            CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(localId))
+            {
+                throw new ArgumentException("LocalId mangler.", nameof(localId));
+            }
+
+            if (string.IsNullOrWhiteSpace(_options.Token))
+            {
+                throw new InvalidOperationException("Adressevælger-token mangler.");
+            }
+
+            var endpoint = ResolveDetailEndpoint(resultType);
+            if (endpoint == null)
+            {
+                throw new InvalidOperationException(
+                    $"Adressevælger id-opslag understøttes ikke for type '{resultType}'. " +
+                    "Vælg et autocomplete-resultat med type 'husnummer' eller 'adresse'.");
+            }
+
+            var requestUri = BuildDetailUri(_options.EffectiveBaseUrl, endpoint, localId, _options.Token);
+            using var response = await _httpClient.GetAsync(requestUri, cancellationToken).ConfigureAwait(false);
+            var payload = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new InvalidOperationException(
+                    $"Adressevælger id-opslag fejlede (HTTP {(int)response.StatusCode}).");
+            }
+
+            using var document = JsonDocument.Parse(payload);
+            var root = document.RootElement;
+
+            if (!string.Equals(root.GetProperty("status").GetString(), "ok", StringComparison.OrdinalIgnoreCase))
+            {
+                var description = root.TryGetProperty("beskrivelse", out var beskrivelse)
+                    ? beskrivelse.GetString()
+                    : null;
+                throw new InvalidOperationException(
+                    string.IsNullOrWhiteSpace(description)
+                        ? "Adressevælger id-opslag returnerede ikke status 'ok'."
+                        : $"Adressevælger id-opslag fejlede: {description}");
+            }
+
+            return endpoint switch
+            {
+                "husnumre" => AdressevaelgerDetailMapper.FromHusnummer(root.GetProperty("husnummer")),
+                "adresser" => AdressevaelgerDetailMapper.FromAdresse(root.GetProperty("adresse")),
+                _ => throw new InvalidOperationException($"Ukendt Adressevælger-endpoint: {endpoint}.")
+            };
+        }
+
         private async Task<List<AdressevaelgerFund>> FetchFundsAsync(
             string baseUrl,
             string token,
@@ -168,6 +245,20 @@ namespace TheNerdCollective.Integrations.Dar.Services.Dar
                 query.Select(pair => $"{Uri.EscapeDataString(pair.Key)}={Uri.EscapeDataString(pair.Value!)}"));
 
             return $"{trimmedBaseUrl}/{endpoint}/soeg?{queryString}";
+        }
+
+        private static string? ResolveDetailEndpoint(string? resultType) =>
+            resultType?.Trim().ToLowerInvariant() switch
+            {
+                "husnummer" => "husnumre",
+                "adresse" => "adresser",
+                _ => null
+            };
+
+        private static string BuildDetailUri(string baseUrl, string endpoint, string localId, string token)
+        {
+            var trimmedBaseUrl = baseUrl.TrimEnd('/');
+            return $"{trimmedBaseUrl}/{endpoint}/{Uri.EscapeDataString(localId)}?token={Uri.EscapeDataString(token)}";
         }
 
         private static bool ShouldSearchUnits(string searchText) => UnitSearchPattern.IsMatch(searchText);

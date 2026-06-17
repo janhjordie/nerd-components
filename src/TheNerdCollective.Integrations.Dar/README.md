@@ -11,6 +11,7 @@ Pakken targeter **.NET Standard 2.0** og kan bruges fra .NET Framework 4.6.1+ og
 ## Hvad kan pakken?
 
 - **Adresse-autocomplete** via Adressevælger (fri-tekst dansk adressesøgning)
+- **Adressedetaljer efter autocomplete** — koordinater (WGS84 + ETRS89), kommune m.m. via Adressevælger id-opslag
 - **Adresseopslag** i DAR med KVHX/DAWA-format output
 - **BBR-data** via separate services (bygning, enheder, etager, opgange, grund, ejendomsrelationer)
 - **Lazy by design** — kald kun de services du har brug for; intet hentes automatisk
@@ -36,7 +37,7 @@ Pakken bruger **to adgangskanaler til DAR** (Danmarks Adresseregister) — samme
 | Kanal | Host | Config | Formål |
 |---|---|---|---|
 | [Datafordeler](https://datafordeler.dk/) GraphQL | `graphql.datafordeler.dk` | `ApiKey` | Struktureret DAR + BBR (opslag, bygning, etager …) |
-| [Adressevælger](https://adressevaelger.dk) REST | `adressevaelger.dk` | `AutocompleteToken` | Fri-tekst søgning i DAR (DAWA-autocomplete-erstatning) |
+| [Adressevælger](https://adressevaelger.dk) REST | `adressevaelger.dk` | `AutocompleteToken` | Fonetisk søgning + id-opslag (koordinater m.m.) |
 
 **Adressevælger udstiller DAR** — ikke et separat register. Klimadatastyrelsen (som driver DAR) beskriver Adressevælger som et API der *«udelukkende vil tilbyde søgning i adresser og vejnavne … som det er angivet i Danmarks Adresseregister»* ([dokumentation](https://confluence.sdfi.dk/pages/viewpage.action?pageId=234782998)). Attributterne mapper direkte til DAR-entiteter (`DAR_Husnummer`, `DAR_Adresse`, `DAR_NavngivenVej` …), og opdateringer er tilgængelige dagen efter ændringer i DAR ([opdateringsfrekvens](https://confluence.sdfi.dk/pages/viewpage.action?pageId=234782998)).
 
@@ -112,7 +113,7 @@ var bygninger = await services.Bbr.Bygning.GetAllByHusnummerIdAsync(adresse.Husn
 var etager = await services.Bbr.Etage.GetByBygningIdAsync(bygninger[0].IdLokalId!);
 ```
 
-**Autocomplete (uden Datafordeler-nøgle):**
+**Autocomplete med koordinater (uden Datafordeler-nøgle):**
 
 ```csharp
 using var httpClient = new HttpClient();
@@ -120,12 +121,18 @@ var autocomplete = DarClientFactory.CreateAutocomplete(
     new DarAutocompleteOptions { Token = "adressevaelger123" },
     httpClient);
 
-var forslag = await autocomplete.SearchAsync("Århusvej 69");
-foreach (var adresse in forslag)
-{
-    Console.WriteLine($"{adresse.DisplayName} ({adresse.ResultType})");
-}
+// 1. Fonetisk søgning
+var forslag = await autocomplete.SearchAsync("Århusvej 69a 3000");
+var valgt = forslag.First(f => f.IsCompleteAddress);
+
+// 2. Id-opslag på valgt forslag — koordinater + DAR husnummer-id
+var detaljer = await autocomplete.GetDetailsAsync(valgt);
+
+Console.WriteLine($"{detaljer.Betegnelse}: {detaljer.Latitude}, {detaljer.Longitude}");
+Console.WriteLine($"HusnummerId (til DAR/BBR): {detaljer.HusnummerId}");
 ```
+
+`GetDetailsAsync` virker for autocomplete-typerne `husnummer` og `adresse`. Kræver kun Adressevælger-token — ikke Datafordeler API-nøgle.
 
 ---
 
@@ -206,7 +213,7 @@ Hovedendpoint **`GET /api/lookup/full?vej=...&postnr=...&by=...`** returnerer sa
 ```
 DarServices
 ├── Dar
-│   ├── Autocomplete    → fri-tekst adressesøgning (Adressevælger / DAR REST)
+│   ├── Autocomplete    → fonetisk søgning + id-opslag (koordinater) via Adressevælger
 │   ├── Adresseopslag   → native DAR-resultat + valgfri KvHxInput (DAWA legacy)
 │   └── Husnummer       → native DAR husnummer uden KvHxInput
 └── Bbr
@@ -222,6 +229,23 @@ DarServices
 ---
 
 ## Typisk flow
+
+### UI med autocomplete (anbefalet)
+
+```csharp
+// 1. Bruger vælger adresse i autocomplete
+var valgt = (await services.Dar.Autocomplete.SearchAsync("Århusvej 69a 3000"))
+    .First(f => f.IsCompleteAddress);
+
+// 2. Koordinater + husnummer-id (kun Adressevælger-token)
+var detaljer = await services.Dar.Autocomplete.GetDetailsAsync(valgt);
+var husnummerId = detaljer.HusnummerId;
+
+// 3. BBR via Datafordeler (kræver ApiKey + whitelisted IP)
+var bygninger = await services.Bbr.Bygning.GetAllByHusnummerIdAsync(husnummerId);
+```
+
+### Direkte adresseopslag (uden autocomplete)
 
 ```csharp
 // 1. DAR: adresseopslag
@@ -264,11 +288,38 @@ Fri-tekst adressesøgning i DAR via [Adressevælger](https://adressevaelger.dk) 
 
 | Metode | Beskrivelse |
 |---|---|
-| `SearchAsync(searchText, ct?)` | Returnerer op til 10 autocomplete-forslag |
+| `SearchAsync(searchText, ct?)` | Fonetisk søgning — returnerer op til 10 forslag |
+| `GetDetailsAsync(selection, ct?)` | Id-opslag på et autocomplete-resultat |
+| `GetDetailsAsync(localId, resultType, ct?)` | Id-opslag med `LocalId` + `ResultType` fra søgning |
 
-Returnerer `DanishAddressAutocompleteResult` med bl.a. `DisplayName`, `AddressLine1`, `PostalCode`, `City`, `IsCompleteAddress` og `LocalId`.
+`SearchAsync` returnerer `DanishAddressAutocompleteResult` med bl.a. `DisplayName`, `AddressLine1`, `PostalCode`, `City`, `IsCompleteAddress`, `LocalId` og `ResultType`.
 
-Typisk brug i UI: debounce 300 ms, minimum 2 tegn, vis kun forslag hvor `IsCompleteAddress == true` hvis adressen skal bruges til videre DAR/BBR-opslag.
+`GetDetailsAsync` kalder Adressevælger [id-opslag](https://confluence.sdfi.dk/pages/viewpage.action?pageId=246743156) (`GET /husnumre/{id}` eller `GET /adresser/{id}`) og returnerer `DanishAddressDetailResult`:
+
+| Felt | Beskrivelse |
+|---|---|
+| `HusnummerId` | DAR `id_lokalId` — brug videre i Datafordeler/BBR |
+| `AdresseId` | DAR adresse-id når opslag startede fra type `adresse` |
+| `Betegnelse`, `Vejnavn`, `Husnummer`, `Postnummer`, `Postdistrikt` | Adressebetegnelser fra Adressevælger |
+| `Etagebetegnelse`, `Doerbetegnelse` | Ved enhedsadresse |
+| `Kommunekode` | Fra `navngivenvejkommunedel` |
+| `Easting`, `Northing`, `CoordinateSystem` | Adgangspunkt i ETRS89 (EPSG:25832) |
+| `Latitude`, `Longitude` | WGS84 (EPSG:4326), beregnet fra ETRS89 |
+
+Eksempel:
+
+```csharp
+var forslag = await services.Dar.Autocomplete.SearchAsync("Århusvej 69a 3000");
+var valgt = forslag.First(f => f.IsCompleteAddress);
+
+var detaljer = await services.Dar.Autocomplete.GetDetailsAsync(valgt);
+// detaljer.HusnummerId, detaljer.Latitude, detaljer.Longitude, detaljer.Easting, detaljer.Northing
+
+// Fortsæt til BBR med samme husnummer-id
+var bygninger = await services.Bbr.Bygning.GetAllByHusnummerIdAsync(detaljer.HusnummerId);
+```
+
+`GetDetailsAsync` virker kun for `ResultType` `husnummer` eller `adresse` — ikke for vejnavn-forslag. Kræver kun Adressevælger-token.
 
 #### `services.Dar.Adresseopslag`
 
@@ -357,7 +408,8 @@ Namespace: `TheNerdCollective.Integrations.Dar.Models`
 
 | DTO | Beskrivelse |
 |---|---|
-| `DanishAddressAutocompleteResult` | Autocomplete-forslag fra Adressevælger |
+| `DanishAddressAutocompleteResult` | Fonetisk søgningsforslag fra Adressevælger |
+| `DanishAddressDetailResult` | Id-opslag efter autocomplete (koordinater, husnummer-id m.m.) |
 | `AdresseopslagResult` | Adresseopslag med native `Dar` + valgfri `KvHxInput` (legacy) |
 | `DarAdresseopslagDto` | Native DAR-resultat (`Husnummer` + `Vejnavn`) |
 | `HusnummerLookupResult` | Husnummer med native `Dar` (uden KvHxInput) |
@@ -470,7 +522,7 @@ Kræver whitelisted IP — ellers springes testen over ved `DAF-AUTH-0005`.
 
 ## Versionering
 
-**Nuværende version:** `1.2.1`
+**Nuværende version:** `1.3.8`
 
 Publiceres til [NuGet.org](https://www.nuget.org/packages/TheNerdCollective.Integrations.Dar) via GitHub Actions ved push til `main`.
 
