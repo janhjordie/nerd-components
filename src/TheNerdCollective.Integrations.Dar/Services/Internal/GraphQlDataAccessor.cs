@@ -101,6 +101,52 @@ namespace TheNerdCollective.Integrations.Dar.Services.Internal
             return ToJsonArray(items);
         }
 
+        internal async Task<JsonElement> FetchAllDarNodesAsync(
+            string query,
+            Func<string?, object> createVariables,
+            string rootField,
+            CancellationToken cancellationToken = default)
+        {
+            var items = new List<JsonElement>();
+            string? after = null;
+
+            while (true)
+            {
+                using var response = await _client.ExecuteAsync(
+                    _darEndpoint,
+                    query,
+                    createVariables(after),
+                    cancellationToken).ConfigureAwait(false);
+
+                var connection = response.RootElement
+                    .GetProperty("data")
+                    .GetProperty(rootField);
+
+                foreach (var node in connection.GetProperty("nodes").EnumerateArray())
+                {
+                    items.Add(node.Clone());
+                }
+
+                if (!connection.TryGetProperty("pageInfo", out var pageInfo)
+                    || !pageInfo.TryGetProperty("hasNextPage", out var hasNextPage)
+                    || !hasNextPage.GetBoolean())
+                {
+                    break;
+                }
+
+                after = pageInfo.TryGetProperty("endCursor", out var cursor)
+                    ? cursor.GetString()
+                    : null;
+
+                if (string.IsNullOrEmpty(after))
+                {
+                    break;
+                }
+            }
+
+            return ToJsonArray(items);
+        }
+
         internal async Task<JsonElement> FetchDagiSingleNodeAsync(
             string query,
             object variables,

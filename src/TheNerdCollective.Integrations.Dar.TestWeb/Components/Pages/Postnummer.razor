@@ -1,0 +1,328 @@
+@page "/postnummer"
+@rendermode InteractiveServer
+@inject DarRuntime Runtime
+
+<PageTitle>Postnummer</PageTitle>
+
+<div class="page">
+    <header class="page-header">
+        <h1>Postnummer</h1>
+        <p>
+            Test af <code>Dar.Postnummer</code> — aktive postnumre via
+            <a href="https://graphql.datafordeler.dk/DAR/v3" target="_blank" rel="noopener">DAR GraphQL</a>
+            og kommune-metadata via
+            <a href="https://dawadocs.dataforsyningen.dk/dok/api/postnummer" target="_blank" rel="noopener">DAWA</a>
+            (gratis, ingen API-nøgle).
+        </p>
+        <p class="section-intro">
+            Fuld liste caches i 30 dage. Første kald til <code>GetAllActiveAsync()</code> kan tage et par sekunder.
+        </p>
+    </header>
+
+    @if (!string.IsNullOrWhiteSpace(_configurationError))
+    {
+        <section class="alert alert--warning">
+            <strong>Konfiguration:</strong> @_configurationError
+        </section>
+    }
+    else
+    {
+        <section class="card">
+            <div class="tab-bar tab-bar--3" role="tablist" aria-label="Postnummer-test">
+                <button type="button"
+                        class="tab @(_mode == TestMode.All ? "tab--active" : null)"
+                        role="tab"
+                        aria-selected="@(_mode == TestMode.All)"
+                        @onclick="() => _mode = TestMode.All">
+                    Alle aktive
+                </button>
+                <button type="button"
+                        class="tab @(_mode == TestMode.Municipality ? "tab--active" : null)"
+                        role="tab"
+                        aria-selected="@(_mode == TestMode.Municipality)"
+                        @onclick="() => _mode = TestMode.Municipality">
+                    Per kommune
+                </button>
+                <button type="button"
+                        class="tab @(_mode == TestMode.Lookup ? "tab--active" : null)"
+                        role="tab"
+                        aria-selected="@(_mode == TestMode.Lookup)"
+                        @onclick="() => _mode = TestMode.Lookup">
+                    Opslag
+                </button>
+            </div>
+
+            @if (_mode == TestMode.All)
+            {
+                <div class="tab-panel" role="tabpanel">
+                    <h2>Alle aktive postnumre</h2>
+                    <p class="section-intro">Kalder <code>GetAllActiveAsync()</code> (DAR GraphQL, status 3).</p>
+
+                    <div class="actions actions--inline">
+                        <button type="button"
+                                class="button button--primary"
+                                disabled="@_isLoadingAll"
+                                @onclick="LoadAllAsync">
+                            @(_isLoadingAll ? "Henter..." : "Hent alle postnumre")
+                        </button>
+                        @if (_allPostnumre.Count > 0)
+                        {
+                            <span class="meta-pill">@_allPostnumre.Count postnumre</span>
+                        }
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(_allMethodCall))
+                    {
+                        <MethodCallHint Text="@_allMethodCall" />
+                    }
+                </div>
+            }
+            else if (_mode == TestMode.Municipality)
+            {
+                <div class="tab-panel" role="tabpanel">
+                    <h2>Postnumre per kommune</h2>
+                    <p class="section-intro">Kalder <code>GetByMunicipalityCodeAsync(kommunekode)</code> via DAWA.</p>
+
+                    <div class="form-grid form-grid--compact">
+                        <label>
+                            Kommunekode (4 cifre)
+                            <InputText @bind-Value="_kommunekode" class="input" placeholder="0101" />
+                        </label>
+                    </div>
+
+                    <div class="actions actions--inline">
+                        <button type="button"
+                                class="button button--primary"
+                                disabled="@_isLoadingMunicipality"
+                                @onclick="LoadByMunicipalityAsync">
+                            @(_isLoadingMunicipality ? "Henter..." : "Hent postnumre")
+                        </button>
+                        @if (_municipalityPostnumre.Count > 0)
+                        {
+                            <span class="meta-pill">@_municipalityPostnumre.Count postnumre</span>
+                        }
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(_municipalityMethodCall))
+                    {
+                        <MethodCallHint Text="@_municipalityMethodCall" />
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="tab-panel" role="tabpanel">
+                    <h2>Opslag med kommune</h2>
+                    <p class="section-intro">
+                        Kalder <code>GetByPostalCodesAsync()</code>. Angiv ét postnummer eller flere adskilt med
+                        <code>|</code> (fx <code>2730|2750|2610</code>).
+                    </p>
+
+                    <div class="form-grid form-grid--compact">
+                        <label>
+                            Postnummer(e)
+                            <InputText @bind-Value="_postalCodeInput" class="input" placeholder="2730 eller 2730|2750|2610" />
+                        </label>
+                    </div>
+
+                    <div class="actions actions--inline">
+                        <button type="button"
+                                class="button button--primary"
+                                disabled="@_isLoadingLookup"
+                                @onclick="LoadByPostalCodesAsync">
+                            @(_isLoadingLookup ? "Slår op..." : "Slå op")
+                        </button>
+                        <button type="button"
+                                class="button"
+                                disabled="@_isLoadingLookup"
+                                @onclick="LoadHerlevBatchAsync">
+                            Herlev-batch (GEO-04b)
+                        </button>
+                        @if (_lookupResults.Count > 0)
+                        {
+                            <span class="meta-pill">@_lookupResults.Count resultater</span>
+                        }
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(_lookupMethodCall))
+                    {
+                        <MethodCallHint Text="@_lookupMethodCall" />
+                    }
+                </div>
+            }
+        </section>
+
+        @if (!string.IsNullOrWhiteSpace(_errorMessage))
+        {
+            <section class="alert alert--error">
+                <strong>Fejl:</strong> @_errorMessage
+            </section>
+        }
+
+        @if (_lookupResults.Count > 0)
+        {
+            <section class="summary card">
+                <h2>Opslag-resultater</h2>
+                <dl class="summary-grid">
+                    @foreach (var item in _lookupResults)
+                    {
+                        <div>
+                            <dt>@item.Postnummer @item.Postdistrikt</dt>
+                            <dd>@(item.Kommunenavn ?? "—") (@(item.Kommunekode ?? "—"))</dd>
+                        </div>
+                    }
+                </dl>
+            </section>
+
+            <ResultPanel Title="Dar.Postnummer.GetByPostalCodesAsync"
+                         Subtitle="@($"{_lookupResults.Count} postnumre")"
+                         MethodCall="@_lookupMethodCall"
+                         Data="_lookupResults"
+                         Open="true" />
+        }
+
+        @if (_municipalityPostnumre.Count > 0)
+        {
+            <ResultPanel Title="Dar.Postnummer.GetByMunicipalityCodeAsync"
+                         Subtitle="@($"kommunekode {_kommunekode.Trim()} — {_municipalityPostnumre.Count} postnumre")"
+                         MethodCall="@_municipalityMethodCall"
+                         Data="_municipalityPostnumre" />
+        }
+
+        @if (_allPostnumre.Count > 0)
+        {
+            <ResultPanel Title="Dar.Postnummer.GetAllActiveAsync"
+                         Subtitle="@($"{_allPostnumre.Count} postnumre")"
+                         MethodCall="@_allMethodCall"
+                         Data="_allPostnumre" />
+        }
+    }
+</div>
+
+@code {
+    private const string GetAllMethodCall =
+        "var services = DarClientFactory.Create(darOptions, httpClient);\n" +
+        "var postnumre = await services.Dar.Postnummer.GetAllActiveAsync();";
+
+    private enum TestMode
+    {
+        All,
+        Municipality,
+        Lookup
+    }
+
+    private TestMode _mode = TestMode.Lookup;
+    private IReadOnlyList<PostnummerDto> _allPostnumre = Array.Empty<PostnummerDto>();
+    private IReadOnlyList<PostnummerDto> _municipalityPostnumre = Array.Empty<PostnummerDto>();
+    private IReadOnlyList<PostnummerMedKommuneDto> _lookupResults = Array.Empty<PostnummerMedKommuneDto>();
+    private string _kommunekode = "0101";
+    private string _postalCodeInput = "2730";
+    private string? _configurationError;
+    private string? _errorMessage;
+    private string? _allMethodCall;
+    private string? _municipalityMethodCall;
+    private string? _lookupMethodCall;
+    private bool _isLoadingAll;
+    private bool _isLoadingMunicipality;
+    private bool _isLoadingLookup;
+
+    protected override void OnInitialized()
+    {
+        _configurationError = Runtime.ConfigurationError;
+    }
+
+    private async Task LoadAllAsync()
+    {
+        _errorMessage = null;
+        _isLoadingAll = true;
+
+        try
+        {
+            var services = Runtime.CreateServices();
+            _allPostnumre = await services.Dar.Postnummer.GetAllActiveAsync();
+            _allMethodCall = GetAllMethodCall;
+        }
+        catch (DatafordelerApiException ex) when (ex.ResponseBody.Contains("DAF-AUTH-0005", StringComparison.Ordinal))
+        {
+            _errorMessage = BuildAuthErrorMessage();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = ex.Message;
+        }
+        finally
+        {
+            _isLoadingAll = false;
+        }
+    }
+
+    private async Task LoadByMunicipalityAsync()
+    {
+        _errorMessage = null;
+        _isLoadingMunicipality = true;
+        _municipalityPostnumre = Array.Empty<PostnummerDto>();
+
+        var code = _kommunekode.Trim();
+        _municipalityMethodCall =
+            "var postnumre = await services.Dar.Postnummer.GetByMunicipalityCodeAsync(\n" +
+            $"    {MethodCallFormatter.CsString(code)});";
+
+        try
+        {
+            var services = Runtime.CreateServices();
+            _municipalityPostnumre = await services.Dar.Postnummer.GetByMunicipalityCodeAsync(code);
+        }
+        catch (DatafordelerApiException ex) when (ex.ResponseBody.Contains("DAF-AUTH-0005", StringComparison.Ordinal))
+        {
+            _errorMessage = BuildAuthErrorMessage();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = ex.Message;
+        }
+        finally
+        {
+            _isLoadingMunicipality = false;
+        }
+    }
+
+    private Task LoadHerlevBatchAsync()
+    {
+        _postalCodeInput = "2730|2750|2610|1500|3520|2800";
+        return LoadByPostalCodesAsync();
+    }
+
+    private async Task LoadByPostalCodesAsync()
+    {
+        _errorMessage = null;
+        _lookupResults = Array.Empty<PostnummerMedKommuneDto>();
+        _isLoadingLookup = true;
+
+        var input = _postalCodeInput.Trim();
+        _lookupMethodCall =
+            "var postnumre = await services.Dar.Postnummer.GetByPostalCodesAsync(\n" +
+            $"    new[] {{ {MethodCallFormatter.CsString(input)} }});";
+
+        try
+        {
+            var services = Runtime.CreateServices();
+            _lookupResults = await services.Dar.Postnummer.GetByPostalCodesAsync(new[] { input });
+        }
+        catch (DatafordelerApiException ex) when (ex.ResponseBody.Contains("DAF-AUTH-0005", StringComparison.Ordinal))
+        {
+            _errorMessage = BuildAuthErrorMessage();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = ex.Message;
+        }
+        finally
+        {
+            _isLoadingLookup = false;
+        }
+    }
+
+    private static string BuildAuthErrorMessage() =>
+        "IP-adressen er ikke whitelisted i Datafordeler Administration (DAF-AUTH-0005). " +
+        "Tilføj din udgående IP under https://administration.datafordeler.dk/";
+}

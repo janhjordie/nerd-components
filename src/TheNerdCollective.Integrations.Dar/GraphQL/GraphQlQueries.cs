@@ -229,4 +229,39 @@ public static class GraphQlQueries
           }
         }
         """;
+
+    public static string GetAllPostnumre => $$"""
+        query GetAllPostnumre($virkningstid: DafDateTime, $registreringstid: DafDateTime, $after: String) {
+          DAR_Postnummer(
+            first: 100
+            after: $after
+            virkningstid: $virkningstid
+            registreringstid: $registreringstid
+            where: { status: { eq: "3" } }
+          ) {
+            nodes {
+              {{GraphQlFieldLists.Postnummer}}
+            }
+            pageInfo {
+              hasNextPage
+              endCursor
+            }
+          }
+        }
+        """;
+
+    public static string GetPostnummerByCode => $$"""
+        query GetPostnummerByCode($postnr: String!, $virkningstid: DafDateTime, $registreringstid: DafDateTime) {
+          DAR_Postnummer(
+            first: 1
+            virkningstid: $virkningstid
+            registreringstid: $registreringstid
+            where: { postnr: { eq: $postnr }, status: { eq: "3" } }
+          ) {
+            nodes {
+              {{GraphQlFieldLists.Postnummer}}
+            }
+          }
+        }
+        """;
 }

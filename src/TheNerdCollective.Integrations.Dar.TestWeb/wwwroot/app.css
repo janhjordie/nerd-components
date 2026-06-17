@@ -126,6 +126,14 @@ label {
     font-weight: 600;
 }
 
+.tab-bar--3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.form-grid--compact {
+    max-width: 420px;
+}
+
 .tab-bar {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));

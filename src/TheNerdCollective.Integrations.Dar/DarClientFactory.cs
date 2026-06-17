@@ -56,7 +56,8 @@ namespace TheNerdCollective.Integrations.Dar
                 new DarAdresseopslagService(accessor),
                 new DarHusnummerService(accessor),
                 new DarAddressAutocompleteService(options.Autocomplete, client),
-                new DarKommuneService(accessor, client, options.ApiKey, options.Dagi));
+                new DarKommuneService(accessor, client, options.ApiKey, options.Dagi),
+                new DarPostnummerService(accessor, client, options.ApiKey, options.Postnummer));
 
             var bbr = new BbrServices(
                 new BbrBygningService(accessor),

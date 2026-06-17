@@ -25,6 +25,9 @@ public sealed class DarOptions
     /// <summary>DAGI REST/WFS-fallback og cache når GraphQL er tom.</summary>
     public DarDagiOptions Dagi { get; set; } = new();
 
+    /// <summary>Postnummer-liste, kommune-opslag og cache.</summary>
+    public DarPostnummerOptions Postnummer { get; set; } = new();
+
     /// <summary>DAR adresse-autocomplete (Adressevælger REST).</summary>
     public DarAutocompleteOptions Autocomplete { get; set; } = new();
 

@@ -449,4 +449,11 @@ public static class GraphQlFieldLists
         virkningTil
         """;
 
+    public const string Postnummer = """
+        id_lokalId
+        postnr
+        navn
+        status
+        """;
+
 }

@@ -14,6 +14,7 @@ Pakken targeter **.NET Standard 2.0** og kan bruges fra .NET Framework 4.6.1+ og
 - **Adressedetaljer efter autocomplete** — koordinater (WGS84 + ETRS89), kommune m.m. via Adressevælger id-opslag
 - **Adresseopslag** i DAR med KVHX/DAWA-format output
 - **Kommuner (DAGI)** — liste af alle kommuner og opslag ud fra WGS84-koordinater (`GetAllAsync`, `FindByCoordinatesAsync`); **DAWA-fallback** mens Datafordeler DAGI GraphQL returnerer tomme resultater
+- **Postnumre (DAR)** — aktive postnumre, filtrering på kommunekode og batch-opslag med kommune-metadata (`GetAllActiveAsync`, `GetByMunicipalityCodeAsync`, `GetByPostalCodesAsync`)
 - **BBR-data** via separate services (bygning, enheder, etager, opgange, grund, ejendomsrelationer)
 - **Lazy by design** — kald kun de services du har brug for; intet hentes automatisk
 - **Typed DTO'er** med fleksibel JSON-deserialisering mod Datafordeler
@@ -217,7 +218,8 @@ DarServices
 │   ├── Autocomplete    → fonetisk søgning + id-opslag (koordinater) via Adressevælger
 │   ├── Adresseopslag   → native DAR-resultat + valgfri KvHxInput (DAWA legacy)
 │   ├── Husnummer       → native DAR husnummer uden KvHxInput
-│   └── Kommune         → DAGI kommuner (GraphQL + DAWA/WFS/REST-fallback)
+│   ├── Kommune         → DAGI kommuner (GraphQL + DAWA/WFS/REST-fallback)
+│   └── Postnummer      → aktive postnumre (GraphQL) + kommune via DAWA/REST
 └── Bbr
     ├── Bygning
     ├── Enhed
@@ -395,6 +397,110 @@ var kommune = await services.Dar.Kommune.FindByCoordinatesAsync(
 
 Returnerer `KommuneDto` med `IdLokalId`, `Navn` og `Kommunekode`.
 
+#### `services.Dar.Postnummer`
+
+Aktive postnumre via **DAR GraphQL** (`DAR_Postnummer`, [v3](https://graphql.datafordeler.dk/DAR/v3)) med `status = 3` (gyldige/aktive). Kommune-metadata hentes via **[DAWA](https://dawadocs.dataforsyningen.dk/dok/api/postnummer)** (`api.dataforsyningen.dk/postnumre`) — **gratis, ingen API-nøgle** — eller DAR REST husnummer-opslag (`MedDybde=true`) som fallback.
+
+> **DAWA til kommune-metadata**  
+> DAR GraphQL returnerer postnummer og postdistrikt, men ikke kommune direkte på `DAR_Postnummer`.  
+> Pakken beriger derfor med DAWA (eller REST) når du kalder `GetByMunicipalityCodeAsync` / `GetByPostalCodesAsync`.  
+> Slå DAWA fra med `Postnummer:EnableDawaEnrichment: false` — så bruges kun DAR REST husnummer-opslag (langsommere ved mange kald).
+
+**Datakilder pr. metode**
+
+| Metode | Primær kilde | Fallback | Cache |
+|---|---|---|---|
+| `GetAllActiveAsync` | DAR GraphQL (`DAR_Postnummer`, pagineret) | — | 30 dage (default) |
+| `GetByMunicipalityCodeAsync` | DAWA `?kommunekode=` | REST-baseret filtrering | DAWA live |
+| `GetByPostalCodesAsync` | DAWA `?nr=` | DAR REST husnummer pr. postnr | DAWA live |
+
+**Primær kommune**
+
+Når et postnummer tilhører flere kommuner (sjældent), vælges primær kommune således:
+
+1. Første DAWA-kommune hvis `navn` matcher postdistriktet (fx 2730 → Herlev `0163`)
+2. Ellers sidste kommune i DAWA-listen
+3. Ved REST-fallback: kommune fra første husnummer (`kommuneinddeling` på `husnummer?postnr=…`)
+
+**Downstream-mapping (eksempel)**
+
+| Pakke (`PostnummerMedKommuneDto`) | Typisk host-DTO |
+|---|---|
+| `Postnummer` | `PostalCode` / `nr` |
+| `Postdistrikt` | `City` / `navn` |
+| `Kommunekode` | `MunicipalityCode` / `kommuner[].kode` |
+| `Kommunenavn` | `MunicipalityName` / `kommuner[].navn` |
+
+```json
+"TheNerdCollective": {
+  "Dar": {
+    "ApiKey": "...",
+    "Postnummer": {
+      "EnableDawaEnrichment": true,
+      "DawaBaseUrl": "https://api.dataforsyningen.dk",
+      "RestUrl": "https://services.datafordeler.dk/DAR/DAR/3.0.0/rest",
+      "CacheDuration": "30.00:00:00",
+      "MaxParallelKommuneLookups": 12
+    }
+  }
+}
+```
+
+| Config | Default | Beskrivelse |
+|---|---|---|
+| `EnableDawaEnrichment` | `true` | Brug DAWA til kommune-opslag og kommunefilter |
+| `DawaBaseUrl` | `https://api.dataforsyningen.dk` | DAWA base-URL |
+| `RestUrl` | DAR REST 3.0.0 | Husnummer-opslag når DAWA fejler |
+| `CacheDuration` | `30` dage | Cache for `GetAllActiveAsync` |
+| `MaxParallelKommuneLookups` | `12` | Parallel REST-opslag ved DAWA-fallback på stor liste |
+
+| Metode | Beskrivelse |
+|---|---|
+| `GetAllActiveAsync(ct?)` | Alle aktive postnumre (`Postnummer`, `Postdistrikt`), sorteret efter postnummer |
+| `GetByMunicipalityCodeAsync(kommunekode, ct?)` | Postnumre for en kommune (firecifret kode, fx `"0101"`) |
+| `GetByPostalCodesAsync(postalCodes, ct?)` | `PostnummerMedKommuneDto` pr. angivet postnummer; pipe-separeret streng i ét element understøttes |
+
+```csharp
+// Fuld liste (tung første gang — caches i 30 dage)
+var postnumre = await services.Dar.Postnummer.GetAllActiveAsync();
+// postnumre.Count typisk > 1000; indeholder fx "2730" / "Herlev"
+
+// København autocomplete (GEO-05)
+var koebenhavn = await services.Dar.Postnummer.GetByMunicipalityCodeAsync("0101");
+
+// Enkelt opslag (GEO-04)
+var byNumber = await services.Dar.Postnummer.GetByPostalCodesAsync(new[] { "2100" });
+
+// Batch med pipe (GEO-04b) — mindst 2 forskellige kommunekoder i resultatet
+var batch = await services.Dar.Postnummer.GetByPostalCodesAsync(
+    new[] { "2730|2750|2610|2800" });
+// batch[0].Kommunekode fx "0163" (Herlev), batch[1] fx "0151" (Ballerup)
+```
+
+**DTO'er**
+
+```csharp
+// PostnummerDto — fra GetAllActiveAsync / GetByMunicipalityCodeAsync
+public record PostnummerDto
+{
+    public string Postnummer { get; init; }   // "2730"
+    public string Postdistrikt { get; init; } // "Herlev"
+}
+
+// PostnummerMedKommuneDto — fra GetByPostalCodesAsync
+public sealed record PostnummerMedKommuneDto : PostnummerDto
+{
+    public string? Kommunekode { get; init; }  // "0163"
+    public string? Kommunenavn { get; init; }    // "Herlev"
+}
+```
+
+**Performance:** `GetAllActiveAsync` henter alle aktive postnumre via GraphQL-pagination (~1000+ rækker). Planlæg lang timeout ved første kald i downstream HTTP-API'er; efterfølgende kald er hurtige pga. cache.
+
+Test i **TestWeb**: `/postnummer` — faner for alle tre metoder med kodeeksempler.
+
+Returnerer `PostnummerDto` / `PostnummerMedKommuneDto`.
+
 ### DAR-resultat (anbefalet)
 
 `AdresseopslagResult.Dar` (`DarAdresseopslagDto`) er det **native DAR-resultat** fra Datafordeler — brug dette i nye integrationer:
@@ -473,6 +579,8 @@ Namespace: `TheNerdCollective.Integrations.Dar.Models`
 | `DarAdresseopslagDto` | Native DAR-resultat (`Husnummer` + `Vejnavn`) |
 | `HusnummerLookupResult` | Husnummer med native `Dar` (uden KvHxInput) |
 | `KommuneDto` | Kommune (`id_lokalId`, `navn`, `kommunekode`) fra DAGI/DAWA |
+| `PostnummerDto` | Aktivt postnummer (`Postnummer`, `Postdistrikt`) |
+| `PostnummerMedKommuneDto` | Postnummer med primær `Kommunekode` / `Kommunenavn` |
 | `KvHxInputDto` | KVHX i DAWA-format (legacy bagudkompatibilitet) |
 | `HusnummerDto` | DAR husnummer |
 | `BygningDto` | Bygning, arealer, grund-reference |
@@ -553,6 +661,12 @@ dotnet pack src/TheNerdCollective.Integrations.Dar/TheNerdCollective.Integration
 
 Åbn **http://localhost:5095**.
 
+| Side | Route | Tester |
+|---|---|---|
+| Adresse & BBR | `/adresse` | Autocomplete, adresseopslag, fuld BBR-kæde |
+| Kommune | `/kommune` | `Dar.Kommune.GetAllAsync`, `FindByCoordinatesAsync` |
+| Postnummer | `/postnummer` | `Dar.Postnummer.GetAllActiveAsync`, `GetByMunicipalityCodeAsync`, `GetByPostalCodesAsync` |
+
 Opsæt API-nøgle:
 
 ```bash
@@ -562,13 +676,17 @@ cp src/TheNerdCollective.Integrations.Dar.TestWeb/appsettings.local.json.example
 
 `appsettings.local.json` er i `.gitignore` og committes ikke.
 
-TestWeb kalder alle services i én operation (adresseopslag → husnummer → bygning → enheder → etager → opgange → tekniske anlæg → grund → ejendomsrelationer). Standard testadresse: **Århusvej 69a, 3000 Helsingør**.
+**Adresse & BBR** (`/adresse`) kalder alle BBR-services i én operation. Standard testadresse: **Århusvej 69a, 3000 Helsingør**.
+
+**Kommune** og **Postnummer** har egne sider med faner, JSON-resultater og **Kald i kode**-eksempler pr. metode.
 
 ### Integrationstests
 
 ```bash
 dotnet test tests/TheNerdCollective.Integrations.Dar.IntegrationTests
 ```
+
+Integrationstests dækker bl.a. `DarKommuneIntegrationTests` og `DarPostnummerIntegrationTests` (postnummer: ≥500 aktive, 2730, kommunekode 0101, Herlev-batch).
 
 API-nøgle læses i prioriteret rækkefølge:
 
@@ -582,7 +700,7 @@ Kræver whitelisted IP — ellers springes testen over ved `DAF-AUTH-0005`.
 
 ## Versionering
 
-**Nuværende version:** `1.4.2`
+**Nuværende version:** `1.5.0`
 
 Publiceres til [NuGet.org](https://www.nuget.org/packages/TheNerdCollective.Integrations.Dar) via GitHub Actions ved push til `main`.
 
