@@ -70,6 +70,11 @@ public sealed class DarPostnummerService
         return postnumre;
     }
 
+    /// <summary>Returnerer alle aktive postnumre inkl. primær kommune (cache 30 dage).</summary>
+    public Task<IReadOnlyList<PostnummerMedKommuneDto>> GetAllActiveWithKommuneAsync(
+        CancellationToken cancellationToken = default) =>
+        ResolveAllWithKommuneAsync(cancellationToken);
+
     /// <summary>Postnumre hvis primære kommune matcher kommunekode (fire cifre, fx "0101").</summary>
     public async Task<IReadOnlyList<PostnummerDto>> GetByMunicipalityCodeAsync(
         string kommunekode,

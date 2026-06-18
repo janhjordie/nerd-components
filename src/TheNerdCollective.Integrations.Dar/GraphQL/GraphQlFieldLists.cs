@@ -410,6 +410,13 @@ public static class GraphQlFieldLists
         id_lokalId
         navn
         kommunekode
+        regionLokalid
+        """;
+
+    public const string Regionsinddeling = """
+        id_lokalId
+        navn
+        regionskode
         """;
 
     public const string Husnummer = """

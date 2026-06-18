@@ -12,6 +12,9 @@ public sealed class DarDagiOptions
     /// <summary>Cache-varighed for kommune-listen (default 24 timer).</summary>
     public TimeSpan KommuneListCacheDuration { get; set; } = TimeSpan.FromHours(24);
 
+    /// <summary>Cache-varighed for region-listen (default 24 timer).</summary>
+    public TimeSpan RegionListCacheDuration { get; set; } = TimeSpan.FromHours(24);
+
     /// <summary>DAWA fallback (gratis, ingen nøgle) når Datafordeler DAGI GraphQL er tom.</summary>
     public bool EnableDawaFallback { get; set; } = true;
 

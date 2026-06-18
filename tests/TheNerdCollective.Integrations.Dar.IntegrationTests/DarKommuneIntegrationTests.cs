@@ -21,7 +21,13 @@ public sealed class DarKommuneIntegrationTests
             Assert.False(string.IsNullOrWhiteSpace(k.IdLokalId));
             Assert.False(string.IsNullOrWhiteSpace(k.Navn));
             Assert.False(string.IsNullOrWhiteSpace(k.Kommunekode));
+            Assert.False(string.IsNullOrWhiteSpace(k.Regionskode));
+            Assert.False(string.IsNullOrWhiteSpace(k.Regionnavn));
         });
+
+        var koebenhavn = kommuner.First(k => k.Kommunekode == "0101");
+        Assert.Equal("1084", koebenhavn.Regionskode);
+        Assert.Equal("Region Hovedstaden", koebenhavn.Regionnavn);
     }
 
     [SkippableFact]

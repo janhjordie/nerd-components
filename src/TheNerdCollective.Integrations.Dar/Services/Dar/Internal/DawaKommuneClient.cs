@@ -150,8 +150,36 @@ internal sealed class DawaKommuneClient
         {
             IdLokalId = ReadString(element, "dagi_id"),
             Navn = navn,
-            Kommunekode = kode
+            Kommunekode = kode,
+            Regionskode = ReadRegionCode(element),
+            Regionnavn = ReadRegionName(element)
         };
+    }
+
+    private static string? ReadRegionCode(JsonElement element)
+    {
+        var direct = ReadString(element, "regionskode");
+        if (!string.IsNullOrWhiteSpace(direct))
+        {
+            return direct;
+        }
+
+        if (element.TryGetProperty("region", out var region) && region.ValueKind == JsonValueKind.Object)
+        {
+            return ReadString(region, "kode");
+        }
+
+        return null;
+    }
+
+    private static string? ReadRegionName(JsonElement element)
+    {
+        if (element.TryGetProperty("region", out var region) && region.ValueKind == JsonValueKind.Object)
+        {
+            return ReadString(region, "navn");
+        }
+
+        return null;
     }
 
     private static string? ReadString(JsonElement element, string propertyName)

@@ -264,4 +264,25 @@ public static class GraphQlQueries
           }
         }
         """;
+
+    public static string GetAllRegioner => $$"""
+        # DAGI_Regionsinddeling — alle regioner
+        # https://confluence.sdfi.dk/pages/viewpage.action?pageId=199984259
+        query GetAllRegioner($virkningstid: DafDateTime, $registreringstid: DafDateTime, $after: String) {
+          DAGI_Regionsinddeling(
+            first: 100
+            after: $after
+            virkningstid: $virkningstid
+            registreringstid: $registreringstid
+          ) {
+            nodes {
+              {{GraphQlFieldLists.Regionsinddeling}}
+            }
+            pageInfo {
+              hasNextPage
+              endCursor
+            }
+          }
+        }
+        """;
 }

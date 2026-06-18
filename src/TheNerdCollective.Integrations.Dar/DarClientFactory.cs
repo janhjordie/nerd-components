@@ -5,6 +5,7 @@ using TheNerdCollective.Integrations.Dar.GraphQL;
 using TheNerdCollective.Integrations.Dar.Services;
 using TheNerdCollective.Integrations.Dar.Services.Bbr;
 using TheNerdCollective.Integrations.Dar.Services.Dar;
+using TheNerdCollective.Integrations.Dar.Services.Dar.Internal;
 using TheNerdCollective.Integrations.Dar.Services.Internal;
 
 namespace TheNerdCollective.Integrations.Dar
@@ -52,11 +53,15 @@ namespace TheNerdCollective.Integrations.Dar
                 options.DarGraphQlUrl,
                 options.DagiGraphQlUrl);
 
+            var regionFetcher = new DagiRegionDataFetcher(accessor, client, options.ApiKey, options.Dagi);
+            var region = new DarRegionService(regionFetcher);
+
             var dar = new DarRegister(
                 new DarAdresseopslagService(accessor),
                 new DarHusnummerService(accessor),
                 new DarAddressAutocompleteService(options.Autocomplete, client),
-                new DarKommuneService(accessor, client, options.ApiKey, options.Dagi),
+                new DarKommuneService(accessor, client, options.ApiKey, options.Dagi, region),
+                region,
                 new DarPostnummerService(accessor, client, options.ApiKey, options.Postnummer));
 
             var bbr = new BbrServices(

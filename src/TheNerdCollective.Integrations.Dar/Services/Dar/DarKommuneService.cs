@@ -23,16 +23,19 @@ public sealed class DarKommuneService
     private readonly DawaKommuneClient _dawaClient;
     private readonly DagiRestKommuneClient _restClient;
     private readonly DagiWfsKommuneClient _wfsClient;
+    private readonly DarRegionService _regionService;
     private readonly DarDagiOptions _dagiOptions;
 
     public DarKommuneService(
         GraphQlDataAccessor accessor,
         HttpClient httpClient,
         string apiKey,
-        DarDagiOptions dagiOptions)
+        DarDagiOptions dagiOptions,
+        DarRegionService regionService)
     {
         _accessor = accessor ?? throw new ArgumentNullException(nameof(accessor));
         _dagiOptions = dagiOptions ?? throw new ArgumentNullException(nameof(dagiOptions));
+        _regionService = regionService ?? throw new ArgumentNullException(nameof(regionService));
         _dawaClient = new DawaKommuneClient(httpClient, dagiOptions);
         _restClient = new DagiRestKommuneClient(httpClient, apiKey, dagiOptions);
         _wfsClient = new DagiWfsKommuneClient(httpClient, apiKey, dagiOptions);
@@ -49,7 +52,8 @@ public sealed class DarKommuneService
         var graphQlKommuner = await TryGraphQlGetAllAsync(cancellationToken).ConfigureAwait(false);
         if (graphQlKommuner.Count >= MinimumExpectedKommuneCount)
         {
-            return CacheAndReturn(graphQlKommuner);
+            var enriched = await EnrichFromGraphAsync(graphQlKommuner, cancellationToken).ConfigureAwait(false);
+            return CacheAndReturn(enriched);
         }
 
         if (_dagiOptions.EnableDawaFallback)
@@ -64,7 +68,8 @@ public sealed class DarKommuneService
         var wfsKommuner = await _wfsClient.GetAllAsync(cancellationToken).ConfigureAwait(false);
         if (wfsKommuner.Count > 0)
         {
-            return CacheAndReturn(wfsKommuner);
+            var enriched = await EnrichExistingAsync(wfsKommuner, cancellationToken).ConfigureAwait(false);
+            return CacheAndReturn(enriched);
         }
 
         throw new InvalidOperationException(DagiAccessHelp.EmptyKommuneResultMessage);
@@ -158,7 +163,7 @@ public sealed class DarKommuneService
         return kommuner;
     }
 
-    private async Task<IReadOnlyList<KommuneDto>> TryGraphQlGetAllAsync(CancellationToken cancellationToken)
+    private async Task<IReadOnlyList<KommuneGraphDto>> TryGraphQlGetAllAsync(CancellationToken cancellationToken)
     {
         var temporal = GraphQlDataAccessor.CreateTemporalVariables();
         var nodes = await _accessor.FetchAllDagiNodesAsync(
@@ -167,9 +172,49 @@ public sealed class DarKommuneService
             "DAGI_Kommuneinddeling",
             cancellationToken).ConfigureAwait(false);
 
-        return DarJsonSerializer.DeserializeList<KommuneDto>(nodes)
-            .OrderBy(k => k.Navn, StringComparer.CurrentCultureIgnoreCase)
-            .ToList();
+        return DarJsonSerializer.DeserializeList<KommuneGraphDto>(nodes);
+    }
+
+    private async Task<IReadOnlyList<KommuneDto>> EnrichFromGraphAsync(
+        IReadOnlyList<KommuneGraphDto> graphKommuner,
+        CancellationToken cancellationToken)
+    {
+        var regioner = await SafeGetRegionsAsync(cancellationToken).ConfigureAwait(false);
+        IReadOnlyList<KommuneDto>? dawaKommuner = null;
+
+        if (_dagiOptions.EnableDawaFallback)
+        {
+            dawaKommuner = await _dawaClient.GetAllAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        return KommuneRegionEnricher.EnrichFromGraph(graphKommuner, regioner, dawaKommuner);
+    }
+
+    private async Task<IReadOnlyList<KommuneDto>> EnrichExistingAsync(
+        IReadOnlyList<KommuneDto> kommuner,
+        CancellationToken cancellationToken)
+    {
+        var regioner = await SafeGetRegionsAsync(cancellationToken).ConfigureAwait(false);
+        IReadOnlyList<KommuneDto>? dawaKommuner = null;
+
+        if (_dagiOptions.EnableDawaFallback)
+        {
+            dawaKommuner = await _dawaClient.GetAllAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        return KommuneRegionEnricher.EnrichExisting(kommuner, regioner, dawaKommuner);
+    }
+
+    private async Task<IReadOnlyList<RegionDto>> SafeGetRegionsAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await _regionService.GetAllAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch (InvalidOperationException)
+        {
+            return Array.Empty<RegionDto>();
+        }
     }
 
     private async Task<KommuneDto?> TryGraphQlFindByPointAsync(
@@ -192,7 +237,9 @@ public sealed class DarKommuneService
             return null;
         }
 
-        return DarJsonSerializer.DeserializeRequired<KommuneDto>(nodes[0]);
+        var graph = DarJsonSerializer.DeserializeRequired<KommuneGraphDto>(nodes[0]);
+        var enriched = await EnrichFromGraphAsync(new[] { graph }, cancellationToken).ConfigureAwait(false);
+        return enriched.FirstOrDefault();
     }
 
     private static void ValidateWgs84Coordinates(double latitude, double longitude)

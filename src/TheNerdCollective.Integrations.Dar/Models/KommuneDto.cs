@@ -13,4 +13,12 @@ public sealed record KommuneDto
 
     [JsonPropertyName("kommunekode")]
     public string? Kommunekode { get; init; }
+
+    /// <summary>Regionskode (fire cifre, fx <c>1084</c> for Region Hovedstaden).</summary>
+    [JsonPropertyName("regionskode")]
+    public string? Regionskode { get; init; }
+
+    /// <summary>Regionnavn (fx <c>Region Hovedstaden</c>).</summary>
+    [JsonPropertyName("regionnavn")]
+    public string? Regionnavn { get; init; }
 }

@@ -25,12 +25,14 @@ namespace TheNerdCollective.Integrations.Dar.Services
             DarHusnummerService husnummer,
             DarAddressAutocompleteService autocomplete,
             DarKommuneService kommune,
+            DarRegionService region,
             DarPostnummerService postnummer)
         {
             Adresseopslag = adresseopslag;
             Husnummer = husnummer;
             Autocomplete = autocomplete;
             Kommune = kommune;
+            Region = region;
             Postnummer = postnummer;
         }
 
@@ -41,6 +43,8 @@ namespace TheNerdCollective.Integrations.Dar.Services
         public DarAddressAutocompleteService Autocomplete { get; }
 
         public DarKommuneService Kommune { get; }
+
+        public DarRegionService Region { get; }
 
         public DarPostnummerService Postnummer { get; }
     }

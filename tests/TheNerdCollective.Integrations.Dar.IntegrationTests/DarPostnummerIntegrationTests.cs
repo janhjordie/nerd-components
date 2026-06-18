@@ -73,6 +73,18 @@ public sealed class DarPostnummerIntegrationTests
         Assert.Contains(results, p => p.Postnummer == "2750");
     }
 
+    [SkippableFact]
+    public async Task GetAllActiveWithKommuneAsync_returnerer_kommune_for_2730()
+    {
+        var services = CreateServices();
+        var postnumre = await services.Dar.Postnummer.GetAllActiveWithKommuneAsync();
+
+        Assert.True(postnumre.Count >= 500, $"Forventede mindst 500 postnumre, fik {postnumre.Count}.");
+        var herlev = postnumre.FirstOrDefault(p => p.Postnummer == "2730");
+        Assert.NotNull(herlev);
+        Assert.Equal("0163", herlev.Kommunekode);
+    }
+
     private static DarServices CreateServices()
     {
         try
