@@ -40,10 +40,11 @@ public sealed class DarAddressAutocompleteDetailIntegrationTests
             new DarAutocompleteOptions { Token = "adressevaelger123" },
             httpClient);
 
-        var results = await autocomplete.SearchAsync("Århusvej 69a 1. th 3000");
+        var results = await autocomplete.SearchAsync("Baldersgade 45 2. th");
         var selection = results.FirstOrDefault(r =>
             r.IsCompleteAddress
-            && string.Equals(r.ResultType, "adresse", StringComparison.OrdinalIgnoreCase));
+            && string.Equals(r.ResultType, "adresse", StringComparison.OrdinalIgnoreCase)
+            && r.DisplayName.Contains("2. th", StringComparison.OrdinalIgnoreCase));
 
         Assert.NotNull(selection);
         Assert.False(string.IsNullOrWhiteSpace(selection.HusnummerId));

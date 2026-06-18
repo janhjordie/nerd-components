@@ -93,7 +93,7 @@ namespace TheNerdCollective.Integrations.Dar.Services.Dar
                 }
             }
 
-            var preferUnits = searchUnit || hasHusnummerMatch;
+            var preferUnits = searchUnit;
             var results = BuildResults(allFunds, preferUnits, unitHint);
 
             if (results.Count > 0)
@@ -213,8 +213,8 @@ namespace TheNerdCollective.Integrations.Dar.Services.Dar
             bool searchUnit,
             string? unitHint)
         {
-            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var results = new List<DanishAddressAutocompleteResult>();
+            var displayNameIndex = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
             foreach (var fund in funds
                          .Where(IsAutocompleteResult)
@@ -222,20 +222,53 @@ namespace TheNerdCollective.Integrations.Dar.Services.Dar
                          .ThenBy(f => UnitMatchRank(f, unitHint)))
             {
                 var mapped = MapFund(fund);
-                if (mapped == null || !seen.Add(mapped.LocalId))
+                if (mapped == null)
                 {
                     continue;
                 }
 
-                results.Add(mapped);
+                if (!searchUnit && displayNameIndex.TryGetValue(mapped.DisplayName, out var existingIndex))
+                {
+                    if (ShouldReplaceDuplicateSuggestion(mapped, results[existingIndex]))
+                    {
+                        results[existingIndex] = mapped;
+                    }
+
+                    continue;
+                }
+
+                if (searchUnit)
+                {
+                    if (results.Any(r => string.Equals(r.LocalId, mapped.LocalId, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        continue;
+                    }
+                }
+
                 if (results.Count >= MaxResults)
                 {
                     break;
                 }
+
+                displayNameIndex[mapped.DisplayName] = results.Count;
+                results.Add(mapped);
             }
 
             return results;
         }
+
+        /// <summary>
+        /// Adressevælger returnerer ofte både adgangspunkt (adresse) og husnummer med samme titel.
+        /// Foretræk kanonisk husnummer-token (LocalId == HusnummerId) til GetDetailsAsync.
+        /// </summary>
+        private static bool ShouldReplaceDuplicateSuggestion(
+            DanishAddressAutocompleteResult candidate,
+            DanishAddressAutocompleteResult existing) =>
+            IsCanonicalHusnummerSuggestion(candidate) && !IsCanonicalHusnummerSuggestion(existing);
+
+        private static bool IsCanonicalHusnummerSuggestion(DanishAddressAutocompleteResult result) =>
+            !string.IsNullOrWhiteSpace(result.LocalId)
+            && string.Equals(result.LocalId, result.HusnummerId, StringComparison.OrdinalIgnoreCase);
 
         private static string BuildSearchUri(string baseUrl, string endpoint, string searchText, string token)
         {

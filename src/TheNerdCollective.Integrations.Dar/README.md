@@ -316,6 +316,8 @@ Fri-tekst adressesøgning i DAR via [Adressevælger](https://adressevaelger.dk) 
 | `IsCompleteAddress` | `true` for `husnummer` og `adresse` — `false` for vejnavn-forslag |
 | `ResultType` | `husnummer`, `adresse`, `vejnavn` eller `navngivenvejpostnummer` |
 
+Adressevælger returnerer ofte både adgangspunkt (`adresse`) og husnummer med identisk `titel`. `SearchAsync` deduplicerer på `DisplayName` og beholder kanonisk husnummer-token (`LocalId == HusnummerId`) — fx `Århusvej 69` giver 3 unikke forslag, ikke 6.
+
 **Id-opslag (`GetDetailsAsync`)**
 
 Kalder Adressevælger [id-opslag](https://confluence.sdfi.dk/pages/viewpage.action?pageId=246743156) via **`GET /husnumre/{id}`** (ikke `/adresser/{id}`) og returnerer `DanishAddressDetailResult`:
@@ -755,7 +757,7 @@ Kræver whitelisted IP — ellers springes testen over ved `DAF-AUTH-0005`.
 
 ## Versionering
 
-**Nuværende version:** `1.6.0`
+**Nuværende version:** `1.6.1`
 
 Publiceres til [NuGet.org](https://www.nuget.org/packages/TheNerdCollective.Integrations.Dar) via GitHub Actions ved push til `main`.
 
