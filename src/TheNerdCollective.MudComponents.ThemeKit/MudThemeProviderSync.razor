@@ -1,0 +1,16 @@
+@implements IDisposable
+@inject IMudThemeStateService ThemeState
+
+<MudThemeProvider Theme="@ThemeState.CurrentTheme" IsDarkMode="@ThemeState.IsDarkMode" />
+<MudThemeKitInitializer />
+
+@code {
+    protected override void OnInitialized()
+    {
+        ThemeState.Changed += OnThemeStateChanged;
+    }
+
+    private void OnThemeStateChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => ThemeState.Changed -= OnThemeStateChanged;
+}

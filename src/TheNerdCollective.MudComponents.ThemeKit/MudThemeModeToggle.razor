@@ -1,0 +1,15 @@
+@inject IMudThemeStateService ThemeState
+
+<MudTooltip Text="@(ThemeState.IsDarkMode ? "Light mode" : "Dark mode")">
+    <MudIconButton Icon="@Icon"
+                   Color="Color.Inherit"
+                   OnClick="Toggle" />
+</MudTooltip>
+
+@code {
+    private string Icon => ThemeState.IsDarkMode
+        ? Icons.Material.Filled.LightMode
+        : Icons.Material.Filled.DarkMode;
+
+    private void Toggle() => ThemeState.SetDarkMode(!ThemeState.IsDarkMode);
+}

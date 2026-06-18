@@ -1,0 +1,75 @@
+@using TheNerdCollective.Blazor.ThemeKit
+
+<div class="@GetRootClass()">
+    @if (Token.Kind == ThemeTokenKind.Color)
+    {
+        <MudStack Row="true" Spacing="1" AlignItems="AlignItems.End" Class="w-100">
+            <MudTooltip Text="Click to copy hex">
+                <div style="@GetSwatchStyle()"
+                     role="button"
+                     tabindex="0"
+                     @onclick="CopySwatchHexAsync"
+                     @onkeydown="@(e => { if (e.Key == "Enter") _ = CopySwatchHexAsync(); })"
+                     aria-label="@($"{Token.Label} preview — copy hex")"></div>
+            </MudTooltip>
+            <div class="flex-grow-1" style="min-width: 0">
+                <MudColorPicker @key="@($"{ThemeState.CurrentThemeId}:{Token.Id}")"
+                                 Label="@Token.Label"
+                                 Value="@GetColor()"
+                                 ValueChanged="SetColor"
+                                 ColorPickerMode="ColorPickerMode.HEX"
+                                 Variant="Variant.Outlined"
+                                 Margin="Margin.Dense"
+                                 ShowPreview="@true"
+                                 Class="w-100" />
+            </div>
+            @if (IsModified)
+            {
+                <MudTooltip Text="Nulstil til catalog-værdi">
+                    <MudIconButton Icon="@Icons.Material.Filled.Undo"
+                                   Size="Size.Small"
+                                   Color="Color.Warning"
+                                   OnClick="ResetToken"
+                                   Class="mb-1" />
+                </MudTooltip>
+            }
+        </MudStack>
+        @if (IsModified)
+        {
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1">
+                Catalog: <code>@GetCatalogDisplayValue()</code>
+            </MudText>
+        }
+    }
+    else
+    {
+        <MudStack Row="true" Spacing="1" AlignItems="AlignItems.End" Class="w-100">
+            <div class="flex-grow-1" style="min-width: 0">
+                <MudTextField @key="@($"{ThemeState.CurrentThemeId}:{Token.Id}")"
+                              T="string"
+                              Label="@Token.Label"
+                              Value="@GetValue()"
+                              ValueChanged="SetValue"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              FullWidth="@true" />
+            </div>
+            @if (IsModified)
+            {
+                <MudTooltip Text="Nulstil til catalog-værdi">
+                    <MudIconButton Icon="@Icons.Material.Filled.Undo"
+                                   Size="Size.Small"
+                                   Color="Color.Warning"
+                                   OnClick="ResetToken"
+                                   Class="mb-1" />
+                </MudTooltip>
+            }
+        </MudStack>
+        @if (IsModified)
+        {
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1">
+                Catalog: <code>@GetCatalogDisplayValue()</code>
+            </MudText>
+        }
+    }
+</div>

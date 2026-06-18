@@ -1,0 +1,44 @@
+@inject IThemeEditorGate EditorGate
+
+@if (EditorGate.IsSwitcherEnabled || EditorGate.IsEditorEnabled)
+{
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+        @if (EditorGate.IsSwitcherEnabled)
+        {
+            <MudThemeSwitcher AlwaysVisible="@AlwaysShowThemeSwitcher" OnAppBar="true" />
+            <MudThemeModeToggle />
+        }
+
+        @if (EditorGate.IsEditorEnabled)
+        {
+            <MudTooltip Text="Theme editor">
+                <MudIconButton Icon="@Icons.Material.Filled.Tune"
+                               Color="Color.Inherit"
+                               OnClick="() => _drawerOpen = true" />
+            </MudTooltip>
+        }
+    </MudStack>
+
+    @if (EditorGate.IsEditorEnabled)
+    {
+        <MudDrawer @bind-Open="_drawerOpen"
+                   Anchor="Anchor.End"
+                   Elevation="2"
+                   Variant="DrawerVariant.Temporary"
+                   Style="--mud-drawer-width: 420px;">
+            <MudDrawerHeader>
+                <MudText Typo="Typo.h6">Theme editor</MudText>
+            </MudDrawerHeader>
+            <div class="pa-4">
+                <MudThemeTokenEditor />
+            </div>
+        </MudDrawer>
+    }
+}
+
+@code {
+    [Parameter]
+    public bool AlwaysShowThemeSwitcher { get; set; }
+
+    private bool _drawerOpen;
+}

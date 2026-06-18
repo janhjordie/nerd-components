@@ -25,6 +25,15 @@ The main Blazor components library bundling MudQuillEditor and other UI componen
 - Additional utility components for Blazor applications
 - Seamless MudBlazor integration
 
+#### [TheNerdCollective.MudComponents.ThemeKit](src/TheNerdCollective.MudComponents.ThemeKit/README.md)
+MudBlazor theme switcher, light/dark toggle, and token editor for design-time theming.
+- **MudThemeToolbar** — switcher + editor drawer (environment-gated)
+- **MudThemeTokenEditor** — v1 palette, layout, and font tokens
+- Requires **TheNerdCollective.Blazor.ThemeKit** and host `IMudThemeCatalog`
+
+#### [TheNerdCollective.Blazor.ThemeKit](src/TheNerdCollective.Blazor.ThemeKit/README.md)
+Theme catalog contracts, runtime state, localStorage preferences, and editor gating.
+
 #### [TheNerdCollective.MudComponents.MudQuillEditor](src/TheNerdCollective.MudComponents.MudQuillEditor/README.md)
 Specialized package providing MudBlazor-compatible rich-text editor.
 - **MudQuillEditor** - Rich-text editor with dark/light theme support

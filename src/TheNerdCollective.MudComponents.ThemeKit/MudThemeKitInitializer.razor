@@ -1,0 +1,35 @@
+@inject IMudThemeStateService ThemeState
+@inject IJSRuntime JsRuntime
+
+@code {
+    private bool _scriptLoaded;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await ThemeState.InitializeAsync();
+            await EnsureScriptLoadedAsync();
+        }
+    }
+
+    private async Task EnsureScriptLoadedAsync()
+    {
+        if (_scriptLoaded)
+        {
+            return;
+        }
+
+        try
+        {
+            await JsRuntime.InvokeVoidAsync(
+                "eval",
+                "if(!window.themeKit){const s=document.createElement('script');s.src='_content/TheNerdCollective.MudComponents.ThemeKit/theme-kit.js';document.head.appendChild(s);}");
+            _scriptLoaded = true;
+        }
+        catch (JSException)
+        {
+            // Script load is best-effort.
+        }
+    }
+}

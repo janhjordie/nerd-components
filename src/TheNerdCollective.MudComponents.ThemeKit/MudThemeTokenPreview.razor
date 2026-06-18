@@ -1,0 +1,78 @@
+@using TheNerdCollective.Blazor.ThemeKit
+
+@if (!Compact)
+{
+    <MudDivider Class="my-6" />
+}
+
+@if (Compact && _changes.Count > 0)
+{
+    <MudPaper Outlined="true" Class="pa-3 mb-3">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-2">
+            <MudText Typo="Typo.subtitle2">Ændringer (@_changes.Count)</MudText>
+            <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Filled">vs catalog</MudChip>
+        </MudStack>
+        <MudStack Spacing="1">
+            @foreach (var change in _changes.Take(8))
+            {
+                <MudText Typo="Typo.caption">
+                    <strong>@change.Label</strong>:
+                    <code class="mud-theme-token-change-old">@Truncate(change.CatalogValue)</code>
+                    →
+                    <code class="mud-theme-token-change-new">@Truncate(change.CurrentValue)</code>
+                </MudText>
+            }
+            @if (_changes.Count > 8)
+            {
+                <MudText Typo="Typo.caption" Color="Color.Secondary">+ @(_changes.Count - 8) flere…</MudText>
+            }
+        </MudStack>
+    </MudPaper>
+}
+
+<MudText Typo="@(Compact ? Typo.subtitle1 : Typo.h6)" Class="mb-1">Live preview</MudText>
+<MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-3">
+    Components use the active <strong>@(ThemeState.IsDarkMode ? "dark" : "light")</strong> palette from the app bar toggle or editor switch.
+</MudText>
+
+<MudPaper Class="pa-3 mb-3" Outlined="true" Style="@GetSurfacePreviewStyle()">
+    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-2">Surface on background</MudText>
+    <MudPaper Elevation="1" Class="pa-3" Style="@GetCardOnSurfaceStyle()">
+        <MudText Typo="Typo.body2">Card on surface — typical page content block.</MudText>
+    </MudPaper>
+</MudPaper>
+
+<MudPaper Class="pa-3" Outlined="true">
+    <MudText Typo="Typo.subtitle2" Class="mb-2">Buttons & chips</MudText>
+    <MudStack Spacing="2">
+        <MudStack Row="true" Spacing="1" Class="flex-wrap gap-1">
+            <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary">Primary</MudButton>
+            <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Secondary">Secondary</MudButton>
+            <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Tertiary">Tertiary</MudButton>
+        </MudStack>
+        <MudStack Row="true" Spacing="1" Class="flex-wrap gap-1">
+            <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled">Primary</MudChip>
+            <MudChip T="string" Size="Size.Small" Color="Color.Secondary" Variant="Variant.Filled">Secondary</MudChip>
+            <MudChip T="string" Size="Size.Small" Color="Color.Tertiary" Variant="Variant.Filled">Tertiary</MudChip>
+        </MudStack>
+        <MudAlert Severity="Severity.Info" Variant="Variant.Filled" Dense="@true">
+            Info alert
+        </MudAlert>
+        <MudText Typo="Typo.body2">Body primary text sample.</MudText>
+        <MudText Typo="Typo.caption" Color="Color.Secondary">Body secondary text sample.</MudText>
+    </MudStack>
+</MudPaper>
+
+@if (!Compact)
+{
+    <MudText Typo="Typo.subtitle2" Class="mb-2 mt-4">Palette pairs</MudText>
+    <MudStack Spacing="2">
+        @foreach (var pair in GetColorPairs())
+        {
+            <MudPaper Outlined="true" Class="pa-2">
+                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1">@pair.Label</MudText>
+                <div style="@pair.Style">Sample text</div>
+            </MudPaper>
+        }
+    </MudStack>
+}

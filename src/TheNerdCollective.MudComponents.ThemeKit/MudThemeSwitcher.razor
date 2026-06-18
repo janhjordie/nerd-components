@@ -1,0 +1,118 @@
+@inject IMudThemeCatalog Catalog
+@inject IMudThemeStateService ThemeState
+@implements IDisposable
+
+@if (Catalog.All.Count > 0 && (AlwaysVisible || Catalog.All.Count > 1))
+{
+    <MudSelect T="string"
+               @key="@ThemeRefreshKey"
+               Value="@ThemeState.CurrentThemeId"
+               ValueChanged="OnThemeChanged"
+               Label="Theme"
+               Variant="@(OnAppBar ? Variant.Text : Variant.Outlined)"
+               Dense="true"
+               Margin="Margin.Dense"
+               Class="@SelectClass"
+               Style="min-width: 220px;"
+               Disabled="@(Catalog.All.Count == 1)">
+        @foreach (var theme in Catalog.All)
+        {
+            var hasSession = ShowSessionMarkers && _sessionThemeIds.Contains(theme.Id);
+            <MudSelectItem Value="@theme.Id">@FormatThemeLabel(theme, hasSession)</MudSelectItem>
+        }
+    </MudSelect>
+}
+
+@code {
+    [Parameter]
+    public bool AlwaysVisible { get; set; }
+
+    /// <summary>
+    /// When true, input uses AppBar text/underline tokens so it matches the active theme in the header.
+    /// </summary>
+    [Parameter]
+    public bool OnAppBar { get; set; }
+
+    [Parameter]
+    public bool ShowSessionMarkers { get; set; }
+
+    private string SelectClass => OnAppBar ? "mud-theme-kit-appbar-select" : string.Empty;
+
+    private string ThemeRefreshKey => $"{ThemeState.CurrentThemeId}:{ThemeState.IsDarkMode}";
+
+    private HashSet<string> _sessionThemeIds = new(StringComparer.OrdinalIgnoreCase);
+
+    protected override void OnInitialized()
+    {
+        ThemeState.Changed += OnThemeStateChanged;
+        RefreshSessionMarkers();
+    }
+
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && ShowSessionMarkers)
+        {
+            RefreshSessionMarkers();
+            StateHasChanged();
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private void OnThemeStateChanged()
+    {
+        RefreshSessionMarkers();
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void RefreshSessionMarkers()
+    {
+        if (!ShowSessionMarkers)
+        {
+            return;
+        }
+
+        _sessionThemeIds = ThemeState.GetSavedSessions()
+            .Select(session => session.ThemeId)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+    }
+
+    private void OnThemeChanged(string themeId) => ThemeState.SetTheme(themeId);
+
+    private static string FormatThemeLabel(MudThemeDescriptor theme, bool hasSession)
+    {
+        var label = $"{theme.DisplayName} v{theme.Version}";
+        if (!string.IsNullOrWhiteSpace(theme.UpdatedAt))
+        {
+            label = $"{label} ({theme.UpdatedAt})";
+        }
+
+        return hasSession ? $"{label} · session" : label;
+    }
+
+    public void Dispose() => ThemeState.Changed -= OnThemeStateChanged;
+}
+
+<style>
+    /* App bar: follow MudTheme AppbarBackground / AppbarText, not Surface/Primary form defaults */
+    .mud-theme-kit-appbar-select .mud-input-label,
+    .mud-theme-kit-appbar-select .mud-input-label-inputcontrol,
+    .mud-theme-kit-appbar-select .mud-select-input,
+    .mud-theme-kit-appbar-select .mud-input-slot-input,
+    .mud-theme-kit-appbar-select .mud-input-root-text {
+        color: var(--mud-palette-appbar-text) !important;
+    }
+
+    .mud-theme-kit-appbar-select .mud-input-underline:before,
+    .mud-theme-kit-appbar-select .mud-input-underline:after {
+        border-bottom-color: var(--mud-palette-appbar-text) !important;
+    }
+
+    .mud-theme-kit-appbar-select .mud-input-underline:before {
+        opacity: 0.42;
+    }
+
+    .mud-theme-kit-appbar-select .mud-select .mud-svg-icon {
+        fill: var(--mud-palette-appbar-text) !important;
+    }
+</style>

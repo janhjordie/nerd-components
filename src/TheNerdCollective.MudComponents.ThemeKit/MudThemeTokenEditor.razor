@@ -1,0 +1,350 @@
+@using TheNerdCollective.Blazor.ThemeKit
+
+<MudPaper Class="pa-4" Elevation="1">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-3 flex-wrap gap-2">
+        <MudText Typo="Typo.h6">Theme tokens</MudText>
+        <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center" Class="flex-wrap gap-1">
+            @if (_descriptor is not null)
+            {
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">v@_descriptor.Version</MudChip>
+            }
+            @if (ThemeState.HasSavedSession)
+            {
+                <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Filled">Session gemt</MudChip>
+            }
+            @if (ThemeState.HasUnsavedChanges)
+            {
+                <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Filled">
+                    @_modifiedCount ændret
+                </MudChip>
+            }
+            <MudChip T="string" Size="Size.Small" Color="Color.Secondary" Variant="Variant.Outlined">
+                @(ThemeState.IsDarkMode ? "Dark preview" : "Light preview")
+            </MudChip>
+        </MudStack>
+    </MudStack>
+
+    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-4">
+        Vælg et catalog-theme, rediger tokens, gem som browser-session eller skriv en ny version til <code>Storybook/Themes/*.theme.json</code>.
+    </MudText>
+
+    <MudPaper Outlined="true" Class="pa-3 mb-4">
+        <MudGrid Spacing="2">
+            <MudItem xs="12" md="4">
+                <MudThemeSwitcher AlwaysVisible="@true" ShowSessionMarkers="@true" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudStack Spacing="1">
+                    <MudTextField T="string"
+                                  @bind-Value="_search"
+                                  Label="Search tokens"
+                                  Placeholder="primary, ændret, app bar…"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Search"
+                                  Immediate="true"
+                                  Clearable="true"
+                                  FullWidth="@true" />
+                    <MudSwitch T="bool"
+                               @bind-Value="_showOnlyModified"
+                               Color="Color.Warning"
+                               Label="Kun ændrede tokens" />
+                </MudStack>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="2">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                    <MudSwitch T="bool"
+                               Value="@ThemeState.IsDarkMode"
+                               ValueChanged="v => ThemeState.SetDarkMode(v)"
+                               Color="Color.Primary"
+                               Label="Dark mode preview" />
+                </MudStack>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="2">
+                <MudStack Row="true" Spacing="1" Justify="Justify.FlexEnd" Class="flex-wrap gap-1">
+                    <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" OnClick="CopyCSharpExportAsync">C#</MudButton>
+                    <MudButton Size="Size.Small" Variant="Variant.Outlined" OnClick="CopyManifestExportAsync">Manifest</MudButton>
+                    <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Secondary" OnClick="CopyJsonExportAsync">JSON</MudButton>
+                    <MudButton Size="Size.Small" Variant="Variant.Outlined" OnClick="DownloadJsonExportAsync">Download</MudButton>
+                    <MudButton Size="Size.Small" Variant="Variant.Outlined" OnClick="ResetTheme">Nulstil</MudButton>
+                </MudStack>
+            </MudItem>
+        </MudGrid>
+
+        <MudDivider Class="my-3" />
+
+        <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center" Class="flex-wrap gap-1">
+            <MudButton Size="Size.Small"
+                       Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Save"
+                       OnClick="SaveSessionAsync">
+                Gem session
+            </MudButton>
+            <MudButton Size="Size.Small"
+                       Variant="Variant.Outlined"
+                       Disabled="@(!ThemeState.HasSavedSession)"
+                       OnClick="DiscardSessionAsync">
+                Kassér session
+            </MudButton>
+            @if (FilePersistence.IsAvailable)
+            {
+                <MudButton Size="Size.Small"
+                           Variant="Variant.Filled"
+                           Color="Color.Tertiary"
+                           StartIcon="@Icons.Material.Filled.Publish"
+                           Disabled="@(!ThemeState.HasUnsavedChanges)"
+                           OnClick="OpenSaveFileDialog">
+                    Gem JSON-fil
+                </MudButton>
+                <MudButton Size="Size.Small"
+                           Variant="Variant.Outlined"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="OpenCreateThemeDialog">
+                    Nyt tema
+                </MudButton>
+                <MudButton Size="Size.Small"
+                           Variant="Variant.Outlined"
+                           Color="Color.Error"
+                           StartIcon="@Icons.Material.Filled.Delete"
+                           Disabled="@(!CanDeleteCurrentTheme())"
+                           OnClick="OpenDeleteThemeDialog">
+                    Slet tema
+                </MudButton>
+            }
+            <MudButton Size="Size.Small"
+                       Variant="Variant.Outlined"
+                       StartIcon="@Icons.Material.Filled.Upload"
+                       OnClick="OpenImportDialog">
+                Import JSON
+            </MudButton>
+        </MudStack>
+    </MudPaper>
+
+    <MudGrid Spacing="4">
+        <MudItem xs="12" lg="8">
+            <div @key="@ThemeState.CurrentThemeId">
+                @if (!HasVisibleTokens())
+                {
+                    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
+                        No tokens match <strong>@_search</strong>. Clear the search or try another term.
+                    </MudAlert>
+                }
+                else
+                {
+                <MudExpansionPanels MultiExpansion="true" Elevation="0" Class="mud-expand-panel-dense">
+                    @foreach (var editorGroup in ThemeTokenEditorLayout.V1)
+                    {
+                        if (!GroupHasVisibleTokens(editorGroup))
+                        {
+                            continue;
+                        }
+
+                        <MudExpansionPanel Text="@GetGroupTitle(editorGroup)"
+                                           Expanded="@IsGroupExpanded(editorGroup.Title)"
+                                           ExpandedChanged="v => SetGroupExpanded(editorGroup.Title, v)">
+                            @foreach (var tokenSection in editorGroup.Sections)
+                            {
+                                if (!SectionHasVisibleTokens(tokenSection))
+                                {
+                                    continue;
+                                }
+
+                                @if (!string.IsNullOrWhiteSpace(tokenSection.Title))
+                                {
+                                    <MudText Typo="Typo.subtitle2" Color="Color.Secondary" Class="mb-2 mt-2">@tokenSection.Title</MudText>
+                                }
+
+                                @foreach (var row in tokenSection.Rows)
+                                {
+                                    if (!RowHasVisibleTokens(row))
+                                    {
+                                        continue;
+                                    }
+
+                                    <MudGrid Spacing="2" Class="mb-2">
+                                        @foreach (var tokenId in row.TokenIds)
+                                        {
+                                            var token = ThemeTokenEditorLayout.FindToken(tokenId);
+                                            if (!IsTokenVisible(token))
+                                            {
+                                                continue;
+                                            }
+
+                                            <MudItem xs="12" sm="@ThemeTokenEditorLayout.GetGridColumns(row.TokenIds.Length)">
+                                                <MudThemeTokenField Token="@token" />
+                                            </MudItem>
+                                        }
+                                    </MudGrid>
+
+                                    @if (TryGetContrastPreview(row, out var contrast))
+                                    {
+                                        <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="mb-3 flex-wrap gap-2">
+                                            <div style="@contrast.PreviewStyle">Sample text</div>
+                                            <MudChip T="string" Size="Size.Small" Color="@contrast.ChipColor" Variant="Variant.Filled">
+                                                @contrast.Ratio.ToString("F1"):1 · @contrast.WcagLabel
+                                            </MudChip>
+                                        </MudStack>
+                                    }
+                                }
+                            }
+                        </MudExpansionPanel>
+                    }
+                </MudExpansionPanels>
+                }
+            </div>
+        </MudItem>
+
+        <MudItem xs="12" lg="4">
+            <div style="position: sticky; top: 1rem;">
+                <MudThemeTokenPreview Compact="@true" />
+            </div>
+        </MudItem>
+    </MudGrid>
+</MudPaper>
+
+<MudDialog @bind-Visible="_saveFileDialogOpen" Options="_dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6">Gem theme som JSON-fil</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.body2" Class="mb-3">
+            Skriver til <code>src/Storybook/Themes/</code> og opdaterer <code>themes.index.json</code> med ny version.
+        </MudText>
+        <MudTextField T="string"
+                      @bind-Value="_nextVersion"
+                      Label="Ny version"
+                      Variant="Variant.Outlined"
+                      Margin="Margin.Dense"
+                      FullWidth="@true"
+                      HelperText="@($"Nuværende: v{_descriptor?.Version ?? "1.0.0"}")" />
+        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-2">
+            Fil: <code>@GetThemeFileName()</code>
+        </MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="CloseSaveFileDialog">Annuller</MudButton>
+        <MudButton Color="Color.Primary"
+                   Variant="Variant.Filled"
+                   Disabled="@string.IsNullOrWhiteSpace(_nextVersion)"
+                   OnClick="SaveThemeFileAsync">
+            Gem fil
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+<MudDialog @bind-Visible="_importDialogOpen" Options="_wideDialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6">Importér theme JSON</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.body2" Class="mb-3">
+            Indsæt JSON fra clipboard, upload en <code>.theme.json</code> fil, eller indsæt manuelt. Theme-id skal matche et catalog-entry.
+        </MudText>
+        <InputFile OnChange="OnImportFileSelectedAsync" accept=".json,application/json" class="mb-3" />
+        <MudTextField T="string"
+                      @bind-Value="_importJson"
+                      Label="Theme JSON"
+                      Variant="Variant.Outlined"
+                      Margin="Margin.Dense"
+                      Lines="12"
+                      FullWidth="@true" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="CloseImportDialog">Annuller</MudButton>
+        <MudButton Variant="Variant.Outlined" OnClick="PasteImportJsonAsync">Indsæt fra clipboard</MudButton>
+        <MudButton Color="Color.Primary"
+                   Variant="Variant.Filled"
+                   Disabled="@string.IsNullOrWhiteSpace(_importJson)"
+                   OnClick="ImportThemeJson">
+            Importér
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+<MudDialog @bind-Visible="_createThemeDialogOpen" Options="_dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6">Opret nyt tema</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.body2" Class="mb-3">
+            Opretter <code>*.theme.json</code> og tilføjer entry i <code>themes.index.json</code>.
+        </MudText>
+        <MudTextField T="string"
+                      Value="@_newThemeDisplayName"
+                      ValueChanged="OnNewThemeDisplayNameChanged"
+                      Label="Display name"
+                      Placeholder="My Brand Theme"
+                      Variant="Variant.Outlined"
+                      Margin="Margin.Dense"
+                      FullWidth="@true"
+                      Class="mb-3" />
+        <MudTextField T="string"
+                      Value="@_newThemeId"
+                      ValueChanged="OnNewThemeIdChanged"
+                      Label="Theme id"
+                      Placeholder="my-brand-theme"
+                      Variant="Variant.Outlined"
+                      Margin="Margin.Dense"
+                      FullWidth="@true"
+                      HelperText="Lowercase med bindestreger, fx playbook-sandbox"
+                      Class="mb-3" />
+        <MudSelect T="string"
+                   @bind-Value="_newThemeCloneFromId"
+                   Label="Klon tokens fra"
+                   Variant="Variant.Outlined"
+                   Margin="Margin.Dense"
+                   FullWidth="@true">
+            @foreach (var theme in Catalog.All)
+            {
+                <MudSelectItem Value="@theme.Id">@theme.DisplayName</MudSelectItem>
+            }
+        </MudSelect>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="CloseCreateThemeDialog">Annuller</MudButton>
+        <MudButton Color="Color.Primary"
+                   Variant="Variant.Filled"
+                   Disabled="@(!CanSubmitCreateTheme())"
+                   OnClick="CreateThemeAsync">
+            Opret tema
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+<MudDialog @bind-Visible="_deleteThemeDialogOpen" Options="_dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6">Slet tema</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.body2" Class="mb-3">
+            Sletter <code>@GetThemeFileName()</code> og fjerner theme fra <code>themes.index.json</code>.
+        </MudText>
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true">
+            Dette kan ikke fortrydes. SharedUI-temaer (<code>source: shared-ui</code>) kan ikke slettes.
+        </MudAlert>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="CloseDeleteThemeDialog">Annuller</MudButton>
+        <MudButton Color="Color.Error"
+                   Variant="Variant.Filled"
+                   OnClick="DeleteCurrentThemeAsync">
+            Slet @ThemeState.CurrentThemeId
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+<style>
+    .mud-theme-token-field--modified {
+        border-left: 3px solid var(--mud-palette-warning);
+        border-radius: var(--mud-default-borderradius);
+        background-color: rgba(var(--mud-palette-warning-rgb), 0.06);
+    }
+
+    .mud-theme-token-change-old {
+        opacity: 0.75;
+        text-decoration: line-through;
+    }
+</style>
