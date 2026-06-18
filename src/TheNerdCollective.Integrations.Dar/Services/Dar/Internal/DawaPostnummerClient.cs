@@ -134,10 +134,10 @@ internal sealed class DawaPostnummerClient
 
         return new PostnummerMedKommuneDto
         {
-            Postnummer = postnummer,
+            Postnummer = postnummer!,
             Postdistrikt = postdistrikt ?? string.Empty,
             Kommunekode = kommunekode,
-            Kommunenavn = kommunenavn
+            Kommunenavn = kommunenavn ?? string.Empty
         };
     }
 

@@ -11,15 +11,16 @@ namespace TheNerdCollective.Integrations.Dar.Mapping
                 throw new InvalidOperationException("Husnummer mangler vejmidte (kommunekode-vejkode).");
             }
 
-            var separatorIndex = vejmidte.IndexOf('-');
-            if (separatorIndex <= 0 || separatorIndex >= vejmidte.Length - 1)
+            var normalizedVejmidte = vejmidte!;
+            var separatorIndex = normalizedVejmidte.IndexOf('-');
+            if (separatorIndex <= 0 || separatorIndex >= normalizedVejmidte.Length - 1)
             {
-                throw new InvalidOperationException($"Ugyldigt vejmidte-format: \"{vejmidte}\".");
+                throw new InvalidOperationException($"Ugyldigt vejmidte-format: \"{normalizedVejmidte}\".");
             }
 
             return (
-                NormalizeCode(vejmidte.Substring(0, separatorIndex), 4),
-                NormalizeCode(vejmidte.Substring(separatorIndex + 1), 4));
+                NormalizeCode(normalizedVejmidte.Substring(0, separatorIndex), 4),
+                NormalizeCode(normalizedVejmidte.Substring(separatorIndex + 1), 4));
         }
 
         private static string NormalizeCode(string value, int length)

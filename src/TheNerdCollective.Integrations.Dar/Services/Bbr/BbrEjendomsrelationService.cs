@@ -46,15 +46,17 @@ namespace TheNerdCollective.Integrations.Dar.Services.Bbr
 
             foreach (var relation in bygningEjendomsrelationer)
             {
-                if (!string.IsNullOrWhiteSpace(relation.BygningPaaFremmedGrund))
+                var bygningPaaFremmedGrund = relation.BygningPaaFremmedGrund;
+                if (!string.IsNullOrWhiteSpace(bygningPaaFremmedGrund))
                 {
-                    relationIds.Add(relation.BygningPaaFremmedGrund);
+                    relationIds.Add(bygningPaaFremmedGrund!);
                 }
             }
 
-            if (!string.IsNullOrWhiteSpace(grund?.BestemtFastEjendom))
+            var bestemtFastEjendom = grund?.BestemtFastEjendom;
+            if (!string.IsNullOrWhiteSpace(bestemtFastEjendom))
             {
-                relationIds.Add(grund.BestemtFastEjendom);
+                relationIds.Add(bestemtFastEjendom!);
             }
 
             if (relationIds.Count == 0)

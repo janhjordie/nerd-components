@@ -95,14 +95,16 @@ internal static class KommuneRegionEnricher
 
         foreach (var region in regioner)
         {
-            if (!string.IsNullOrWhiteSpace(region.IdLokalId))
+            var idLokalId = region.IdLokalId;
+            if (!string.IsNullOrWhiteSpace(idLokalId))
             {
-                lookup[region.IdLokalId] = region;
+                lookup[idLokalId!] = region;
             }
 
-            if (!string.IsNullOrWhiteSpace(region.Regionskode))
+            var regionskode = region.Regionskode;
+            if (!string.IsNullOrWhiteSpace(regionskode))
             {
-                lookup[region.Regionskode] = region;
+                lookup[regionskode!] = region;
             }
         }
 
@@ -124,21 +126,23 @@ internal static class KommuneRegionEnricher
 
     private static RegionDto? TryResolveRegion(IReadOnlyDictionary<string, RegionDto> regionById, string? regionLokalid)
     {
-        if (string.IsNullOrWhiteSpace(regionLokalid))
+        var key = regionLokalid;
+        if (string.IsNullOrWhiteSpace(key))
         {
             return null;
         }
 
-        return regionById.TryGetValue(regionLokalid, out var region) ? region : null;
+        return regionById.TryGetValue(key!, out var region) ? region : null;
     }
 
     private static KommuneDto? TryResolveDawa(IReadOnlyDictionary<string, KommuneDto> dawaByCode, string? kommunekode)
     {
-        if (string.IsNullOrWhiteSpace(kommunekode))
+        var kommunekodeKey = kommunekode;
+        if (string.IsNullOrWhiteSpace(kommunekodeKey))
         {
             return null;
         }
 
-        return dawaByCode.TryGetValue(kommunekode, out var kommune) ? kommune : null;
+        return dawaByCode.TryGetValue(kommunekodeKey!, out var kommune) ? kommune : null;
     }
 }

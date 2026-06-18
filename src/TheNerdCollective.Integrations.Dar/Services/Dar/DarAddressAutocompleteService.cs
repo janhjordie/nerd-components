@@ -53,7 +53,7 @@ namespace TheNerdCollective.Integrations.Dar.Services.Dar
             CancellationToken cancellationToken = default)
         {
             var trimmedSearchText = searchText?.Trim();
-            if (string.IsNullOrWhiteSpace(trimmedSearchText) || trimmedSearchText.Length < MinSearchLength)
+            if (trimmedSearchText is null || trimmedSearchText.Length < MinSearchLength)
             {
                 return Array.Empty<DanishAddressAutocompleteResult>();
             }
@@ -293,9 +293,10 @@ namespace TheNerdCollective.Integrations.Dar.Services.Dar
 
         private static string NormalizeDetailResultType(string? resultType, string localId, string? husnummerId)
         {
-            if (!string.IsNullOrWhiteSpace(resultType))
+            var normalizedResultType = resultType;
+            if (!string.IsNullOrWhiteSpace(normalizedResultType))
             {
-                return resultType.Trim();
+                return normalizedResultType!.Trim();
             }
 
             if (!string.IsNullOrWhiteSpace(husnummerId)
@@ -312,7 +313,7 @@ namespace TheNerdCollective.Integrations.Dar.Services.Dar
             if (string.Equals(resultType, "adresse", StringComparison.OrdinalIgnoreCase)
                 && !string.IsNullOrWhiteSpace(husnummerId))
             {
-                return husnummerId;
+                return husnummerId!;
             }
 
             return localId;
@@ -354,12 +355,13 @@ namespace TheNerdCollective.Integrations.Dar.Services.Dar
 
         private static int UnitMatchRank(AdressevaelgerFund fund, string? unitHint)
         {
-            if (unitHint == null || string.IsNullOrWhiteSpace(fund.Title))
+            var title = fund.Title;
+            if (unitHint == null || string.IsNullOrWhiteSpace(title))
             {
                 return 1;
             }
 
-            return fund.Title.IndexOf(unitHint, StringComparison.OrdinalIgnoreCase) >= 0 ? 0 : 1;
+            return title!.IndexOf(unitHint, StringComparison.OrdinalIgnoreCase) >= 0 ? 0 : 1;
         }
 
         private static bool IsHusnummerFund(AdressevaelgerFund fund) =>
@@ -388,14 +390,15 @@ namespace TheNerdCollective.Integrations.Dar.Services.Dar
 
         private static DanishAddressAutocompleteResult? MapFund(AdressevaelgerFund fund)
         {
-            if (string.IsNullOrWhiteSpace(fund.Title))
+            var title = fund.Title;
+            if (string.IsNullOrWhiteSpace(title))
             {
                 return null;
             }
 
-            var displayName = fund.Title.Trim();
+            var displayName = title!.Trim();
             var localId = !string.IsNullOrWhiteSpace(fund.Id)
-                ? fund.Id
+                ? fund.Id!
                 : $"vejnavn:{displayName.ToLower(DanishCulture)}";
             var isComplete = IsCompleteAddress(fund);
             var resultType = fund.Type?.Trim() ?? string.Empty;
@@ -435,9 +438,11 @@ namespace TheNerdCollective.Integrations.Dar.Services.Dar
                     husnummerId);
             }
 
-            var addressLine1 = !string.IsNullOrWhiteSpace(fund.StreetName) && !string.IsNullOrWhiteSpace(fund.HouseNumber)
-                ? $"{fund.StreetName.Trim()} {fund.HouseNumber.Trim()}"
-                : fund.StreetName?.Trim() ?? displayName;
+            var streetName = fund.StreetName;
+            var houseNumber = fund.HouseNumber;
+            var addressLine1 = !string.IsNullOrWhiteSpace(streetName) && !string.IsNullOrWhiteSpace(houseNumber)
+                ? $"{streetName!.Trim()} {houseNumber!.Trim()}"
+                : streetName?.Trim() ?? displayName;
 
             return new DanishAddressAutocompleteResult(
                 localId,
