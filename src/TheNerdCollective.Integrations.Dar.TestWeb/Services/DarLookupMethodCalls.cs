@@ -11,6 +11,21 @@ internal static class DarLookupMethodCalls
         var postal = MethodCallFormatter.CsString(request.PostalCode);
         var city = MethodCallFormatter.CsNullableString(request.City);
         var husnummerId = MethodCallFormatter.CsString(result.Adresseopslag?.HusnummerId);
+        var searchText = MethodCallFormatter.CsString(request.AutocompleteSearchText ?? request.StreetAndNumber);
+
+        var autocompleteFlow =
+            "var autocompleteResults = (await darServices.Dar.Autocomplete.SearchAsync(" + searchText + ")).ToList();\n" +
+            "var adresseLookupAutocomplete = DanishAddressAutocompleteMatching.ResolveBestMatch(\n" +
+            "    autocompleteResults,\n" +
+            "    " + searchText + ")\n" +
+            "    ?? throw new InvalidOperationException(\"Ingen DAR autocomplete-resultater fundet for adressen.\");\n\n" +
+            "var adresseLookup = await darServices.Dar.Adresseopslag.LookupFromAutocompleteAsync(\n" +
+            "    adresseLookupAutocomplete);\n" +
+            "KvHxInput? kvhxInput = ToKvHxInput(adresseLookup.KvHxInput);";
+
+        var adresseopslagFromAutocomplete =
+            "var adresseopslag = await services.Dar.Adresseopslag.LookupFromAutocompleteAsync(\n" +
+            "    adresseLookupAutocomplete);";
 
         var adresseopslag =
             "var adresseopslag = await services.Dar.Adresseopslag.LookupAsync(\n" +
@@ -69,17 +84,24 @@ internal static class DarLookupMethodCalls
             "    bygningEjendomsrelationer,\n" +
             "    grund);";
 
+        var usedAutocomplete = request.AutocompleteSelection is not null;
+        var overviewAdresseopslag = usedAutocomplete ? adresseopslagFromAutocomplete : adresseopslag;
+
         return new LookupMethodCalls
         {
-            Overview =
-                "var services = DarClientFactory.Create(darOptions, httpClient);\n\n" +
-                adresseopslag + "\n\n" +
-                husnummer + "\n\n" +
-                bygning,
-            AdresseopslagDar = adresseopslag + "\n\n// Native DAR: adresseopslag.Dar",
-            Adresseopslag = adresseopslag,
-            KvHxInput = adresseopslag + "\n\n// Legacy: adresseopslag.KvHxInput",
-            Husnummer = husnummer,
+            Overview = usedAutocomplete
+                ? autocompleteFlow
+                : "var services = DarClientFactory.Create(darOptions, httpClient);\n\n" +
+                  adresseopslag + "\n\n" +
+                  husnummer + "\n\n" +
+                  bygning,
+            AutocompleteFlow = autocompleteFlow,
+            AdresseopslagDar = overviewAdresseopslag + "\n\n// Native DAR: adresseopslag.Dar",
+            Adresseopslag = overviewAdresseopslag,
+            KvHxInput = overviewAdresseopslag + "\n\n// Legacy: adresseopslag.KvHxInput",
+            Husnummer = usedAutocomplete
+                ? "// Ikke nødvendig — husnummer findes i adresseopslag ved id-baseret flow"
+                : husnummer,
             Bygning = bygning,
             Enhed = enhed,
             Etage = etage,
@@ -95,6 +117,8 @@ internal static class DarLookupMethodCalls
     internal sealed class LookupMethodCalls
     {
         public required string Overview { get; init; }
+
+        public required string AutocompleteFlow { get; init; }
 
         public required string AdresseopslagDar { get; init; }
 

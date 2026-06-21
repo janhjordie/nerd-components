@@ -19,6 +19,12 @@ public sealed record AdresseopslagResult
     /// <summary>BBR-bygnings-ID fra <c>adgangTilBygning</c>, hvis tilgængeligt.</summary>
     public string? BygningId { get; init; }
 
+    /// <summary>
+    /// DAR adresse-id når opslaget stammer fra autocomplete med type <c>adresse</c> (enhed).
+    /// Null for adgangsadresse/husnummer-opslag.
+    /// </summary>
+    public string? AdresseLocalId { get; init; }
+
     public required string StreetAndNumber { get; init; }
 
     public required string PostalCode { get; init; }

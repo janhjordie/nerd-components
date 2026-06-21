@@ -1,5 +1,6 @@
 @page "/adresse"
 @rendermode InteractiveServer
+@using TheNerdCollective.Integrations.Dar.TestWeb.Models
 @inject DarLookupOrchestrator Orchestrator
 
 <PageTitle>Adresse & BBR</PageTitle>
@@ -12,7 +13,11 @@
 
     <section class="card">
         <h2>Adresse-autocomplete</h2>
-        <p class="section-intro">Fri-tekst søgning via Adressevælger (<code>SearchAsync</code>). Vælg en adresse for at udfylde felterne nedenfor.</p>
+        <p class="section-intro">
+            Fri-tekst søgning via Adressevælger (<code>SearchAsync</code>).
+            Vælg et forslag — opslag bruger <strong>husnummer-id</strong> (ikke DisplayName).
+            Enheder (fx <code>2. tv</code>) har type <code>adresse</code> med egen LocalId og separat HusnummerId.
+        </p>
         <AddressAutocomplete OnAddressSelected="ApplyAutocompleteSelectionAsync" />
     </section>
 
@@ -80,6 +85,13 @@
                     <dt>KVHX (legacy)</dt>
                     <dd>@_result.Adresseopslag?.KvHxInput.KvhxId</dd>
                 </div>
+                @if (!string.IsNullOrWhiteSpace(_result.Adresseopslag?.AdresseLocalId))
+                {
+                    <div>
+                        <dt>Adresse LocalId (enhed)</dt>
+                        <dd>@_result.Adresseopslag?.AdresseLocalId</dd>
+                    </div>
+                }
                 <div>
                     <dt>Bygninger</dt>
                     <dd>@FormatBygninger(_result.Bygninger)</dd>
@@ -109,6 +121,14 @@
 
         <section class="results">
             <h2>Service-resultater</h2>
+
+            @if (_methodCalls is not null && _request.AutocompleteSelection is not null)
+            {
+                <div class="method-call--overview">
+                    <h3>Anbefalet Azure Function-flow (autocomplete → KVHX)</h3>
+                    <MethodCallHint Text="@_methodCalls.AutocompleteFlow" />
+                </div>
+            }
 
             @if (_methodCalls is not null)
             {
@@ -152,21 +172,25 @@
             ? "-"
             : string.Join(", ", bygninger.Select(b => b.Bygningsnummer ?? b.IdLokalId ?? "?"));
 
-    private async Task ApplyAutocompleteSelectionAsync(DanishAddressAutocompleteResult selection)
+    private async Task ApplyAutocompleteSelectionAsync(AutocompleteSelectionEventArgs selection)
     {
-        if (selection.IsCompleteAddress)
+        var result = selection.Result;
+        _request.AutocompleteSelection = result;
+        _request.AutocompleteSearchText = selection.SearchText;
+
+        if (result.IsCompleteAddress)
         {
-            _request.StreetAndNumber = string.IsNullOrWhiteSpace(selection.AddressLine2)
-                ? selection.AddressLine1
-                : $"{selection.AddressLine1}, {selection.AddressLine2}";
-            _request.PostalCode = selection.PostalCode;
-            _request.City = selection.City;
+            _request.StreetAndNumber = string.IsNullOrWhiteSpace(result.AddressLine2)
+                ? result.AddressLine1
+                : $"{result.AddressLine1}, {result.AddressLine2}";
+            _request.PostalCode = result.PostalCode;
+            _request.City = result.City;
         }
         else
         {
-            _request.StreetAndNumber = selection.AddressLine1;
-            _request.PostalCode = selection.PostalCode;
-            _request.City = selection.City;
+            _request.StreetAndNumber = result.AddressLine1;
+            _request.PostalCode = result.PostalCode;
+            _request.City = result.City;
         }
 
         await Task.CompletedTask;

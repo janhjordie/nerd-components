@@ -364,8 +364,32 @@ Assert.Equal(valgt.HusnummerId, detaljer.HusnummerId);
 |---|---|
 | `LookupAsync(streetAndNumber, postalCode, city?, ct?)` | Opslag på vej/husnummer + postnummer |
 | `LookupAsync(fullAddress, ct?)` | Opslag på fuld adresse, fx `"Århusvej 69a, 3000 Helsingør"` |
+| `LookupByHusnummerIdAsync(husnummerId, adresseLocalId?, ct?)` | Opslag via DAR husnummer-id (`id_lokalId`) |
+| `LookupFromAutocompleteAsync(selection, ct?)` | Opslag fra autocomplete-resultat — bruger husnummer-id, ikke DisplayName |
 
-Returnerer `AdresseopslagResult` med bl.a. `Dar` (native DAR), `HusnummerId`, `BygningId` og valgfri `KvHxInput` (DAWA legacy).
+Returnerer `AdresseopslagResult` med bl.a. `Dar` (native DAR), `HusnummerId`, `AdresseLocalId` (enhed), `BygningId` og valgfri `KvHxInput` (DAWA legacy).
+
+**Autocomplete → KVHX (anbefalet flow)**
+
+Brug **ikke** `LookupAsync(selection.DisplayName)` for enhedsadresser (fx `"Øster Allé 48, 2. tv, 8260 Viby J"`) — DisplayName kan ikke parses korrekt til husnummer-opslag. Brug i stedet id'er fra autocomplete:
+
+```csharp
+var autocompleteResults = (await darServices.Dar.Autocomplete.SearchAsync(cosmosDataSource.Adresse)).ToList();
+var valgt = DanishAddressAutocompleteMatching.ResolveBestMatch(
+    autocompleteResults,
+    cosmosDataSource.Adresse)
+    ?? throw new InvalidOperationException("Ingen DAR autocomplete-resultater fundet for adressen.");
+
+var adresseLookup = await darServices.Dar.Adresseopslag.LookupFromAutocompleteAsync(valgt);
+KvHxInput? kvhxInput = ToKvHxInput(adresseLookup.KvHxInput);
+// adresseLookup.HusnummerId — adgangsadresse (BBR)
+// adresseLookup.AdresseLocalId — sat når valgt.ResultType er "adresse" (enhed)
+```
+
+| Autocomplete `ResultType` | Id til opslag | Betydning |
+|---|---|---|
+| `husnummer` | `LocalId` (= `HusnummerId`) | Adgangsadresse, fx `"Øster Allé 48, 8260 Viby J"` |
+| `adresse` | `HusnummerId` til opslag; `LocalId` gemmes som `AdresseLocalId` | Enhed, fx `"Øster Allé 48, 2. tv, 8260 Viby J"` |
 
 #### `services.Dar.Husnummer`
 
@@ -757,7 +781,7 @@ Kræver whitelisted IP — ellers springes testen over ved `DAF-AUTH-0005`.
 
 ## Versionering
 
-**Nuværende version:** `1.6.2`
+**Nuværende version:** `1.6.3`
 
 Publiceres til [NuGet.org](https://www.nuget.org/packages/TheNerdCollective.Integrations.Dar) via GitHub Actions ved push til `main`.
 

@@ -46,6 +46,62 @@ namespace TheNerdCollective.Integrations.Dar.Services.Dar
                 .ConfigureAwait(false);
         }
 
+        /// <summary>Slår en adresse op via DAR husnummer-id (<c>id_lokalId</c>).</summary>
+        public async Task<AdresseopslagResult> LookupByHusnummerIdAsync(
+            string husnummerId,
+            string? adresseLocalId = null,
+            CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(husnummerId))
+            {
+                throw new ArgumentException("Husnummer-id må ikke være tomt.", nameof(husnummerId));
+            }
+
+            var husnummerNode = await DarAddressSearch.FindHusnummerNodeByIdAsync(
+                _accessor,
+                husnummerId,
+                cancellationToken).ConfigureAwait(false);
+
+            var (streetAndNumber, postalCode, city) = ResolveAddressParts(husnummerNode);
+            var result = await MapResultAsync(
+                husnummerNode,
+                streetAndNumber,
+                postalCode,
+                city,
+                cancellationToken).ConfigureAwait(false);
+
+            if (string.IsNullOrWhiteSpace(adresseLocalId))
+            {
+                return result;
+            }
+
+            return result with { AdresseLocalId = adresseLocalId };
+        }
+
+        /// <summary>
+        /// Slår en adresse op ud fra et autocomplete-resultat via husnummer-id — ikke DisplayName.
+        /// Brug <see cref="DanishAddressAutocompleteMatching.ResolveBestMatch"/> til at vælge forslag.
+        /// </summary>
+        public Task<AdresseopslagResult> LookupFromAutocompleteAsync(
+            DanishAddressAutocompleteResult selection,
+            CancellationToken cancellationToken = default)
+        {
+            if (selection == null)
+            {
+                throw new ArgumentNullException(nameof(selection));
+            }
+
+            if (!selection.IsCompleteAddress)
+            {
+                throw new InvalidOperationException(
+                    "Autocomplete-resultat er ikke en fuld adresse. Vælg et forslag med type 'husnummer' eller 'adresse'.");
+            }
+
+            var husnummerId = selection.GetHusnummerIdForLookup();
+            var adresseLocalId = selection.GetAdresseLocalId();
+            return LookupByHusnummerIdAsync(husnummerId, adresseLocalId, cancellationToken);
+        }
+
         /// <summary>Slår en adresse op ud fra fuld adresse, fx "Århusvej 69a, 3000 Helsingør".</summary>
         public Task<AdresseopslagResult> LookupAsync(
             string fullAddress,
@@ -98,6 +154,42 @@ namespace TheNerdCollective.Integrations.Dar.Services.Dar
                     : null),
                 KvHxInput = AdresseopslagKvHxMapper.Map(husnummer, adgangsadresse, husnummerId, postalCode, vejnavn)
             };
+        }
+
+        private static (string StreetAndNumber, string PostalCode, string? City) ResolveAddressParts(
+            System.Text.Json.JsonElement husnummerNode)
+        {
+            var adgangsadresse = husnummerNode.GetProperty("adgangsadressebetegnelse").GetString();
+            if (!string.IsNullOrWhiteSpace(adgangsadresse))
+            {
+                try
+                {
+                    var parsed = DarAddressParser.Parse(adgangsadresse!);
+                    return (parsed.StreetAndNumber, parsed.PostalCode, parsed.City);
+                }
+                catch (ArgumentException)
+                {
+                    // Fortsæt med fallback nedenfor.
+                }
+            }
+
+            var husnummer = DarJsonSerializer.DeserializeRequired<HusnummerDto>(husnummerNode);
+            var postalCode = husnummer.Postnummer
+                ?? throw new InvalidOperationException("Husnummer mangler postnummer.");
+
+            if (string.IsNullOrWhiteSpace(adgangsadresse))
+            {
+                throw new InvalidOperationException("Husnummer mangler adgangsadressebetegnelse.");
+            }
+
+            var streetAndNumber = adgangsadresse!;
+            var commaIndex = streetAndNumber.IndexOf(',');
+            if (commaIndex > 0)
+            {
+                streetAndNumber = streetAndNumber.Substring(0, commaIndex).Trim();
+            }
+
+            return (streetAndNumber, postalCode, husnummer.SupplerendeBynavn);
         }
     }
 }

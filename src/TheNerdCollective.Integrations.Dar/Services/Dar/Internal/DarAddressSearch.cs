@@ -55,6 +55,36 @@ namespace TheNerdCollective.Integrations.Dar.Services.Dar.Internal
                 "Prøv med stort bogstav i husnummer (fx 69A) eller fuld adresse.");
         }
 
+        internal static async Task<JsonElement> FindHusnummerNodeByIdAsync(
+            GraphQlDataAccessor accessor,
+            string husnummerId,
+            CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(husnummerId))
+            {
+                throw new ArgumentException("Husnummer-id må ikke være tomt.", nameof(husnummerId));
+            }
+
+            var temporal = GraphQlDataAccessor.CreateTemporalVariables();
+            var nodes = await accessor.FetchDarNodesAsync(
+                GraphQlQueries.GetHusnummerById,
+                new
+                {
+                    husnummerId,
+                    temporal.Virkningstid,
+                    temporal.Registreringstid
+                },
+                "DAR_Husnummer",
+                cancellationToken).ConfigureAwait(false);
+
+            if (nodes.GetArrayLength() == 0)
+            {
+                throw new InvalidOperationException($"Ingen husnummer fundet for id \"{husnummerId}\".");
+            }
+
+            return nodes[0].Clone();
+        }
+
         private static IEnumerable<string> BuildAddressSearchPrefixes(string streetAndNumber, string postalCode)
         {
             var normalizedStreet = NormalizeHouseLetter(streetAndNumber);

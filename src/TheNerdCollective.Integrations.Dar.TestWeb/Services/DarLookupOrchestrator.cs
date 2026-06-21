@@ -21,16 +21,37 @@ public sealed class DarLookupOrchestrator(DarRuntime runtime)
         var services = runtime.CreateServices();
         var stopwatch = Stopwatch.StartNew();
 
-        var adresseopslag = await services.Dar.Adresseopslag.LookupAsync(
-            request.StreetAndNumber,
-            request.PostalCode,
-            request.City,
-            cancellationToken);
+        AdresseopslagResult adresseopslag;
+        HusnummerLookupResult husnummer;
 
-        var husnummer = await services.Dar.Husnummer.FindByAddressAsync(
-            request.StreetAndNumber,
-            request.PostalCode,
-            cancellationToken);
+        if (request.AutocompleteSelection is not null)
+        {
+            adresseopslag = await services.Dar.Adresseopslag.LookupFromAutocompleteAsync(
+                request.AutocompleteSelection,
+                cancellationToken);
+
+            husnummer = new HusnummerLookupResult
+            {
+                Dar = adresseopslag.Dar,
+                Husnummer = adresseopslag.Husnummer,
+                Adgangsadresse = adresseopslag.Adgangsadresse,
+                HusnummerId = adresseopslag.HusnummerId,
+                BygningId = adresseopslag.BygningId
+            };
+        }
+        else
+        {
+            adresseopslag = await services.Dar.Adresseopslag.LookupAsync(
+                request.StreetAndNumber,
+                request.PostalCode,
+                request.City,
+                cancellationToken);
+
+            husnummer = await services.Dar.Husnummer.FindByAddressAsync(
+                request.StreetAndNumber,
+                request.PostalCode,
+                cancellationToken);
+        }
 
         var bygninger = await services.Bbr.Bygning.GetAllByHusnummerIdAsync(
             adresseopslag.HusnummerId,

@@ -26,6 +26,24 @@ namespace TheNerdCollective.Integrations.Dar.Services.Dar.Internal
                     nameof(fullAddress));
             }
 
+            if (segments.Length >= 3)
+            {
+                for (var i = segments.Length - 1; i >= 1; i--)
+                {
+                    var unitPostalMatch = PostalCityRegex.Match(segments[i].Trim());
+                    if (!unitPostalMatch.Success)
+                    {
+                        continue;
+                    }
+
+                    var unitCity = unitPostalMatch.Groups["city"].Value.Trim();
+                    return new ParsedAddress(
+                        segments[0],
+                        unitPostalMatch.Groups["postnr"].Value,
+                        string.IsNullOrWhiteSpace(unitCity) ? null : unitCity);
+                }
+            }
+
             var streetAndNumber = segments[0];
             var postalSegment = segments[1];
             var city = segments.Length > 2

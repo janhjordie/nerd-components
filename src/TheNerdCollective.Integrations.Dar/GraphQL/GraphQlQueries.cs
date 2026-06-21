@@ -20,6 +20,21 @@ public static class GraphQlQueries
         }
         """;
 
+    public static string GetHusnummerById => $$"""
+        query GetHusnummer($husnummerId: String!, $virkningstid: DafDateTime, $registreringstid: DafDateTime) {
+          DAR_Husnummer(
+            first: 1
+            virkningstid: $virkningstid
+            registreringstid: $registreringstid
+            where: { id_lokalId: { eq: $husnummerId } }
+          ) {
+            nodes {
+              {{GraphQlFieldLists.Husnummer}}
+            }
+          }
+        }
+        """;
+
     public static string GetNavngivenVejById => """
         query GetNavngivenVej($navngivenVejId: String!, $virkningstid: DafDateTime, $registreringstid: DafDateTime) {
           DAR_NavngivenVej(
