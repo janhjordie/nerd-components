@@ -42,8 +42,12 @@ namespace TheNerdCollective.Integrations.Dar.Services.Dar
                 postalCode,
                 cancellationToken).ConfigureAwait(false);
 
-            return await MapResultAsync(husnummerNode, streetAndNumber, postalCode, city, cancellationToken)
-                .ConfigureAwait(false);
+            return await MapResultAsync(
+                husnummerNode,
+                streetAndNumber,
+                postalCode,
+                city,
+                cancellationToken: cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>Slår en adresse op via DAR husnummer-id (<c>id_lokalId</c>).</summary>
@@ -62,12 +66,23 @@ namespace TheNerdCollective.Integrations.Dar.Services.Dar
                 husnummerId,
                 cancellationToken).ConfigureAwait(false);
 
+            AdresseDto? adresse = null;
+            if (!string.IsNullOrWhiteSpace(adresseLocalId))
+            {
+                var adresseNode = await DarAddressSearch.FindAdresseNodeByIdAsync(
+                    _accessor,
+                    adresseLocalId!,
+                    cancellationToken).ConfigureAwait(false);
+                adresse = DarJsonSerializer.DeserializeRequired<AdresseDto>(adresseNode);
+            }
+
             var (streetAndNumber, postalCode, city) = ResolveAddressParts(husnummerNode);
             var result = await MapResultAsync(
                 husnummerNode,
                 streetAndNumber,
                 postalCode,
                 city,
+                adresse,
                 cancellationToken).ConfigureAwait(false);
 
             if (string.IsNullOrWhiteSpace(adresseLocalId))
@@ -116,7 +131,8 @@ namespace TheNerdCollective.Integrations.Dar.Services.Dar
             string streetAndNumber,
             string postalCode,
             string? city,
-            CancellationToken cancellationToken)
+            AdresseDto? adresse = null,
+            CancellationToken cancellationToken = default)
         {
             var husnummerId = husnummerNode.GetProperty("id_lokalId").GetString()
                 ?? throw new InvalidOperationException("Husnummer mangler id_lokalId.");
@@ -137,7 +153,8 @@ namespace TheNerdCollective.Integrations.Dar.Services.Dar
             var dar = new DarAdresseopslagDto
             {
                 Husnummer = husnummer,
-                Vejnavn = vejnavn
+                Vejnavn = vejnavn,
+                Adresse = adresse
             };
 
             return new AdresseopslagResult
@@ -147,12 +164,19 @@ namespace TheNerdCollective.Integrations.Dar.Services.Dar
                 Adgangsadresse = adgangsadresse,
                 HusnummerId = husnummerId,
                 BygningId = bygningId,
+                AdresseLocalId = adresse?.IdLokalId,
                 StreetAndNumber = streetAndNumber,
                 PostalCode = postalCode,
                 City = city ?? (husnummerNode.TryGetProperty("supplerendeBynavn", out var bynavn)
                     ? bynavn.GetString()
                     : null),
-                KvHxInput = AdresseopslagKvHxMapper.Map(husnummer, adgangsadresse, husnummerId, postalCode, vejnavn)
+                KvHxInput = AdresseopslagKvHxMapper.Map(
+                    husnummer,
+                    adgangsadresse,
+                    husnummerId,
+                    postalCode,
+                    vejnavn,
+                    adresse)
             };
         }
 

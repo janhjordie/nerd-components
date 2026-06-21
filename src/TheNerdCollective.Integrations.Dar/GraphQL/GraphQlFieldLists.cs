@@ -419,6 +419,29 @@ public static class GraphQlFieldLists
         regionskode
         """;
 
+    public const string Adresse = """
+        adressebetegnelse
+        datafordelerOpdateringstid
+        datafordelerRegisterImportSequenceNumber
+        datafordelerRowId
+        datafordelerRowVersion
+        doerbetegnelse
+        etagebetegnelse
+        forretningshaendelse
+        forretningsomraade
+        forretningsproces
+        husnummer
+        id_lokalId
+        id_namespace
+        registreringFra
+        registreringsaktoer
+        registreringTil
+        status
+        virkningFra
+        virkningsaktoer
+        virkningTil
+        """;
+
     public const string Husnummer = """
         adgangsadressebetegnelse
         adgangspunkt

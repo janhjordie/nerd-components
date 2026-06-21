@@ -35,6 +35,21 @@ public static class GraphQlQueries
         }
         """;
 
+    public static string GetAdresseById => $$"""
+        query GetAdresse($adresseId: String!, $virkningstid: DafDateTime, $registreringstid: DafDateTime) {
+          DAR_Adresse(
+            first: 1
+            virkningstid: $virkningstid
+            registreringstid: $registreringstid
+            where: { id_lokalId: { eq: $adresseId } }
+          ) {
+            nodes {
+              {{GraphQlFieldLists.Adresse}}
+            }
+          }
+        }
+        """;
+
     public static string GetNavngivenVejById => """
         query GetNavngivenVej($navngivenVejId: String!, $virkningstid: DafDateTime, $registreringstid: DafDateTime) {
           DAR_NavngivenVej(

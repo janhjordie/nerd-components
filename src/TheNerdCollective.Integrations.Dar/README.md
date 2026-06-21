@@ -621,7 +621,21 @@ Eksempel for **Askeholm 12, 8700 Horsens**:
   "kvhxId": "06150330__12_______",
   "postnummer": "8700",
   "vejkode": "0330",
-  "vejnavn": "Askeholm"
+  "vejnavn": "Askeholm",
+  "etage": "",
+  "dør": ""
+}
+```
+
+Enhedsadresse (fx `Øster Allé 48, 2. tv, 8260 Viby J`) — `etage` og `dør` hentes fra `DAR_Adresse` via `LookupFromAutocompleteAsync`:
+
+```json
+{
+  "adressebetegnelse": "Øster Allé 48, 2. tv, 8260 Viby J",
+  "etage": "2",
+  "dør": "tv",
+  "kvhxId": "07519554__48__2__tv",
+  "id": "<DAR_Adresse.id_lokalId>"
 }
 ```
 
@@ -781,7 +795,7 @@ Kræver whitelisted IP — ellers springes testen over ved `DAF-AUTH-0005`.
 
 ## Versionering
 
-**Nuværende version:** `1.6.3`
+**Nuværende version:** `1.6.4`
 
 Publiceres til [NuGet.org](https://www.nuget.org/packages/TheNerdCollective.Integrations.Dar) via GitHub Actions ved push til `main`.
 

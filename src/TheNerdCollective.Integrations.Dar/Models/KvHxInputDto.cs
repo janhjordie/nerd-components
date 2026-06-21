@@ -36,4 +36,12 @@ public sealed record KvHxInputDto
 
     [JsonPropertyName("vejnavn")]
     public required string Vejnavn { get; init; }
+
+    /// <summary>Etagebetegnelse — DAWA <c>etage</c> / DAR <c>etagebetegnelse</c>.</summary>
+    [JsonPropertyName("etage")]
+    public string Etage { get; init; } = string.Empty;
+
+    /// <summary>Dørbetegnelse (sidebetegnelse) — DAWA <c>dør</c> / DAR <c>doerbetegnelse</c>.</summary>
+    [JsonPropertyName("dør")]
+    public string Door { get; init; } = string.Empty;
 }

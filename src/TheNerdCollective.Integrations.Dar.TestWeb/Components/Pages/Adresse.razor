@@ -85,6 +85,14 @@
                     <dt>KVHX (legacy)</dt>
                     <dd>@_result.Adresseopslag?.KvHxInput.KvhxId</dd>
                 </div>
+                @if (!string.IsNullOrWhiteSpace(_result.Adresseopslag?.KvHxInput.Etage)
+                     || !string.IsNullOrWhiteSpace(_result.Adresseopslag?.KvHxInput.Door))
+                {
+                    <div>
+                        <dt>KVHX etage / dør</dt>
+                        <dd>@_result.Adresseopslag?.KvHxInput.Etage / @_result.Adresseopslag?.KvHxInput.Door</dd>
+                    </div>
+                }
                 @if (!string.IsNullOrWhiteSpace(_result.Adresseopslag?.AdresseLocalId))
                 {
                     <div>

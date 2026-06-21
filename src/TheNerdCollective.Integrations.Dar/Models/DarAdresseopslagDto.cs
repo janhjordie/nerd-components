@@ -11,4 +11,7 @@ public sealed record DarAdresseopslagDto
 
     /// <summary>Resolved vejnavn fra DAR_NavngivenVej, når tilgængeligt.</summary>
     public string? Vejnavn { get; init; }
+
+    /// <summary>DAR_Adresse når opslaget er en enhedsadresse (etage/dør).</summary>
+    public AdresseDto? Adresse { get; init; }
 }

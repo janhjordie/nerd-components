@@ -13,30 +13,45 @@ namespace TheNerdCollective.Integrations.Dar.Mapping
             string adgangsadresse,
             string husnummerId,
             string postalCode,
-            string? vejnavn)
+            string? vejnavn,
+            AdresseDto? adresse = null)
         {
             var husnummertekst = husnummer.Husnummertekst
                 ?? throw new InvalidOperationException("Husnummer mangler husnummertekst.");
 
             var (kommunekode, vejkode) = VejmidteParser.Parse(husnummer.Vejmidte);
+            var etage = adresse?.Etagebetegnelse;
+            var door = adresse?.Doerbetegnelse;
+            var hasUnit = !string.IsNullOrWhiteSpace(etage) || !string.IsNullOrWhiteSpace(door);
+            var addressId = hasUnit && !string.IsNullOrWhiteSpace(adresse?.IdLokalId)
+                ? adresse!.IdLokalId!
+                : husnummerId;
+            var adressebetegnelse = !string.IsNullOrWhiteSpace(adresse?.Adressebetegnelse)
+                ? adresse!.Adressebetegnelse!
+                : adgangsadresse;
 
             return ToKvHxInput(new KvHxInputMappingSource
             {
-                Adgangsadresse = adgangsadresse,
-                HusnummerId = husnummerId,
+                Adgangsadresse = adressebetegnelse,
+                HusnummerId = addressId,
                 PostalCode = postalCode,
                 Vejnavn = vejnavn ?? ParseVejnavnFallback(adgangsadresse, husnummertekst),
                 Komunekode = kommunekode,
                 Vejkode = vejkode,
-                KvhxId = KvHxIdBuilder.BuildAdgangsadresse(kommunekode, vejkode, husnummertekst),
+                KvhxId = hasUnit
+                    ? KvHxIdBuilder.BuildEnhedsadresse(kommunekode, vejkode, husnummertekst, etage, door)
+                    : KvHxIdBuilder.BuildAdgangsadresse(kommunekode, vejkode, husnummertekst),
                 Husnummer = husnummertekst,
-                Esrejendomsnr = "0"
+                Esrejendomsnr = "0",
+                Etage = etage ?? string.Empty,
+                Door = door ?? string.Empty
             });
         }
 
         [MapProperty(nameof(KvHxInputMappingSource.Adgangsadresse), nameof(KvHxInputDto.Adressebetegnelse))]
         [MapProperty(nameof(KvHxInputMappingSource.HusnummerId), nameof(KvHxInputDto.Id))]
         [MapProperty(nameof(KvHxInputMappingSource.PostalCode), nameof(KvHxInputDto.Postnummer))]
+        [MapProperty(nameof(KvHxInputMappingSource.Door), nameof(KvHxInputDto.Door))]
         private static partial KvHxInputDto ToKvHxInput(KvHxInputMappingSource source);
 
         private static string ParseVejnavnFallback(string adgangsadresse, string husnummer)
@@ -74,6 +89,10 @@ namespace TheNerdCollective.Integrations.Dar.Mapping
             public required string Husnummer { get; init; }
 
             public required string Esrejendomsnr { get; init; }
+
+            public required string Etage { get; init; }
+
+            public required string Door { get; init; }
         }
     }
 }

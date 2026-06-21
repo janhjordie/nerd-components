@@ -85,6 +85,36 @@ namespace TheNerdCollective.Integrations.Dar.Services.Dar.Internal
             return nodes[0].Clone();
         }
 
+        internal static async Task<System.Text.Json.JsonElement> FindAdresseNodeByIdAsync(
+            GraphQlDataAccessor accessor,
+            string adresseId,
+            CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(adresseId))
+            {
+                throw new ArgumentException("Adresse-id må ikke være tomt.", nameof(adresseId));
+            }
+
+            var temporal = GraphQlDataAccessor.CreateTemporalVariables();
+            var nodes = await accessor.FetchDarNodesAsync(
+                GraphQlQueries.GetAdresseById,
+                new
+                {
+                    adresseId,
+                    temporal.Virkningstid,
+                    temporal.Registreringstid
+                },
+                "DAR_Adresse",
+                cancellationToken).ConfigureAwait(false);
+
+            if (nodes.GetArrayLength() == 0)
+            {
+                throw new InvalidOperationException($"Ingen adresse fundet for id \"{adresseId}\".");
+            }
+
+            return nodes[0].Clone();
+        }
+
         private static IEnumerable<string> BuildAddressSearchPrefixes(string streetAndNumber, string postalCode)
         {
             var normalizedStreet = NormalizeHouseLetter(streetAndNumber);
