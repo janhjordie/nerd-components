@@ -26,7 +26,22 @@ namespace TheNerdCollective.Integrations.Dar.Services.Dar
             var result = await _adresseopslag.LookupAsync(streetAndNumber, postalCode, cancellationToken: cancellationToken)
                 .ConfigureAwait(false);
 
-            return new HusnummerLookupResult
+            return MapResult(result);
+        }
+
+        /// <summary>Finder husnummer via DAR husnummer-id (<c>id_lokalId</c>).</summary>
+        public async Task<HusnummerLookupResult> FindByHusnummerIdAsync(
+            string husnummerId,
+            CancellationToken cancellationToken = default)
+        {
+            var result = await _adresseopslag.LookupByHusnummerIdAsync(husnummerId, cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
+
+            return MapResult(result);
+        }
+
+        private static HusnummerLookupResult MapResult(AdresseopslagResult result) =>
+            new()
             {
                 Dar = result.Dar,
                 Husnummer = result.Husnummer,
@@ -34,6 +49,5 @@ namespace TheNerdCollective.Integrations.Dar.Services.Dar
                 HusnummerId = result.HusnummerId,
                 BygningId = result.BygningId
             };
-        }
     }
 }

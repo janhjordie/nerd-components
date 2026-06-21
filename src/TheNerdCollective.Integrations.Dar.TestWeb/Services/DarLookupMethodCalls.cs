@@ -14,14 +14,10 @@ internal static class DarLookupMethodCalls
         var searchText = MethodCallFormatter.CsString(request.AutocompleteSearchText ?? request.StreetAndNumber);
 
         var autocompleteFlow =
-            "var autocompleteResults = (await darServices.Dar.Autocomplete.SearchAsync(" + searchText + ")).ToList();\n" +
-            "var adresseLookupAutocomplete = DanishAddressAutocompleteMatching.ResolveBestMatch(\n" +
-            "    autocompleteResults,\n" +
-            "    " + searchText + ")\n" +
-            "    ?? throw new InvalidOperationException(\"Ingen DAR autocomplete-resultater fundet for adressen.\");\n\n" +
-            "var adresseLookup = await darServices.Dar.Adresseopslag.LookupFromAutocompleteAsync(\n" +
-            "    adresseLookupAutocomplete);\n" +
-            "KvHxInput? kvhxInput = ToKvHxInput(adresseLookup.KvHxInput);";
+            "var resolved = await darServices.Address.ResolveBestMatchAsync(" + searchText + ");\n" +
+            "var ids = resolved.Ids;\n" +
+            "KvHxInput? kvhxInput = ToKvHxInput(resolved.KvHxInput);\n" +
+            "// BBR: await darServices.Bbr.Bygning.GetAllByHusnummerIdAsync(resolved.HusnummerId);";
 
         var adresseopslagFromAutocomplete =
             "var adresseopslag = await services.Dar.Adresseopslag.LookupFromAutocompleteAsync(\n" +

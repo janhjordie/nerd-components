@@ -98,6 +98,8 @@ export TheNerdCollective__Dar__AutocompleteToken="adressevaelger123"
 
 ### 3. Brug
 
+**Anbefalet (Cosmos/adresse-tekst → ids → KvHx → BBR):**
+
 ```csharp
 using TheNerdCollective.Integrations.Dar;
 using TheNerdCollective.Integrations.Dar.Configuration;
@@ -110,6 +112,16 @@ var options = new DarOptions
 using var httpClient = new HttpClient();
 var services = DarClientFactory.Create(options, httpClient);
 
+var resolved = await services.Address.ResolveBestMatchAsync("Øster Allé 48, 8260 Viby J");
+var bygninger = await services.Bbr.Bygning.GetAllByHusnummerIdAsync(resolved.HusnummerId);
+var etager = await services.Bbr.Etage.GetByBygningIdAsync(bygninger[0].IdLokalId!);
+```
+
+Se [Sverre-flow](#sverre--adresse--ids--kvhx--bbr-anbefalet-v165) for komplet BBR-kæde og genopslag via gemte ids.
+
+**Klassisk vej/postnr (legacy):**
+
+```csharp
 var adresse = await services.Dar.Adresseopslag.LookupAsync("Århusvej 69a", "3000", "Helsingør");
 var bygninger = await services.Bbr.Bygning.GetAllByHusnummerIdAsync(adresse.HusnummerId);
 var etager = await services.Bbr.Etage.GetByBygningIdAsync(bygninger[0].IdLokalId!);
@@ -214,6 +226,7 @@ Hovedendpoint **`GET /api/lookup/full?vej=...&postnr=...&by=...`** returnerer sa
 
 ```
 DarServices
+├── Address            → autocomplete → bedste match → ids + KvHxInput (anbefalet)
 ├── Dar
 │   ├── Autocomplete    → fonetisk søgning + id-opslag (koordinater) via Adressevælger
 │   ├── Adresseopslag   → native DAR-resultat + valgfri KvHxInput (DAWA legacy)
@@ -235,7 +248,61 @@ DarServices
 
 ## Typisk flow
 
-### UI med autocomplete (anbefalet)
+### Sverre — adresse → ids → KvHx → BBR (anbefalet, v1.6.5+)
+
+Ét kald med adresse-tekst → DAR vælger bedste match (inkl. etage/dør) → ids + KvHxInput.  
+**BBR og efterfølgende opslag sker altid via `localId` / `husnummerId` — aldrig vej/postnr/DisplayName.**
+
+```csharp
+// 1. Adresse → bedste match → ids + KvHxInput
+var resolved = await darServices.Address.ResolveBestMatchAsync(cosmosDataSource.Adresse);
+
+// Gem disse i Cosmos — det er de eneste nøgler der giver mening
+var ids = resolved.Ids;                    // LocalId, ResultType, HusnummerId
+var kvhxInput = resolved.KvHxInput;          // Klar til downstream
+var husnummerId = resolved.HusnummerId;      // Til BBR
+var adresseLocalId = resolved.AdresseLocalId; // Kun for enhed (type "adresse")
+
+// 2. BBR — altid via id
+var bygninger = await darServices.Bbr.Bygning.GetAllByHusnummerIdAsync(resolved.HusnummerId);
+
+foreach (var bygning in bygninger)
+{
+    var bygningId = bygning.IdLokalId!;
+
+    var enheder = await darServices.Bbr.Enhed.GetByBygningIdAsync(bygningId);
+    var etager = await darServices.Bbr.Etage.GetByBygningIdAsync(bygningId);
+    var opgange = await darServices.Bbr.Opgang.GetByBygningIdAsync(bygningId);
+    var tekniskeAnlaeg = await darServices.Bbr.TekniskAnlaeg.GetByBygningIdAsync(bygningId);
+    var bygningRelationer = await darServices.Bbr.Ejendomsrelation.GetByBygningIdAsync(bygningId);
+
+    var grund = !string.IsNullOrWhiteSpace(bygning.Grund)
+        ? await darServices.Bbr.Grund.GetByIdAsync(bygning.Grund)
+        : null;
+
+    var ejendomsrelationer = await darServices.Bbr.Ejendomsrelation.ResolveAsync(
+        bygningRelationer,
+        grund);
+}
+```
+
+**Når ids allerede er gemt i Cosmos** (uden at søge igen):
+
+```csharp
+var kvhxInput = await darServices.Address.GetKvHxInputByLocalIdAsync(
+    localId,
+    resultType,      // "husnummer" eller "adresse"
+    husnummerId);    // påkrævet for enhed
+```
+
+| Autocomplete `ResultType` | `Ids.LocalId` | Id til BBR / husnummer-opslag |
+|---|---|---|
+| `husnummer` | Husnummer-id | `Ids.LocalId` (= `HusnummerId`) |
+| `adresse` | Enheds-adresse-id | `Ids.HusnummerId` (ikke `LocalId`) |
+
+> Brug **ikke** `LookupAsync(selection.DisplayName)` for enhedsadresser — DisplayName kan ikke parses korrekt, og etage/dør mangler i KvHxInput.
+
+### UI med autocomplete (koordinater)
 
 ```csharp
 // 1. Bruger vælger adresse i autocomplete
@@ -288,6 +355,21 @@ foreach (var bygning in bygninger)
 ## API-reference
 
 ### DAR
+
+#### `services.Address` (anbefalet — v1.6.5+)
+
+Id-baseret adresse-flow — se [Sverre — adresse → ids → KvHx → BBR](#sverre--adresse--ids--kvhx--bbr-anbefalet-v165) for komplet eksempel.
+
+| Metode | Beskrivelse |
+|---|---|
+| `ResolveBestMatchAsync(address, ct?)` | Autocomplete → bedste match → ids + KvHxInput + BBR-nøgler |
+| `GetKvHxInputByLocalIdAsync(localId, resultType, husnummerId?, ct?)` | KvHxInput via gemte DAR-id'er |
+| `GetKvHxInputAsync(DarAddressIds ids, ct?)` | KvHxInput via `DarAddressIds` |
+| `GetAdresseopslagAsync(DarAddressIds ids, ct?)` | Fuldt adresseopslag via id'er |
+
+Returnerer `DarAddressResolutionResult` med `Ids`, `KvHxInput`, `HusnummerId` (BBR) og `AdresseLocalId` (enhed).
+
+`DarAddressIds` samler `LocalId`, `ResultType` og `HusnummerId` fra autocomplete — brug `GetHusnummerIdForLookup()` og `GetAdresseLocalId()` når I bygger egne kald.
 
 #### `services.Dar.Autocomplete`
 
@@ -369,9 +451,9 @@ Assert.Equal(valgt.HusnummerId, detaljer.HusnummerId);
 
 Returnerer `AdresseopslagResult` med bl.a. `Dar` (native DAR), `HusnummerId`, `AdresseLocalId` (enhed), `BygningId` og valgfri `KvHxInput` (DAWA legacy).
 
-**Autocomplete → KVHX (anbefalet flow)**
+For Cosmos/Azure Function-flow: foretræk `services.Address.ResolveBestMatchAsync` — se [Sverre-flow](#sverre--adresse--ids--kvhx--bbr-anbefalet-v165).
 
-Brug **ikke** `LookupAsync(selection.DisplayName)` for enhedsadresser (fx `"Øster Allé 48, 2. tv, 8260 Viby J"`) — DisplayName kan ikke parses korrekt til husnummer-opslag. Brug i stedet id'er fra autocomplete:
+**Manuel autocomplete-liste** (bruger vælger selv række):
 
 ```csharp
 var autocompleteResults = (await darServices.Dar.Autocomplete.SearchAsync(cosmosDataSource.Adresse)).ToList();
@@ -380,22 +462,17 @@ var valgt = DanishAddressAutocompleteMatching.ResolveBestMatch(
     cosmosDataSource.Adresse)
     ?? throw new InvalidOperationException("Ingen DAR autocomplete-resultater fundet for adressen.");
 
-var adresseLookup = await darServices.Dar.Adresseopslag.LookupFromAutocompleteAsync(valgt);
-KvHxInput? kvhxInput = ToKvHxInput(adresseLookup.KvHxInput);
-// adresseLookup.HusnummerId — adgangsadresse (BBR)
-// adresseLookup.AdresseLocalId — sat når valgt.ResultType er "adresse" (enhed)
+var ids = DarAddressIds.FromSelection(valgt);
+var kvhxInput = await darServices.Address.GetKvHxInputAsync(ids);
+var bygninger = await darServices.Bbr.Bygning.GetAllByHusnummerIdAsync(ids.GetHusnummerIdForLookup());
 ```
-
-| Autocomplete `ResultType` | Id til opslag | Betydning |
-|---|---|---|
-| `husnummer` | `LocalId` (= `HusnummerId`) | Adgangsadresse, fx `"Øster Allé 48, 8260 Viby J"` |
-| `adresse` | `HusnummerId` til opslag; `LocalId` gemmes som `AdresseLocalId` | Enhed, fx `"Øster Allé 48, 2. tv, 8260 Viby J"` |
 
 #### `services.Dar.Husnummer`
 
 | Metode | Returnerer |
 |---|---|
 | `FindByAddressAsync(streetAndNumber, postalCode, ct?)` | `HusnummerLookupResult` med native `Dar` (uden KvHxInput) |
+| `FindByHusnummerIdAsync(husnummerId, ct?)` | Samme — via DAR husnummer-id |
 
 #### `services.Dar.Kommune`
 
@@ -627,7 +704,7 @@ Eksempel for **Askeholm 12, 8700 Horsens**:
 }
 ```
 
-Enhedsadresse (fx `Øster Allé 48, 2. tv, 8260 Viby J`) — `etage` og `dør` hentes fra `DAR_Adresse` via `LookupFromAutocompleteAsync`:
+Enhedsadresse (fx `Øster Allé 48, 2. tv, 8260 Viby J`) — `etage` og `dør` hentes fra `DAR_Adresse` via `services.Address.ResolveBestMatchAsync`:
 
 ```json
 {
@@ -642,6 +719,8 @@ Enhedsadresse (fx `Øster Allé 48, 2. tv, 8260 Viby J`) — `etage` og `dør` h
 `kvhxId` bygges i DAWA-format (19 tegn). Property-navnet `komunekode` følger eksisterende downstream-kontrakt. `Id` svarer til DAR `id_lokalId`.
 
 ### BBR
+
+BBR-opslag sker **altid via id** — start med `husnummerId` fra `services.Address.ResolveBestMatchAsync` (eller gemt i Cosmos), derefter `bygning.IdLokalId` til enheder, etager m.m. Se [Sverre-flow](#sverre--adresse--ids--kvhx--bbr-anbefalet-v165).
 
 Alle BBR-services tager `bygningId` (`id_lokalId`) som udgangspunkt, undtagen `Grund.GetByIdAsync` og `Ejendomsrelation.ResolveAsync`.
 
@@ -795,7 +874,7 @@ Kræver whitelisted IP — ellers springes testen over ved `DAF-AUTH-0005`.
 
 ## Versionering
 
-**Nuværende version:** `1.6.4`
+**Nuværende version:** `1.6.5`
 
 Publiceres til [NuGet.org](https://www.nuget.org/packages/TheNerdCollective.Integrations.Dar) via GitHub Actions ved push til `main`.
 

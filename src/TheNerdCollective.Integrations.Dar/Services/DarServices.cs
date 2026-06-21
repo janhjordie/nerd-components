@@ -10,11 +10,15 @@ namespace TheNerdCollective.Integrations.Dar.Services
         {
             Dar = dar;
             Bbr = bbr;
+            Address = new DarAddressResolutionService(dar.Autocomplete, dar.Adresseopslag);
         }
 
         public DarRegister Dar { get; }
 
         public BbrServices Bbr { get; }
+
+        /// <summary>Autocomplete → bedste match → ids, KvHxInput og BBR-nøgler.</summary>
+        public DarAddressResolutionService Address { get; }
     }
 
     /// <summary>DAR-services (adresser).</summary>
