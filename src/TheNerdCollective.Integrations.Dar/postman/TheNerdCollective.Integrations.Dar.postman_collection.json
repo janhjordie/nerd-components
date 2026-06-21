@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "d4r-bbr-nerd-collective-api",
     "name": "TheNerdCollective.Integrations.Dar",
-    "description": "HTTP API til DAR/BBR via Azure Functions — ét endpoint per panel på TestWeb Home-siden.\n\nGuide: ../AZURE-FUNCTIONS-API.md\n\nEnvironment:\n- baseUrl (fx http://localhost:7071/api)\n- functionKey (Azure Functions key; tom ved Anonymous lokalt)\n- vej, postnr, by, searchQuery",
+    "description": "HTTP API til DAR/BBR via Azure Functions.\n\nGuide: ../AZURE-FUNCTIONS-API.md\n\n**Sverre:** Start i mappen *Sverre — Autocomplete → KVHX* med `searchQueryOesterAlle` (adgangsadresse) eller `searchQueryOesterAlleUnit` (enhed).\n\nEnvironment:\n- baseUrl, functionKey\n- vej, postnr, by (klassisk opslag)\n- searchQueryOesterAlle, searchQueryOesterAlleUnit\n- autocompleteLocalId, autocompleteResultType, autocompleteHusnummerId (sættes af test-scripts)",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -14,6 +14,158 @@
     ]
   },
   "item": [
+    {
+      "name": "Sverre — Autocomplete → KVHX",
+      "description": "Anbefalet flow: SearchAsync → ResolveBestMatch → LookupFromAutocompleteAsync.\n\nKør requests 1→2 (adgangsadresse) eller 3→4 (enhed med etage/dør). Request *ét kald* kræver endpoint `/from-autocomplete` (se AZURE-FUNCTIONS-API.md).",
+      "item": [
+        {
+          "name": "1. Autocomplete — Øster Allé 48, 8260 Viby J",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const results = pm.response.json();",
+                  "const searchText = pm.variables.get('searchQueryOesterAlle');",
+                  "function looksLikeUnit(s) { return /\\b\\d+\\s*(?:\\.?\\s*)?(?:sal|th|tv|mf|kl)\\b|\\b\\d+(?:th|sal|tv)\\b|\\b(?:st|kl|mf)\\b/i.test(s || ''); }",
+                  "function isAdresse(r) { return (r.resultType || '').toLowerCase() === 'adresse'; }",
+                  "function isHusnummer(r) { return (r.resultType || '').toLowerCase() === 'husnummer'; }",
+                  "let valgt = null;",
+                  "if (looksLikeUnit(searchText)) {",
+                  "  valgt = results.find(r => r.isCompleteAddress && isAdresse(r))",
+                  "    || results.find(r => r.isCompleteAddress)",
+                  "    || results[0];",
+                  "} else {",
+                  "  valgt = results.find(r => r.isCompleteAddress && isHusnummer(r))",
+                  "    || results.find(r => r.isCompleteAddress && isAdresse(r))",
+                  "    || results.find(r => r.isCompleteAddress)",
+                  "    || results[0];",
+                  "}",
+                  "pm.test('Autocomplete returnerede resultater', () => pm.expect(results.length).to.be.above(0));",
+                  "pm.test('Bedste match fundet', () => pm.expect(valgt).to.be.an('object'));",
+                  "if (valgt) {",
+                  "  pm.collectionVariables.set('autocompleteLocalId', valgt.localId);",
+                  "  pm.collectionVariables.set('autocompleteResultType', valgt.resultType || '');",
+                  "  pm.collectionVariables.set('autocompleteHusnummerId', valgt.husnummerId || valgt.localId);",
+                  "  pm.collectionVariables.set('autocompleteDisplayName', valgt.displayName || '');",
+                  "  console.log('Valgt:', valgt.displayName, valgt.resultType, valgt.localId);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{baseUrl}}/dar/autocomplete?q={{searchQueryOesterAlle}}",
+            "description": "Første trin i Sverres Azure Function-flow. Test-script vælger bedste husnummer-match og gemmer LocalId/HusnummerId til næste request."
+          }
+        },
+        {
+          "name": "2. KvHxInput from autocomplete (ét kald, q=)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{baseUrl}}/dar/adresseopslag/kvhx/from-autocomplete?q={{searchQueryOesterAlle}}",
+            "description": "Svarer til LookupFromAutocompleteAsync + KvHxInput. Ét kald — SearchAsync, ResolveBestMatch og id-opslag på serveren.\n\nForventet: kvhxId for adgangsadresse (uden etage/dør)."
+          }
+        },
+        {
+          "name": "2b. KvHxInput from autocomplete (med ids fra step 1)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/dar/adresseopslag/kvhx/from-autocomplete?localId={{autocompleteLocalId}}&resultType={{autocompleteResultType}}&husnummerId={{autocompleteHusnummerId}}&q={{searchQueryOesterAlle}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["dar", "adresseopslag", "kvhx", "from-autocomplete"],
+              "query": [
+                { "key": "localId", "value": "{{autocompleteLocalId}}" },
+                { "key": "resultType", "value": "{{autocompleteResultType}}" },
+                { "key": "husnummerId", "value": "{{autocompleteHusnummerId}}" },
+                { "key": "q", "value": "{{searchQueryOesterAlle}}" }
+              ]
+            },
+            "description": "Alternativ to-trins flow: kør request 1 først, derefter denne med ids fra autocomplete (ikke DisplayName)."
+          }
+        },
+        {
+          "name": "3. Autocomplete — Øster Allé 48, 2. tv, 8260 Viby J",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const results = pm.response.json();",
+                  "const searchText = pm.variables.get('searchQueryOesterAlleUnit');",
+                  "function looksLikeUnit(s) { return /\\b\\d+\\s*(?:\\.?\\s*)?(?:sal|th|tv|mf|kl)\\b|\\b\\d+(?:th|sal|tv)\\b|\\b(?:st|kl|mf)\\b/i.test(s || ''); }",
+                  "function isAdresse(r) { return (r.resultType || '').toLowerCase() === 'adresse'; }",
+                  "function isHusnummer(r) { return (r.resultType || '').toLowerCase() === 'husnummer'; }",
+                  "let valgt = null;",
+                  "if (looksLikeUnit(searchText)) {",
+                  "  valgt = results.find(r => r.isCompleteAddress && isAdresse(r))",
+                  "    || results.find(r => r.isCompleteAddress)",
+                  "    || results[0];",
+                  "} else {",
+                  "  valgt = results.find(r => r.isCompleteAddress && isHusnummer(r))",
+                  "    || results.find(r => r.isCompleteAddress && isAdresse(r))",
+                  "    || results.find(r => r.isCompleteAddress)",
+                  "    || results[0];",
+                  "}",
+                  "pm.test('Autocomplete returnerede resultater', () => pm.expect(results.length).to.be.above(0));",
+                  "if (valgt) {",
+                  "  pm.collectionVariables.set('autocompleteLocalId', valgt.localId);",
+                  "  pm.collectionVariables.set('autocompleteResultType', valgt.resultType || '');",
+                  "  pm.collectionVariables.set('autocompleteHusnummerId', valgt.husnummerId || valgt.localId);",
+                  "  pm.collectionVariables.set('autocompleteDisplayName', valgt.displayName || '');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{baseUrl}}/dar/autocomplete?q={{searchQueryOesterAlleUnit}}",
+            "description": "Enhedsadresse — forvent ResultType `adresse` med HusnummerId ≠ LocalId."
+          }
+        },
+        {
+          "name": "4. KvHxInput from autocomplete — enhed (ét kald)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const kvhx = pm.response.json();",
+                  "pm.test('Etage udfyldt', () => pm.expect(kvhx.etage).to.eql('2'));",
+                  "pm.test('Dør udfyldt', () => pm.expect(kvhx.dør || kvhx.dor).to.eql('tv'));",
+                  "pm.test('KVHX-id for enhed', () => pm.expect(kvhx.kvhxId).to.eql('07519554__48__2__tv'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{baseUrl}}/dar/adresseopslag/kvhx/from-autocomplete?q={{searchQueryOesterAlleUnit}}",
+            "description": "Forventet KvHxInput med etage=`2`, dør=`tv`, kvhxId=`07519554__48__2__tv`."
+          }
+        },
+        {
+          "name": "5. Full lookup from autocomplete (BBR-kæde)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{baseUrl}}/lookup/full/from-autocomplete?q={{searchQueryOesterAlle}}",
+            "description": "Samlet BBR-opslag via autocomplete-valg (id-baseret adresseopslag + bygninger/enheder m.m.)."
+          }
+        }
+      ]
+    },
     {
       "name": "Lookup",
       "description": "Samlet opslag og opsummering — svarer til knappen \"Test alle services\" og Opsummering-sektionen.",
@@ -40,7 +192,7 @@
     },
     {
       "name": "DAR",
-      "description": "DAR-paneler fra Home.razor + autocomplete.",
+      "description": "DAR-paneler + autocomplete.",
       "item": [
         {
           "name": "Autocomplete (Adresse-autocomplete)",
@@ -75,7 +227,16 @@
             "method": "GET",
             "header": [{ "key": "Accept", "value": "application/json" }],
             "url": "{{baseUrl}}/dar/adresseopslag/kvhx?vej={{vej}}&postnr={{postnr}}&by={{by}}",
-            "description": "Panel: Dar.Adresseopslag.KvHxInput — KvHxInputDto."
+            "description": "Panel: Dar.Adresseopslag.KvHxInput — KvHxInputDto (klassisk vej/postnr — ikke autocomplete)."
+          }
+        },
+        {
+          "name": "Adresseopslag.KvHxInput from autocomplete",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{baseUrl}}/dar/adresseopslag/kvhx/from-autocomplete?q={{searchQueryOesterAlle}}",
+            "description": "KvHxInput via autocomplete + id-opslag (anbefalet for Cosmos/adresse-tekst)."
           }
         },
         {
@@ -91,7 +252,7 @@
     },
     {
       "name": "BBR",
-      "description": "BBR-paneler fra Home.razor — alle kræver vej + postnr (+ valgfri by).",
+      "description": "BBR-paneler — alle kræver vej + postnr (+ valgfri by), medmindre du bruger /from-autocomplete under Lookup.",
       "item": [
         {
           "name": "Bygninger",
@@ -180,9 +341,15 @@
   "variable": [
     { "key": "baseUrl", "value": "http://localhost:7071/api" },
     { "key": "functionKey", "value": "" },
-    { "key": "vej", "value": "Århusvej 69a" },
-    { "key": "postnr", "value": "3000" },
-    { "key": "by", "value": "Helsingør" },
-    { "key": "searchQuery", "value": "Århusvej 69" }
+    { "key": "vej", "value": "Øster Allé 48" },
+    { "key": "postnr", "value": "8260" },
+    { "key": "by", "value": "Viby J" },
+    { "key": "searchQuery", "value": "Øster Allé 48, 8260 Viby J" },
+    { "key": "searchQueryOesterAlle", "value": "Øster Allé 48, 8260 Viby J" },
+    { "key": "searchQueryOesterAlleUnit", "value": "Øster Allé 48, 2. tv, 8260 Viby J" },
+    { "key": "autocompleteLocalId", "value": "" },
+    { "key": "autocompleteResultType", "value": "" },
+    { "key": "autocompleteHusnummerId", "value": "" },
+    { "key": "autocompleteDisplayName", "value": "" }
   ]
 }

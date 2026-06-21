@@ -13,6 +13,9 @@ Hver række svarer til et `ResultPanel` (eller sektion) på Home-siden:
 | TestWeb (Home.razor) | HTTP-endpoint | Response-type |
 |---|---|---|
 | Adresse-autocomplete | `GET /api/dar/autocomplete?q=` | `DanishAddressAutocompleteResult[]` |
+| **Autocomplete → KvHxInput** | `GET /api/dar/adresseopslag/kvhx/from-autocomplete?q=` | `KvHxInputDto` |
+| **Autocomplete → Adresseopslag** | `GET /api/dar/adresseopslag/from-autocomplete?localId=&resultType=&husnummerId=&q=` | `AdresseopslagResult` |
+| **Autocomplete → full lookup** | `GET /api/lookup/full/from-autocomplete?q=` | `DarFullLookupResult` |
 | **Dar.Adresseopslag.Dar** | `GET /api/dar/adresseopslag/dar` | `DarAdresseopslagDto` |
 | **Dar.Adresseopslag** | `GET /api/dar/adresseopslag` | `AdresseopslagResult` |
 | **Dar.Adresseopslag.KvHxInput** | `GET /api/dar/adresseopslag/kvhx` | `KvHxInputDto` |
@@ -40,6 +43,19 @@ Alle endpoints undtagen **autocomplete** bruger adresse-input som TestWeb-formul
 | `by` | Nej | `Helsingør` |
 
 Autocomplete bruger `q` (min. 2 tegn).
+
+**Autocomplete → opslag (anbefalet for Cosmos/adresse-tekst):**
+
+| Parameter | Påkrævet | Beskrivelse |
+|---|---|---|
+| `q` | Ja* | Fri-tekst søgning, fx `Øster Allé 48, 8260 Viby J` |
+| `localId` | Nej | Fra autocomplete — springer søgning over hvis angivet sammen med `resultType` |
+| `resultType` | Nej | `husnummer` eller `adresse` |
+| `husnummerId` | Nej | Påkrævet for type `adresse` |
+
+\* Enten `q` alene (server kalder `SearchAsync` + `ResolveBestMatch`) eller eksplicitte ids fra forrige autocomplete-kald.
+
+> **Tip:** Brug `/api/dar/adresseopslag/kvhx/from-autocomplete?q=...` til Sverres Azure Function-flow — **ikke** `DisplayName` i klassisk `vej`/`postnr`-opslag.
 
 > **Tip:** Brug `/api/lookup/full` når du skal hente alt på én gang. De granulære `/api/bbr/*`-endpoints er til Postman/debug og returnerer samme data som det tilsvarende panel — de kalder internt `DarLookupOrchestrator.LookupAllAsync()` og returnerer det relevante udsnit.
 
@@ -224,6 +240,7 @@ using Microsoft.AspNetCore.Mvc;
 using MyDarApi.Models;
 using MyDarApi.Services;
 using TheNerdCollective.Integrations.Dar.GraphQL;
+using TheNerdCollective.Integrations.Dar.Models;
 
 namespace MyDarApi.Functions;
 
@@ -249,6 +266,73 @@ internal static class DarHttpHelper
 
         validationError = null;
         return true;
+    }
+
+    internal static bool TryParseAutocompleteQuery(
+        HttpRequest req,
+        out DanishAddressAutocompleteResult? selection,
+        out string? searchText,
+        out string? validationError)
+    {
+        selection = null;
+        searchText = req.Query["q"].ToString();
+        var localId = req.Query["localId"].ToString();
+        var resultType = req.Query["resultType"].ToString();
+        var husnummerId = req.Query["husnummerId"].ToString();
+
+        if (!string.IsNullOrWhiteSpace(localId))
+        {
+            selection = new DanishAddressAutocompleteResult(
+                localId,
+                req.Query["displayName"].ToString(),
+                string.Empty,
+                string.Empty,
+                string.Empty,
+                IsCompleteAddress: true,
+                ResultType: resultType,
+                HusnummerId: string.IsNullOrWhiteSpace(husnummerId) ? null : husnummerId);
+            validationError = null;
+            return true;
+        }
+
+        if (string.IsNullOrWhiteSpace(searchText) || searchText.Length < 2)
+        {
+            validationError = "Query parameter 'q' skal være mindst 2 tegn (eller angiv localId/resultType/husnummerId).";
+            return false;
+        }
+
+        validationError = null;
+        return true;
+    }
+
+    internal static async Task<DanishAddressAutocompleteResult> ResolveAutocompleteSelectionAsync(
+        DarRuntime runtime,
+        HttpRequest req,
+        CancellationToken cancellationToken)
+    {
+        if (!TryParseAutocompleteQuery(req, out var explicitSelection, out var searchText, out var validationError))
+        {
+            throw new InvalidOperationException(validationError);
+        }
+
+        if (explicitSelection is not null)
+        {
+            return explicitSelection;
+        }
+
+        var results = await runtime.CreateAutocomplete().SearchAsync(searchText!, cancellationToken);
+        return DanishAddressAutocompleteMatching.ResolveBestMatch(results, searchText)
+            ?? throw new InvalidOperationException("Ingen DAR autocomplete-resultater fundet for adressen.");
+    }
+
+    internal static async Task<AdresseopslagResult> LookupFromAutocompleteAsync(
+        DarRuntime runtime,
+        HttpRequest req,
+        CancellationToken cancellationToken)
+    {
+        var selection = await ResolveAutocompleteSelectionAsync(runtime, req, cancellationToken);
+        var services = runtime.CreateServices();
+        return await services.Dar.Adresseopslag.LookupFromAutocompleteAsync(selection, cancellationToken);
     }
 
     internal static IActionResult? ConfigError(DarRuntime runtime) =>
@@ -334,6 +418,34 @@ public sealed class LookupApiFunctions(DarLookupOrchestrator orchestrator, DarRu
         DarHttpHelper.WithLookupAsync(
             req, runtime, orchestrator, cancellationToken,
             result => DarLookupSummary.FromResult(result));
+
+    /// <summary>Samlet opslag via autocomplete (id-baseret) — Sverre/Cosmos-flow.</summary>
+    [Function("LookupFullFromAutocomplete")]
+    public async Task<IActionResult> LookupFullFromAutocomplete(
+        [HttpTrigger(AuthorizationLevel.Function, "get", Route = "lookup/full/from-autocomplete")] HttpRequest req,
+        CancellationToken cancellationToken)
+    {
+        if (DarHttpHelper.ConfigError(runtime) is { } configFailure)
+        {
+            return configFailure;
+        }
+
+        try
+        {
+            var selection = await DarHttpHelper.ResolveAutocompleteSelectionAsync(runtime, req, cancellationToken);
+            var request = new DarLookupRequest
+            {
+                AutocompleteSelection = selection,
+                AutocompleteSearchText = req.Query["q"].ToString()
+            };
+            var result = await orchestrator.LookupAllAsync(request, cancellationToken);
+            return new OkObjectResult(result);
+        }
+        catch (Exception ex) when (ex is DatafordelerApiException or InvalidOperationException)
+        {
+            return DarHttpHelper.MapDarException(ex);
+        }
+    }
 }
 ```
 
@@ -345,6 +457,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using MyDarApi.Services;
 using TheNerdCollective.Integrations.Dar.GraphQL;
+using TheNerdCollective.Integrations.Dar.Models;
 
 namespace MyDarApi.Functions;
 
@@ -393,6 +506,50 @@ public sealed class DarApiFunctions(DarLookupOrchestrator orchestrator, DarRunti
         [HttpTrigger(AuthorizationLevel.Function, "get", Route = "dar/adresseopslag/kvhx")] HttpRequest req,
         CancellationToken cancellationToken) =>
         DarHttpHelper.WithLookupAsync(req, runtime, orchestrator, cancellationToken, r => r.Adresseopslag?.KvHxInput);
+
+    /// <summary>KvHxInput via autocomplete + LookupFromAutocompleteAsync (anbefalet).</summary>
+    [Function("DarAdresseopslagKvhxFromAutocomplete")]
+    public async Task<IActionResult> AdresseopslagKvhxFromAutocomplete(
+        [HttpTrigger(AuthorizationLevel.Function, "get", Route = "dar/adresseopslag/kvhx/from-autocomplete")] HttpRequest req,
+        CancellationToken cancellationToken)
+    {
+        if (DarHttpHelper.ConfigError(runtime) is { } configFailure)
+        {
+            return configFailure;
+        }
+
+        try
+        {
+            var lookup = await DarHttpHelper.LookupFromAutocompleteAsync(runtime, req, cancellationToken);
+            return new OkObjectResult(lookup.KvHxInput);
+        }
+        catch (Exception ex) when (ex is DatafordelerApiException or InvalidOperationException)
+        {
+            return DarHttpHelper.MapDarException(ex);
+        }
+    }
+
+    /// <summary>Adresseopslag via autocomplete (fuld AdresseopslagResult).</summary>
+    [Function("DarAdresseopslagFromAutocomplete")]
+    public async Task<IActionResult> AdresseopslagFromAutocomplete(
+        [HttpTrigger(AuthorizationLevel.Function, "get", Route = "dar/adresseopslag/from-autocomplete")] HttpRequest req,
+        CancellationToken cancellationToken)
+    {
+        if (DarHttpHelper.ConfigError(runtime) is { } configFailure)
+        {
+            return configFailure;
+        }
+
+        try
+        {
+            var lookup = await DarHttpHelper.LookupFromAutocompleteAsync(runtime, req, cancellationToken);
+            return new OkObjectResult(lookup);
+        }
+        catch (Exception ex) when (ex is DatafordelerApiException or InvalidOperationException)
+        {
+            return DarHttpHelper.MapDarException(ex);
+        }
+    }
 
     /// <summary>Panel: Dar.Husnummer.</summary>
     [Function("DarHusnummer")]
@@ -508,6 +665,12 @@ curl "$BASE/bbr/etager?$ADDR&$KEY"
 
 # Autocomplete
 curl "$BASE/dar/autocomplete?q=Århusvej%2069&$KEY"
+
+# Sverre — autocomplete → KvHx (adgangsadresse)
+curl "$BASE/dar/adresseopslag/kvhx/from-autocomplete?q=Øster%20Allé%2048,%208260%20Viby%20J&$KEY"
+
+# Sverre — autocomplete → KvHx (enhed med etage/dør)
+curl "$BASE/dar/adresseopslag/kvhx/from-autocomplete?q=Øster%20Allé%2048,%202.%20tv,%208260%20Viby%20J&$KEY"
 ```
 
 ---
@@ -534,7 +697,7 @@ Importér filerne fra [`postman/`](./postman/):
 
 | Fil | Formål |
 |---|---|
-| [`TheNerdCollective.Integrations.Dar.postman_collection.json`](./postman/TheNerdCollective.Integrations.Dar.postman_collection.json) | Alle 16 endpoints — ét request per TestWeb-panel |
+| [`TheNerdCollective.Integrations.Dar.postman_collection.json`](./postman/TheNerdCollective.Integrations.Dar.postman_collection.json) | Alle endpoints inkl. **Sverre — Autocomplete → KVHX** (Øster Allé 48) |
 | [`TheNerdCollective.Integrations.Dar.postman_environment.json`](./postman/TheNerdCollective.Integrations.Dar.postman_environment.json) | Lokal udvikling |
 | [`TheNerdCollective.Integrations.Dar.Azure.postman_environment.json`](./postman/TheNerdCollective.Integrations.Dar.Azure.postman_environment.json) | Azure (skabelon) |
 
@@ -544,7 +707,9 @@ Importér filerne fra [`postman/`](./postman/):
 2. Vælg environment (**Local** eller **Azure**).
 3. Sæt `functionKey` (tom ved `Anonymous` lokalt; ellers default key fra Azure Portal).
 4. Sæt `baseUrl` til `http://localhost:7071/api` eller `https://<app>.azurewebsites.net/api`.
-5. Gennemgå mapperne **Lookup**, **DAR** og **BBR** — hvert request matcher et panel på Home-siden.
+5. Gennemgå mapperne **Sverre — Autocomplete → KVHX**, **Lookup**, **DAR** og **BBR**.
+
+**Sverre (Øster Allé 48):** Kør request *2. KvHxInput from autocomplete* direkte, eller *1 → 2b* for to-trins flow. For enhed: *3 → 4*.
 
 ---
 
