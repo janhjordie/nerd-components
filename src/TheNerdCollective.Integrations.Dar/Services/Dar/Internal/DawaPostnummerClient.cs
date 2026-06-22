@@ -67,14 +67,102 @@ internal sealed class DawaPostnummerClient
         string kommunekode,
         CancellationToken cancellationToken = default)
     {
-        var items = new List<PostnummerMedKommuneDto>();
+        var items = await FetchPagedPostnumreAsync(
+            $"kommunekode={Uri.EscapeDataString(kommunekode)}",
+            cancellationToken).ConfigureAwait(false);
+
+        return items
+            .Select(MapPostnummer)
+            .Where(p => p is not null)
+            .Cast<PostnummerMedKommuneDto>()
+            .OrderBy(p => p.Postnummer, StringComparer.Ordinal)
+            .ToList();
+    }
+
+    internal async Task<IReadOnlyList<PostnummerMedKommunerDto>> GetByMunicipalityCodeWithAllKommunerAsync(
+        string kommunekode,
+        CancellationToken cancellationToken = default)
+    {
+        var items = await FetchPagedPostnumreAsync(
+            $"kommunekode={Uri.EscapeDataString(kommunekode)}",
+            cancellationToken).ConfigureAwait(false);
+
+        return items
+            .Select(MapPostnummerMedKommuner)
+            .Where(p => p is not null)
+            .Cast<PostnummerMedKommunerDto>()
+            .OrderBy(p => p.Postnummer, StringComparer.Ordinal)
+            .ToList();
+    }
+
+    internal async Task<IReadOnlyList<PostnummerMedKommunerDto>> GetByCircleAsync(
+        double longitude,
+        double latitude,
+        int radiusMeters,
+        CancellationToken cancellationToken = default)
+    {
+        var cirkel = string.Join(
+            ",",
+            longitude.ToString(CultureInfo.InvariantCulture),
+            latitude.ToString(CultureInfo.InvariantCulture),
+            radiusMeters.ToString(CultureInfo.InvariantCulture));
+
+        var items = await FetchPagedPostnumreAsync(
+            $"cirkel={Uri.EscapeDataString(cirkel)}",
+            cancellationToken).ConfigureAwait(false);
+
+        return items
+            .Select(MapPostnummerMedKommuner)
+            .Where(p => p is not null)
+            .Cast<PostnummerMedKommunerDto>()
+            .OrderBy(p => p.Postnummer, StringComparer.Ordinal)
+            .ToList();
+    }
+
+    internal async Task<PostnummerMedKommunerDto?> GetByPostalCodeWithAllKommunerAsync(
+        string postnummer,
+        CancellationToken cancellationToken = default)
+    {
+        var url = $"{_baseUrl}/postnumre?nr={Uri.EscapeDataString(postnummer)}";
+        using var response = await _httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
+        if (response.StatusCode == HttpStatusCode.NotFound)
+        {
+            return null;
+        }
+
+        await EnsureSuccessAsync(response).ConfigureAwait(false);
+        using var document = await JsonDocument.ParseAsync(
+            await response.Content.ReadAsStreamAsync().ConfigureAwait(false),
+            cancellationToken: cancellationToken).ConfigureAwait(false);
+
+        if (document.RootElement.ValueKind == JsonValueKind.Array)
+        {
+            if (document.RootElement.GetArrayLength() == 0)
+            {
+                return null;
+            }
+
+            return MapPostnummerMedKommuner(document.RootElement[0]);
+        }
+
+        if (document.RootElement.ValueKind == JsonValueKind.Object)
+        {
+            return MapPostnummerMedKommuner(document.RootElement);
+        }
+
+        return null;
+    }
+
+    private async Task<List<JsonElement>> FetchPagedPostnumreAsync(
+        string query,
+        CancellationToken cancellationToken)
+    {
+        var items = new List<JsonElement>();
         var side = 1;
 
         while (true)
         {
-            var url =
-                $"{_baseUrl}/postnumre?kommunekode={Uri.EscapeDataString(kommunekode)}" +
-                $"&per_side={PageSize}&side={side}";
+            var url = $"{_baseUrl}/postnumre?{query}&per_side={PageSize}&side={side}";
 
             using var response = await _httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
             await EnsureSuccessAsync(response).ConfigureAwait(false);
@@ -89,11 +177,8 @@ internal sealed class DawaPostnummerClient
             }
 
             var page = document.RootElement.EnumerateArray()
-                .Select(MapPostnummer)
-                .Where(p => p is not null)
-                .Cast<PostnummerMedKommuneDto>()
+                .Select(element => element.Clone())
                 .ToList();
-
             if (page.Count == 0)
             {
                 break;
@@ -109,9 +194,7 @@ internal sealed class DawaPostnummerClient
             side++;
         }
 
-        return items
-            .OrderBy(p => p.Postnummer, StringComparer.Ordinal)
-            .ToList();
+        return items;
     }
 
     private static PostnummerMedKommuneDto? MapPostnummer(JsonElement element)
@@ -134,11 +217,70 @@ internal sealed class DawaPostnummerClient
 
         return new PostnummerMedKommuneDto
         {
-            Postnummer = postnummer!,
+            Postnummer = postnummer,
             Postdistrikt = postdistrikt ?? string.Empty,
             Kommunekode = kommunekode,
             Kommunenavn = kommunenavn ?? string.Empty
         };
+    }
+
+    private static PostnummerMedKommunerDto? MapPostnummerMedKommuner(JsonElement element)
+    {
+        if (element.ValueKind != JsonValueKind.Object)
+        {
+            return null;
+        }
+
+        var postnummer = ReadString(element, "nr");
+        var postdistrikt = ReadString(element, "navn");
+        if (string.IsNullOrWhiteSpace(postnummer))
+        {
+            return null;
+        }
+
+        var kommuner = MapKommuner(element.TryGetProperty("kommuner", out var kommunerElement) ? kommunerElement : default);
+        if (kommuner.Count == 0)
+        {
+            var (kommunekode, kommunenavn) = SelectPrimaryKommune(postdistrikt, default);
+            if (!string.IsNullOrWhiteSpace(kommunekode))
+            {
+                kommuner.Add(new KommuneRefDto
+                {
+                    Kommunekode = kommunekode,
+                    Navn = kommunenavn ?? string.Empty
+                });
+            }
+        }
+
+        return new PostnummerMedKommunerDto
+        {
+            Postnummer = postnummer,
+            Postdistrikt = postdistrikt ?? string.Empty,
+            Kommuner = kommuner
+        };
+    }
+
+    private static List<KommuneRefDto> MapKommuner(JsonElement kommuner)
+    {
+        if (kommuner.ValueKind != JsonValueKind.Array || kommuner.GetArrayLength() == 0)
+        {
+            return new List<KommuneRefDto>();
+        }
+
+        return kommuner.EnumerateArray()
+            .Select(k => new
+            {
+                Kode = ReadString(k, "kode"),
+                Navn = ReadString(k, "navn")
+            })
+            .Where(k => !string.IsNullOrWhiteSpace(k.Kode))
+            .Select(k => new KommuneRefDto
+            {
+                Kommunekode = k.Kode!,
+                Navn = k.Navn ?? string.Empty
+            })
+            .OrderBy(k => k.Kommunekode, StringComparer.Ordinal)
+            .ToList();
     }
 
     internal static (string? Kode, string? Navn) SelectPrimaryKommune(string? postdistrikt, JsonElement kommuner)

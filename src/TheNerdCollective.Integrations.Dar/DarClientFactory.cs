@@ -55,14 +55,20 @@ namespace TheNerdCollective.Integrations.Dar
 
             var regionFetcher = new DagiRegionDataFetcher(accessor, client, options.ApiKey, options.Dagi);
             var region = new DarRegionService(regionFetcher);
+            var kommune = new DarKommuneService(
+                accessor,
+                client,
+                options.ApiKey,
+                options.Dagi,
+                region);
 
             var dar = new DarRegister(
                 new DarAdresseopslagService(accessor),
                 new DarHusnummerService(accessor),
                 new DarAddressAutocompleteService(options.Autocomplete, client),
-                new DarKommuneService(accessor, client, options.ApiKey, options.Dagi, region),
+                kommune,
                 region,
-                new DarPostnummerService(accessor, client, options.ApiKey, options.Postnummer));
+                new DarPostnummerService(accessor, client, options.ApiKey, options.Postnummer, kommune));
 
             var bbr = new BbrServices(
                 new BbrBygningService(accessor),

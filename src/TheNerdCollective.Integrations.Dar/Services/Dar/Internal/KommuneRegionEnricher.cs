@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using TheNerdCollective.Integrations.Dar.Mapping;
 using TheNerdCollective.Integrations.Dar.Models;
 
 namespace TheNerdCollective.Integrations.Dar.Services.Dar.Internal;
@@ -25,10 +26,12 @@ internal static class KommuneRegionEnricher
                     Kommunekode = graph.Kommunekode
                 };
 
-                return ApplyRegion(
+                var enriched = ApplyRegion(
                     baseKommune,
                     TryResolveRegion(regionById, graph.RegionLokalid),
                     TryResolveDawa(dawaByCode, graph.Kommunekode));
+
+                return ApplyRepresentativePoint(enriched, graph.Geometri);
             })
             .OrderBy(k => k.Navn, StringComparer.CurrentCultureIgnoreCase)
             .ToList();
@@ -144,5 +147,20 @@ internal static class KommuneRegionEnricher
         }
 
         return dawaByCode.TryGetValue(kommunekodeKey!, out var kommune) ? kommune : null;
+    }
+
+    private static KommuneDto ApplyRepresentativePoint(KommuneDto kommune, KoordinatDto? geometri)
+    {
+        var centroid = WktCentroidHelper.TryGetCentroidWgs84(geometri?.Wkt);
+        if (centroid is null)
+        {
+            return kommune;
+        }
+
+        return kommune with
+        {
+            RepræsentativPunktLatitude = centroid.Value.Latitude,
+            RepræsentativPunktLongitude = centroid.Value.Longitude
+        };
     }
 }

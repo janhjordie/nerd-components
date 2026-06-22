@@ -275,6 +275,48 @@ public static class GraphQlQueries
         }
         """;
 
+    public static string GetKommuneById => $$"""
+        query GetKommuneById($kommuneId: String!, $virkningstid: DafDateTime, $registreringstid: DafDateTime) {
+          DAGI_Kommuneinddeling(
+            first: 1
+            virkningstid: $virkningstid
+            registreringstid: $registreringstid
+            where: { id_lokalId: { eq: $kommuneId } }
+          ) {
+            nodes {
+              {{GraphQlFieldLists.KommuneinddelingWithGeometri}}
+            }
+          }
+        }
+        """;
+
+    public static string FindKommunerByGeometry => $$"""
+        query FindKommunerByGeometry($wkt: String!, $virkningstid: DafDateTime, $registreringstid: DafDateTime, $after: String) {
+          DAGI_Kommuneinddeling(
+            first: 100
+            after: $after
+            virkningstid: $virkningstid
+            registreringstid: $registreringstid
+            where: {
+              geometri: {
+                intersects: {
+                  crs: 25832
+                  wkt: $wkt
+                }
+              }
+            }
+          ) {
+            nodes {
+              {{GraphQlFieldLists.KommuneinddelingWithGeometri}}
+            }
+            pageInfo {
+              hasNextPage
+              endCursor
+            }
+          }
+        }
+        """;
+
     public static string GetAllPostnumre => $$"""
         query GetAllPostnumre($virkningstid: DafDateTime, $registreringstid: DafDateTime, $after: String) {
           DAR_Postnummer(
@@ -305,6 +347,26 @@ public static class GraphQlQueries
           ) {
             nodes {
               {{GraphQlFieldLists.Postnummer}}
+            }
+          }
+        }
+        """;
+
+    public static string GetHusnumreByKommuneId => $$"""
+        query GetHusnumreByKommuneId($kommuneId: String!, $virkningstid: DafDateTime, $registreringstid: DafDateTime, $after: String) {
+          DAR_Husnummer(
+            first: 100
+            after: $after
+            virkningstid: $virkningstid
+            registreringstid: $registreringstid
+            where: { status: { eq: "3" }, kommuneinddeling: { eq: $kommuneId } }
+          ) {
+            nodes {
+              {{GraphQlFieldLists.HusnummerCircleLookup}}
+            }
+            pageInfo {
+              hasNextPage
+              endCursor
             }
           }
         }

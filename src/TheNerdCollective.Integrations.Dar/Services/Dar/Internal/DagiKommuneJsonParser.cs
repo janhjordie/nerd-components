@@ -107,7 +107,7 @@ internal static class DagiKommuneJsonParser
         }
     }
 
-    private static bool TryMapElement(JsonElement element, out KommuneDto kommune)
+    internal static bool TryMapElement(JsonElement element, out KommuneDto kommune)
     {
         kommune = null!;
 

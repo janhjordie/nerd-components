@@ -18,6 +18,7 @@
         </p>
         <p class="section-intro">
             Kommune-listen caches i 24 timer. Koordinat-opslag bruger DAWA reverse geocoding når GraphQL er tom.
+            Fanen <strong>Datafordeler-only</strong> kalder kun GraphQL + REST DAGI (ingen DAWA).
         </p>
     </header>
 
@@ -30,7 +31,7 @@
     else
     {
         <section class="card">
-            <div class="tab-bar" role="tablist" aria-label="Kommunevalg">
+            <div class="tab-bar tab-bar--3" role="tablist" aria-label="Kommunevalg">
                 <button type="button"
                         class="tab @(_mode == SelectionMode.List ? "tab--active" : null)"
                         role="tab"
@@ -44,6 +45,13 @@
                         aria-selected="@(_mode == SelectionMode.Location)"
                         @onclick="() => _mode = SelectionMode.Location">
                     Din lokation
+                </button>
+                <button type="button"
+                        class="tab @(_mode == SelectionMode.DatafordelerOnly ? "tab--active" : null)"
+                        role="tab"
+                        aria-selected="@(_mode == SelectionMode.DatafordelerOnly)"
+                        @onclick="() => _mode = SelectionMode.DatafordelerOnly">
+                    Datafordeler-only
                 </button>
             </div>
 
@@ -88,7 +96,7 @@
                     }
                 </div>
             }
-            else
+            else if (_mode == SelectionMode.Location)
             {
                 <div class="tab-panel" role="tabpanel">
                     <h2>Din lokation</h2>
@@ -111,26 +119,56 @@
                         <MethodCallHint Text="@_locationMethodCall" />
                     }
 
-                    @if (_latitude is not null && _longitude is not null)
+                    @RenderCoordinatesSummary(_latitude, _longitude, _accuracyMeters)
+                </div>
+            }
+            else
+            {
+                <div class="tab-panel" role="tabpanel">
+                    <h2>Datafordeler-only</h2>
+                    <p class="section-intro">
+                        Kalder <code>FindByCoordinatesDatafordelerAsync()</code> — GraphQL + REST DAGI, <strong>ingen DAWA</strong>.
+                        Returnerer repræsentativt punkt når DAGI-geometri er tilgængelig.
+                    </p>
+
+                    <div class="form-grid form-grid--compact">
+                        <label>
+                            Latitude (WGS84)
+                            <InputText @bind-Value="_dfLatitudeInput" class="input" placeholder="56.02304649121056" />
+                        </label>
+                        <label>
+                            Longitude (WGS84)
+                            <InputText @bind-Value="_dfLongitudeInput" class="input" placeholder="12.598664281911976" />
+                        </label>
+                    </div>
+
+                    <div class="actions actions--inline">
+                        <button type="button"
+                                class="button button--primary"
+                                disabled="@_isResolvingDatafordeler"
+                                @onclick="ResolveDatafordelerAsync">
+                            @(_isResolvingDatafordeler ? "Finder..." : "Slå op")
+                        </button>
+                        <button type="button"
+                                class="button"
+                                disabled="@_isResolvingDatafordeler"
+                                @onclick="UseHelsingoerTestPoint">
+                            Testpunkt (Helsingør)
+                        </button>
+                        <button type="button"
+                                class="button"
+                                disabled="@_isResolvingDatafordeler"
+                                @onclick="ResolveDatafordelerFromGeolocationAsync">
+                            Brug min position
+                        </button>
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(_datafordelerMethodCall))
                     {
-                        <dl class="summary-grid location-grid">
-                            <div>
-                                <dt>Latitude</dt>
-                                <dd>@_latitude.Value.ToString("0.######")</dd>
-                            </div>
-                            <div>
-                                <dt>Longitude</dt>
-                                <dd>@_longitude.Value.ToString("0.######")</dd>
-                            </div>
-                            @if (_accuracyMeters is not null)
-                            {
-                                <div>
-                                    <dt>Nøjagtighed</dt>
-                                    <dd>±@_accuracyMeters.Value.ToString("0") m</dd>
-                                </div>
-                            }
-                        </dl>
+                        <MethodCallHint Text="@_datafordelerMethodCall" />
                     }
+
+                    @RenderCoordinatesSummary(_dfLatitude, _dfLongitude, _dfAccuracyMeters)
                 </div>
             }
         </section>
@@ -144,48 +182,20 @@
 
         @if (_selectedKommune is not null)
         {
-            <section class="summary card">
-                <h2>Valgt kommune</h2>
-                <dl class="summary-grid">
-                    <div>
-                        <dt>Navn</dt>
-                        <dd>@_selectedKommune.Navn</dd>
-                    </div>
-                    <div>
-                        <dt>Kommunekode</dt>
-                        <dd>@_selectedKommune.Kommunekode</dd>
-                    </div>
-                    <div>
-                        <dt>id_lokalId</dt>
-                        <dd>@_selectedKommune.IdLokalId</dd>
-                    </div>
-                </dl>
-            </section>
-
+            @RenderKommuneSummary("Valgt kommune", _selectedKommune)
             <ResultPanel Title="Dar.Kommune (valgt)" Subtitle="KommuneDto" MethodCall="@_selectedKommuneMethodCall" Data="_selectedKommune" Open="true" />
         }
 
         @if (_locationKommune is not null)
         {
-            <section class="summary card">
-                <h2>Kommune fra position</h2>
-                <dl class="summary-grid">
-                    <div>
-                        <dt>Navn</dt>
-                        <dd>@_locationKommune.Navn</dd>
-                    </div>
-                    <div>
-                        <dt>Kommunekode</dt>
-                        <dd>@_locationKommune.Kommunekode</dd>
-                    </div>
-                    <div>
-                        <dt>id_lokalId</dt>
-                        <dd>@_locationKommune.IdLokalId</dd>
-                    </div>
-                </dl>
-            </section>
-
+            @RenderKommuneSummary("Kommune fra position", _locationKommune)
             <ResultPanel Title="Dar.Kommune.FindByCoordinatesAsync" Subtitle="KommuneDto" MethodCall="@_locationMethodCall" Data="_locationKommune" Open="true" />
+        }
+
+        @if (_datafordelerKommune is not null)
+        {
+            @RenderKommuneSummary("Kommune (Datafordeler-only)", _datafordelerKommune, includeRepresentativePoint: true)
+            <ResultPanel Title="Dar.Kommune.FindByCoordinatesDatafordelerAsync" Subtitle="KommuneDto" MethodCall="@_datafordelerMethodCall" Data="_datafordelerKommune" Open="true" />
         }
 
         @if (_kommuner.Count > 0)
@@ -200,10 +210,14 @@
         "var services = DarClientFactory.Create(darOptions, httpClient);\n" +
         "var kommuner = await services.Dar.Kommune.GetAllAsync();";
 
+    private const double HelsingoerTestLatitude = 56.02304649121056;
+    private const double HelsingoerTestLongitude = 12.598664281911976;
+
     private enum SelectionMode
     {
         List,
-        Location
+        Location,
+        DatafordelerOnly
     }
 
     private sealed record GeoPosition(double Latitude, double Longitude, double Accuracy);
@@ -213,16 +227,24 @@
     private string? _selectedKommuneId;
     private KommuneDto? _selectedKommune;
     private KommuneDto? _locationKommune;
+    private KommuneDto? _datafordelerKommune;
     private double? _latitude;
     private double? _longitude;
     private double? _accuracyMeters;
+    private double? _dfLatitude;
+    private double? _dfLongitude;
+    private double? _dfAccuracyMeters;
+    private string _dfLatitudeInput = HelsingoerTestLatitude.ToString("G17");
+    private string _dfLongitudeInput = HelsingoerTestLongitude.ToString("G17");
     private string? _configurationError;
     private string? _errorMessage;
     private string? _listMethodCall;
     private string? _locationMethodCall;
+    private string? _datafordelerMethodCall;
     private string? _selectedKommuneMethodCall;
     private bool _isLoadingList;
     private bool _isResolvingLocation;
+    private bool _isResolvingDatafordeler;
     private IJSObjectReference? _geoModule;
 
     protected override void OnInitialized()
@@ -238,6 +260,103 @@
         }
     }
 
+    private RenderFragment RenderCoordinatesSummary(double? latitude, double? longitude, double? accuracyMeters) => builder =>
+    {
+        if (latitude is null || longitude is null)
+        {
+            return;
+        }
+
+        builder.OpenElement(0, "dl");
+        builder.AddAttribute(1, "class", "summary-grid location-grid");
+        builder.OpenElement(2, "div");
+        builder.OpenElement(3, "dt");
+        builder.AddContent(4, "Latitude");
+        builder.CloseElement();
+        builder.OpenElement(5, "dd");
+        builder.AddContent(6, latitude.Value.ToString("0.######"));
+        builder.CloseElement();
+        builder.CloseElement();
+        builder.OpenElement(7, "div");
+        builder.OpenElement(8, "dt");
+        builder.AddContent(9, "Longitude");
+        builder.CloseElement();
+        builder.OpenElement(10, "dd");
+        builder.AddContent(11, longitude.Value.ToString("0.######"));
+        builder.CloseElement();
+        builder.CloseElement();
+        if (accuracyMeters is not null)
+        {
+            builder.OpenElement(12, "div");
+            builder.OpenElement(13, "dt");
+            builder.AddContent(14, "Nøjagtighed");
+            builder.CloseElement();
+            builder.OpenElement(15, "dd");
+            builder.AddContent(16, $"±{accuracyMeters.Value.ToString("0")} m");
+            builder.CloseElement();
+            builder.CloseElement();
+        }
+
+        builder.CloseElement();
+    };
+
+    private RenderFragment RenderKommuneSummary(string title, KommuneDto kommune, bool includeRepresentativePoint = false) => builder =>
+    {
+        builder.OpenElement(0, "section");
+        builder.AddAttribute(1, "class", "summary card");
+        builder.OpenElement(2, "h2");
+        builder.AddContent(3, title);
+        builder.CloseElement();
+        builder.OpenElement(4, "dl");
+        builder.AddAttribute(5, "class", "summary-grid");
+        builder.OpenElement(6, "div");
+        builder.OpenElement(7, "dt");
+        builder.AddContent(8, "Navn");
+        builder.CloseElement();
+        builder.OpenElement(9, "dd");
+        builder.AddContent(10, kommune.Navn);
+        builder.CloseElement();
+        builder.CloseElement();
+        builder.OpenElement(11, "div");
+        builder.OpenElement(12, "dt");
+        builder.AddContent(13, "Kommunekode");
+        builder.CloseElement();
+        builder.OpenElement(14, "dd");
+        builder.AddContent(15, kommune.Kommunekode);
+        builder.CloseElement();
+        builder.CloseElement();
+        builder.OpenElement(16, "div");
+        builder.OpenElement(17, "dt");
+        builder.AddContent(18, "id_lokalId");
+        builder.CloseElement();
+        builder.OpenElement(19, "dd");
+        builder.AddContent(20, kommune.IdLokalId);
+        builder.CloseElement();
+        builder.CloseElement();
+        if (includeRepresentativePoint)
+        {
+            builder.OpenElement(21, "div");
+            builder.OpenElement(22, "dt");
+            builder.AddContent(23, "Repræsentativt punkt");
+            builder.CloseElement();
+            builder.OpenElement(24, "dd");
+            if (kommune.RepræsentativPunktLatitude is not null && kommune.RepræsentativPunktLongitude is not null)
+            {
+                builder.AddContent(25, $"{kommune.RepræsentativPunktLatitude:0.######}, {kommune.RepræsentativPunktLongitude:0.######}");
+            }
+            else
+            {
+                builder.AddContent(26, "— (DAGI-geometri ikke tilgængelig endnu)");
+            }
+
+            builder.CloseElement();
+            builder.CloseElement();
+        }
+
+        builder.CloseElement();
+        builder.CloseElement();
+    };
+
     private async Task LoadKommunerAsync()
     {
         _errorMessage = null;
@@ -251,9 +370,7 @@
         }
         catch (DatafordelerApiException ex) when (ex.ResponseBody.Contains("DAF-AUTH-0005", StringComparison.Ordinal))
         {
-            _errorMessage =
-                "IP-adressen er ikke whitelisted i Datafordeler Administration (DAF-AUTH-0005). " +
-                "Tilføj din udgående IP under https://administration.datafordeler.dk/";
+            _errorMessage = BuildAuthErrorMessage();
         }
         catch (Exception ex)
         {
@@ -312,9 +429,7 @@
         }
         catch (DatafordelerApiException ex) when (ex.ResponseBody.Contains("DAF-AUTH-0005", StringComparison.Ordinal))
         {
-            _errorMessage =
-                "IP-adressen er ikke whitelisted i Datafordeler Administration (DAF-AUTH-0005). " +
-                "Tilføj din udgående IP under https://administration.datafordeler.dk/";
+            _errorMessage = BuildAuthErrorMessage();
         }
         catch (Exception ex)
         {
@@ -325,6 +440,110 @@
             _isResolvingLocation = false;
         }
     }
+
+    private void UseHelsingoerTestPoint()
+    {
+        _dfLatitudeInput = HelsingoerTestLatitude.ToString("G17");
+        _dfLongitudeInput = HelsingoerTestLongitude.ToString("G17");
+        _errorMessage = null;
+    }
+
+    private async Task ResolveDatafordelerAsync()
+    {
+        _errorMessage = null;
+        _datafordelerKommune = null;
+        _isResolvingDatafordeler = true;
+
+        try
+        {
+            if (!TryParseCoordinate(_dfLatitudeInput, out var latitude)
+                || !TryParseCoordinate(_dfLongitudeInput, out var longitude))
+            {
+                _errorMessage = "Latitude og longitude skal være gyldige tal (WGS84).";
+                return;
+            }
+
+            _dfLatitude = latitude;
+            _dfLongitude = longitude;
+            _dfAccuracyMeters = null;
+
+            var services = Runtime.CreateServices();
+            _datafordelerKommune = await services.Dar.Kommune.FindByCoordinatesDatafordelerAsync(
+                latitude,
+                longitude);
+            _datafordelerMethodCall =
+                "var kommune = await services.Dar.Kommune.FindByCoordinatesDatafordelerAsync(\n" +
+                $"    {MethodCallFormatter.Number(latitude)},\n" +
+                $"    {MethodCallFormatter.Number(longitude)});";
+        }
+        catch (DatafordelerApiException ex) when (ex.ResponseBody.Contains("DAF-AUTH-0005", StringComparison.Ordinal))
+        {
+            _errorMessage = BuildAuthErrorMessage();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = ex.Message;
+        }
+        finally
+        {
+            _isResolvingDatafordeler = false;
+        }
+    }
+
+    private async Task ResolveDatafordelerFromGeolocationAsync()
+    {
+        if (_geoModule is null)
+        {
+            _errorMessage = "Geolocation-modulet er ikke klar endnu. Prøv igen om et øjeblik.";
+            return;
+        }
+
+        _errorMessage = null;
+        _datafordelerKommune = null;
+        _isResolvingDatafordeler = true;
+
+        try
+        {
+            var position = await _geoModule.InvokeAsync<GeoPosition>("getCurrentPosition");
+            _dfLatitude = position.Latitude;
+            _dfLongitude = position.Longitude;
+            _dfAccuracyMeters = position.Accuracy;
+            _dfLatitudeInput = position.Latitude.ToString("G17");
+            _dfLongitudeInput = position.Longitude.ToString("G17");
+
+            var services = Runtime.CreateServices();
+            _datafordelerKommune = await services.Dar.Kommune.FindByCoordinatesDatafordelerAsync(
+                position.Latitude,
+                position.Longitude);
+            _datafordelerMethodCall =
+                "var kommune = await services.Dar.Kommune.FindByCoordinatesDatafordelerAsync(\n" +
+                $"    {MethodCallFormatter.Number(position.Latitude)},\n" +
+                $"    {MethodCallFormatter.Number(position.Longitude)});";
+        }
+        catch (JSException ex)
+        {
+            _errorMessage = ex.Message;
+        }
+        catch (DatafordelerApiException ex) when (ex.ResponseBody.Contains("DAF-AUTH-0005", StringComparison.Ordinal))
+        {
+            _errorMessage = BuildAuthErrorMessage();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = ex.Message;
+        }
+        finally
+        {
+            _isResolvingDatafordeler = false;
+        }
+    }
+
+    private static bool TryParseCoordinate(string input, out double value) =>
+        double.TryParse(input.Trim().Replace(',', '.'), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out value);
+
+    private static string BuildAuthErrorMessage() =>
+        "IP-adressen er ikke whitelisted i Datafordeler Administration (DAF-AUTH-0005). " +
+        "Tilføj din udgående IP under https://administration.datafordeler.dk/";
 
     public async ValueTask DisposeAsync()
     {

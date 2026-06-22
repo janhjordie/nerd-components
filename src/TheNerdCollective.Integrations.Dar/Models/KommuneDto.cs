@@ -21,4 +21,12 @@ public sealed record KommuneDto
     /// <summary>Regionnavn (fx <c>Region Hovedstaden</c>).</summary>
     [JsonPropertyName("regionnavn")]
     public string? Regionnavn { get; init; }
+
+    /// <summary>Repræsentativt punkt (WGS84 længdegrad) fra DAGI-geometri.</summary>
+    [JsonPropertyName("repraesentativPunktLongitude")]
+    public double? RepræsentativPunktLongitude { get; init; }
+
+    /// <summary>Repræsentativt punkt (WGS84 breddegrad) fra DAGI-geometri.</summary>
+    [JsonPropertyName("repraesentativPunktLatitude")]
+    public double? RepræsentativPunktLatitude { get; init; }
 }

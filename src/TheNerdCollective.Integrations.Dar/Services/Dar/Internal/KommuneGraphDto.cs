@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using TheNerdCollective.Integrations.Dar.Models;
 
 namespace TheNerdCollective.Integrations.Dar.Services.Dar.Internal;
 
@@ -16,4 +17,7 @@ internal sealed class KommuneGraphDto
 
     [JsonPropertyName("regionLokalid")]
     public string? RegionLokalid { get; init; }
+
+    [JsonPropertyName("geometri")]
+    public KoordinatDto? Geometri { get; init; }
 }

@@ -1,0 +1,34 @@
+name: "Datafordeler / DAWA ugentlig watch"
+description: "Tjekker om DAGI GraphQL er klar til at erstatte DAWA-fallback i Integrations.Dar, og om officielle udfasningsdatoer er ændret."
+workflow:
+  triggers:
+    - cron:
+        cron: "0 8 * * 1"
+  actions: {}
+  prompts:
+    - |
+      Du overvåger Datafordeler- og DAWA-opdateringer for NuGet-pakken TheNerdCollective.Integrations.Dar.
+
+      ## Repo-kontekst
+      - Læs docs/monitoring/DATAFORDELER-DAWA-WATCH.md (kilder, datoer, fjernelseskriterier).
+      - Pakken bruger DAWA-fallback mens DAGI GraphQL returnerer tom geografi.
+
+      ## Ugentlige opgaver
+      1. Søg nettet efter ændringer siden sidste uge på:
+         - datafordeler.dk (udfasing 2026, Transition)
+         - confluence.sdfi.dk (Mapning DAWA→Datafordeler, DAGI migration, REST udfasning)
+         - klimadatastyrelsen.dk nyheder om Datafordeler
+      2. Kør scripts/check-datafordeler-dagi-readiness.sh (eller tilsvarende dotnet test med DarDagiReadinessProbeTests).
+      3. Sammenlign med docs/monitoring/last-status.md hvis den findes.
+      4. Hvis READY_TO_DISABLE_DAWA_FALLBACK=true ELLER officielle kilder annoncerer ændrede datoer/krav:
+         - Opdater docs/monitoring/last-status.md med dato, kilde-links og anbefaling.
+         - Nævn konkret hvilke flags/metoder der kan skiftes (EnableDawaFallback, EnableDawaEnrichment).
+      5. Hvis intet ændret: kort log i last-status.md med "ingen ændring" + probe-resultat.
+
+      Skriv kort og handlingsorienteret på dansk. Commit kun hvis brugeren har bedt om det — ellers rapportér i chat.
+  agentOptions:
+    skipInstall: false
+  memoryEnabled: true
+  gitConfig:
+    repo: janhjordie/nerd-components
+    branch: main

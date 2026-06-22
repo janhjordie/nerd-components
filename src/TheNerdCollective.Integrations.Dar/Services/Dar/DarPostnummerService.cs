@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Text.Json.Serialization;
@@ -8,6 +9,7 @@ using System.Threading.Tasks;
 using TheNerdCollective.Integrations.Dar.Configuration;
 using TheNerdCollective.Integrations.Dar.GraphQL;
 using TheNerdCollective.Integrations.Dar.Json;
+using TheNerdCollective.Integrations.Dar.Mapping;
 using TheNerdCollective.Integrations.Dar.Models;
 using TheNerdCollective.Integrations.Dar.Services.Dar.Internal;
 using TheNerdCollective.Integrations.Dar.Services.Internal;
@@ -22,18 +24,23 @@ public sealed class DarPostnummerService
     private readonly GraphQlDataAccessor _accessor;
     private readonly DawaPostnummerClient _dawaClient;
     private readonly DarPostnummerRestClient _restClient;
+    private readonly PostnummerKommuneRestResolver _kommuneResolver;
+    private readonly DarKommuneService _kommuneService;
     private readonly DarPostnummerOptions _options;
 
     public DarPostnummerService(
         GraphQlDataAccessor accessor,
         HttpClient httpClient,
         string apiKey,
-        DarPostnummerOptions options)
+        DarPostnummerOptions options,
+        DarKommuneService kommuneService)
     {
         _accessor = accessor ?? throw new ArgumentNullException(nameof(accessor));
         _options = options ?? throw new ArgumentNullException(nameof(options));
+        _kommuneService = kommuneService ?? throw new ArgumentNullException(nameof(kommuneService));
         _dawaClient = new DawaPostnummerClient(httpClient, options);
         _restClient = new DarPostnummerRestClient(httpClient, apiKey, options);
+        _kommuneResolver = new PostnummerKommuneRestResolver(accessor, httpClient, apiKey, options);
     }
 
     /// <summary>Returnerer alle aktive postnumre (DAR status 3) sorteret efter postnummer.</summary>
@@ -143,6 +150,172 @@ public sealed class DarPostnummerService
         }
 
         return results;
+    }
+
+    /// <summary>
+    /// Returnerer aktive postnumre inden for en cirkel (WGS84) med alle tilknyttede kommuner.
+    /// Prøver Datafordeler (DAGI geometri + DAR) først; falder tilbage til DAWA når
+    /// <see cref="DarPostnummerOptions.EnableDawaEnrichment"/> er sand og Datafordeler ikke har data endnu.
+    /// </summary>
+    public async Task<IReadOnlyList<PostnummerMedKommunerDto>> GetByCircleAsync(
+        double longitude,
+        double latitude,
+        int radiusMeters,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateCircleParameters(longitude, latitude, radiusMeters);
+
+        var cacheKey =
+            $"{longitude.ToString("F8", CultureInfo.InvariantCulture)}|" +
+            $"{latitude.ToString("F8", CultureInfo.InvariantCulture)}|{radiusMeters}";
+        if (PostnummerCache.TryGetCircle(cacheKey, _options.CircleCacheDuration, out var cached))
+        {
+            return cached;
+        }
+
+        var polygonWkt = GeoCircleHelper.CreateCirclePolygonWkt(longitude, latitude, radiusMeters);
+        var kommuner = await _kommuneService
+            .FindKommunerByGeometryAsync(polygonWkt, includeWfsFallback: false, cancellationToken)
+            .ConfigureAwait(false);
+
+        IReadOnlyList<PostnummerMedKommunerDto> ordered;
+
+        if (kommuner.Count == 0)
+        {
+            ordered = await TryDawaCircleFallbackAsync(longitude, latitude, radiusMeters, cancellationToken)
+                .ConfigureAwait(false);
+            PostnummerCache.SetCircle(cacheKey, ordered, _options.CircleCacheDuration);
+            return ordered;
+        }
+
+        var merged = new Dictionary<string, PostnummerMedKommunerDto>(StringComparer.Ordinal);
+
+        foreach (var kommune in kommuner)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (string.IsNullOrWhiteSpace(kommune.Kommunekode))
+            {
+                continue;
+            }
+
+            var postnumre = await _kommuneResolver.GetByKommunekodeAsync(kommune.Kommunekode!, cancellationToken)
+                .ConfigureAwait(false);
+
+            foreach (var postnummer in postnumre)
+            {
+                merged[postnummer.Postnummer] = postnummer;
+            }
+        }
+
+        var activeLookup = await BuildActiveLookupAsync(cancellationToken).ConfigureAwait(false);
+        var results = new List<PostnummerMedKommunerDto>(merged.Count);
+
+        foreach (var candidate in merged.Values.OrderBy(p => p.Postnummer, StringComparer.Ordinal))
+        {
+            activeLookup.TryGetValue(candidate.Postnummer, out var basic);
+            var postdistrikt = !string.IsNullOrWhiteSpace(candidate.Postdistrikt)
+                ? candidate.Postdistrikt
+                : basic?.Postdistrikt ?? string.Empty;
+
+            var enriched = await ResolveAllKommunerAsync(
+                candidate.Postnummer,
+                postdistrikt,
+                cancellationToken).ConfigureAwait(false);
+
+            if (enriched is not null)
+            {
+                results.Add(enriched);
+            }
+        }
+
+        ordered = results.Count > 0
+            ? results
+            : await TryDawaCircleFallbackAsync(longitude, latitude, radiusMeters, cancellationToken)
+                .ConfigureAwait(false);
+
+        PostnummerCache.SetCircle(cacheKey, ordered, _options.CircleCacheDuration);
+        return ordered;
+    }
+
+    private async Task<IReadOnlyList<PostnummerMedKommunerDto>> TryDawaCircleFallbackAsync(
+        double longitude,
+        double latitude,
+        int radiusMeters,
+        CancellationToken cancellationToken)
+    {
+        if (!_options.EnableDawaEnrichment)
+        {
+            return Array.Empty<PostnummerMedKommunerDto>();
+        }
+
+        return await _dawaClient.GetByCircleAsync(longitude, latitude, radiusMeters, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    private async Task<PostnummerMedKommunerDto?> ResolveAllKommunerAsync(
+        string postnummer,
+        string postdistrikt,
+        CancellationToken cancellationToken)
+    {
+        if (_options.EnableDawaEnrichment)
+        {
+            var dawa = await _dawaClient.GetByPostalCodeWithAllKommunerAsync(postnummer, cancellationToken)
+                .ConfigureAwait(false);
+            if (dawa is not null)
+            {
+                return string.IsNullOrWhiteSpace(dawa.Postdistrikt)
+                    ? dawa with { Postdistrikt = postdistrikt }
+                    : dawa;
+            }
+        }
+
+        return await _kommuneResolver.ResolveAllKommunerAsync(postnummer, postdistrikt, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Postnumre for en kommunekode inkl. alle tilknyttede kommuner pr. postnummer.
+    /// Prøver DAWA når <see cref="DarPostnummerOptions.EnableDawaEnrichment"/> er sand;
+    /// ellers Datafordeler (DAR GraphQL + REST).
+    /// </summary>
+    public async Task<IReadOnlyList<PostnummerMedKommunerDto>> GetByMunicipalityCodeWithKommunerAsync(
+        string kommunekode,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedCode = NormalizeKommunekode(kommunekode);
+
+        if (_options.EnableDawaEnrichment)
+        {
+            var dawaResults = await _dawaClient
+                .GetByMunicipalityCodeWithAllKommunerAsync(normalizedCode, cancellationToken)
+                .ConfigureAwait(false);
+            if (dawaResults.Count > 0)
+            {
+                return dawaResults;
+            }
+        }
+
+        return await _kommuneResolver.GetByKommunekodeAsync(normalizedCode, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    private static void ValidateCircleParameters(double longitude, double latitude, int radiusMeters)
+    {
+        if (latitude is < -90 or > 90)
+        {
+            throw new ArgumentOutOfRangeException(nameof(latitude), latitude, "Breddegrad skal være mellem -90 og 90.");
+        }
+
+        if (longitude is < -180 or > 180)
+        {
+            throw new ArgumentOutOfRangeException(nameof(longitude), longitude, "Længdegrad skal være mellem -180 og 180.");
+        }
+
+        if (radiusMeters <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(radiusMeters), radiusMeters, "Radius skal være positiv.");
+        }
     }
 
     private async Task<Dictionary<string, PostnummerDto>> BuildActiveLookupAsync(CancellationToken cancellationToken)

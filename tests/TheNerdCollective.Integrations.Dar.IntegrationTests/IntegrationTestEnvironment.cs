@@ -1,7 +1,7 @@
-using System.Text.Json;
 using TheNerdCollective.Integrations.Dar;
 using TheNerdCollective.Integrations.Dar.Configuration;
 using TheNerdCollective.Integrations.Dar.Services;
+using Xunit;
 
 namespace TheNerdCollective.Integrations.Dar.IntegrationTests;
 
@@ -38,9 +38,18 @@ internal static class IntegrationTestEnvironment
     }
 
     internal static DarServices CreateServices() =>
-        DarClientFactory.Create(
-            new DarOptions { ApiKey = ApiKey },
-            new HttpClient());
+        CreateServices(new DarOptions { ApiKey = ApiKey });
+
+    internal static DarServices CreateDatafordelerOnlyServices() =>
+        CreateServices(new DarOptions
+        {
+            ApiKey = ApiKey,
+            Dagi = new DarDagiOptions { EnableDawaFallback = false },
+            Postnummer = new DarPostnummerOptions { EnableDawaEnrichment = false }
+        });
+
+    private static DarServices CreateServices(DarOptions options) =>
+        DarClientFactory.Create(options, new HttpClient());
 
     private static bool IsUsableApiKey(string? apiKey)
     {
@@ -66,7 +75,7 @@ internal static class IntegrationTestEnvironment
             return null;
         }
 
-        using var document = JsonDocument.Parse(File.ReadAllText(testWebConfigPath));
+        using var document = System.Text.Json.JsonDocument.Parse(File.ReadAllText(testWebConfigPath));
         if (!document.RootElement.TryGetProperty("TheNerdCollective", out var theNerdCollective)
             || !theNerdCollective.TryGetProperty("Dar", out var dar)
             || !dar.TryGetProperty(nameof(DarOptions.ApiKey), out var apiKey))

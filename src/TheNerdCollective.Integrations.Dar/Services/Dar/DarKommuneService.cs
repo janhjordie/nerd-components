@@ -76,6 +76,78 @@ public sealed class DarKommuneService
     }
 
     /// <summary>
+    /// Finder kommunen for et punkt i WGS84 udelukkende via Datafordeler (GraphQL + REST DAGI).
+    /// Kalder aldrig DAWA — uafhængigt af <see cref="DarDagiOptions.EnableDawaFallback"/>.
+    /// </summary>
+    public async Task<KommuneDto> FindByCoordinatesDatafordelerAsync(
+        double latitude,
+        double longitude,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateWgs84Coordinates(latitude, longitude);
+
+        var graphQlKommune = await TryGraphQlFindByWgs84Async(latitude, longitude, cancellationToken)
+            .ConfigureAwait(false);
+        if (graphQlKommune is not null)
+        {
+            return await EnrichRepresentativePointAsync(graphQlKommune, cancellationToken).ConfigureAwait(false);
+        }
+
+        var (easting, northing) = Etrs89Utm32NConverter.FromWgs84(latitude, longitude);
+        var restKommune = await _restClient.FindByPointAsync(easting, northing, cancellationToken)
+            .ConfigureAwait(false);
+        if (restKommune is not null)
+        {
+            return await EnrichRepresentativePointAsync(restKommune, cancellationToken).ConfigureAwait(false);
+        }
+
+        throw new InvalidOperationException(DagiAccessHelp.PointLookupFailedMessage);
+    }
+
+    /// <summary>Finder kommuner hvis geometri intersecter den angivne WKT-polygon (EPSG:25832).</summary>
+    public Task<IReadOnlyList<KommuneDto>> FindKommunerByGeometryAsync(
+        string polygonWkt,
+        CancellationToken cancellationToken = default) =>
+        FindKommunerByGeometryAsync(polygonWkt, includeWfsFallback: true, cancellationToken);
+
+    internal async Task<IReadOnlyList<KommuneDto>> FindKommunerByGeometryAsync(
+        string polygonWkt,
+        bool includeWfsFallback,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(polygonWkt))
+        {
+            throw new ArgumentException("Polygon WKT må ikke være tom.", nameof(polygonWkt));
+        }
+
+        var temporal = GraphQlDataAccessor.CreateTemporalVariables();
+        var nodes = await _accessor.FetchAllDagiNodesAsync(
+            GraphQlQueries.FindKommunerByGeometry,
+            after => new GeometryListVariables(polygonWkt, temporal.Virkningstid, temporal.Registreringstid, after),
+            "DAGI_Kommuneinddeling",
+            cancellationToken).ConfigureAwait(false);
+
+        var graphKommuner = DarJsonSerializer.DeserializeList<KommuneGraphDto>(nodes);
+        if (graphKommuner.Count > 0)
+        {
+            return await EnrichFromGraphAsync(graphKommuner, cancellationToken).ConfigureAwait(false);
+        }
+
+        if (!includeWfsFallback)
+        {
+            return Array.Empty<KommuneDto>();
+        }
+
+        var wfsKommuner = await _wfsClient.FindByGeometryAsync(polygonWkt, cancellationToken).ConfigureAwait(false);
+        if (wfsKommuner.Count > 0)
+        {
+            return await EnrichExistingAsync(wfsKommuner, cancellationToken).ConfigureAwait(false);
+        }
+
+        return Array.Empty<KommuneDto>();
+    }
+
+    /// <summary>
     /// Finder kommunen for et punkt i WGS84 (EPSG:4326), fx fra browserens Geolocation API
     /// (<c>position.coords.latitude</c> / <c>longitude</c>).
     /// </summary>
@@ -143,6 +215,14 @@ public sealed class DarKommuneService
         if (restKommune is not null)
         {
             return restKommune;
+        }
+
+        var wfsKommune = await _wfsClient.FindByPointAsync(easting, northing, cancellationToken)
+            .ConfigureAwait(false);
+        if (wfsKommune is not null)
+        {
+            var enriched = await EnrichExistingAsync(new[] { wfsKommune }, cancellationToken).ConfigureAwait(false);
+            return enriched.FirstOrDefault() ?? wfsKommune;
         }
 
         throw new InvalidOperationException(DagiAccessHelp.PointLookupFailedMessage);
@@ -239,7 +319,53 @@ public sealed class DarKommuneService
 
         var graph = DarJsonSerializer.DeserializeRequired<KommuneGraphDto>(nodes[0]);
         var enriched = await EnrichFromGraphAsync(new[] { graph }, cancellationToken).ConfigureAwait(false);
-        return enriched.FirstOrDefault();
+        var kommune = enriched.FirstOrDefault();
+        if (kommune is null)
+        {
+            return null;
+        }
+
+        return await EnrichRepresentativePointAsync(kommune, cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task<KommuneDto> EnrichRepresentativePointAsync(
+        KommuneDto kommune,
+        CancellationToken cancellationToken)
+    {
+        if (kommune.RepræsentativPunktLatitude is not null && kommune.RepræsentativPunktLongitude is not null)
+        {
+            return kommune;
+        }
+
+        if (string.IsNullOrWhiteSpace(kommune.IdLokalId))
+        {
+            return kommune;
+        }
+
+        var temporal = GraphQlDataAccessor.CreateTemporalVariables();
+        var nodes = await _accessor.FetchDagiNodesAsync(
+            GraphQlQueries.GetKommuneById,
+            new KommuneByIdVariables(kommune.IdLokalId, temporal.Virkningstid, temporal.Registreringstid),
+            "DAGI_Kommuneinddeling",
+            cancellationToken).ConfigureAwait(false);
+
+        if (nodes.GetArrayLength() == 0)
+        {
+            return kommune;
+        }
+
+        var graph = DarJsonSerializer.DeserializeRequired<KommuneGraphDto>(nodes[0]);
+        var centroid = WktCentroidHelper.TryGetCentroidWgs84(graph.Geometri?.Wkt);
+        if (centroid is null)
+        {
+            return kommune;
+        }
+
+        return kommune with
+        {
+            RepræsentativPunktLatitude = centroid.Value.Latitude,
+            RepræsentativPunktLongitude = centroid.Value.Longitude
+        };
     }
 
     private static void ValidateWgs84Coordinates(double latitude, double longitude)
@@ -257,6 +383,22 @@ public sealed class DarKommuneService
 
     private static string FormatPointWkt(double easting, double northing) =>
         $"POINT ({easting.ToString("0.########", CultureInfo.InvariantCulture)} {northing.ToString("0.########", CultureInfo.InvariantCulture)})";
+
+    private sealed class KommuneByIdVariables
+    {
+        public KommuneByIdVariables(string kommuneId, string virkningstid, string registreringstid)
+        {
+            KommuneId = kommuneId;
+            Virkningstid = virkningstid;
+            Registreringstid = registreringstid;
+        }
+
+        public string KommuneId { get; }
+
+        public string Virkningstid { get; }
+
+        public string Registreringstid { get; }
+    }
 
     private sealed class KommuneByPointVariables
     {
@@ -282,6 +424,25 @@ public sealed class DarKommuneService
             Registreringstid = registreringstid;
             After = after;
         }
+
+        public string Virkningstid { get; }
+
+        public string Registreringstid { get; }
+
+        public string? After { get; }
+    }
+
+    private sealed class GeometryListVariables
+    {
+        public GeometryListVariables(string wkt, string virkningstid, string registreringstid, string? after)
+        {
+            Wkt = wkt;
+            Virkningstid = virkningstid;
+            Registreringstid = registreringstid;
+            After = after;
+        }
+
+        public string Wkt { get; }
 
         public string Virkningstid { get; }
 

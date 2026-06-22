@@ -413,6 +413,24 @@ public static class GraphQlFieldLists
         regionLokalid
         """;
 
+    public const string KommuneinddelingWithGeometri = """
+        id_lokalId
+        navn
+        kommunekode
+        regionLokalid
+        geometri {
+          type
+          crs
+          wkt
+        }
+        """;
+
+    public const string HusnummerCircleLookup = """
+        adgangsadressebetegnelse
+        postnummer
+        kommuneinddeling
+        """;
+
     public const string Regionsinddeling = """
         id_lokalId
         navn

@@ -11,6 +11,9 @@ public sealed class DarPostnummerOptions
     /// <summary>Cache-varighed for aktiv postnummer-liste (default 30 dage).</summary>
     public TimeSpan CacheDuration { get; set; } = TimeSpan.FromDays(30);
 
+    /// <summary>Cache-varighed for cirkel-opslag (default 24 timer).</summary>
+    public TimeSpan CircleCacheDuration { get; set; } = TimeSpan.FromHours(24);
+
     /// <summary>DAWA til kommune-opslag og filtrering på kommunekode (gratis, ingen nøgle).</summary>
     public bool EnableDawaEnrichment { get; set; } = true;
 

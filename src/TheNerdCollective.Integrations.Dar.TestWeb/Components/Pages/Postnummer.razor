@@ -12,10 +12,10 @@
             <a href="https://graphql.datafordeler.dk/DAR/v3" target="_blank" rel="noopener">DAR GraphQL</a>
             og kommune-metadata via
             <a href="https://dawadocs.dataforsyningen.dk/dok/api/postnummer" target="_blank" rel="noopener">DAWA</a>
-            (gratis, ingen API-nøgle).
+            (gratis, ingen API-nøgle) når Datafordeler-geografi endnu migreres.
         </p>
         <p class="section-intro">
-            Fuld liste caches i 30 dage. Første kald til <code>GetAllActiveAsync()</code> kan tage et par sekunder.
+            Fuld liste caches i 30 dage. Cirkel-opslag caches i 24 timer. Første kald til <code>GetAllActiveAsync()</code> kan tage et par sekunder.
         </p>
     </header>
 
@@ -28,7 +28,7 @@
     else
     {
         <section class="card">
-            <div class="tab-bar tab-bar--3" role="tablist" aria-label="Postnummer-test">
+            <div class="tab-bar tab-bar--5" role="tablist" aria-label="Postnummer-test">
                 <button type="button"
                         class="tab @(_mode == TestMode.All ? "tab--active" : null)"
                         role="tab"
@@ -42,6 +42,20 @@
                         aria-selected="@(_mode == TestMode.Municipality)"
                         @onclick="() => _mode = TestMode.Municipality">
                     Per kommune
+                </button>
+                <button type="button"
+                        class="tab @(_mode == TestMode.MultiKommune ? "tab--active" : null)"
+                        role="tab"
+                        aria-selected="@(_mode == TestMode.MultiKommune)"
+                        @onclick="() => _mode = TestMode.MultiKommune">
+                    Multi-kommune
+                </button>
+                <button type="button"
+                        class="tab @(_mode == TestMode.Circle ? "tab--active" : null)"
+                        role="tab"
+                        aria-selected="@(_mode == TestMode.Circle)"
+                        @onclick="() => _mode = TestMode.Circle">
+                    Cirkel
                 </button>
                 <button type="button"
                         class="tab @(_mode == TestMode.Lookup ? "tab--active" : null)"
@@ -81,7 +95,7 @@
             {
                 <div class="tab-panel" role="tabpanel">
                     <h2>Postnumre per kommune</h2>
-                    <p class="section-intro">Kalder <code>GetByMunicipalityCodeAsync(kommunekode)</code> via DAWA.</p>
+                    <p class="section-intro">Kalder <code>GetByMunicipalityCodeAsync(kommunekode)</code> — primær kommune via DAWA.</p>
 
                     <div class="form-grid form-grid--compact">
                         <label>
@@ -106,6 +120,90 @@
                     @if (!string.IsNullOrWhiteSpace(_municipalityMethodCall))
                     {
                         <MethodCallHint Text="@_municipalityMethodCall" />
+                    }
+                </div>
+            }
+            else if (_mode == TestMode.MultiKommune)
+            {
+                <div class="tab-panel" role="tabpanel">
+                    <h2>Multi-kommune per postnummer</h2>
+                    <p class="section-intro">
+                        Kalder <code>GetByMunicipalityCodeWithKommunerAsync(kommunekode)</code> —
+                        alle tilknyttede kommuner pr. postnummer (DAWA-fallback når DAGI er tom).
+                    </p>
+
+                    <div class="form-grid form-grid--compact">
+                        <label>
+                            Kommunekode (4 cifre)
+                            <InputText @bind-Value="_multiKommunekode" class="input" placeholder="0217" />
+                        </label>
+                    </div>
+
+                    <div class="actions actions--inline">
+                        <button type="button"
+                                class="button button--primary"
+                                disabled="@_isLoadingMultiKommune"
+                                @onclick="LoadMultiKommuneAsync">
+                            @(_isLoadingMultiKommune ? "Henter..." : "Hent med alle kommuner")
+                        </button>
+                        @if (_multiKommuneResults.Count > 0)
+                        {
+                            <span class="meta-pill">@_multiKommuneResults.Count postnumre</span>
+                        }
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(_multiKommuneMethodCall))
+                    {
+                        <MethodCallHint Text="@_multiKommuneMethodCall" />
+                    }
+                </div>
+            }
+            else if (_mode == TestMode.Circle)
+            {
+                <div class="tab-panel" role="tabpanel">
+                    <h2>Postnumre i cirkel</h2>
+                    <p class="section-intro">
+                        Kalder <code>GetByCircleAsync(longitude, latitude, radiusMeters)</code> (WGS84).
+                        DAGI GraphQL forsøges først; DAWA <code>?cirkel=</code> bruges som fallback.
+                    </p>
+
+                    <div class="form-grid form-grid--compact">
+                        <label>
+                            Longitude (WGS84)
+                            <InputText @bind-Value="_circleLongitudeInput" class="input" placeholder="12.48168066" />
+                        </label>
+                        <label>
+                            Latitude (WGS84)
+                            <InputText @bind-Value="_circleLatitudeInput" class="input" placeholder="56.04907246" />
+                        </label>
+                        <label>
+                            Radius (meter)
+                            <InputText @bind-Value="_circleRadiusInput" class="input" placeholder="10000" />
+                        </label>
+                    </div>
+
+                    <div class="actions actions--inline">
+                        <button type="button"
+                                class="button button--primary"
+                                disabled="@_isLoadingCircle"
+                                @onclick="LoadCircleAsync">
+                            @(_isLoadingCircle ? "Henter..." : "Hent postnumre i cirkel")
+                        </button>
+                        <button type="button"
+                                class="button"
+                                disabled="@_isLoadingCircle"
+                                @onclick="UseNordsjaellandTestCircle">
+                            Testcirkel (Nordsjælland)
+                        </button>
+                        @if (_circleResults.Count > 0)
+                        {
+                            <span class="meta-pill">@_circleResults.Count postnumre</span>
+                        }
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(_circleMethodCall))
+                    {
+                        <MethodCallHint Text="@_circleMethodCall" />
                     }
                 </div>
             }
@@ -159,6 +257,49 @@
             </section>
         }
 
+        @if (_circleResults.Count > 0)
+        {
+            <section class="summary card">
+                <h2>Cirkel-resultater (udvalg)</h2>
+                <dl class="summary-grid">
+                    @foreach (var item in _circleResults.Take(12))
+                    {
+                        <div>
+                            <dt>@item.Postnummer @item.Postdistrikt</dt>
+                            <dd>@FormatKommuner(item.Kommuner)</dd>
+                        </div>
+                    }
+                </dl>
+            </section>
+
+            <ResultPanel Title="Dar.Postnummer.GetByCircleAsync"
+                         Subtitle="@($"{_circleResults.Count} postnumre")"
+                         MethodCall="@_circleMethodCall"
+                         Data="_circleResults"
+                         Open="true" />
+        }
+
+        @if (_multiKommuneResults.Count > 0)
+        {
+            <section class="summary card">
+                <h2>Multi-kommune (udvalg)</h2>
+                <dl class="summary-grid">
+                    @foreach (var item in _multiKommuneResults.Take(12))
+                    {
+                        <div>
+                            <dt>@item.Postnummer @item.Postdistrikt</dt>
+                            <dd>@FormatKommuner(item.Kommuner)</dd>
+                        </div>
+                    }
+                </dl>
+            </section>
+
+            <ResultPanel Title="Dar.Postnummer.GetByMunicipalityCodeWithKommunerAsync"
+                         Subtitle="@($"kommunekode {_multiKommunekode.Trim()} — {_multiKommuneResults.Count} postnumre")"
+                         MethodCall="@_multiKommuneMethodCall"
+                         Data="_multiKommuneResults" />
+        }
+
         @if (_lookupResults.Count > 0)
         {
             <section class="summary card">
@@ -204,26 +345,42 @@
         "var services = DarClientFactory.Create(darOptions, httpClient);\n" +
         "var postnumre = await services.Dar.Postnummer.GetAllActiveAsync();";
 
+    private const double NordsjaellandTestLongitude = 12.48168066;
+    private const double NordsjaellandTestLatitude = 56.04907246;
+    private const int NordsjaellandTestRadiusMeters = 10000;
+
     private enum TestMode
     {
         All,
         Municipality,
+        MultiKommune,
+        Circle,
         Lookup
     }
 
-    private TestMode _mode = TestMode.Lookup;
+    private TestMode _mode = TestMode.Circle;
     private IReadOnlyList<PostnummerDto> _allPostnumre = Array.Empty<PostnummerDto>();
     private IReadOnlyList<PostnummerDto> _municipalityPostnumre = Array.Empty<PostnummerDto>();
     private IReadOnlyList<PostnummerMedKommuneDto> _lookupResults = Array.Empty<PostnummerMedKommuneDto>();
+    private IReadOnlyList<PostnummerMedKommunerDto> _multiKommuneResults = Array.Empty<PostnummerMedKommunerDto>();
+    private IReadOnlyList<PostnummerMedKommunerDto> _circleResults = Array.Empty<PostnummerMedKommunerDto>();
     private string _kommunekode = "0101";
+    private string _multiKommunekode = "0217";
     private string _postalCodeInput = "2730";
+    private string _circleLongitudeInput = NordsjaellandTestLongitude.ToString("G17");
+    private string _circleLatitudeInput = NordsjaellandTestLatitude.ToString("G17");
+    private string _circleRadiusInput = NordsjaellandTestRadiusMeters.ToString();
     private string? _configurationError;
     private string? _errorMessage;
     private string? _allMethodCall;
     private string? _municipalityMethodCall;
+    private string? _multiKommuneMethodCall;
+    private string? _circleMethodCall;
     private string? _lookupMethodCall;
     private bool _isLoadingAll;
     private bool _isLoadingMunicipality;
+    private bool _isLoadingMultiKommune;
+    private bool _isLoadingCircle;
     private bool _isLoadingLookup;
 
     protected override void OnInitialized()
@@ -286,6 +443,88 @@
         }
     }
 
+    private async Task LoadMultiKommuneAsync()
+    {
+        _errorMessage = null;
+        _isLoadingMultiKommune = true;
+        _multiKommuneResults = Array.Empty<PostnummerMedKommunerDto>();
+
+        var code = _multiKommunekode.Trim();
+        _multiKommuneMethodCall =
+            "var postnumre = await services.Dar.Postnummer.GetByMunicipalityCodeWithKommunerAsync(\n" +
+            $"    {MethodCallFormatter.CsString(code)});";
+
+        try
+        {
+            var services = Runtime.CreateServices();
+            _multiKommuneResults = await services.Dar.Postnummer.GetByMunicipalityCodeWithKommunerAsync(code);
+        }
+        catch (DatafordelerApiException ex) when (ex.ResponseBody.Contains("DAF-AUTH-0005", StringComparison.Ordinal))
+        {
+            _errorMessage = BuildAuthErrorMessage();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = ex.Message;
+        }
+        finally
+        {
+            _isLoadingMultiKommune = false;
+        }
+    }
+
+    private void UseNordsjaellandTestCircle()
+    {
+        _circleLongitudeInput = NordsjaellandTestLongitude.ToString("G17");
+        _circleLatitudeInput = NordsjaellandTestLatitude.ToString("G17");
+        _circleRadiusInput = NordsjaellandTestRadiusMeters.ToString();
+        _errorMessage = null;
+    }
+
+    private async Task LoadCircleAsync()
+    {
+        _errorMessage = null;
+        _isLoadingCircle = true;
+        _circleResults = Array.Empty<PostnummerMedKommunerDto>();
+
+        if (!TryParseCoordinate(_circleLongitudeInput, out var longitude)
+            || !TryParseCoordinate(_circleLatitudeInput, out var latitude)
+            || !int.TryParse(_circleRadiusInput.Trim(), out var radiusMeters)
+            || radiusMeters <= 0)
+        {
+            _errorMessage = "Angiv gyldig longitude, latitude (WGS84) og positiv radius i meter.";
+            _isLoadingCircle = false;
+            return;
+        }
+
+        _circleMethodCall =
+            "var postnumre = await services.Dar.Postnummer.GetByCircleAsync(\n" +
+            $"    {MethodCallFormatter.Number(longitude)},\n" +
+            $"    {MethodCallFormatter.Number(latitude)},\n" +
+            $"    {radiusMeters});";
+
+        try
+        {
+            var services = Runtime.CreateServices();
+            _circleResults = await services.Dar.Postnummer.GetByCircleAsync(
+                longitude,
+                latitude,
+                radiusMeters);
+        }
+        catch (DatafordelerApiException ex) when (ex.ResponseBody.Contains("DAF-AUTH-0005", StringComparison.Ordinal))
+        {
+            _errorMessage = BuildAuthErrorMessage();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = ex.Message;
+        }
+        finally
+        {
+            _isLoadingCircle = false;
+        }
+    }
+
     private Task LoadHerlevBatchAsync()
     {
         _postalCodeInput = "2730|2750|2610|1500|3520|2800";
@@ -321,6 +560,14 @@
             _isLoadingLookup = false;
         }
     }
+
+    private static bool TryParseCoordinate(string input, out double value) =>
+        double.TryParse(input.Trim().Replace(',', '.'), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out value);
+
+    private static string FormatKommuner(IReadOnlyList<KommuneRefDto> kommuner) =>
+        kommuner.Count == 0
+            ? "—"
+            : string.Join(", ", kommuner.Select(k => $"{k.Navn} ({k.Kommunekode})"));
 
     private static string BuildAuthErrorMessage() =>
         "IP-adressen er ikke whitelisted i Datafordeler Administration (DAF-AUTH-0005). " +

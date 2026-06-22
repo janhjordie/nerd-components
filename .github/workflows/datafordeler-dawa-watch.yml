@@ -1,0 +1,48 @@
+name: Datafordeler DAWA watch
+
+on:
+  schedule:
+    # Mandag 07:00 UTC (~09:00 CET vinter / ~08:00 sommer)
+    - cron: '0 7 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dagi-readiness:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Run DAGI readiness probe
+        id: probe
+        continue-on-error: true
+        env:
+          DATAFORDELER_API_KEY: ${{ secrets.DATAFORDELER_API_KEY }}
+        run: |
+          mkdir -p artifacts
+          ./scripts/check-datafordeler-dagi-readiness.sh 2>&1 | tee artifacts/dagi-readiness.log
+
+      - name: Upload rapport
+        uses: actions/upload-artifact@v4
+        with:
+          name: dagi-readiness-${{ github.run_id }}
+          path: artifacts/dagi-readiness.log
+          retention-days: 90
+
+      - name: Opsummering
+        run: |
+          if grep -q 'READY_TO_DISABLE_DAWA_FALLBACK=true' artifacts/dagi-readiness.log; then
+            echo "::notice title=DAGI klar::Alle readiness-checks bestod — overvej at fjerne DAWA-fallback i Integrations.Dar."
+          elif grep -q 'DAF-AUTH-0005' artifacts/dagi-readiness.log; then
+            echo "::warning title=IP whitelist::Proben kræver whitelisted runner-IP eller kørsel lokalt."
+          else
+            echo "::notice title=DAWA fallback::DAGI GraphQL-geografi er endnu ikke klar — behold DAWA-fallback."
+          fi

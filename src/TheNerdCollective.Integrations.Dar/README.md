@@ -14,6 +14,7 @@ Pakken targeter **.NET Standard 2.0** og kan bruges fra .NET Framework 4.6.1+ og
 - **Adressedetaljer efter autocomplete** — koordinater (WGS84 + ETRS89), kommune m.m. via Adressevælger id-opslag
 - **Adresseopslag** i DAR med KVHX/DAWA-format output
 - **Kommuner og regioner (DAGI)** — live kommune-liste med region-metadata + dedikeret region-API (`Kommune.GetAllAsync`, `Region.GetAllAsync`); DAWA-fallback mens GraphQL er tom
+- **Geografi (DN-Turmodul)** — koordinat-opslag (`FindByCoordinatesDatafordelerAsync`), cirkel-postnumre (`GetByCircleAsync`) og multi-kommune (`GetByMunicipalityCodeWithKommunerAsync`); DAWA-fallback mens DAGI GraphQL-geografi migreres
 - **Postnumre (DAR)** — aktive postnumre, filtrering på kommunekode og batch-opslag med kommune-metadata (`GetAllActiveAsync`, `GetAllActiveWithKommuneAsync`, `GetByMunicipalityCodeAsync`, `GetByPostalCodesAsync`)
 - **BBR-data** via separate services (bygning, enheder, etager, opgange, grund, ejendomsrelationer)
 - **Lazy by design** — kald kun de services du har brug for; intet hentes automatisk
@@ -489,8 +490,15 @@ Kommuner via **DAGI** (`DAGI_Kommuneinddeling`, [GraphQL v2](https://graphql.dat
 | Metode | Rækkefølge når GraphQL er tom |
 |---|---|
 | `GetAllAsync` | DAWA liste → WFS (API-nøgle) → fejl |
-| `FindByCoordinatesAsync` | DAWA reverse (`/kommuner/reverse`, WGS84) → REST DAGI punkt (valgfri tjenestebruger) → fejl |
-| `FindByEtrs89Async` | DAWA reverse (EPSG:25832) → REST DAGI punkt → fejl |
+| `FindByCoordinatesAsync` | DAWA reverse (`/kommuner/reverse`, WGS84) → REST DAGI punkt → WFS → fejl |
+| `FindByEtrs89Async` | DAWA reverse (EPSG:25832) → REST DAGI punkt → WFS → fejl |
+| `FindByCoordinatesDatafordelerAsync` | GraphQL punkt → REST DAGI punkt → fejl (**ingen DAWA**) |
+| `FindKommunerByGeometryAsync` | GraphQL intersects → WFS intersects → tom liste |
+
+> **Geografi og DAWA**  
+> Mens Datafordeler migrerer DAGI-geodata returnerer GraphQL ofte **tomme** spatial/liste-resultater.  
+> `FindByCoordinatesAsync` og `GetByCircleAsync` falder derfor tilbage til DAWA når `EnableDawaFallback` / `EnableDawaEnrichment` er `true` (default).  
+> `FindByCoordinatesDatafordelerAsync` kalder **aldrig** DAWA — brug den når du eksplicit vil teste Datafordeler-kanaler.
 
 Kommune-listen caches i 24 timer som standard (`Dagi:KommuneListCacheDuration`). DAWA-listen hentes med paginering (`side` / `per_side`).
 
@@ -515,24 +523,33 @@ Kommune-listen caches i 24 timer som standard (`Dagi:KommuneListCacheDuration`).
 | `GetAllAsync(ct?)` | Alle aktuelle kommuner (`id_lokalId`, `navn`, `kommunekode`, `regionskode`, `regionnavn`), sorteret efter navn |
 | `FindByCoordinatesAsync(latitude, longitude, ct?)` | Finder kommune for WGS84-koordinater (EPSG:4326), fx fra `navigator.geolocation` |
 | `FindByEtrs89Async(easting, northing, ct?)` | Samme opslag med ETRS89 UTM 32N (EPSG:25832) |
+| `FindByCoordinatesDatafordelerAsync(latitude, longitude, ct?)` | Kun Datafordeler (GraphQL + REST DAGI). Beriger med `RepræsentativPunktLatitude/Longitude` fra DAGI-geometri når tilgængelig |
+| `FindKommunerByGeometryAsync(polygonWkt, ct?)` | Kommuner hvis geometri intersecter WKT-polygon (EPSG:25832) |
 
-`KommuneDto` inkluderer region-metadata (`Regionskode`, `Regionnavn`) — fx København `0101` → `1084` / `Region Hovedstaden`. Ved GraphQL beriges via `regionLokalid` + `DAGI_Regionsinddeling`; DAWA-fallback leverer region direkte på `/kommuner`.
+`KommuneDto` inkluderer region-metadata (`Regionskode`, `Regionnavn`) — fx København `0101` → `1084` / `Region Hovedstaden`. Ved GraphQL beriges via `regionLokalid` + `DAGI_Regionsinddeling`; DAWA-fallback leverer region direkte på `/kommuner`.  
+Ved geografi-opslag kan `RepræsentativPunktLatitude` / `RepræsentativPunktLongitude` udfyldes fra DAGI-centroid (WGS84).
 
-Eksempel (kommune-dropdown + “Din lokation”):
+Eksempel (kommune-dropdown + “Din lokation” + Datafordeler-only):
 
 ```csharp
 // Dropdown: hent alle kommuner (GraphQL → DAWA → WFS)
 var kommuner = await services.Dar.Kommune.GetAllAsync();
 
-// Browser-geolocation → kommune (GraphQL → DAWA reverse → REST)
+// Browser-geolocation → kommune (GraphQL → DAWA reverse → REST → WFS)
 var position = await GetBrowserPositionAsync(); // latitude / longitude (WGS84)
 var kommune = await services.Dar.Kommune.FindByCoordinatesAsync(
     position.Latitude,
     position.Longitude);
 // kommune.Navn fx "København", kommune.Kommunekode fx "0101"
+
+// Kun Datafordeler — ingen DAWA (DN-Turmodul / accept-test)
+var helsingoer = await services.Dar.Kommune.FindByCoordinatesDatafordelerAsync(
+    56.02304649121056,
+    12.598664281911976);
+// helsingoer.Kommunekode "0217", RepræsentativPunkt* fra DAGI når migreret
 ```
 
-Returnerer `KommuneDto` med `IdLokalId`, `Navn`, `Kommunekode`, `Regionskode` og `Regionnavn`.
+Returnerer `KommuneDto` med `IdLokalId`, `Navn`, `Kommunekode`, `Regionskode`, `Regionnavn` og valgfrit repræsentativt punkt.
 
 #### `services.Dar.Region`
 
@@ -556,10 +573,11 @@ Region-listen caches i 24 timer som standard (`Dagi:RegionListCacheDuration`).
 
 Aktive postnumre via **DAR GraphQL** (`DAR_Postnummer`, [v3](https://graphql.datafordeler.dk/DAR/v3)) med `status = 3` (gyldige/aktive). Kommune-metadata hentes via **[DAWA](https://dawadocs.dataforsyningen.dk/dok/api/postnummer)** (`api.dataforsyningen.dk/postnumre`) — **gratis, ingen API-nøgle** — eller DAR REST husnummer-opslag (`MedDybde=true`) som fallback.
 
-> **DAWA til kommune-metadata**  
+> **DAWA til kommune-metadata og geografi**  
 > DAR GraphQL returnerer postnummer og postdistrikt, men ikke kommune direkte på `DAR_Postnummer`.  
 > Pakken beriger derfor med DAWA (eller REST) når du kalder `GetByMunicipalityCodeAsync` / `GetByPostalCodesAsync`.  
-> Slå DAWA fra med `Postnummer:EnableDawaEnrichment: false` — så bruges kun DAR REST husnummer-opslag (langsommere ved mange kald).
+> For **cirkel-opslag** og **multi-kommune** bruges DAWA som fallback når DAGI GraphQL spatial er tom (Datafordeler migrerer stadig geodata).  
+> Slå DAWA fra med `Postnummer:EnableDawaEnrichment: false` — så bruges kun Datafordeler-kanaler (kan returnere tomme resultater indtil DAGI er klar).
 
 **Datakilder pr. metode**
 
@@ -569,6 +587,8 @@ Aktive postnumre via **DAR GraphQL** (`DAR_Postnummer`, [v3](https://graphql.dat
 | `GetAllActiveWithKommuneAsync` | DAR GraphQL + DAWA/REST kommune-enrichment | — | 30 dage (postnumre) + live enrichment |
 | `GetByMunicipalityCodeAsync` | DAWA `?kommunekode=` | REST-baseret filtrering | DAWA live |
 | `GetByPostalCodesAsync` | DAWA `?nr=` | DAR REST husnummer pr. postnr | DAWA live |
+| `GetByCircleAsync` | DAGI GraphQL intersects → DAR postnumre pr. kommune | DAWA `?cirkel=` | 24 timer (`CircleCacheDuration`) |
+| `GetByMunicipalityCodeWithKommunerAsync` | DAWA `?kommunekode=` (alle kommuner) | DAR GraphQL/REST husnummer | DAWA live |
 
 **Primær kommune**
 
@@ -596,6 +616,7 @@ Når et postnummer tilhører flere kommuner (sjældent), vælges primær kommune
       "DawaBaseUrl": "https://api.dataforsyningen.dk",
       "RestUrl": "https://services.datafordeler.dk/DAR/DAR/3.0.0/rest",
       "CacheDuration": "30.00:00:00",
+      "CircleCacheDuration": "24:00:00",
       "MaxParallelKommuneLookups": 12
     }
   }
@@ -608,25 +629,37 @@ Når et postnummer tilhører flere kommuner (sjældent), vælges primær kommune
 | `DawaBaseUrl` | `https://api.dataforsyningen.dk` | DAWA base-URL |
 | `RestUrl` | DAR REST 3.0.0 | Husnummer-opslag når DAWA fejler |
 | `CacheDuration` | `30` dage | Cache for `GetAllActiveAsync` |
+| `CircleCacheDuration` | `24` timer | Cache for `GetByCircleAsync` |
 | `MaxParallelKommuneLookups` | `12` | Parallel REST-opslag ved DAWA-fallback på stor liste |
 
 | Metode | Beskrivelse |
 |---|---|
 | `GetAllActiveAsync(ct?)` | Alle aktive postnumre (`Postnummer`, `Postdistrikt`), sorteret efter postnummer |
 | `GetAllActiveWithKommuneAsync(ct?)` | Alle aktive postnumre inkl. primær `Kommunekode` / `Kommunenavn` |
-| `GetByMunicipalityCodeAsync(kommunekode, ct?)` | Postnumre for en kommune (firecifret kode, fx `"0101"`) |
+| `GetByMunicipalityCodeAsync(kommunekode, ct?)` | Postnumre for en kommune (firecifret kode, fx `"0101"`) — primær kommune |
 | `GetByPostalCodesAsync(postalCodes, ct?)` | `PostnummerMedKommuneDto` pr. angivet postnummer; pipe-separeret streng i ét element understøttes |
+| `GetByCircleAsync(longitude, latitude, radiusMeters, ct?)` | Aktive postnumre inden for cirkel (WGS84) med **alle** tilknyttede kommuner pr. postnummer |
+| `GetByMunicipalityCodeWithKommunerAsync(kommunekode, ct?)` | Som ovenfor, men `PostnummerMedKommunerDto` med fuld `Kommuner`-liste |
 
 ```csharp
 // Fuld liste (tung første gang — caches i 30 dage)
 var postnumre = await services.Dar.Postnummer.GetAllActiveAsync();
-// postnumre.Count typisk > 1000; indeholder fx "2730" / "Herlev"
 
 // København autocomplete (GEO-05)
 var koebenhavn = await services.Dar.Postnummer.GetByMunicipalityCodeAsync("0101");
 
 // Enkelt opslag (GEO-04)
 var byNumber = await services.Dar.Postnummer.GetByPostalCodesAsync(new[] { "2100" });
+
+// Cirkel om Nordsjælland (WGS84: lng, lat, radius i meter) — DN-Turmodul
+var iCirkel = await services.Dar.Postnummer.GetByCircleAsync(
+    12.48168066,
+    56.04907246,
+    10000);
+// PostnummerMedKommunerDto[] — fx 3050 med kommuner 0210 + 0217
+
+// Alle kommuner pr. postnummer for Helsingør
+var helsingoer = await services.Dar.Postnummer.GetByMunicipalityCodeWithKommunerAsync("0217");
 
 // Batch med pipe (GEO-04b) — mindst 2 forskellige kommunekoder i resultatet
 var batch = await services.Dar.Postnummer.GetByPostalCodesAsync(
@@ -649,6 +682,14 @@ public sealed record PostnummerMedKommuneDto : PostnummerDto
 {
     public string? Kommunekode { get; init; }  // "0163"
     public string? Kommunenavn { get; init; }    // "Herlev"
+}
+
+// PostnummerMedKommunerDto — fra GetByCircleAsync / GetByMunicipalityCodeWithKommunerAsync
+public sealed record PostnummerMedKommunerDto
+{
+    public required string Postnummer { get; init; }
+    public required string Postdistrikt { get; init; }
+    public IReadOnlyList<KommuneRefDto> Kommuner { get; init; }
 }
 ```
 
@@ -751,10 +792,12 @@ Namespace: `TheNerdCollective.Integrations.Dar.Models`
 | `AdresseopslagResult` | Adresseopslag med native `Dar` + valgfri `KvHxInput` (legacy) |
 | `DarAdresseopslagDto` | Native DAR-resultat (`Husnummer` + `Vejnavn`) |
 | `HusnummerLookupResult` | Husnummer med native `Dar` (uden KvHxInput) |
-| `KommuneDto` | Kommune (`id_lokalId`, `navn`, `kommunekode`, `regionskode`, `regionnavn`) fra DAGI/DAWA |
+| `KommuneDto` | Kommune (`id_lokalId`, `navn`, `kommunekode`, `regionskode`, `regionnavn`, valgfrit repræsentativt punkt) fra DAGI/DAWA |
 | `RegionDto` | Region (`id_lokalId`, `regionskode`, `regionnavn`) fra DAGI/DAWA |
 | `PostnummerDto` | Aktivt postnummer (`Postnummer`, `Postdistrikt`) |
 | `PostnummerMedKommuneDto` | Postnummer med primær `Kommunekode` / `Kommunenavn` |
+| `PostnummerMedKommunerDto` | Postnummer med alle tilknyttede kommuner (`Kommuner[]`) |
+| `KommuneRefDto` | Kommune-reference (`Kommunekode`, `Navn`) i multi-kommune postnumre |
 | `KvHxInputDto` | KVHX i DAWA-format (legacy bagudkompatibilitet) |
 | `HusnummerDto` | DAR husnummer |
 | `BygningDto` | Bygning, arealer, grund-reference |
@@ -874,7 +917,16 @@ Kræver whitelisted IP — ellers springes testen over ved `DAF-AUTH-0005`.
 
 ## Versionering
 
-**Nuværende version:** `1.6.5`
+**Nuværende version:** `1.7.0`
+
+### 1.7.0 — Geografi (DN-Turmodul)
+
+- `Kommune.FindByCoordinatesDatafordelerAsync` — Datafordeler-only punkt-opslag med repræsentativt punkt
+- `Kommune.FindKommunerByGeometryAsync` — spatial intersect (EPSG:25832 WKT)
+- `Postnummer.GetByCircleAsync` — postnumre i cirkel (WGS84) med alle kommuner; DAWA-fallback
+- `Postnummer.GetByMunicipalityCodeWithKommunerAsync` — multi-kommune pr. postnummer
+- Nye DTO'er: `PostnummerMedKommunerDto`, `KommuneRefDto`; `KommuneDto.RepræsentativPunkt*`
+- `Postnummer:CircleCacheDuration` (default 24 timer)
 
 Publiceres til [NuGet.org](https://www.nuget.org/packages/TheNerdCollective.Integrations.Dar) via GitHub Actions ved push til `main`.
 
