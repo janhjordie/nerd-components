@@ -33,5 +33,25 @@ namespace TheNerdCollective.Integrations.Dar.Services.Bbr
 
             return DarJsonSerializer.DeserializeList<EnhedDto>(nodes);
         }
+
+        /// <summary>Henter enheder knyttet til en DAR-adresse (<c>adresseIdentificerer</c>).</summary>
+        public async Task<IReadOnlyList<EnhedDto>> GetByAdresseIdentificererAsync(
+            string adresseIdentificerer,
+            CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(adresseIdentificerer))
+            {
+                throw new ArgumentException("Adresse-id må ikke være tomt.", nameof(adresseIdentificerer));
+            }
+
+            var temporal = GraphQlDataAccessor.CreateTemporalVariables();
+            var nodes = await _accessor.FetchBbrNodesAsync(
+                GraphQlQueries.GetEnhederByAdresseIdentificerer,
+                new { adresseIdentificerer, temporal.Virkningstid, temporal.Registreringstid },
+                "BBR_Enhed",
+                cancellationToken).ConfigureAwait(false);
+
+            return DarJsonSerializer.DeserializeList<EnhedDto>(nodes);
+        }
     }
 }

@@ -111,6 +111,21 @@ public static class GraphQlQueries
         }
         """;
 
+    public static string GetEnhederByAdresseIdentificerer => $$"""
+        query GetEnhederByAdresse($adresseIdentificerer: String!, $virkningstid: DafDateTime, $registreringstid: DafDateTime) {
+          BBR_Enhed(
+            first: 10
+            virkningstid: $virkningstid
+            registreringstid: $registreringstid
+            where: { adresseIdentificerer: { eq: $adresseIdentificerer } }
+          ) {
+            nodes {
+              {{GraphQlFieldLists.Enhed}}
+            }
+          }
+        }
+        """;
+
     public static string GetEtagerByBygning => $$"""
         query GetEtager($bygningId: String!, $virkningstid: DafDateTime, $registreringstid: DafDateTime) {
           BBR_Etage(

@@ -48,7 +48,7 @@ namespace TheNerdCollective.Integrations.Dar.Services.Bbr
 
             if (nodes.GetArrayLength() == 0)
             {
-                throw new InvalidOperationException($"Husnummer \"{husnummerId}\" har intet tilknyttet BBR-bygning.");
+                return Array.Empty<BygningDto>();
             }
 
             return DarJsonSerializer.DeserializeList<BygningDto>(nodes);
