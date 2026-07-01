@@ -138,6 +138,9 @@ Uploads data to the default blob container.
 ##### `UploadAsync(byte[] data, string container, string destinationPath)`
 Uploads data to a specific blob container (creates container if not exists).
 
+##### `UploadAsync(byte[] data, string container, string destinationPath, string? cacheControl)`
+Uploads to a specific container and sets optional HTTP `Cache-Control` headers on the blob.
+
 ##### `DeleteAsync(string container, string destinationPath)`
 Deletes a blob from the specified container.
 

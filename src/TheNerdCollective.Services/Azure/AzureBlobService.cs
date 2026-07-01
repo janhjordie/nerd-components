@@ -50,11 +50,32 @@ public class AzureBlobService
     /// </summary>
     public async Task UploadAsync(byte[] data, string container, string destinationPath)
     {
+        await UploadAsync(data, container, destinationPath, cacheControl: null);
+    }
+
+    /// <summary>
+    /// Uploads data to a specific blob container with optional HTTP cache headers.
+    /// </summary>
+    public async Task UploadAsync(byte[] data, string container, string destinationPath, string? cacheControl)
+    {
         var blobContainer = CreateOrGetBlobContainer(container);
         var blobClient = blobContainer.GetBlobClient(destinationPath);
         await blobClient.DeleteIfExistsAsync();
         using var stream = new MemoryStream(data);
-        await blobClient.UploadAsync(stream, true);
+
+        if (string.IsNullOrWhiteSpace(cacheControl))
+        {
+            await blobClient.UploadAsync(stream, overwrite: true);
+            return;
+        }
+
+        await blobClient.UploadAsync(stream, new BlobUploadOptions
+        {
+            HttpHeaders = new BlobHttpHeaders
+            {
+                CacheControl = cacheControl
+            }
+        });
     }
 
     /// <summary>
