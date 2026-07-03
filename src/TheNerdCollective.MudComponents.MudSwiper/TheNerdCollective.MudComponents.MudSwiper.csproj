@@ -17,7 +17,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MudBlazor" Version="9.5.0" />
+    <PackageReference Include="MudBlazor" Version="9.6.0" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.1" />
   </ItemGroup>
 
