@@ -79,6 +79,17 @@ public class AzureBlobService
     }
 
     /// <summary>
+    /// Returns whether a blob exists in the specified container.
+    /// </summary>
+    public virtual async Task<bool> ExistsAsync(string container, string destinationPath, CancellationToken cancellationToken = default)
+    {
+        var blobContainer = CreateOrGetBlobContainer(container);
+        var blobClient = blobContainer.GetBlobClient(destinationPath);
+        var response = await blobClient.ExistsAsync(cancellationToken);
+        return response.Value;
+    }
+
+    /// <summary>
     /// Deletes a blob from the specified container.
     /// </summary>
     public async Task DeleteAsync(string container, string destinationPath)
