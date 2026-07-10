@@ -1,6 +1,7 @@
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Microsoft.Extensions.Options;
+using System.Collections.Concurrent;
 using TheNerdCollective.Helpers;
 
 namespace TheNerdCollective.Services.Azure;
@@ -12,25 +13,27 @@ public class AzureBlobService
 {
     private readonly BlobContainerClient _blobContainer;
     private readonly BlobServiceClient _blobServiceClient;
+    private readonly ConcurrentDictionary<string, BlobContainerClient> _containerClients = new(StringComparer.OrdinalIgnoreCase);
 
     public AzureBlobService(IOptions<AzureBlobOptions> options)
     {
         var config = options.Value;
         _blobServiceClient = new BlobServiceClient(config.ConnectionString);
-        _blobContainer = CreateOrGetBlobContainer(config.ContainerName);
+        _blobContainer = GetOrCreateContainerClient(config.ContainerName);
     }
 
-    private BlobContainerClient CreateOrGetBlobContainer(string container)
+    private BlobContainerClient GetOrCreateContainerClient(string container)
     {
-        container = container.ToLower();
-        var containers = _blobServiceClient
-            .GetBlobContainers()
-            .ToList();
+        container = container.ToLowerInvariant();
+        return _containerClients.GetOrAdd(
+            container,
+            name => _blobServiceClient.GetBlobContainerClient(name));
+    }
 
-        if (!containers.Any(x => x.Name.Equals(container)))
-            _blobServiceClient.CreateBlobContainer(container);
-
-        var blobContainer = _blobServiceClient.GetBlobContainerClient(container);
+    private async Task<BlobContainerClient> EnsureContainerExistsAsync(string container)
+    {
+        var blobContainer = GetOrCreateContainerClient(container);
+        await blobContainer.CreateIfNotExistsAsync();
         return blobContainer;
     }
 
@@ -58,23 +61,44 @@ public class AzureBlobService
     /// </summary>
     public async Task UploadAsync(byte[] data, string container, string destinationPath, string? cacheControl)
     {
-        var blobContainer = CreateOrGetBlobContainer(container);
+        await UploadAsync(data, container, destinationPath, cacheControl, contentType: null);
+    }
+
+    /// <summary>
+    /// Uploads data to a specific blob container with optional HTTP cache and content-type headers.
+    /// </summary>
+    public async Task UploadAsync(
+        byte[] data,
+        string container,
+        string destinationPath,
+        string? cacheControl,
+        string? contentType)
+    {
+        var blobContainer = await EnsureContainerExistsAsync(container);
         var blobClient = blobContainer.GetBlobClient(destinationPath);
         await blobClient.DeleteIfExistsAsync();
         using var stream = new MemoryStream(data);
 
-        if (string.IsNullOrWhiteSpace(cacheControl))
+        if (string.IsNullOrWhiteSpace(cacheControl) && string.IsNullOrWhiteSpace(contentType))
         {
             await blobClient.UploadAsync(stream, overwrite: true);
             return;
         }
 
+        var httpHeaders = new BlobHttpHeaders();
+        if (!string.IsNullOrWhiteSpace(cacheControl))
+        {
+            httpHeaders.CacheControl = cacheControl;
+        }
+
+        if (!string.IsNullOrWhiteSpace(contentType))
+        {
+            httpHeaders.ContentType = contentType;
+        }
+
         await blobClient.UploadAsync(stream, new BlobUploadOptions
         {
-            HttpHeaders = new BlobHttpHeaders
-            {
-                CacheControl = cacheControl
-            }
+            HttpHeaders = httpHeaders
         });
     }
 
@@ -83,7 +107,7 @@ public class AzureBlobService
     /// </summary>
     public virtual async Task<bool> ExistsAsync(string container, string destinationPath, CancellationToken cancellationToken = default)
     {
-        var blobContainer = CreateOrGetBlobContainer(container);
+        var blobContainer = GetOrCreateContainerClient(container);
         var blobClient = blobContainer.GetBlobClient(destinationPath);
         var response = await blobClient.ExistsAsync(cancellationToken);
         return response.Value;
@@ -94,7 +118,7 @@ public class AzureBlobService
     /// </summary>
     public async Task DeleteAsync(string container, string destinationPath)
     {
-        var blobContainer = CreateOrGetBlobContainer(container);
+        var blobContainer = await EnsureContainerExistsAsync(container);
         var blobClient = blobContainer.GetBlobClient(destinationPath);
         await blobClient.DeleteIfExistsAsync();
     }
@@ -118,7 +142,7 @@ public class AzureBlobService
     /// </summary>
     public async Task<byte[]> DownloadAsync(string container, string sourcePath)
     {
-        var blobContainer = CreateOrGetBlobContainer(container);
+        var blobContainer = await EnsureContainerExistsAsync(container);
         var blobClient = blobContainer.GetBlobClient(sourcePath);
 
         using var stream = new MemoryStream();
@@ -147,7 +171,7 @@ public class AzureBlobService
     /// </summary>
     public async Task<List<BlobItem>> FilesAsync(string container)
     {
-        var blobContainer = CreateOrGetBlobContainer(container);
+        var blobContainer = await EnsureContainerExistsAsync(container);
         var blobs = new List<BlobItem>();
         await foreach (var blob in blobContainer.GetBlobsAsync())
         {
