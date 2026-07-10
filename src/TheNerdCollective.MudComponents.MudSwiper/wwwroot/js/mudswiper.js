@@ -2,8 +2,8 @@
 // Loads Swiper from CDN and manages initialization
 
 const SWIPER_CDN = {
-    css: 'https://cdn.jsdelivr.net/npm/swiper@12/swiper-bundle.min.css',
-    js: 'https://cdn.jsdelivr.net/npm/swiper@12/swiper-bundle.min.js'
+    css: 'https://cdn.jsdelivr.net/npm/swiper@14/swiper-bundle.min.css',
+    js: 'https://cdn.jsdelivr.net/npm/swiper@14/swiper-bundle.min.js'
 };
 
 let swiperInstances = new Map();
@@ -195,7 +195,7 @@ function injectSwiperStyles() {
             background: rgba(255, 255, 255, 1);
         }
 
-        /* Navigation Buttons */
+        /* Navigation Buttons — layout only; arrow glyphs come from Swiper (::after) */
         .mud-swiper-button-prev,
         .mud-swiper-button-next {
             position: absolute;
@@ -212,7 +212,6 @@ function injectSwiperStyles() {
             background: rgba(0, 0, 0, 0.3);
             border-radius: 4px;
             transition: background 0.3s;
-            font-size: 20px;
             user-select: none;
         }
 
@@ -221,26 +220,12 @@ function injectSwiperStyles() {
             background: rgba(0, 0, 0, 0.5);
         }
 
-        .mud-swiper-button-prev::before,
-        .mud-swiper-button-next::before {
-            font-size: 20px;
-            color: white;
-        }
-
         .mud-swiper-button-prev {
             left: 10px;
         }
 
         .mud-swiper-button-next {
             right: 10px;
-        }
-
-        .mud-swiper-button-prev::before {
-            content: '❮';
-        }
-
-        .mud-swiper-button-next::before {
-            content: '❯';
         }
 
         /* Touch and pointer styles */
