@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.8.0
+
+- Design token catalog now wraps MudBlazor previews in `NerdCatalogThemeProvider` with dark-mode toggle.
+- Clipboard and export buttons load `NerdDesignSystemScripts` automatically.
+- Default catalog route moved to `Pages/NerdDesignTokensPage.razor` for custom-route support.
+- Hub links sync `CatalogRoute` at DI registration time.
+
 ## 1.7.0
 
 - Added `TheNerdCollective.MudComponents.Shared` dependency for WCAG helpers, clipboard copy, and design-system hub links.

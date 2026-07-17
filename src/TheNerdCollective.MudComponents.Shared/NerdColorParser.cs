@@ -28,6 +28,19 @@ public static partial class NerdColorParser
             return true;
         }
 
+        var hslMatch = HslRegex().Match(trimmed);
+        if (hslMatch.Success &&
+            TryHslToRgb(
+                ParseChannel(hslMatch.Groups[1].Value),
+                ParseChannel(hslMatch.Groups[2].Value),
+                ParseChannel(hslMatch.Groups[3].Value),
+                out red,
+                out green,
+                out blue))
+        {
+            return true;
+        }
+
         return false;
     }
 
@@ -76,6 +89,55 @@ public static partial class NerdColorParser
         return true;
     }
 
+    private static double ParseChannel(string value)
+    {
+        if (value.EndsWith('%'))
+        {
+            return double.Parse(value[..^1], CultureInfo.InvariantCulture) / 100d;
+        }
+
+        if (value.EndsWith("deg", StringComparison.OrdinalIgnoreCase))
+        {
+            return double.Parse(value[..^3], CultureInfo.InvariantCulture);
+        }
+
+        return double.Parse(value, CultureInfo.InvariantCulture);
+    }
+
+    private static bool TryHslToRgb(double hue, double saturation, double lightness, out int red, out int green, out int blue)
+    {
+        red = green = blue = 0;
+        var h = (hue % 360 + 360) % 360 / 360d;
+
+        if (saturation <= 0)
+        {
+            var gray = Clamp((int)Math.Round(lightness * 255));
+            red = green = blue = gray;
+            return true;
+        }
+
+        static double HueToRgb(double p, double q, double t)
+        {
+            if (t < 0) t += 1;
+            if (t > 1) t -= 1;
+            if (t < 1d / 6) return p + (q - p) * 6 * t;
+            if (t < 1d / 2) return q;
+            if (t < 2d / 3) return p + (q - p) * (2d / 3 - t) * 6;
+            return p;
+        }
+
+        var q = lightness < 0.5
+            ? lightness * (1 + saturation)
+            : lightness + saturation - lightness * saturation;
+        var p = 2 * lightness - q;
+        red = Clamp((int)Math.Round(HueToRgb(p, q, h + 1d / 3) * 255));
+        green = Clamp((int)Math.Round(HueToRgb(p, q, h) * 255));
+        blue = Clamp((int)Math.Round(HueToRgb(p, q, h - 1d / 3) * 255));
+        return true;
+    }
+
+    private static int Clamp(int value) => Math.Clamp(value, 0, 255);
+
     private static double RelativeLuminance(int red, int green, int blue)
     {
         static double Channel(int value)
@@ -91,4 +153,7 @@ public static partial class NerdColorParser
 
     [GeneratedRegex(@"rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)", RegexOptions.CultureInvariant | RegexOptions.IgnoreCase)]
     private static partial Regex RgbRegex();
+
+    [GeneratedRegex(@"hsla?\(\s*([^\s,]+)\s*,\s*([^\s,]+)\s*,\s*([^\s,)]+)", RegexOptions.CultureInvariant | RegexOptions.IgnoreCase)]
+    private static partial Regex HslRegex();
 }

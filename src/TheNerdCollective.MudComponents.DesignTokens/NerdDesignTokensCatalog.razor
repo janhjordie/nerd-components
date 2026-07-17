@@ -1,5 +1,3 @@
-@page "/nerd-design-tokens"
-@rendermode InteractiveServer
 @if (!IsAvailable)
 {
     <MudContainer MaxWidth="MaxWidth.Medium" Class="my-8">
@@ -10,8 +8,10 @@
 }
 else
 {
-    <NerdDesignTokenStyles />
-    <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-6">
+    <NerdDesignSystemScripts />
+    <NerdCatalogThemeProvider IsDarkMode="_previewDark">
+        <NerdDesignTokenStyles />
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-6">
         <MudStack Spacing="3">
             <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-3">
                 <div>
@@ -221,4 +221,5 @@ else
             }
         </MudStack>
     </MudContainer>
+    </NerdCatalogThemeProvider>
 }

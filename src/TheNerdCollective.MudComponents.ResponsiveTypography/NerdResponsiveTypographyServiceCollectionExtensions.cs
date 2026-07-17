@@ -13,13 +13,10 @@ public static class NerdResponsiveTypographyServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configure);
 
-        services.AddNerdDesignSystem(options =>
-        {
-            options.TypographyRoute = "/nerd-typography";
-        });
-
         var options = new NerdResponsiveTypographyOptions();
         configure(options);
+
+        services.AddNerdDesignSystem(hub => hub.TypographyRoute = options.CatalogRoute);
         services.AddSingleton(options);
         services.AddSingleton<MudTheme>(options.CreatePreviewTheme());
 

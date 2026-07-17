@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.0
+
+- Typography catalog uses shared `NerdCatalogThemeProvider` and `NerdDesignSystemScripts`.
+- Default catalog route moved to `Pages/NerdTypographyPage.razor` for custom-route support.
+- Hub links sync `CatalogRoute` at DI registration time.
+
 ## 1.2.0
 
 - Added `TheNerdCollective.MudComponents.Shared` dependency for clipboard copy and design-system hub links.

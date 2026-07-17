@@ -12,13 +12,10 @@ public static class NerdDesignTokenServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configure);
 
-        services.AddNerdDesignSystem(options =>
-        {
-            options.DesignTokensRoute = "/nerd-design-tokens";
-        });
-
         var options = new NerdDesignTokenOptions();
         configure(options);
+
+        services.AddNerdDesignSystem(hub => hub.DesignTokensRoute = options.CatalogRoute);
         services.AddSingleton(options);
         services.AddSingleton(sp => new NerdDesignTokenCss(
             MudBlazorDesignTokenCssGenerator.Generate(sp.GetRequiredService<NerdDesignTokenOptions>())));

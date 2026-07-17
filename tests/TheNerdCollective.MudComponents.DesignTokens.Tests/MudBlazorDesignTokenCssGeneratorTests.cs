@@ -174,7 +174,8 @@ public class MudBlazorDesignTokenCssGeneratorTests
     [Theory]
     [InlineData("#FFFFFF", true)]
     [InlineData("rgb(255, 255, 255)", true)]
-    public void Color_parser_supports_hex_and_rgb(string color, bool expected)
+    [InlineData("hsl(120, 50%, 50%)", true)]
+    public void Color_parser_supports_hex_rgb_and_hsl(string color, bool expected)
     {
         Assert.Equal(expected, TheNerdCollective.MudComponents.Shared.NerdColorParser.TryGetRgb(color, out _, out _, out _));
     }

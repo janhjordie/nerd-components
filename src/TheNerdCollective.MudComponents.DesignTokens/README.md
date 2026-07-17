@@ -163,10 +163,12 @@ options.WcagVersion = "2.1";
 ```
 
 To use a custom route, create a host page and render the shared catalog
-component:
+component (the built-in default page is at `/nerd-design-tokens`):
 
 ```razor
 @page "/kunde/design-tokens"
 @rendermode InteractiveServer
 <NerdDesignTokensCatalog />
 ```
+
+Set `options.CatalogRoute` to match your route so hub links stay correct.

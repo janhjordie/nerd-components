@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace TheNerdCollective.MudComponents.Shared;
 
@@ -10,11 +11,25 @@ public static class NerdDesignSystemServiceCollectionExtensions
         this IServiceCollection services,
         Action<NerdDesignSystemOptions>? configure = null)
     {
-        var options = new NerdDesignSystemOptions();
-        configure?.Invoke(options);
-        services.AddSingleton(options);
-        services.AddScoped<NerdClipboardService>();
-        services.AddScoped<NerdDownloadService>();
+        services.TryAddScoped<NerdClipboardService>();
+        services.TryAddScoped<NerdDownloadService>();
+
+        services.TryAddSingleton<NerdDesignSystemOptions>(sp =>
+        {
+            var options = new NerdDesignSystemOptions();
+            foreach (var action in sp.GetServices<NerdDesignSystemConfigureAction>())
+            {
+                action.Configure(options);
+            }
+
+            return options;
+        });
+
+        if (configure is not null)
+        {
+            services.AddSingleton(new NerdDesignSystemConfigureAction(configure));
+        }
+
         return services;
     }
 }
@@ -34,7 +49,7 @@ public static class NerdDesignSystemWebApplicationExtensions
             return builder;
         }
 
-        return builder.AddAdditionalAssemblies(typeof(NerdDesignSystemWebApplicationExtensions).Assembly);
+        return builder.AddNerdDesignSystemAssets();
     }
 
     public static RazorComponentsEndpointConventionBuilder AddNerdDesignSystemAssets(

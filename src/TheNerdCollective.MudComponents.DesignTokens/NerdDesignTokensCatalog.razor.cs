@@ -35,7 +35,6 @@ public partial class NerdDesignTokensCatalog
             return;
         }
 
-        HubOptions.DesignTokensRoute = Options.CatalogRoute;
         _accessibility = NerdDesignTokenTools.CheckAccessibility(Options);
         _warnings = NerdDesignTokenTools.GetAccessibilityWarnings(Options);
     }

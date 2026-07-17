@@ -27,5 +27,6 @@ automatically and update hub links when catalogs are registered.
 
 ## Assets
 
-Catalog pages call `AddNerdDesignSystemAssets()` to register this assembly and
-load `wwwroot/nerd-shared.js` for clipboard copy and file download helpers.
+Catalog pages call `AddNerdDesignSystemAssets()` to register this assembly.
+Include `<NerdDesignSystemScripts />` in your host `App.razor` when using clipboard
+helpers outside the built-in catalogs (catalogs include the script automatically).

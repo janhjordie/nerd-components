@@ -96,3 +96,5 @@ Custom route:
 @rendermode InteractiveServer
 <NerdResponsiveTypographyCatalog />
 ```
+
+Set `options.CatalogRoute` to match your route so hub links stay correct.

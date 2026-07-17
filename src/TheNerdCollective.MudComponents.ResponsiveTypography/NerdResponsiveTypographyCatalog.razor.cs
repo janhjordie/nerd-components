@@ -31,7 +31,6 @@ public partial class NerdResponsiveTypographyCatalog
             return;
         }
 
-        HubOptions.TypographyRoute = Options.CatalogRoute;
         _previewTheme = Options.CreatePreviewTheme();
         _roles = FilterRoles(NerdTypographyAccessibilityTools.GetConfiguredRoles(_previewTheme)).ToArray();
         _accessibility = NerdTypographyAccessibilityTools.CheckAccessibility(Options);
