@@ -1,0 +1,6 @@
+@using Microsoft.Extensions.DependencyInjection
+@inject IServiceProvider Services
+
+<style data-nerd-design-tokens="true">
+@((MarkupString)Services.GetRequiredService<string>())
+</style>
