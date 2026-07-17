@@ -1,0 +1,90 @@
+@using Microsoft.AspNetCore.Components
+
+<MudPaper Outlined="true" Class="pa-3 mb-3">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-2 mb-2">
+        <div>
+            <MudText Typo="Typo.h6">@Entry.DisplayName</MudText>
+            @if (!string.IsNullOrWhiteSpace(Entry.Description))
+            {
+                <MudText Typo="Typo.caption" Color="Color.Secondary">@Entry.Description</MudText>
+            }
+        </div>
+        <MudStack Row="true" Spacing="1" Class="flex-wrap">
+            @if (EnablePlayground && NerdPlayBookPlaygroundRegistry.SupportsPlayground(Entry.Id))
+            {
+                <MudButton Variant="Variant.Outlined"
+                           Size="Size.Small"
+                           StartIcon="@Icons.Material.Filled.Tune"
+                           OnClick="OpenPlayground">
+                    Playground
+                </MudButton>
+            }
+            <MudButton Href="@Entry.ApiUrl(DocsBaseUrl)" Target="_blank" Variant="Variant.Text" Size="Size.Small"
+                       StartIcon="@Icons.Material.Filled.OpenInNew">
+                MudBlazor API
+            </MudButton>
+        </MudStack>
+    </MudStack>
+
+    <MudGrid Spacing="2">
+        @foreach (var token in Tokens)
+        {
+            <MudItem xs="12" sm="6" md="4" lg="3">
+                <MudPaper Outlined="true" Class="pa-2" data-theme="@ThemeMode">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-2">
+                        <code>.@token</code>
+                    </MudText>
+                    <div class="@token">
+                        <NerdPlayBookPreview ComponentId="@Entry.Id" />
+                    </div>
+                </MudPaper>
+            </MudItem>
+        }
+    </MudGrid>
+</MudPaper>
+
+@if (EnablePlayground && NerdPlayBookPlaygroundRegistry.SupportsPlayground(Entry.Id))
+{
+    <NerdPlayBookComponentPlayground @bind-Open="_playgroundOpen"
+                                     Entry="Entry"
+                                     State="_playgroundState"
+                                     Definitions="_playgroundDefinitions"
+                                     TokenClass="@PlaygroundTokenClass"
+                                     ThemeMode="@ThemeMode"
+                                     DocsBaseUrl="@DocsBaseUrl" />
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public MudBlazorPlayBookEntry Entry { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<string> Tokens { get; set; } = [];
+
+    [Parameter]
+    public string DocsBaseUrl { get; set; } = "https://mudblazor.com/components";
+
+    [Parameter]
+    public string ThemeMode { get; set; } = "light";
+
+    [Parameter]
+    public bool EnablePlayground { get; set; } = true;
+
+    [Parameter]
+    public string PlaygroundTokenClass { get; set; } = string.Empty;
+
+    private bool _playgroundOpen;
+    private NerdPlayBookPlaygroundState _playgroundState = NerdPlayBookPlaygroundRegistry.CreateState("button");
+    private IReadOnlyList<NerdPlayBookPropDefinition> _playgroundDefinitions = [];
+
+    protected override void OnParametersSet()
+    {
+        _playgroundDefinitions = NerdPlayBookPlaygroundRegistry.GetProps(Entry.Id);
+        if (_playgroundDefinitions.Count > 0)
+        {
+            _playgroundState = NerdPlayBookPlaygroundRegistry.CreateState(Entry.Id);
+        }
+    }
+
+    private void OpenPlayground() => _playgroundOpen = true;
+}

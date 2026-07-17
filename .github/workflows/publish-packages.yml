@@ -54,6 +54,7 @@ jobs:
             ["TheNerdCollective.MudComponents.DesignTokens"]="src/TheNerdCollective.MudComponents.DesignTokens"
             ["TheNerdCollective.MudComponents.ResponsiveTypography"]="src/TheNerdCollective.MudComponents.ResponsiveTypography"
             ["TheNerdCollective.MudComponents.Shared"]="src/TheNerdCollective.MudComponents.Shared"
+            ["TheNerdCollective.MudComponents.PlayBook"]="src/TheNerdCollective.MudComponents.PlayBook"
           )
           
           # Detect which packages changed

@@ -1,0 +1,57 @@
+<MudGrid Spacing="2">
+    @foreach (var definition in Definitions)
+    {
+        <MudItem xs="12" sm="6" md="4">
+            @switch (definition.Type)
+            {
+                case NerdPlayBookPropType.Boolean:
+                    <MudCheckBox T="bool"
+                                 Value="State.GetBool(definition.Key)"
+                                 ValueChanged="@(value => OnBoolChanged(definition.Key, value))"
+                                 Label="@definition.Label"
+                                 Color="Color.Primary" />
+                    break;
+                case NerdPlayBookPropType.Select:
+                    <MudSelect T="string"
+                               Label="@definition.Label"
+                               Value="State.GetString(definition.Key, definition.DefaultValue)"
+                               ValueChanged="value => OnValueChanged(definition.Key, value)"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense">
+                        @foreach (var option in definition.Options ?? [])
+                        {
+                            <MudSelectItem Value="@option">@option</MudSelectItem>
+                        }
+                    </MudSelect>
+                    break;
+                default:
+                    <MudTextField T="string"
+                                  Label="@definition.Label"
+                                  Value="State.GetString(definition.Key, definition.DefaultValue)"
+                                  ValueChanged="value => OnValueChanged(definition.Key, value)"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense" />
+                    break;
+            }
+        </MudItem>
+    }
+</MudGrid>
+
+@code {
+    [Parameter, EditorRequired]
+    public IReadOnlyList<NerdPlayBookPropDefinition> Definitions { get; set; } = [];
+
+    [Parameter, EditorRequired]
+    public NerdPlayBookPlaygroundState State { get; set; } = default!;
+
+    [Parameter]
+    public EventCallback StateChanged { get; set; }
+
+    private Task OnValueChanged(string key, string value)
+    {
+        State.Set(key, value);
+        return StateChanged.InvokeAsync();
+    }
+
+    private Task OnBoolChanged(string key, bool value) => OnValueChanged(key, value.ToString());
+}

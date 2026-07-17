@@ -1,0 +1,341 @@
+@* Renders a single MudBlazor component preview for the PlayBook. *@
+@switch (ComponentId)
+{
+    case "button":
+        @if (IsPlayground)
+        {
+            <MudButton Variant="@PVariant()" Color="Color.Inherit" Size="@PSize()" Disabled="@PBool("disabled")">@PText("text", "Button")</MudButton>
+        }
+        else
+        {
+            <MudStack Row="true" Spacing="1" Class="flex-wrap gap-1">
+                <MudButton Variant="Variant.Filled" Color="Color.Inherit" Size="Size.Small">Filled</MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Inherit" Size="Size.Small">Outlined</MudButton>
+                <MudButton Variant="Variant.Text" Color="Color.Inherit" Size="Size.Small">Text</MudButton>
+            </MudStack>
+        }
+        break;
+    case "icon-button":
+        <MudIconButton Icon="@Icons.Material.Filled.Favorite" Color="Color.Inherit" Variant="@PVariant(Variant.Filled)" Size="@PSize()" Disabled="@PBool("disabled")" />
+        break;
+    case "fab":
+        <MudFab Color="Color.Inherit" Icon="@Icons.Material.Filled.Add" Size="@PSize()" Disabled="@PBool("disabled")" />
+        break;
+    case "toggle-group":
+        <MudToggleGroup T="string" @bind-Value="_toggleValue" Color="Color.Inherit" Size="Size.Small">
+            <MudToggleItem Value="@("a")">A</MudToggleItem>
+            <MudToggleItem Value="@("b")">B</MudToggleItem>
+        </MudToggleGroup>
+        break;
+    case "button-group":
+        <MudButtonGroup Color="Color.Inherit" Variant="Variant.Outlined" Size="Size.Small">
+            <MudButton>One</MudButton>
+            <MudButton>Two</MudButton>
+        </MudButtonGroup>
+        break;
+    case "text-field":
+        <MudTextField T="string" @bind-Value="_textValue" Label="@PText("label", "Name")" Placeholder="@PText("placeholder", "Enter value")"
+                      Variant="@PVariant(Variant.Outlined)" ReadOnly="@PBool("readOnly")" Disabled="@PBool("disabled")" Margin="Margin.Dense" />
+        break;
+    case "numeric-field":
+        <MudNumericField T="int" @bind-Value="_numericValue" Label="@PText("label", "Amount")" Placeholder="@PText("placeholder", "0")"
+                         Variant="@PVariant(Variant.Outlined)" ReadOnly="@PBool("readOnly")" Disabled="@PBool("disabled")" Margin="Margin.Dense" />
+        break;
+    case "select":
+        <MudSelect T="string" @bind-Value="_selectValue" Label="@PText("label", "Option")" Variant="@PVariant(Variant.Outlined)"
+                   Disabled="@PBool("disabled")" Margin="Margin.Dense">
+            <MudSelectItem Value="@("alpha")">Alpha</MudSelectItem>
+            <MudSelectItem Value="@("beta")">Beta</MudSelectItem>
+        </MudSelect>
+        break;
+    case "autocomplete":
+        <MudAutocomplete T="string" @bind-Value="_autocompleteValue" Label="@PText("label", "City")" Variant="@PVariant(Variant.Outlined)"
+                         Disabled="@PBool("disabled")" ReadOnly="@PBool("readOnly")" SearchFunc="@SearchCities" Margin="Margin.Dense" />
+        break;
+    case "checkbox":
+        <MudCheckBox @bind-Value="_checkValue" Label="@PText("label", "Accept")" Color="Color.Inherit" Disabled="@PBool("disabled")" />
+        break;
+    case "radio":
+        <MudRadioGroup T="string" @bind-Value="_radioValue">
+            <MudRadio Value="@("a")" Color="Color.Inherit" Disabled="@PBool("disabled")">A</MudRadio>
+            <MudRadio Value="@("b")" Color="Color.Inherit" Disabled="@PBool("disabled")">B</MudRadio>
+        </MudRadioGroup>
+        break;
+    case "switch":
+        <MudSwitch @bind-Value="_switchValue" Label="@PText("label", "Enabled")" Color="Color.Inherit" Disabled="@PBool("disabled")" />
+        break;
+    case "slider":
+        <MudSlider @bind-Value="_sliderValue" Min="@PInt("min", 0)" Max="@PInt("max", 100)" Color="Color.Inherit" Disabled="@PBool("disabled")" />
+        break;
+    case "rating":
+        <MudRating @bind-SelectedValue="_ratingValue" MaxValue="@PInt("max", 5)" ReadOnly="@PBool("readOnly")" Color="Color.Inherit" />
+        break;
+    case "date-picker":
+        <MudDatePicker @bind-Date="_dateValue" Label="@PText("label", "Date")" Variant="@PVariant(Variant.Outlined)" Disabled="@PBool("disabled")" Margin="Margin.Dense" />
+        break;
+    case "time-picker":
+        <MudTimePicker @bind-Time="_timeValue" Label="@PText("label", "Time")" Variant="@PVariant(Variant.Outlined)" Disabled="@PBool("disabled")" Margin="Margin.Dense" />
+        break;
+    case "date-range-picker":
+        <MudDateRangePicker @bind-DateRange="_dateRangeValue" Label="@PText("label", "Range")" Variant="@PVariant(Variant.Outlined)" Disabled="@PBool("disabled")" Margin="Margin.Dense" />
+        break;
+    case "file-upload":
+        <MudButton Variant="Variant.Outlined" Color="Color.Inherit" Size="Size.Small" StartIcon="@Icons.Material.Filled.Upload">
+            Upload
+        </MudButton>
+        break;
+    case "table":
+        <MudTable Items="_tableItems" Dense="@PDense()" Hover="true" Bordered="true">
+            <HeaderContent>
+                <MudTh>Name</MudTh>
+                <MudTh>Qty</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.Name</MudTd>
+                <MudTd>@context.Quantity</MudTd>
+            </RowTemplate>
+        </MudTable>
+        break;
+    case "simple-table":
+        <MudSimpleTable Dense="@PDense()" Bordered="true">
+            <tbody>
+                <tr><td>Row</td><td>1</td></tr>
+                <tr><td>Row</td><td>2</td></tr>
+            </tbody>
+        </MudSimpleTable>
+        break;
+    case "data-grid":
+        <MudDataGrid T="PlayBookRow" Items="_tableItems" Dense="@PDense()" Bordered="true" Style="max-height:120px">
+            <Columns>
+                <PropertyColumn Property="x => x.Name" Title="Name" />
+                <PropertyColumn Property="x => x.Quantity" Title="Qty" />
+            </Columns>
+        </MudDataGrid>
+        break;
+    case "chip":
+        @if (IsPlayground)
+        {
+            <MudChip T="string" Variant="@PVariant()" Color="Color.Inherit" Disabled="@PBool("disabled")">@PText("text", "Chip")</MudChip>
+        }
+        else
+        {
+            <MudStack Row="true" Spacing="1" Class="flex-wrap gap-1">
+                <MudChip T="string" Variant="Variant.Filled" Color="Color.Inherit">Filled</MudChip>
+                <MudChip T="string" Variant="Variant.Outlined" Color="Color.Inherit">Outlined</MudChip>
+            </MudStack>
+        }
+        break;
+    case "badge":
+        <MudBadge Content="3" Color="Color.Inherit" Overlap="true">
+            <MudIcon Icon="@Icons.Material.Filled.Notifications" />
+        </MudBadge>
+        break;
+    case "avatar":
+        <MudStack Row="true" Spacing="1">
+            <MudAvatar Color="Color.Inherit">AB</MudAvatar>
+            <MudAvatar Color="Color.Inherit" Variant="Variant.Outlined">CD</MudAvatar>
+        </MudStack>
+        break;
+    case "tooltip":
+        <MudTooltip Text="Tooltip preview">
+            <MudButton Variant="Variant.Outlined" Color="Color.Inherit" Size="Size.Small">Hover me</MudButton>
+        </MudTooltip>
+        break;
+    case "list":
+        <MudList T="string" Dense="true">
+            <MudListItem Icon="@Icons.Material.Filled.Home">Home</MudListItem>
+            <MudListItem Icon="@Icons.Material.Filled.Settings">Settings</MudListItem>
+        </MudList>
+        break;
+    case "tree-view":
+        <MudTreeView T="string" Items="_treeItems" Dense="true" />
+        break;
+    case "timeline":
+        <MudTimeline TimelinePosition="TimelinePosition.Start">
+            <MudTimelineItem Color="Color.Inherit">
+                <MudText Typo="Typo.body2">Step one</MudText>
+            </MudTimelineItem>
+            <MudTimelineItem Color="Color.Inherit">
+                <MudText Typo="Typo.body2">Step two</MudText>
+            </MudTimelineItem>
+        </MudTimeline>
+        break;
+    case "typography":
+        <MudText Typo="@PTypo()">@PText("text", "Typography preview")</MudText>
+        break;
+    case "icon":
+        <MudStack Row="true" Spacing="1">
+            <MudIcon Icon="@Icons.Material.Filled.Star" />
+            <MudIcon Icon="@Icons.Material.Filled.Favorite" />
+        </MudStack>
+        break;
+    case "image":
+        <MudImage Src="https://via.placeholder.com/120x48" Alt="Preview" Width="120" Height="48" ObjectFit="ObjectFit.Cover" />
+        break;
+    case "markdown":
+        <MudText Typo="Typo.body2"><b>Bold</b> and <i>italic</i> text preview.</MudText>
+        break;
+    case "alert":
+        <MudAlert Severity="@PSeverity()" Variant="@PVariant(Variant.Filled)" Dense="@PDense()">@PText("text", "Alert preview")</MudAlert>
+        break;
+    case "progress-circular":
+        <MudProgressCircular Color="Color.Inherit" Indeterminate="@PBool("indeterminate", true)" Value="@PInt("value", 60)" Size="Size.Small" />
+        break;
+    case "progress-linear":
+        <MudProgressLinear Color="Color.Inherit" Indeterminate="@PBool("indeterminate")" Value="@PInt("value", 60)" />
+        break;
+    case "skeleton":
+        <MudSkeleton Width="100%" Height="40px" Animation="Animation.Wave" />
+        break;
+    case "paper":
+        <MudPaper Class="pa-3" Elevation="1">Paper surface</MudPaper>
+        break;
+    case "card":
+        <MudCard Elevation="1">
+            <MudCardContent>
+                <MudText Typo="Typo.body2">Card content</MudText>
+            </MudCardContent>
+        </MudCard>
+        break;
+    case "expansion-panel":
+        <MudExpansionPanels Elevation="0">
+            <MudExpansionPanel Text="Panel" Dense="true">
+                <MudText Typo="Typo.body2">Expanded content</MudText>
+            </MudExpansionPanel>
+        </MudExpansionPanels>
+        break;
+    case "drawer":
+        <MudPaper Class="pa-3" Outlined="true" Style="width:140px">Drawer preview</MudPaper>
+        break;
+    case "popover":
+        <MudButton Variant="Variant.Outlined" Color="Color.Inherit" Size="Size.Small" OnClick="@(() => _popoverOpen = !_popoverOpen)">
+            Popover
+        </MudButton>
+        <MudPopover Open="_popoverOpen" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
+            <MudPaper Class="pa-3">Popover content</MudPaper>
+        </MudPopover>
+        break;
+    case "app-bar":
+        <MudPaper Class="pa-2 d-flex align-center" Elevation="1">
+            <MudIcon Icon="@Icons.Material.Filled.Menu" Class="mr-2" />
+            <MudText Typo="Typo.subtitle2">App bar</MudText>
+        </MudPaper>
+        break;
+    case "nav-menu":
+        <MudNavMenu Dense="true">
+            <MudNavLink Icon="@Icons.Material.Filled.Home" Href="#">Home</MudNavLink>
+            <MudNavLink Icon="@Icons.Material.Filled.Settings" Href="#">Settings</MudNavLink>
+        </MudNavMenu>
+        break;
+    case "tabs":
+        <MudTabs Elevation="0" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-2">
+            <MudTabPanel Text="Tab 1"><MudText Typo="Typo.body2">One</MudText></MudTabPanel>
+            <MudTabPanel Text="Tab 2"><MudText Typo="Typo.body2">Two</MudText></MudTabPanel>
+        </MudTabs>
+        break;
+    case "breadcrumbs":
+        <MudBreadcrumbs Items="_breadcrumbs" />
+        break;
+    case "menu":
+        <MudMenu Label="Menu" Color="Color.Inherit" Dense="true">
+            <MudMenuItem>Item 1</MudMenuItem>
+            <MudMenuItem>Item 2</MudMenuItem>
+        </MudMenu>
+        break;
+    case "pagination":
+        <MudPagination Count="5" Selected="_page" SelectedChanged="p => _page = p" Color="Color.Inherit" />
+        break;
+    case "stepper":
+        <MudStepper @bind-ActiveIndex="_stepIndex" Color="Color.Inherit" Style="max-width:280px">
+            <MudStep Title="Start" />
+            <MudStep Title="Done" />
+        </MudStepper>
+        break;
+    case "grid":
+        <MudGrid Spacing="1">
+            <MudItem xs="6"><MudPaper Class="pa-2" Outlined="true">A</MudPaper></MudItem>
+            <MudItem xs="6"><MudPaper Class="pa-2" Outlined="true">B</MudPaper></MudItem>
+        </MudGrid>
+        break;
+    case "container":
+        <MudContainer MaxWidth="MaxWidth.Small" Class="pa-0">
+            <MudPaper Class="pa-2" Outlined="true">Container</MudPaper>
+        </MudContainer>
+        break;
+    case "divider":
+        <MudStack Spacing="1">
+            <MudText Typo="Typo.caption">Above</MudText>
+            <MudDivider />
+            <MudText Typo="Typo.caption">Below</MudText>
+        </MudStack>
+        break;
+    case "stack":
+        <MudStack Spacing="1">
+            <MudPaper Class="pa-1" Outlined="true">Stack 1</MudPaper>
+            <MudPaper Class="pa-1" Outlined="true">Stack 2</MudPaper>
+        </MudStack>
+        break;
+    case "spacer":
+        <MudStack Row="true" AlignItems="AlignItems.Center" Style="width:100%">
+            <MudText Typo="Typo.caption">Left</MudText>
+            <MudSpacer />
+            <MudText Typo="Typo.caption">Right</MudText>
+        </MudStack>
+        break;
+    default:
+        <MudText Typo="Typo.caption" Color="Color.Secondary">Preview not available.</MudText>
+        break;
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public string ComponentId { get; set; } = string.Empty;
+
+    private string _toggleValue = "a";
+    private string _textValue = "Sample";
+    private int _numericValue = 42;
+    private string _selectValue = "alpha";
+    private string? _autocompleteValue = "Copenhagen";
+    private bool _checkValue = true;
+    private string _radioValue = "a";
+    private bool _switchValue = true;
+    private int _sliderValue = 40;
+    private int _ratingValue = 3;
+    private DateTime? _dateValue = DateTime.Today;
+    private TimeSpan? _timeValue = new(9, 30, 0);
+    private DateRange _dateRangeValue = new(DateTime.Today, DateTime.Today.AddDays(7));
+    private bool _popoverOpen;
+    private int _page = 1;
+    private int _stepIndex;
+
+    private readonly List<PlayBookRow> _tableItems =
+    [
+        new("Alpha", 1),
+        new("Beta", 2)
+    ];
+
+    private readonly List<TreeItemData<string>> _treeItems =
+    [
+        new TreeItemData<string>
+        {
+            Text = "Parent",
+            Children = new List<TreeItemData<string>> { new() { Text = "Child" } }
+        }
+    ];
+
+    private readonly List<BreadcrumbItem> _breadcrumbs =
+    [
+        new BreadcrumbItem("Home", href: "#"),
+        new BreadcrumbItem("PlayBook", href: null, disabled: true)
+    ];
+
+    private Task<IEnumerable<string>> SearchCities(string value, CancellationToken token)
+    {
+        string[] cities = ["Copenhagen", "Aarhus", "Odense"];
+        IEnumerable<string> results = cities.Where(city =>
+            string.IsNullOrWhiteSpace(value) || city.Contains(value, StringComparison.OrdinalIgnoreCase));
+        return Task.FromResult(results);
+    }
+
+    private sealed record PlayBookRow(string Name, int Quantity);
+}

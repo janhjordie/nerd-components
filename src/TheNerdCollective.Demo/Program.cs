@@ -2,6 +2,7 @@ using MudBlazor.Services;
 using TheNerdCollective.Demo.Components;
 using TheNerdCollective.MudComponents.DesignTokens;
 using TheNerdCollective.MudComponents.ResponsiveTypography;
+using TheNerdCollective.MudComponents.PlayBook;
 using TheNerdCollective.MudComponents.Shared;
 using TheNerdCollective.Services.BlazorServer;
 using TheNerdCollective.Blazor.SessionMonitor;
@@ -35,6 +36,11 @@ builder.Services.AddNerdResponsiveTypography(options =>
     options.RestrictCatalogToDevelopment = false;
     NerdTypographyPresets.ApplyMarketing(options.Typography);
     options.Typography.H3 = ResponsiveFontSize.Clamp("1.75rem", "3vw", "2.5rem");
+});
+
+builder.Services.AddNerdPlayBook(options =>
+{
+    options.RestrictPlayBookToDevelopment = false;
 });
 
 // Add session monitoring
@@ -77,6 +83,7 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode()
     .AddNerdDesignTokenCatalog(app.Services)
     .AddNerdResponsiveTypographyCatalog(app.Services)
+    .AddNerdPlayBook(app.Services)
     .AddNerdDesignSystemHub(app.Services);
 
 app.Run();

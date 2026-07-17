@@ -1,0 +1,19 @@
+{
+  "schemaVersion": "1.0",
+  "id": "nerd-brand",
+  "displayName": "Nerd brand",
+  "version": "1.0.0",
+  "updatedAt": "2026-07-17",
+  "previewPrimaryHex": "#365C3A",
+  "tokens": {
+    "light.primary": "#365C3A",
+    "light.secondary": "#E8D8AD",
+    "light.tertiary": "#287A9E",
+    "light.appbar.background": "#365C3A",
+    "light.background": "#F0F7F0",
+    "light.surface": "#FFFFFF",
+    "dark.primary": "#4D7A50",
+    "dark.background": "#121212",
+    "dark.surface": "#1E1E1E"
+  }
+}

@@ -1,0 +1,94 @@
+<MudPaper Outlined="true" Class="pa-3">
+    <MudGrid Spacing="2">
+        <MudItem xs="12" md="3">
+            <MudSelect T="string" Label="Design token" @bind-Value="SelectedTokenFilter" Variant="Variant.Outlined" Margin="Margin.Dense">
+                <MudSelectItem Value="@("all")">All tokens</MudSelectItem>
+                @foreach (var name in TokenNames)
+                {
+                    <MudSelectItem Value="@name">@name</MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="12" md="3">
+            @if (ShowTypographyPreset)
+            {
+                <MudSelect T="string" Label="Typography preset" Value="TypographyPreset" ValueChanged="OnTypographyPresetChanged" Variant="Variant.Outlined" Margin="Margin.Dense">
+                    @foreach (var preset in NerdPlayBookTypography.Presets)
+                    {
+                        <MudSelectItem Value="@preset.Id">@preset.Label</MudSelectItem>
+                    }
+                </MudSelect>
+            }
+        </MudItem>
+        <MudItem xs="12" md="3">
+            <MudSelect T="string" Label="Category" @bind-Value="SelectedCategory" Variant="Variant.Outlined" Margin="Margin.Dense">
+                <MudSelectItem Value="@("all")">All categories</MudSelectItem>
+                @foreach (var category in MudBlazorPlayBookCatalog.Categories)
+                {
+                    <MudSelectItem Value="@category">@category</MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="12" md="3">
+            <MudTextField T="string" Label="Search components" @bind-Value="SearchQuery" Variant="Variant.Outlined" Margin="Margin.Dense"
+                          Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Immediate="true" />
+        </MudItem>
+        <MudItem xs="12">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="flex-wrap">
+                @if (ShowDarkModeToggle)
+                {
+                    <MudSwitch @bind-Value="PreviewDark" Color="Color.Primary" Label="Dark mode preview" />
+                }
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">
+                    @MudBlazorPlayBookCatalog.All.Count components
+                </MudChip>
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">
+                    @MudBlazorPlayBookCatalog.Categories.Count categories
+                </MudChip>
+            </MudStack>
+        </MudItem>
+    </MudGrid>
+</MudPaper>
+
+@code {
+    [Parameter]
+    public IReadOnlyList<string> TokenNames { get; set; } = [];
+
+    [Parameter]
+    public string SelectedTokenFilter { get; set; } = "all";
+
+    [Parameter]
+    public EventCallback<string> SelectedTokenFilterChanged { get; set; }
+
+    [Parameter]
+    public string TypographyPreset { get; set; } = NerdPlayBookTypography.DefaultPreset;
+
+    [Parameter]
+    public EventCallback<string> TypographyPresetChanged { get; set; }
+
+    [Parameter]
+    public bool PreviewDark { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> PreviewDarkChanged { get; set; }
+
+    [Parameter]
+    public string SelectedCategory { get; set; } = "all";
+
+    [Parameter]
+    public EventCallback<string> SelectedCategoryChanged { get; set; }
+
+    [Parameter]
+    public string SearchQuery { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> SearchQueryChanged { get; set; }
+
+    [Parameter]
+    public bool ShowTypographyPreset { get; set; } = true;
+
+    [Parameter]
+    public bool ShowDarkModeToggle { get; set; } = true;
+
+    private Task OnTypographyPresetChanged(string value) => TypographyPresetChanged.InvokeAsync(value);
+}
