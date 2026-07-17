@@ -21,5 +21,8 @@ public static class ResponsiveTypographyOptionsExtensions
         target.Button = source.Button;
         target.Caption = source.Caption;
         target.Overline = source.Overline;
+        target.LineHeight = source.LineHeight;
+        target.LetterSpacing = source.LetterSpacing;
+        target.FontWeight = source.FontWeight;
     }
 }

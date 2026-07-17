@@ -3,16 +3,15 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <PackageId>TheNerdCollective.MudComponents.ResponsiveTypography</PackageId>
-    <Version>1.2.0</Version>
+    <PackageId>TheNerdCollective.MudComponents.Shared</PackageId>
+    <Version>1.0.0</Version>
     <Authors>The Nerd Collective</Authors>
-    <Description>CSS-native responsive typography helpers for MudBlazor themes.</Description>
-    <PackageTags>mudblazor;blazor;typography;responsive;css</PackageTags>
+    <Description>Shared WCAG helpers and design-system catalog utilities for MudBlazor component packages.</Description>
+    <PackageTags>mudblazor;blazor;wcag;design-system</PackageTags>
     <LicenseExpression>Apache-2.0</LicenseExpression>
     <RepositoryUrl>https://github.com/janhjordie/nerd-components</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,10 +20,6 @@
 
   <ItemGroup>
     <PackageReference Include="MudBlazor" Version="9.6.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\TheNerdCollective.MudComponents.Shared\TheNerdCollective.MudComponents.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,3 +1,5 @@
+@page "/nerd-design-tokens"
+@rendermode InteractiveServer
 @if (!IsAvailable)
 {
     <MudContainer MaxWidth="MaxWidth.Medium" Class="my-8">
@@ -8,6 +10,7 @@
 }
 else
 {
+    <NerdDesignTokenStyles />
     <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-6">
         <MudStack Spacing="3">
             <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-3">
@@ -19,10 +22,17 @@ else
                 </div>
                 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="flex-wrap">
                     <MudSwitch @bind-Value="_previewDark" Color="Color.Primary" Label="Preview dark mode" />
+                    <MudButton Href="@HubOptions.HubRoute" Variant="Variant.Text">Design system</MudButton>
                     <MudChip T="string" Color="Color.Info" Variant="Variant.Outlined">
                         @Options.CatalogRoute
                     </MudChip>
                 </MudStack>
+            </MudStack>
+
+            <MudStack Row="true" Spacing="1" Class="flex-wrap">
+                <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="DownloadCssAsync">Export CSS</MudButton>
+                <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="DownloadJsonAsync">Export JSON</MudButton>
+                <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="DownloadStitchAsync">Export Stitch DESIGN.md</MudButton>
             </MudStack>
 
             @if (_warnings.Count > 0)
@@ -65,6 +75,15 @@ else
                         <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-2">
                             <MudText Typo="Typo.h6">@pair.Key</MudText>
                             <MudStack Row="true" Spacing="1" Class="flex-wrap">
+                                @if (Options.IsAlias(pair.Key))
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined">alias</MudChip>
+                                }
+                                else if (Options.ConfiguredColors.Contains(pair.Key))
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">configured</MudChip>
+                                }
+                                <NerdClipboardButton Text="@($".{className}")" Label="Copy class" />
                                 <MudChip T="string" Variant="Variant.Outlined" Size="Size.Small">
                                     <code>.@className</code>
                                 </MudChip>

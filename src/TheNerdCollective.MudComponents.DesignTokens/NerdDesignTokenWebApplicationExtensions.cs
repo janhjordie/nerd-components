@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
+using TheNerdCollective.MudComponents.Shared;
 
 namespace TheNerdCollective.MudComponents.DesignTokens;
 
@@ -14,11 +15,13 @@ public static class NerdDesignTokenWebApplicationExtensions
         ArgumentNullException.ThrowIfNull(services);
 
         var options = services.GetService<NerdDesignTokenOptions>();
-        if (options is null || !options.EnableCatalogPage)
+        if (options is not null && !options.EnableCatalogPage)
         {
             return builder;
         }
 
-        return builder.AddAdditionalAssemblies(typeof(NerdDesignTokenWebApplicationExtensions).Assembly);
+        return builder
+            .AddNerdDesignSystemAssets()
+            .AddAdditionalAssemblies(typeof(NerdDesignTokenWebApplicationExtensions).Assembly);
     }
 }

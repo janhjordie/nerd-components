@@ -105,4 +105,25 @@ public class ResponsiveTypographyTests
 
         Assert.Contains(warnings, warning => warning.Role == "Body1");
     }
+
+    [Theory]
+    [InlineData("clamp(1rem, 4vw, 2rem)", 320, 16)]
+    [InlineData("clamp(1rem, 4vw, 2rem)", 1920, 32)]
+    [InlineData("2rem", 1280, 32)]
+    public void Clamp_evaluator_returns_expected_pixel_sizes(string fontSize, double viewport, double expected)
+    {
+        var actual = NerdClampEvaluator.EvaluateAtViewport(fontSize, viewport);
+        Assert.Equal(expected, actual);
+    }
+
+    [Fact]
+    public void Marketing_preset_configures_roles_and_spacing()
+    {
+        var options = new ResponsiveTypographyOptions();
+        NerdTypographyPresets.ApplyMarketing(options);
+
+        Assert.Contains("H1", options.ConfiguredRoles);
+        Assert.Equal("1.5", options.LineHeight);
+        Assert.Equal("0.01em", options.LetterSpacing);
+    }
 }

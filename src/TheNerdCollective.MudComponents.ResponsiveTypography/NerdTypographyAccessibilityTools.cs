@@ -1,5 +1,6 @@
-using System.Globalization;
-using System.Text.RegularExpressions;
+using MudBlazor;
+using Microsoft.Extensions.Logging;
+using TheNerdCollective.MudComponents.Shared;
 
 namespace TheNerdCollective.MudComponents.ResponsiveTypography;
 
@@ -10,7 +11,9 @@ public sealed record NerdTypographyAccessibilityResult(
     double? MinimumPixels,
     double RequiredMinimumPixels,
     bool MeetsResizeGuidance,
-    bool MeetsMinimumSize);
+    bool MeetsMinimumSize,
+    bool MeetsLineHeightGuidance,
+    bool MeetsSpacingGuidance);
 
 public sealed record NerdTypographyAccessibilityWarning(
     string Role,
@@ -22,25 +25,24 @@ public sealed record NerdTypographyAccessibilityWarning(
 
 public static partial class NerdTypographyAccessibilityTools
 {
-    public const string DefaultWcagVersion = "2.1";
-  private const double RootFontPixels = 16;
+    public const string DefaultWcagVersion = WcagStandards.DefaultVersion;
 
-    public static IReadOnlyList<NerdTypographyRole> GetConfiguredRoles(MudBlazor.MudTheme theme) =>
+    public static IReadOnlyList<NerdTypographyRole> GetConfiguredRoles(MudTheme theme) =>
     [
-        new("Default", theme.Typography.Default.FontSize, MudBlazor.Typo.body1, 16),
-        new("H1", theme.Typography.H1.FontSize, MudBlazor.Typo.h1, 24),
-        new("H2", theme.Typography.H2.FontSize, MudBlazor.Typo.h2, 21),
-        new("H3", theme.Typography.H3.FontSize, MudBlazor.Typo.h3, 18),
-        new("H4", theme.Typography.H4.FontSize, MudBlazor.Typo.h4, 16),
-        new("H5", theme.Typography.H5.FontSize, MudBlazor.Typo.h5, 14),
-        new("H6", theme.Typography.H6.FontSize, MudBlazor.Typo.h6, 14),
-        new("Subtitle1", theme.Typography.Subtitle1.FontSize, MudBlazor.Typo.subtitle1, 16),
-        new("Subtitle2", theme.Typography.Subtitle2.FontSize, MudBlazor.Typo.subtitle2, 14),
-        new("Body1", theme.Typography.Body1.FontSize, MudBlazor.Typo.body1, 16),
-        new("Body2", theme.Typography.Body2.FontSize, MudBlazor.Typo.body2, 14),
-        new("Button", theme.Typography.Button.FontSize, MudBlazor.Typo.button, 14),
-        new("Caption", theme.Typography.Caption.FontSize, MudBlazor.Typo.caption, 12),
-        new("Overline", theme.Typography.Overline.FontSize, MudBlazor.Typo.overline, 10)
+        new("Default", theme.Typography.Default.FontSize, theme.Typography.Default.LineHeight, theme.Typography.Default.LetterSpacing, Typo.body1, 16),
+        new("H1", theme.Typography.H1.FontSize, theme.Typography.H1.LineHeight, theme.Typography.H1.LetterSpacing, Typo.h1, 24),
+        new("H2", theme.Typography.H2.FontSize, theme.Typography.H2.LineHeight, theme.Typography.H2.LetterSpacing, Typo.h2, 21),
+        new("H3", theme.Typography.H3.FontSize, theme.Typography.H3.LineHeight, theme.Typography.H3.LetterSpacing, Typo.h3, 18),
+        new("H4", theme.Typography.H4.FontSize, theme.Typography.H4.LineHeight, theme.Typography.H4.LetterSpacing, Typo.h4, 16),
+        new("H5", theme.Typography.H5.FontSize, theme.Typography.H5.LineHeight, theme.Typography.H5.LetterSpacing, Typo.h5, 14),
+        new("H6", theme.Typography.H6.FontSize, theme.Typography.H6.LineHeight, theme.Typography.H6.LetterSpacing, Typo.h6, 14),
+        new("Subtitle1", theme.Typography.Subtitle1.FontSize, theme.Typography.Subtitle1.LineHeight, theme.Typography.Subtitle1.LetterSpacing, Typo.subtitle1, 16),
+        new("Subtitle2", theme.Typography.Subtitle2.FontSize, theme.Typography.Subtitle2.LineHeight, theme.Typography.Subtitle2.LetterSpacing, Typo.subtitle2, 14),
+        new("Body1", theme.Typography.Body1.FontSize, theme.Typography.Body1.LineHeight, theme.Typography.Body1.LetterSpacing, Typo.body1, 16),
+        new("Body2", theme.Typography.Body2.FontSize, theme.Typography.Body2.LineHeight, theme.Typography.Body2.LetterSpacing, Typo.body2, 14),
+        new("Button", theme.Typography.Button.FontSize, theme.Typography.Button.LineHeight, theme.Typography.Button.LetterSpacing, Typo.button, 14),
+        new("Caption", theme.Typography.Caption.FontSize, theme.Typography.Caption.LineHeight, theme.Typography.Caption.LetterSpacing, Typo.caption, 12),
+        new("Overline", theme.Typography.Overline.FontSize, theme.Typography.Overline.LineHeight, theme.Typography.Overline.LetterSpacing, Typo.overline, 10)
     ];
 
     public static IReadOnlyList<NerdTypographyAccessibilityResult> CheckAccessibility(
@@ -63,14 +65,19 @@ public static partial class NerdTypographyAccessibilityTools
         var warnings = new List<NerdTypographyAccessibilityWarning>();
         foreach (var result in CheckAccessibility(options))
         {
-            if (result.MeetsMinimumSize && result.MeetsResizeGuidance)
+            if (result.MeetsMinimumSize && result.MeetsResizeGuidance &&
+                result.MeetsLineHeightGuidance && result.MeetsSpacingGuidance)
             {
                 continue;
             }
 
             var message = !result.MeetsMinimumSize
                 ? $"Minimum size {(result.MinimumPixels?.ToString("0.#") ?? "unknown")}px is below WCAG {result.WcagVersion} recommended {result.RequiredMinimumPixels:0.#}px."
-                : $"Font size '{result.FontSize}' should use relative units for WCAG {result.WcagVersion} resize guidance.";
+                : !result.MeetsResizeGuidance
+                    ? $"Font size '{result.FontSize}' should use relative units for WCAG {result.WcagVersion} resize guidance."
+                    : !result.MeetsLineHeightGuidance
+                        ? $"Line height should be at least {WcagStandards.MinimumLineHeightRatio:0.0} for readability."
+                        : $"Letter spacing should be at least {WcagStandards.MinimumLetterSpacingEm:0.2}em.";
 
             warnings.Add(new NerdTypographyAccessibilityWarning(
                 result.Role,
@@ -86,7 +93,7 @@ public static partial class NerdTypographyAccessibilityTools
 
     public static void LogAccessibilityWarnings(
         NerdResponsiveTypographyOptions options,
-        Microsoft.Extensions.Logging.ILogger logger)
+        ILogger logger)
     {
         ArgumentNullException.ThrowIfNull(logger);
         foreach (var warning in GetAccessibilityWarnings(options))
@@ -97,20 +104,6 @@ public static partial class NerdTypographyAccessibilityTools
                 warning.FontSize,
                 warning.Message);
         }
-    }
-
-    internal static double? ParseMinimumPixels(string fontSize, double rootPixels = RootFontPixels)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(fontSize);
-        var trimmed = fontSize.Trim();
-
-        var clampMatch = ClampRegex().Match(trimmed);
-        if (clampMatch.Success)
-        {
-            return ParseSize(clampMatch.Groups[1].Value.Trim(), rootPixels);
-        }
-
-        return ParseSize(trimmed, rootPixels);
     }
 
     internal static bool UsesRelativeUnits(string fontSize)
@@ -128,9 +121,13 @@ public static partial class NerdTypographyAccessibilityTools
         NerdTypographyRole role,
         string wcagVersion)
     {
-        var minimum = ParseMinimumPixels(role.FontSize);
+        var minimum = NerdClampEvaluator.EvaluateAtViewport(role.FontSize, 320);
         var meetsResize = UsesRelativeUnits(role.FontSize);
         var meetsMinimum = minimum is null || minimum >= role.RequiredMinimumPixels;
+        var meetsLineHeight = ParseLineHeight(role.LineHeight) is null ||
+                              ParseLineHeight(role.LineHeight) >= WcagStandards.MinimumLineHeightRatio;
+        var meetsSpacing = ParseEm(role.LetterSpacing) is null ||
+                           ParseEm(role.LetterSpacing) >= WcagStandards.MinimumLetterSpacingEm;
 
         return new NerdTypographyAccessibilityResult(
             role.Role,
@@ -139,32 +136,43 @@ public static partial class NerdTypographyAccessibilityTools
             minimum,
             role.RequiredMinimumPixels,
             meetsResize,
-            meetsMinimum);
+            meetsMinimum,
+            meetsLineHeight,
+            meetsSpacing);
     }
 
-    private static double? ParseSize(string value, double rootPixels)
+    private static double? ParseLineHeight(string? lineHeight)
     {
-        if (value.EndsWith("rem", StringComparison.OrdinalIgnoreCase) &&
-            double.TryParse(value[..^3], NumberStyles.Float, CultureInfo.InvariantCulture, out var rem))
+        if (string.IsNullOrWhiteSpace(lineHeight))
         {
-            return rem * rootPixels;
+            return null;
         }
 
-        if (value.EndsWith("px", StringComparison.OrdinalIgnoreCase) &&
-            double.TryParse(value[..^2], NumberStyles.Float, CultureInfo.InvariantCulture, out var px))
-        {
-            return px;
-        }
-
-        return null;
+        return double.TryParse(lineHeight, System.Globalization.NumberStyles.Float,
+            System.Globalization.CultureInfo.InvariantCulture, out var value)
+            ? value
+            : null;
     }
 
-    [GeneratedRegex(@"clamp\(\s*([^,]+)\s*,", RegexOptions.CultureInvariant | RegexOptions.IgnoreCase)]
-    private static partial Regex ClampRegex();
+    private static double? ParseEm(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        return value.EndsWith("em", StringComparison.OrdinalIgnoreCase) &&
+               double.TryParse(value[..^2], System.Globalization.NumberStyles.Float,
+                   System.Globalization.CultureInfo.InvariantCulture, out var em)
+            ? em
+            : null;
+    }
 }
 
 public sealed record NerdTypographyRole(
     string Role,
     string FontSize,
-    MudBlazor.Typo Typo,
+    string? LineHeight,
+    string? LetterSpacing,
+    Typo Typo,
     double RequiredMinimumPixels);

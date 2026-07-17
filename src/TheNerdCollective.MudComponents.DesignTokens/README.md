@@ -143,12 +143,12 @@ builder.Services.AddNerdDesignTokens(options =>
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode()
-    .AddNerdDesignTokenCatalog(app.Services);
+    .AddNerdDesignTokenCatalog(app.Services)
+    .AddNerdDesignSystemHub(app.Services);
 ```
 
-Call `AddNerdDesignTokenCatalog(app.Services)` only when you want the catalog
-page. It is enabled by default through `EnableCatalogPage`, but skipped when
-that option is `false`.
+`AddNerdDesignTokenCatalog(app.Services)` registers the catalog assembly when
+`EnableCatalogPage` is `true`. The default route is `/nerd-design-tokens`.
 
 The catalog shows color swatches, light/dark preview, WCAG 2.1 AA/AAA badges
 with contrast ratios, live MudBlazor component previews, aliases, radius, and

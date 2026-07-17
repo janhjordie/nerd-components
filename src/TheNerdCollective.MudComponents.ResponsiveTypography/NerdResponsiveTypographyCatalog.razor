@@ -1,3 +1,5 @@
+@page "/nerd-typography"
+@rendermode InteractiveServer
 @if (!IsAvailable)
 {
     <MudContainer MaxWidth="MaxWidth.Medium" Class="my-8">
@@ -8,7 +10,7 @@
 }
 else
 {
-    <MudThemeProvider Theme="_previewTheme">
+    <NerdResponsiveTypographyThemeProvider Theme="_previewTheme">
         <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-6">
             <MudStack Spacing="3">
                 <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-3">
@@ -18,9 +20,16 @@ else
                             CSS <code>clamp()</code> values applied through <code>MudTheme.Typography</code>
                         </MudText>
                     </div>
-                    <MudChip T="string" Color="Color.Info" Variant="Variant.Outlined">
-                        @Options.CatalogRoute
-                    </MudChip>
+                    <MudStack Row="true" Spacing="1" Class="flex-wrap">
+                        <MudButton Href="@HubOptions.HubRoute" Variant="Variant.Text">Design system</MudButton>
+                        <MudChip T="string" Color="Color.Info" Variant="Variant.Outlined">@Options.CatalogRoute</MudChip>
+                    </MudStack>
+                </MudStack>
+
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="flex-wrap">
+                    <MudSwitch @bind-Value="_showAllRoles" Label="Show all roles" />
+                    <MudText Typo="Typo.caption">Viewport @_viewportWidth.ToString("0")px</MudText>
+                    <MudSlider @bind-Value="_viewportWidth" Min="320" Max="1920" Step="10" Style="max-width: 320px;" />
                 </MudStack>
 
                 @if (_warnings.Count > 0)
@@ -39,14 +48,8 @@ else
                         </MudStack>
                     </MudAlert>
                 }
-                else
-                {
-                    <MudAlert Severity="Severity.Success" Variant="Variant.Outlined">
-                        All typography roles pass WCAG @Options.WcagVersion resize and minimum-size guidance.
-                    </MudAlert>
-                }
 
-                @foreach (var role in _roles)
+                @foreach (var role in FilterRoles(NerdTypographyAccessibilityTools.GetConfiguredRoles(_previewTheme)))
                 {
                     var accessibility = GetAccessibility(role.Role);
 
@@ -54,30 +57,32 @@ else
                         <MudStack Spacing="2">
                             <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-2">
                                 <MudText Typo="Typo.h6">@role.Role</MudText>
-                                @if (accessibility is not null)
-                                {
-                                    <MudStack Row="true" Spacing="1" Class="flex-wrap">
-                                        <MudChip T="string"
-                                                 Size="Size.Small"
-                                                 Color="@(accessibility.MeetsResizeGuidance ? Color.Success : Color.Error)"
-                                                 Variant="Variant.Filled">
+                                <MudStack Row="true" Spacing="1" Class="flex-wrap">
+                                    @if (Options.Typography.ConfiguredRoles.Contains(role.Role))
+                                    {
+                                        <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">configured</MudChip>
+                                    }
+                                    <NerdClipboardButton Text="@role.FontSize" Label="Copy CSS" />
+                                    @if (accessibility is not null)
+                                    {
+                                        <MudChip T="string" Size="Size.Small" Color="@(accessibility.MeetsResizeGuidance ? Color.Success : Color.Error)" Variant="Variant.Filled">
                                             WCAG @accessibility.WcagVersion resize @(accessibility.MeetsResizeGuidance ? "pass" : "fail")
                                         </MudChip>
-                                        <MudChip T="string"
-                                                 Size="Size.Small"
-                                                 Color="@(accessibility.MeetsMinimumSize ? Color.Success : Color.Warning)"
-                                                 Variant="Variant.Outlined">
-                                            Min @(accessibility.MinimumPixels?.ToString("0.#") ?? "?")px / @(accessibility.RequiredMinimumPixels.ToString("0.#"))px
+                                        <MudChip T="string" Size="Size.Small" Color="@(accessibility.MeetsMinimumSize ? Color.Success : Color.Warning)" Variant="Variant.Outlined">
+                                            Min @(accessibility.MinimumPixels?.ToString("0.#") ?? "?")px
                                         </MudChip>
-                                    </MudStack>
-                                }
+                                        <MudChip T="string" Size="Size.Small" Color="@(accessibility.MeetsLineHeightGuidance ? Color.Success : Color.Warning)" Variant="Variant.Outlined">
+                                            Line-height @(accessibility.MeetsLineHeightGuidance ? "pass" : "fail")
+                                        </MudChip>
+                                    }
+                                </MudStack>
                             </MudStack>
 
                             <MudText Typo="Typo.caption" Color="Color.Secondary">
-                                <code>@role.FontSize</code>
+                                <code>@role.FontSize</code> · computed @GetComputedSize(role) at @_viewportWidth.ToString("0")px
                             </MudText>
 
-                            <MudPaper Class="pa-4" Outlined="true">
+                            <MudPaper Class="pa-4" Outlined="true" Style="@($"max-width:{_viewportWidth}px")">
                                 <MudText Typo="@role.Typo">
                                     The quick brown fox jumps over the lazy dog — @role.Role preview
                                 </MudText>
@@ -87,5 +92,5 @@ else
                 }
             </MudStack>
         </MudContainer>
-    </MudThemeProvider>
+    </NerdResponsiveTypographyThemeProvider>
 }

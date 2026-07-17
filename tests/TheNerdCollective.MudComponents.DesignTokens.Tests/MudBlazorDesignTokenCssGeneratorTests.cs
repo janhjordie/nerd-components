@@ -143,6 +143,42 @@ public class MudBlazorDesignTokenCssGeneratorTests
         Assert.True(options.RestrictCatalogToDevelopment);
     }
 
+    [Fact]
+    public void Generate_respects_use_important_overrides_option()
+    {
+        var options = new NerdDesignTokenOptions { Prefix = "dnf", UseImportantOverrides = false }
+            .Add("forest", new NerdColorToken { Value = "#365C3A", ContrastText = "#FFFFFF" });
+
+        var css = MudBlazorDesignTokenCssGenerator.Generate(options);
+
+        Assert.DoesNotContain("!important", css);
+    }
+
+    [Fact]
+    public void Accessibility_check_uses_dark_contrast_text_when_configured()
+    {
+        var options = new NerdDesignTokenOptions { Prefix = "test" }
+            .Add("forest", new NerdColorToken
+            {
+                Value = "#365C3A",
+                Dark = "#203B25",
+                ContrastText = "#FFFFFF",
+                DarkContrastText = "#F8FAFC"
+            });
+
+        var result = NerdDesignTokenTools.CheckAccessibility(options).Single();
+
+        Assert.Equal("#F8FAFC", result.Dark.Foreground);
+    }
+
+    [Theory]
+    [InlineData("#FFFFFF", true)]
+    [InlineData("rgb(255, 255, 255)", true)]
+    public void Color_parser_supports_hex_and_rgb(string color, bool expected)
+    {
+        Assert.Equal(expected, TheNerdCollective.MudComponents.Shared.NerdColorParser.TryGetRgb(color, out _, out _, out _));
+    }
+
     [Theory]
     [InlineData("Sand")]
     [InlineData("sand color")]

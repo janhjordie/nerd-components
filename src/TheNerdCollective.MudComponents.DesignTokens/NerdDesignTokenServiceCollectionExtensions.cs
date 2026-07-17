@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using TheNerdCollective.MudComponents.Shared;
 
 namespace TheNerdCollective.MudComponents.DesignTokens;
 
@@ -11,12 +12,21 @@ public static class NerdDesignTokenServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configure);
 
+        services.AddNerdDesignSystem(options =>
+        {
+            options.DesignTokensRoute = "/nerd-design-tokens";
+        });
+
         var options = new NerdDesignTokenOptions();
         configure(options);
         services.AddSingleton(options);
         services.AddSingleton(sp => new NerdDesignTokenCss(
             MudBlazorDesignTokenCssGenerator.Generate(sp.GetRequiredService<NerdDesignTokenOptions>())));
-        services.AddHostedService<NerdDesignTokenAccessibilityStartupValidator>();
+
+        if (options.Colors.Count > 0 && options.WarnOnAccessibilityFailuresAtStartup)
+        {
+            services.AddHostedService<NerdDesignTokenAccessibilityStartupValidator>();
+        }
 
         return services;
     }

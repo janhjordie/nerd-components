@@ -64,12 +64,24 @@ builder.Services.AddNerdResponsiveTypography(options =>
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode()
-    .AddNerdResponsiveTypographyCatalog(app.Services);
+    .AddNerdResponsiveTypographyCatalog(app.Services)
+    .AddNerdDesignSystemHub(app.Services);
 ```
 
-The catalog shows every MudBlazor typography role, the effective `font-size`
-value, live `MudText` previews, and WCAG 2.1 badges for resize-friendly units
-and minimum readable sizes. Startup warnings are logged when guidance fails.
+`AddNerdResponsiveTypographyCatalog(app.Services)` registers the catalog when
+`EnableCatalogPage` is `true`. The default route is `/nerd-typography`.
+
+Presets and shared spacing:
+
+```csharp
+builder.Services.AddNerdResponsiveTypography(options =>
+{
+    NerdTypographyPresets.ApplyMarketing(options.Typography);
+    options.Typography.H3 = ResponsiveFontSize.Clamp("1.75rem", "3vw", "2.5rem");
+});
+```
+
+`NerdTypographyPresets.ApplyDenseApp` is available for compact application UIs.
 
 To disable the page:
 

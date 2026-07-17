@@ -3,7 +3,9 @@ namespace TheNerdCollective.MudComponents.DesignTokens;
 public sealed class NerdDesignTokenOptions
 {
     private readonly Dictionary<string, NerdColorToken> _colors = new(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<string> _configuredColors = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, string> _aliases = new(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<string> _configuredAliases = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, string> _radii = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, string> _shadows = new(StringComparer.OrdinalIgnoreCase);
 
@@ -13,6 +15,7 @@ public sealed class NerdDesignTokenOptions
     public string CssLayerName { get; set; } = "nerd-design-tokens";
     public string? ScopeSelector { get; set; }
     public bool MinifyCss { get; set; }
+    public bool UseImportantOverrides { get; set; } = true;
     public bool EnableCatalogPage { get; set; } = true;
     public string CatalogRoute { get; set; } = "/nerd-design-tokens";
     public bool RestrictCatalogToDevelopment { get; set; } = true;
@@ -20,15 +23,20 @@ public sealed class NerdDesignTokenOptions
     public string WcagVersion { get; set; } = NerdDesignTokenTools.DefaultWcagVersion;
 
     public IReadOnlyDictionary<string, NerdColorToken> Colors => _colors;
+    public IReadOnlySet<string> ConfiguredColors => _configuredColors;
     public IReadOnlyDictionary<string, string> Aliases => _aliases;
+    public IReadOnlySet<string> ConfiguredAliases => _configuredAliases;
     public IReadOnlyDictionary<string, string> Radii => _radii;
     public IReadOnlyDictionary<string, string> Shadows => _shadows;
+
+    public bool IsAlias(string name) => _aliases.ContainsKey(name);
 
     public NerdDesignTokenOptions Add(string name, NerdColorToken token)
     {
         NerdTokenNameValidator.Validate(name);
         ArgumentNullException.ThrowIfNull(token);
         _colors[name] = token;
+        _configuredColors.Add(name);
         return this;
     }
 
@@ -37,6 +45,7 @@ public sealed class NerdDesignTokenOptions
         NerdTokenNameValidator.Validate(name);
         NerdTokenNameValidator.Validate(target);
         _aliases[name] = target;
+        _configuredAliases.Add(name);
         return this;
     }
 

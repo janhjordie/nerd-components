@@ -6,6 +6,7 @@ public sealed class NerdColorToken
     public string? Light { get; init; }
     public string? Dark { get; init; }
     public string? ContrastText { get; init; }
+    public string? DarkContrastText { get; init; }
     public string? Surface { get; init; }
     public string? Content { get; init; }
     public string? Interactive { get; init; }

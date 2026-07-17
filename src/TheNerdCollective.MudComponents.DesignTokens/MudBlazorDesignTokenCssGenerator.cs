@@ -108,40 +108,45 @@ public static class MudBlazorDesignTokenCssGenerator
         css.AppendLine("  color: var(" + textVariable + ");");
         css.AppendLine("  background-color: var(" + variable + ");");
         css.AppendLine("}");
+        var darkContrast = NerdColorValue.Validate(
+            token.DarkContrastText ?? token.ContrastText ?? NerdColorValue.ContrastText(dark),
+            nameof(token.DarkContrastText));
         css.AppendLine($"[data-theme=\"dark\"] {root} {{");
         css.AppendLine($"  {variable}: {dark};");
-        css.AppendLine($"  {textVariable}: {NerdColorValue.ContrastText(dark)};");
+        css.AppendLine($"  {textVariable}: {darkContrast};");
         css.AppendLine("}");
+
+        var important = options.UseImportantOverrides ? " !important" : string.Empty;
 
         css.AppendLine($"{root}.mud-button-filled, {root}.mud-chip, {root}.mud-alert,");
         css.AppendLine($"{root}.mud-badge, {root}.mud-progress-linear {{");
-        css.AppendLine($"  background-color: var({variable}) !important;");
-        css.AppendLine($"  color: var({textVariable}) !important;");
+        css.AppendLine($"  background-color: var({variable}){important};");
+        css.AppendLine($"  color: var({textVariable}){important};");
         css.AppendLine("}");
 
         css.AppendLine($"{root}.mud-button-outlined, {root}.mud-button-text,");
         css.AppendLine($"{root}.mud-icon-button, {root}.mud-link, {root}.mud-typography {{");
-        css.AppendLine($"  color: var({variable}) !important;");
+        css.AppendLine($"  color: var({variable}){important};");
         css.AppendLine("}");
 
         css.AppendLine($"{root}.mud-button-outlined {{");
-        css.AppendLine($"  border-color: var({borderVariable}) !important;");
+        css.AppendLine($"  border-color: var({borderVariable}){important};");
         css.AppendLine("}");
 
         css.AppendLine($"{root}.mud-button-filled:hover, {root}.mud-button-outlined:hover,");
         css.AppendLine($"{root}.mud-button-text:hover, {root}.mud-chip:hover {{");
-        css.AppendLine($"  background-color: var({hoverVariable}) !important;");
+        css.AppendLine($"  background-color: var({hoverVariable}){important};");
         css.AppendLine("}");
 
         css.AppendLine($"{root}:focus-visible, {root}.mud-button:focus, {root}.mud-button:active,");
         css.AppendLine($"{root}.mud-chip:active, {root}.mud-selected, {root}.mud-checked,");
         css.AppendLine($"{root}.mud-expanded, {root}[aria-pressed=\"true\"] {{");
-        css.AppendLine($"  outline-color: var({activeVariable}) !important;");
+        css.AppendLine($"  outline-color: var({activeVariable}){important};");
         css.AppendLine("}");
 
         css.AppendLine($"{root}.mud-disabled, {root}[disabled], {root}.mud-button:disabled,");
         css.AppendLine($"{root}.mud-chip.mud-disabled, {root}[aria-disabled=\"true\"] {{");
-        css.AppendLine($"  color: var({disabledVariable}) !important;");
+        css.AppendLine($"  color: var({disabledVariable}){important};");
         css.AppendLine("}");
         css.AppendLine();
     }

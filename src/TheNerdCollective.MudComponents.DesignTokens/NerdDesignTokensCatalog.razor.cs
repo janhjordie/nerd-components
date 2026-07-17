@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Hosting;
+using TheNerdCollective.MudComponents.Shared;
 
 namespace TheNerdCollective.MudComponents.DesignTokens;
 
@@ -9,7 +11,13 @@ public partial class NerdDesignTokensCatalog
     private NerdDesignTokenOptions Options { get; set; } = default!;
 
     [Inject]
+    private NerdDesignSystemOptions HubOptions { get; set; } = default!;
+
+    [Inject]
     private IWebHostEnvironment HostEnvironment { get; set; } = default!;
+
+    [Inject]
+    private NerdDownloadService DownloadService { get; set; } = default!;
 
     private bool _previewDark;
     private IReadOnlyList<NerdAccessibilityResult> _accessibility = [];
@@ -27,6 +35,7 @@ public partial class NerdDesignTokensCatalog
             return;
         }
 
+        HubOptions.DesignTokensRoute = Options.CatalogRoute;
         _accessibility = NerdDesignTokenTools.CheckAccessibility(Options);
         _warnings = NerdDesignTokenTools.GetAccessibilityWarnings(Options);
     }
@@ -45,4 +54,13 @@ public partial class NerdDesignTokensCatalog
         dark ? token.Dark ?? token.Light ?? token.Value : token.Light ?? token.Value;
 
     private static string FormatRatio(double ratio) => $"{ratio:0.0}:1";
+
+    private Task DownloadCssAsync() =>
+        DownloadService.DownloadTextAsync($"{Options.Prefix}-tokens.css", MudBlazorDesignTokenCssGenerator.Generate(Options)).AsTask();
+
+    private Task DownloadJsonAsync() =>
+        DownloadService.DownloadTextAsync($"{Options.Prefix}-tokens.json", NerdDesignTokenTools.ExportJson(Options)).AsTask();
+
+    private Task DownloadStitchAsync() =>
+        DownloadService.DownloadTextAsync("DESIGN.md", NerdDesignTokenTools.ExportStitchDesignMd(Options)).AsTask();
 }

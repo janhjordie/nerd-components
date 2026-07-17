@@ -37,6 +37,9 @@ Customer-specific CSS design tokens and MudBlazor component color variants.
 #### [TheNerdCollective.MudComponents.ResponsiveTypography](src/TheNerdCollective.MudComponents.ResponsiveTypography/README.md)
 CSS-native responsive typography helpers for MudBlazor themes using `clamp()`.
 
+#### [TheNerdCollective.MudComponents.Shared](src/TheNerdCollective.MudComponents.Shared/README.md)
+Shared WCAG helpers, clipboard utilities, and the `/nerd-design-system` hub for design token and typography catalogs.
+
 #### [TheNerdCollective.Blazor.ThemeKit](src/TheNerdCollective.Blazor.ThemeKit/README.md)
 Theme catalog contracts, runtime state, localStorage preferences, and editor gating.
 

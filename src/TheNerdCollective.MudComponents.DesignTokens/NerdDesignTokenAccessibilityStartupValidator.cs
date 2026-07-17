@@ -1,16 +1,15 @@
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+using TheNerdCollective.MudComponents.Shared;
 
 namespace TheNerdCollective.MudComponents.DesignTokens;
 
-internal sealed class NerdDesignTokenAccessibilityStartupValidator : IHostedService
+internal sealed class NerdDesignTokenAccessibilityStartupValidator : Microsoft.Extensions.Hosting.IHostedService
 {
     private readonly NerdDesignTokenOptions _options;
-    private readonly ILogger<NerdDesignTokenAccessibilityStartupValidator> _logger;
+    private readonly Microsoft.Extensions.Logging.ILogger<NerdDesignTokenAccessibilityStartupValidator> _logger;
 
     public NerdDesignTokenAccessibilityStartupValidator(
         NerdDesignTokenOptions options,
-        ILogger<NerdDesignTokenAccessibilityStartupValidator> logger)
+        Microsoft.Extensions.Logging.ILogger<NerdDesignTokenAccessibilityStartupValidator> logger)
     {
         _options = options;
         _logger = logger;
@@ -18,11 +17,12 @@ internal sealed class NerdDesignTokenAccessibilityStartupValidator : IHostedServ
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        if (_options.WarnOnAccessibilityFailuresAtStartup)
+        if (_options.Colors.Count == 0 || !_options.WarnOnAccessibilityFailuresAtStartup)
         {
-            NerdDesignTokenTools.LogAccessibilityWarnings(_options, _logger);
+            return Task.CompletedTask;
         }
 
+        NerdDesignTokenTools.LogAccessibilityWarnings(_options, _logger);
         return Task.CompletedTask;
     }
 

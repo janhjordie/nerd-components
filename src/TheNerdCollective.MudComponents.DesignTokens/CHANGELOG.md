@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.7.0
+
+- Added `TheNerdCollective.MudComponents.Shared` dependency for WCAG helpers, clipboard copy, and design-system hub links.
+- Added `DarkContrastText` on `NerdColorToken` for dark-mode-specific foreground colors.
+- Added `UseImportantOverrides` option (default `true`) to control `!important` on component selectors.
+- Added `ConfiguredColors` and `ConfiguredAliases` tracking on `NerdDesignTokenOptions`.
+- Catalog exports CSS, JSON, and Stitch `DESIGN.md` files and shows configured/alias badges.
+- `AddNerdDesignTokenCatalog` now registers the catalog assembly for discovery at `/nerd-design-tokens`.
+- Startup accessibility validator now runs only when colors are configured.
+
 ## 1.6.0
 
 - `AddNerdDesignTokenCatalog(app.Services)` now respects `EnableCatalogPage` and skips registration when disabled.

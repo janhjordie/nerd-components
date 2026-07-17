@@ -1,0 +1,15 @@
+@inject NerdClipboardService Clipboard
+
+<MudButton Size="Size.Small" Variant="Variant.Outlined" OnClick="CopyAsync">
+    @Label
+</MudButton>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Text { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Label { get; set; } = "Copy";
+
+    private async Task CopyAsync() => await Clipboard.CopyAsync(Text);
+}

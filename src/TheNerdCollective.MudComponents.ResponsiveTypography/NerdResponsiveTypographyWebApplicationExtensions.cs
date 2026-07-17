@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
+using TheNerdCollective.MudComponents.Shared;
 
 namespace TheNerdCollective.MudComponents.ResponsiveTypography;
 
@@ -14,11 +15,13 @@ public static class NerdResponsiveTypographyWebApplicationExtensions
         ArgumentNullException.ThrowIfNull(services);
 
         var options = services.GetService<NerdResponsiveTypographyOptions>();
-        if (options is null || !options.EnableCatalogPage)
+        if (options is not null && !options.EnableCatalogPage)
         {
             return builder;
         }
 
-        return builder.AddAdditionalAssemblies(typeof(NerdResponsiveTypographyWebApplicationExtensions).Assembly);
+        return builder
+            .AddNerdDesignSystemAssets()
+            .AddAdditionalAssemblies(typeof(NerdResponsiveTypographyWebApplicationExtensions).Assembly);
     }
 }

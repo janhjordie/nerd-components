@@ -4,7 +4,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <PackageId>TheNerdCollective.MudComponents.DesignTokens</PackageId>
-    <Version>1.6.0</Version>
+    <Version>1.7.0</Version>
     <Authors>The Nerd Collective</Authors>
     <Description>Customer-specific CSS design tokens and MudBlazor component color variants.</Description>
     <PackageTags>mudblazor;blazor;design-tokens;css;branding;colors</PackageTags>
@@ -16,7 +16,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="MudBlazor" Version="9.6.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TheNerdCollective.MudComponents.Shared\TheNerdCollective.MudComponents.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>

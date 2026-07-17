@@ -53,6 +53,7 @@ jobs:
             ["TheNerdCollective.MudComponents.SessionMonitor"]="src/TheNerdCollective.MudComponents.SessionMonitor"
             ["TheNerdCollective.MudComponents.DesignTokens"]="src/TheNerdCollective.MudComponents.DesignTokens"
             ["TheNerdCollective.MudComponents.ResponsiveTypography"]="src/TheNerdCollective.MudComponents.ResponsiveTypography"
+            ["TheNerdCollective.MudComponents.Shared"]="src/TheNerdCollective.MudComponents.Shared"
           )
           
           # Detect which packages changed

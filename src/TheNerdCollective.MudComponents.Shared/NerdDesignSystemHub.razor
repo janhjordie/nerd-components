@@ -1,0 +1,27 @@
+@page "/nerd-design-system"
+@rendermode InteractiveServer
+@if (!IsAvailable)
+{
+    <MudContainer MaxWidth="MaxWidth.Medium" Class="my-8">
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Filled">
+            Design system hub is disabled or only available in Development.
+        </MudAlert>
+    </MudContainer>
+}
+else
+{
+    <MudContainer MaxWidth="MaxWidth.Medium" Class="my-8">
+        <MudStack Spacing="3">
+            <MudText Typo="Typo.h4">Nerd design system</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                Browse customer tokens and responsive typography catalogs.
+            </MudText>
+            <MudButton Href="@Options.DesignTokensRoute" Variant="Variant.Filled" Color="Color.Primary">
+                Design tokens
+            </MudButton>
+            <MudButton Href="@Options.TypographyRoute" Variant="Variant.Outlined" Color="Color.Primary">
+                Responsive typography
+            </MudButton>
+        </MudStack>
+    </MudContainer>
+}
