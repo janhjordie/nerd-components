@@ -1,0 +1,63 @@
+@if (!IsAvailable)
+{
+    <MudContainer MaxWidth="MaxWidth.Medium" Class="my-8">
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Filled">
+            MudBlazor PlayBook is disabled or only available in Development.
+        </MudAlert>
+    </MudContainer>
+}
+else
+{
+    <NerdDesignSystemScripts />
+    <NerdCatalogThemeProvider Theme="_previewTheme" IsDarkMode="_previewDark">
+        <NerdDesignTokenStyles />
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-6">
+            <MudStack Spacing="3">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-3">
+                    <div>
+                        <MudText Typo="Typo.h4">MudBlazor PlayBook</MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">
+                            @MudBlazorPlayBookCatalog.All.Count components · MudBlazor @TokenOptions.MudBlazorVersion
+                        </MudText>
+                    </div>
+                    <MudStack Row="true" Spacing="2" Class="flex-wrap">
+                        <MudButton Href="@HubOptions.HubRoute" Variant="Variant.Text">Design system</MudButton>
+                        <MudButton Href="@HubOptions.DesignTokensRoute" Variant="Variant.Text">Tokens</MudButton>
+                        <MudButton Href="@HubOptions.TypographyRoute" Variant="Variant.Text">Typography</MudButton>
+                        <MudChip T="string" Color="Color.Info" Variant="Variant.Outlined">@Options.PlayBookRoute</MudChip>
+                    </MudStack>
+                </MudStack>
+
+                <NerdPlayBookToolbar
+                    TokenNames="_tokenNames"
+                    @bind-SelectedTokenFilter="_selectedTokenFilter"
+                    TypographyPreset="_typographyPreset"
+                    TypographyPresetChanged="OnTypographyPresetChanged"
+                    @bind-PreviewDark="_previewDark"
+                    @bind-SelectedCategory="_selectedCategory"
+                    @bind-SearchQuery="_searchQuery" />
+
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    Showing @FilteredEntries.Count component@(FilteredEntries.Count == 1 ? "" : "s")
+                    across @VisibleTokens.Count design token@(VisibleTokens.Count == 1 ? "" : "s").
+                </MudText>
+
+                @if (_tokenNames.Count == 0)
+                {
+                    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
+                        No design tokens configured. Register colors with <code>AddNerdDesignTokens</code> to enable the token matrix.
+                    </MudAlert>
+                }
+
+                @foreach (var entry in FilteredEntries)
+                {
+                    <NerdPlayBookComponentCard
+                        Entry="entry"
+                        Tokens="VisibleTokens"
+                        DocsBaseUrl="@Options.MudBlazorDocsBaseUrl"
+                        ThemeMode="@(_previewDark ? "dark" : "light")" />
+                }
+            </MudStack>
+        </MudContainer>
+    </NerdCatalogThemeProvider>
+}

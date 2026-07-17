@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.0
+
+- Added `PlayBookRoute` to `NerdDesignSystemOptions` and a PlayBook link on the design system hub.
+
 ## 1.3.0
 
 - Added `NerdColorDerivatives` for lighten, darken, and RGB tuple derivation from supported CSS colors.
