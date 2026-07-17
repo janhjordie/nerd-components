@@ -16,6 +16,8 @@ public sealed class NerdDesignTokenOptions
     public bool EnableCatalogPage { get; set; } = true;
     public string CatalogRoute { get; set; } = "/nerd-design-tokens";
     public bool RestrictCatalogToDevelopment { get; set; } = true;
+    public bool WarnOnAccessibilityFailuresAtStartup { get; set; } = true;
+    public string WcagVersion { get; set; } = NerdDesignTokenTools.DefaultWcagVersion;
 
     public IReadOnlyDictionary<string, NerdColorToken> Colors => _colors;
     public IReadOnlyDictionary<string, string> Aliases => _aliases;

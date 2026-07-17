@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.0
+
+- WCAG badges now show version, contrast ratio, and separate light/dark results.
+- Added catalog warning banner and per-token contrast recommendations.
+- Added startup accessibility warnings via hosted service logging.
+
 ## 1.4.0
 
 - Added visual design token catalog page at `/nerd-design-tokens` (configurable).

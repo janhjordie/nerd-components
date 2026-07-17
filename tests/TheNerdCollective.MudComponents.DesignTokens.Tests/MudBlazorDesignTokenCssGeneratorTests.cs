@@ -102,7 +102,22 @@ public class MudBlazorDesignTokenCssGeneratorTests
         var result = NerdDesignTokenTools.CheckAccessibility(options).Single();
 
         Assert.True(result.MeetsAa);
-        Assert.True(result.ContrastRatio >= 4.5);
+        Assert.True(result.Light.ContrastRatio >= 4.5);
+        Assert.Equal("2.1", result.WcagVersion);
+    }
+
+    [Fact]
+    public void Accessibility_warnings_include_mode_ratio_and_recommendation()
+    {
+        var options = new NerdDesignTokenOptions { Prefix = "test", WcagVersion = "2.1" }
+            .Add("sand", new NerdColorToken { Value = "#E8D8AD", ContrastText = "#D8C58E" });
+
+        var warnings = NerdDesignTokenTools.GetAccessibilityWarnings(options);
+
+        Assert.NotEmpty(warnings);
+        Assert.Contains(warnings, warning => warning.TokenName == "sand");
+        Assert.Contains(warnings, warning => warning.Mode is "light" or "dark");
+        Assert.False(string.IsNullOrWhiteSpace(warnings[0].RecommendedForeground));
     }
 
     [Fact]

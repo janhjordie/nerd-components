@@ -13,6 +13,7 @@ public partial class NerdDesignTokensCatalog
 
     private bool _previewDark;
     private IReadOnlyList<NerdAccessibilityResult> _accessibility = [];
+    private IReadOnlyList<NerdAccessibilityWarning> _warnings = [];
 
     protected override void OnInitialized()
     {
@@ -27,6 +28,7 @@ public partial class NerdDesignTokensCatalog
         }
 
         _accessibility = NerdDesignTokenTools.CheckAccessibility(Options);
+        _warnings = NerdDesignTokenTools.GetAccessibilityWarnings(Options);
     }
 
     private bool IsAvailable =>
@@ -41,4 +43,6 @@ public partial class NerdDesignTokensCatalog
 
     private static string ResolveColor(NerdColorToken token, bool dark) =>
         dark ? token.Dark ?? token.Light ?? token.Value : token.Light ?? token.Value;
+
+    private static string FormatRatio(double ratio) => $"{ratio:0.0}:1";
 }

@@ -25,6 +25,31 @@ else
                 </MudStack>
             </MudStack>
 
+            @if (_warnings.Count > 0)
+            {
+                <MudAlert Severity="Severity.Error" Variant="Variant.Filled">
+                    <MudText Typo="Typo.subtitle2" Class="mb-2">
+                        @_warnings.Count WCAG @Options.WcagVersion accessibility warning@(_warnings.Count == 1 ? "" : "s")
+                    </MudText>
+                    <MudStack Spacing="1">
+                        @foreach (var warning in _warnings)
+                        {
+                            <MudText Typo="Typo.body2">
+                                <strong>@warning.TokenName</strong> (@warning.Mode):
+                                contrast @FormatRatio(warning.ContrastRatio), requires @FormatRatio(warning.RequiredRatio) for WCAG @warning.WcagVersion @warning.Level.
+                                Recommended foreground: <code>@warning.RecommendedForeground</code>
+                            </MudText>
+                        }
+                    </MudStack>
+                </MudAlert>
+            }
+            else if (_accessibility.Count > 0)
+            {
+                <MudAlert Severity="Severity.Success" Variant="Variant.Outlined">
+                    All tokens pass WCAG @Options.WcagVersion AA for both light and dark modes.
+                </MudAlert>
+            }
+
             <MudText Typo="Typo.h6">Color tokens (@Options.Colors.Count)</MudText>
 
             @foreach (var pair in Options.Colors.OrderBy(pair => pair.Key, StringComparer.Ordinal))
@@ -47,19 +72,42 @@ else
                                 {
                                     <MudChip T="string"
                                              Size="Size.Small"
-                                             Color="@(accessibility.MeetsAa ? Color.Success : Color.Error)"
+                                             Color="@(accessibility.Light.MeetsAa ? Color.Success : Color.Error)"
                                              Variant="Variant.Filled">
-                                        WCAG AA @(accessibility.MeetsAa ? "pass" : "fail")
+                                        WCAG @accessibility.WcagVersion AA light @(accessibility.Light.MeetsAa ? "pass" : "fail") (@FormatRatio(accessibility.Light.ContrastRatio))
                                     </MudChip>
                                     <MudChip T="string"
                                              Size="Size.Small"
-                                             Color="@(accessibility.MeetsAaa ? Color.Success : Color.Warning)"
+                                             Color="@(accessibility.Dark.MeetsAa ? Color.Success : Color.Error)"
+                                             Variant="Variant.Filled">
+                                        WCAG @accessibility.WcagVersion AA dark @(accessibility.Dark.MeetsAa ? "pass" : "fail") (@FormatRatio(accessibility.Dark.ContrastRatio))
+                                    </MudChip>
+                                    <MudChip T="string"
+                                             Size="Size.Small"
+                                             Color="@(accessibility.Light.MeetsAaa ? Color.Success : Color.Warning)"
                                              Variant="Variant.Outlined">
-                                        AAA @(accessibility.MeetsAaa ? "pass" : "fail")
+                                        AAA light @(accessibility.Light.MeetsAaa ? "pass" : "fail")
+                                    </MudChip>
+                                    <MudChip T="string"
+                                             Size="Size.Small"
+                                             Color="@(accessibility.Dark.MeetsAaa ? Color.Success : Color.Warning)"
+                                             Variant="Variant.Outlined">
+                                        AAA dark @(accessibility.Dark.MeetsAaa ? "pass" : "fail")
                                     </MudChip>
                                 }
                             </MudStack>
                         </MudStack>
+
+                        @if (accessibility is not null && (!accessibility.Light.MeetsAa || !accessibility.Dark.MeetsAa))
+                        {
+                            <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true">
+                                Contrast is too low for WCAG @accessibility.WcagVersion AA.
+                                Light: @FormatRatio(accessibility.Light.ContrastRatio), dark: @FormatRatio(accessibility.Dark.ContrastRatio).
+                                Recommended foreground:
+                                light <code>@accessibility.Light.RecommendedForeground</code>,
+                                dark <code>@accessibility.Dark.RecommendedForeground</code>.
+                            </MudAlert>
+                        }
 
                         <MudGrid Spacing="2">
                             <MudItem xs="12" md="4">
@@ -95,7 +143,9 @@ else
                                 <tr><td>Value</td><td><code>@token.Value</code></td></tr>
                                 <tr><td>Light</td><td><code>@(token.Light ?? token.Value)</code></td></tr>
                                 <tr><td>Dark</td><td><code>@(token.Dark ?? token.Light ?? token.Value)</code></td></tr>
-                                <tr><td>ContrastText</td><td><code>@(token.ContrastText ?? accessibility?.RecommendedContrastText)</code></td></tr>
+                                <tr><td>ContrastText</td><td><code>@(token.ContrastText ?? accessibility?.Light.RecommendedForeground)</code></td></tr>
+                                <tr><td>Light contrast</td><td><code>@(accessibility is null ? "-" : FormatRatio(accessibility.Light.ContrastRatio))</code></td></tr>
+                                <tr><td>Dark contrast</td><td><code>@(accessibility is null ? "-" : FormatRatio(accessibility.Dark.ContrastRatio))</code></td></tr>
                                 <tr><td>Surface</td><td><code>@(token.Surface ?? "-")</code></td></tr>
                                 <tr><td>Content</td><td><code>@(token.Content ?? "-")</code></td></tr>
                                 <tr><td>Interactive</td><td><code>@(token.Interactive ?? "-")</code></td></tr>

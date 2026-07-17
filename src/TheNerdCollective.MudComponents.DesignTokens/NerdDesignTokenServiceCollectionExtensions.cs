@@ -16,6 +16,7 @@ public static class NerdDesignTokenServiceCollectionExtensions
         services.AddSingleton(options);
         services.AddSingleton(sp => new NerdDesignTokenCss(
             MudBlazorDesignTokenCssGenerator.Generate(sp.GetRequiredService<NerdDesignTokenOptions>())));
+        services.AddHostedService<NerdDesignTokenAccessibilityStartupValidator>();
 
         return services;
     }

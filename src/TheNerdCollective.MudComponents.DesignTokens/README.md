@@ -147,8 +147,17 @@ app.MapRazorComponents<App>()
     .AddNerdDesignTokenCatalog();
 ```
 
-The catalog shows color swatches, light/dark preview, WCAG AA/AAA badges,
-live MudBlazor component previews, aliases, radius, and shadow tokens.
+The catalog shows color swatches, light/dark preview, WCAG 2.1 AA/AAA badges
+with contrast ratios, live MudBlazor component previews, aliases, radius, and
+shadow tokens. Failing tokens are highlighted with warning banners and
+recommended foreground colors.
+
+Startup warnings are logged when tokens fail WCAG AA:
+
+```csharp
+options.WarnOnAccessibilityFailuresAtStartup = true;
+options.WcagVersion = "2.1";
+```
 
 To use a custom route, create a host page and render the shared catalog
 component:
