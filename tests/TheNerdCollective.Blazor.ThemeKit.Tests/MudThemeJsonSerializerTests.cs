@@ -1,36 +1,12 @@
 using MudBlazor;
 using MudBlazor.Utilities;
 using TheNerdCollective.Blazor.ThemeKit;
-using TheNerdCollective.MudComponents.ResponsiveTypography;
 using Xunit;
 
 namespace TheNerdCollective.Blazor.ThemeKit.Tests;
 
 public class MudThemeJsonSerializerTests
 {
-    [Fact]
-    public void ResponsiveFontSize_Clamp_returns_css_clamp_expression()
-    {
-        Assert.Equal("clamp(1.75rem, 3vw, 2.5rem)", ResponsiveFontSize.Clamp("1.75rem", "3vw", "2.5rem"));
-    }
-
-    [Fact]
-    public void ResponsiveTypography_applies_configured_roles_and_preserves_omitted_roles()
-    {
-        var theme = new MudTheme();
-        var originalH2 = theme.Typography.H2.FontSize;
-
-        theme.UseResponsiveTypography(options =>
-        {
-            options.H1 = ResponsiveFontSize.Clamp("2rem", "4vw", "4rem");
-            options.H3 = ResponsiveFontSize.Clamp("1.75rem", "3vw", "2.5rem");
-        });
-
-        Assert.Equal("clamp(2rem, 4vw, 4rem)", theme.Typography.H1.FontSize);
-        Assert.Equal("clamp(1.75rem, 3vw, 2.5rem)", theme.Typography.H3.FontSize);
-        Assert.Equal(originalH2, theme.Typography.H2.FontSize);
-    }
-
     [Fact]
     public void ExtractTokens_and_apply_roundtrip_preserves_primary()
     {

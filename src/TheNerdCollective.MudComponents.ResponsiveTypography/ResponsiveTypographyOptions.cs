@@ -2,6 +2,7 @@ namespace TheNerdCollective.MudComponents.ResponsiveTypography;
 
 public sealed class ResponsiveTypographyOptions
 {
+    public string? Default { get; set; }
     public string? H1 { get; set; }
     public string? H2 { get; set; }
     public string? H3 { get; set; }

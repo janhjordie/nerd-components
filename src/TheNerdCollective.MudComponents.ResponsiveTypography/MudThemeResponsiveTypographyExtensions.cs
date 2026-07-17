@@ -14,6 +14,7 @@ public static class MudThemeResponsiveTypographyExtensions
         var options = new ResponsiveTypographyOptions();
         configure(options);
 
+        Set(options.Default, value => theme.Typography.Default.FontSize = value);
         Set(options.H1, value => theme.Typography.H1.FontSize = value);
         Set(options.H2, value => theme.Typography.H2.FontSize = value);
         Set(options.H3, value => theme.Typography.H3.FontSize = value);
