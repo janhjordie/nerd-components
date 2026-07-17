@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.0.0
+
+- Complete MudBlazor 9.6 palette coverage: all 80 `--mud-palette-*` variables are now mapped per token.
+- Added `MudBlazorPaletteMapper` with derived darken, lighten, and RGB channels for every color role.
+- Added `MudBlazorComponentRuleBuilder` with pattern-based selectors covering buttons, chips, alerts, inputs, tables, data grids, navigation, ratings, switches, and structural components.
+- Descendant selectors (`.token .mud-*`) support tokens applied on container elements such as `MudGrid`.
+- Design token catalog previews now include icon buttons, FABs, badges, form controls, ratings, and progress bars.
+
 ## 1.9.0
 
 - WCAG contrast checks now resolve CSS variables such as `var(--dnf-color-forest)`.

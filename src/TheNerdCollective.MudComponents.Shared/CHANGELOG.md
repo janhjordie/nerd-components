@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.0
+
+- Added `NerdColorDerivatives` for lighten, darken, and RGB tuple derivation from supported CSS colors.
+
 ## 1.2.0
 
 - Added `hsl()` / `hsla()` and `var(--token)` resolution to `NerdColorParser`.

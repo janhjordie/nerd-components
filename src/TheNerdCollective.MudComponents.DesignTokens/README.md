@@ -46,13 +46,16 @@ Use the customer vocabulary in markup:
 </MudGrid>
 ```
 
-The generator emits the MudBlazor palette variables used by all components
-that consume the theme variables, so the token works generically on
-`MudGrid`, `MudPaper`, `MudCard`, and other components. It also emits explicit
-selectors for filled, outlined, and text buttons, chips, alerts, badges,
-progress bars, icon buttons, links, typography, hover, focus, active, and
-disabled states. This covers both inherited theme behavior and component
-variants where MudBlazor uses a more specific selector.
+The generator maps all 80 MudBlazor 9.6 `--mud-palette-*` variables per token,
+so every component that reads the theme palette inherits the token color.
+Pattern-based selectors cover filled, outlined, and text variants for buttons,
+chips, alerts, FABs, avatars, badges, and progress indicators. Inputs
+(text fields, selects, checkboxes, radios, switches, sliders, ratings),
+navigation (tabs, nav links, breadcrumbs, menus), and structural components
+(tables, data grids, cards, dialogs, drawers, app bars) are included.
+Descendant selectors allow applying a token on a container such as
+`MudGrid` and styling all nested MudBlazor components. Hover, focus, active,
+checked, selected, and disabled states are covered.
 
 Token names must be lowercase CSS identifiers, such as `sand`,
 `forest-dark`, or `sea-2`. Each application can define a different set of

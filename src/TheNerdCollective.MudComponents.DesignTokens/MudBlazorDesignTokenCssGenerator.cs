@@ -64,6 +64,9 @@ public static class MudBlazorDesignTokenCssGenerator
         var contrast = NerdColorValue.Validate(
             token.ContrastText ?? NerdColorValue.ContrastText(light),
             nameof(token.ContrastText));
+        var darkContrast = NerdColorValue.Validate(
+            token.DarkContrastText ?? token.ContrastText ?? NerdColorValue.ContrastText(dark),
+            nameof(token.DarkContrastText));
         var root = string.IsNullOrWhiteSpace(options.ScopeSelector)
             ? $".{options.Prefix}-{name}"
             : $"{options.ScopeSelector} .{options.Prefix}-{name}";
@@ -76,78 +79,37 @@ public static class MudBlazorDesignTokenCssGenerator
         var disabledVariable = $"{variable}-disabled";
 
         css.AppendLine($"{root} {{");
-        css.AppendLine($"  {variable}: {light};");
-        css.AppendLine($"  {textVariable}: {contrast};");
-        css.AppendLine($"  {hoverVariable}: {token.Hover ?? light};");
-        css.AppendLine($"  {activeVariable}: {token.Active ?? token.Hover ?? light};");
-        css.AppendLine($"  {borderVariable}: {token.Border ?? light};");
-        css.AppendLine($"  {disabledVariable}: {token.Disabled ?? light};");
-        css.AppendLine($"  --{prefix}-color-{name}-surface: {token.Surface ?? light};");
-        css.AppendLine($"  --{prefix}-color-{name}-content: {token.Content ?? contrast};");
-        css.AppendLine($"  --{prefix}-color-{name}-interactive: {token.Interactive ?? light};");
-        css.AppendLine("  --mud-palette-primary: var(" + variable + ");");
-        css.AppendLine("  --mud-palette-primary-text: var(" + textVariable + ");");
-        css.AppendLine("  --mud-palette-primary-hover: var(" + hoverVariable + ");");
-        css.AppendLine("  --mud-palette-action-default: var(" + variable + ");");
-        css.AppendLine("  --mud-palette-secondary: var(" + variable + ");");
-        css.AppendLine("  --mud-palette-tertiary: var(" + variable + ");");
-        css.AppendLine("  --mud-palette-info: var(" + variable + ");");
-        css.AppendLine("  --mud-palette-success: var(" + variable + ");");
-        css.AppendLine("  --mud-palette-warning: var(" + variable + ");");
-        css.AppendLine("  --mud-palette-error: var(" + variable + ");");
-        css.AppendLine("  --mud-palette-background: var(" + variable + ");");
-        css.AppendLine("  --mud-palette-background-gray: var(" + variable + ");");
-        css.AppendLine("  --mud-palette-surface: var(" + variable + ");");
-        css.AppendLine("  --mud-palette-drawer-background: var(" + variable + ");");
-        css.AppendLine("  --mud-palette-appbar-background: var(" + variable + ");");
-        css.AppendLine("  --mud-palette-text-primary: var(" + textVariable + ");");
-        css.AppendLine("  --mud-palette-text-secondary: var(" + textVariable + ");");
-        css.AppendLine("  --mud-palette-lines-default: var(" + borderVariable + ");");
-        css.AppendLine("  --mud-palette-lines-inputs: var(" + borderVariable + ");");
-        css.AppendLine("  --mud-palette-divider: var(" + borderVariable + ");");
-        css.AppendLine("  color: var(" + textVariable + ");");
-        css.AppendLine("  background-color: var(" + variable + ");");
+        MudBlazorPaletteMapper.AppendPaletteVariables(
+            css,
+            prefix,
+            name,
+            variable,
+            textVariable,
+            hoverVariable,
+            activeVariable,
+            borderVariable,
+            disabledVariable,
+            token,
+            light,
+            dark,
+            contrast,
+            darkContrast);
         css.AppendLine("}");
-        var darkContrast = NerdColorValue.Validate(
-            token.DarkContrastText ?? token.ContrastText ?? NerdColorValue.ContrastText(dark),
-            nameof(token.DarkContrastText));
+
         css.AppendLine($"[data-theme=\"dark\"] {root} {{");
         css.AppendLine($"  {variable}: {dark};");
         css.AppendLine($"  {textVariable}: {darkContrast};");
         css.AppendLine("}");
 
-        var important = options.UseImportantOverrides ? " !important" : string.Empty;
-
-        css.AppendLine($"{root}.mud-button-filled, {root}.mud-chip, {root}.mud-alert,");
-        css.AppendLine($"{root}.mud-badge, {root}.mud-progress-linear {{");
-        css.AppendLine($"  background-color: var({variable}){important};");
-        css.AppendLine($"  color: var({textVariable}){important};");
-        css.AppendLine("}");
-
-        css.AppendLine($"{root}.mud-button-outlined, {root}.mud-button-text,");
-        css.AppendLine($"{root}.mud-icon-button, {root}.mud-link, {root}.mud-typography {{");
-        css.AppendLine($"  color: var({variable}){important};");
-        css.AppendLine("}");
-
-        css.AppendLine($"{root}.mud-button-outlined {{");
-        css.AppendLine($"  border-color: var({borderVariable}){important};");
-        css.AppendLine("}");
-
-        css.AppendLine($"{root}.mud-button-filled:hover, {root}.mud-button-outlined:hover,");
-        css.AppendLine($"{root}.mud-button-text:hover, {root}.mud-chip:hover {{");
-        css.AppendLine($"  background-color: var({hoverVariable}){important};");
-        css.AppendLine("}");
-
-        css.AppendLine($"{root}:focus-visible, {root}.mud-button:focus, {root}.mud-button:active,");
-        css.AppendLine($"{root}.mud-chip:active, {root}.mud-selected, {root}.mud-checked,");
-        css.AppendLine($"{root}.mud-expanded, {root}[aria-pressed=\"true\"] {{");
-        css.AppendLine($"  outline-color: var({activeVariable}){important};");
-        css.AppendLine("}");
-
-        css.AppendLine($"{root}.mud-disabled, {root}[disabled], {root}.mud-button:disabled,");
-        css.AppendLine($"{root}.mud-chip.mud-disabled, {root}[aria-disabled=\"true\"] {{");
-        css.AppendLine($"  color: var({disabledVariable}){important};");
-        css.AppendLine("}");
-        css.AppendLine();
+        MudBlazorComponentRuleBuilder.AppendRules(
+            css,
+            root,
+            variable,
+            textVariable,
+            hoverVariable,
+            activeVariable,
+            borderVariable,
+            disabledVariable,
+            options.UseImportantOverrides);
     }
 }

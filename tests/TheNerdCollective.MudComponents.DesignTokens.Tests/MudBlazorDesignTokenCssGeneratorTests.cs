@@ -19,10 +19,10 @@ public class MudBlazorDesignTokenCssGeneratorTests
 
         Assert.Contains(".dnf-forest", css);
         Assert.Contains("--dnf-color-forest: #365C3A", css);
-        Assert.Contains(".dnf-forest.mud-button-filled", css);
-        Assert.Contains(".dnf-forest.mud-button-outlined", css);
-        Assert.Contains(".dnf-forest.mud-button-text", css);
-        Assert.Contains(".dnf-forest.mud-typography", css);
+        Assert.Contains(".dnf-forest[class*=\"mud-button-filled\"]", css);
+        Assert.Contains(".dnf-forest[class*=\"mud-button-outlined\"]", css);
+        Assert.Contains(".dnf-forest[class*=\"mud-button-text\"]", css);
+        Assert.Contains(".dnf-forest[class*=\"mud-typography\"]", css);
         Assert.Contains(".dnf-forest.mud-disabled", css);
         Assert.Contains("!important", css);
     }
@@ -63,6 +63,42 @@ public class MudBlazorDesignTokenCssGeneratorTests
         Assert.Contains("--dnf-color-forest-interactive: #2D4D30", css);
         Assert.Contains(".dnf-forest.mud-selected", css);
         Assert.Contains("[aria-pressed=\"true\"]", css);
+    }
+
+    [Fact]
+    public void Generate_maps_all_mudblazor_palette_variables()
+    {
+        var options = new NerdDesignTokenOptions { Prefix = "dnf" }
+            .Add("forest", new NerdColorToken { Value = "#365C3A", ContrastText = "#FFFFFF" });
+
+        var css = MudBlazorDesignTokenCssGenerator.Generate(options);
+
+        Assert.Contains("--mud-palette-primary: var(--dnf-color-forest)", css);
+        Assert.Contains("--mud-palette-primary-darken:", css);
+        Assert.Contains("--mud-palette-primary-lighten:", css);
+        Assert.Contains("--mud-palette-primary-rgb:", css);
+        Assert.Contains("--mud-palette-secondary: var(--dnf-color-forest)", css);
+        Assert.Contains("--mud-palette-table-hover:", css);
+        Assert.Contains("--mud-palette-overlay-light:", css);
+        Assert.Contains("--mud-palette-skeleton:", css);
+        Assert.Contains("--mud-palette-action-disabled-background:", css);
+    }
+
+    [Fact]
+    public void Generate_emits_pattern_rules_for_inputs_tables_and_navigation()
+    {
+        var options = new NerdDesignTokenOptions { Prefix = "dnf" }
+            .Add("forest", new NerdColorToken { Value = "#365C3A", ContrastText = "#FFFFFF" });
+
+        var css = MudBlazorDesignTokenCssGenerator.Generate(options);
+
+        Assert.Contains("[class*=\"mud-text-field\"]", css);
+        Assert.Contains("[class*=\"mud-switch\"]", css);
+        Assert.Contains("[class*=\"mud-table\"]", css);
+        Assert.Contains("[class*=\"mud-data-grid\"]", css);
+        Assert.Contains("[class*=\"mud-nav-link\"]", css);
+        Assert.Contains("[class*=\"mud-rating\"]", css);
+        Assert.Contains(".dnf-forest .mud-switch.mud-checked .mud-switch-thumb", css);
     }
 
     [Fact]

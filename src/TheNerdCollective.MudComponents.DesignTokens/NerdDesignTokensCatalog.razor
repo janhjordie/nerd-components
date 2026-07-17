@@ -145,12 +145,26 @@ else
                                         <MudButton Class="@className" Variant="Variant.Filled">Filled</MudButton>
                                         <MudButton Class="@className" Variant="Variant.Outlined">Outlined</MudButton>
                                         <MudButton Class="@className" Variant="Variant.Text">Text</MudButton>
+                                        <MudIconButton Class="@className" Icon="@Icons.Material.Filled.Favorite" />
+                                        <MudFab Class="@className" Color="Color.Inherit" Icon="@Icons.Material.Filled.Add" />
                                     </MudStack>
                                     <MudStack Row="true" Spacing="1" Class="flex-wrap gap-1 mb-2">
                                         <MudChip T="string" Class="@className" Variant="Variant.Filled">Chip</MudChip>
+                                        <MudBadge Class="@className" Content="3" Color="Color.Inherit" Overlap="true">
+                                            <MudIcon Icon="@Icons.Material.Filled.Notifications" />
+                                        </MudBadge>
                                         <MudText Class="@className" Typo="Typo.h6">Heading</MudText>
+                                        <MudLink Class="@className" Href="#">Link</MudLink>
                                     </MudStack>
-                                    <MudAlert Class="@className" Severity="Severity.Info" Variant="Variant.Filled" Dense="true">
+                                    <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="flex-wrap gap-2 mb-2">
+                                        <MudSwitch Class="@className" Value="true" Color="Color.Inherit" Label="Switch" />
+                                        <MudCheckBox Class="@className" Value="true" Color="Color.Inherit" Label="Checkbox" />
+                                        <MudRadio Class="@className" Value="true" Color="Color.Inherit" Label="Radio" />
+                                        <MudRating Class="@className" Value="3" MaxValue="5" />
+                                    </MudStack>
+                                    <MudTextField T="string" Class="@className" Label="Text field" Variant="Variant.Outlined" />
+                                    <MudProgressLinear Class="@($"{className} mt-2")" Value="60" Color="Color.Inherit" />
+                                    <MudAlert Class="@($"{className} mt-2")" Severity="Severity.Info" Variant="Variant.Filled" Dense="true">
                                         Alert preview
                                     </MudAlert>
                                 </MudPaper>
