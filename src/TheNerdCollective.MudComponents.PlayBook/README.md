@@ -52,6 +52,31 @@ Browse the PlayBook at `/nerd-playbook` (configurable via `PlayBookRoute`).
 - **Dark mode preview** with `data-theme="dark"` token activation
 - **Category and search filters** for large component libraries
 - **MudBlazor API links** on every component card
+- **ThemeKit integration** — theme switcher, token editor drawer, and JSON theme file persistence (`Themes/` catalog)
+- **Per-component playgrounds** — edit props live with configuration summary (MudQuillEditor-style)
+
+## ThemeKit
+
+ThemeKit is enabled by default. It registers a JSON theme catalog, enables Playbook mode (theme editor always available), and persists theme files through `FileThemeJsonFilePersistence`.
+
+```csharp
+builder.Services.AddNerdPlayBook(options =>
+{
+    options.EnableThemeKit = true;
+    options.ThemeKitPlaybookMode = true;
+    options.ThemesDirectory = Path.Combine(builder.Environment.ContentRootPath, "playbook-themes");
+});
+```
+
+Copy the packaged `Themes/` folder to your content root, or point `ThemesDirectory` at a writable directory. Use the theme editor drawer to create `playbook-local` themes and save JSON files.
+
+## Component playgrounds
+
+Each component card includes a **Playground** button that opens a drawer with:
+
+1. Editable properties (variant, size, disabled, labels, etc.)
+2. Live preview with the selected design token class
+3. Configuration summary for copy/paste documentation
 
 ## Custom route
 

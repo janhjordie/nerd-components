@@ -1,0 +1,77 @@
+<MudDrawer @bind-Open="Open"
+           Anchor="Anchor.End"
+           Elevation="2"
+           Variant="DrawerVariant.Temporary"
+           Style="--mud-drawer-width: min(960px, 100vw);">
+    <MudDrawerHeader>
+        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Style="width:100%">
+            <div>
+                <MudText Typo="Typo.h6">@Entry.DisplayName playground</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">@Entry.Description</MudText>
+            </div>
+            <MudButton Href="@Entry.ApiUrl(DocsBaseUrl)" Target="_blank" Variant="Variant.Text" Size="Size.Small"
+                       StartIcon="@Icons.Material.Filled.OpenInNew">
+                MudBlazor API
+            </MudButton>
+        </MudStack>
+    </MudDrawerHeader>
+
+    <div class="pa-4">
+        <MudStack Spacing="3">
+            <MudPaper Outlined="true" Class="pa-3">
+                <MudText Typo="Typo.subtitle2" Class="mb-2">Properties</MudText>
+                <NerdPlayBookPlaygroundPanel Definitions="Definitions"
+                                             State="State"
+                                             StateChanged="OnStateChanged" />
+            </MudPaper>
+
+            <MudPaper Outlined="true" Class="pa-3" data-theme="@ThemeMode">
+                <MudText Typo="Typo.subtitle2" Class="mb-2">Live preview · <code>.@TokenClass</code></MudText>
+                <div class="@TokenClass">
+                    <NerdPlayBookPreview ComponentId="@Entry.Id" Playground="State" />
+                </div>
+            </MudPaper>
+
+            <MudPaper Outlined="true" Class="pa-3" Style="border-left: 4px solid var(--mud-palette-primary);">
+                <MudText Typo="Typo.subtitle2" Class="mb-2">Configuration summary</MudText>
+                <MudStack Spacing="1">
+                    @foreach (var pair in State.Values.OrderBy(pair => pair.Key, StringComparer.Ordinal))
+                    {
+                        <MudText Typo="Typo.caption"><strong>@pair.Key:</strong> @FormatSummaryValue(pair.Value)</MudText>
+                    }
+                </MudStack>
+            </MudPaper>
+        </MudStack>
+    </div>
+</MudDrawer>
+
+@code {
+    [Parameter]
+    public bool Open { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> OpenChanged { get; set; }
+
+    [Parameter, EditorRequired]
+    public MudBlazorPlayBookEntry Entry { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public NerdPlayBookPlaygroundState State { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<NerdPlayBookPropDefinition> Definitions { get; set; } = [];
+
+    [Parameter]
+    public string TokenClass { get; set; } = string.Empty;
+
+    [Parameter]
+    public string ThemeMode { get; set; } = "light";
+
+    [Parameter]
+    public string DocsBaseUrl { get; set; } = "https://mudblazor.com/components";
+
+    private Task OnStateChanged() => InvokeAsync(StateHasChanged);
+
+    private static string FormatSummaryValue(string value) =>
+        string.IsNullOrWhiteSpace(value) ? "(empty)" : $"\"{value}\"";
+}

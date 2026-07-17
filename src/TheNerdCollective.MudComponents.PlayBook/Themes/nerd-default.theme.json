@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "1.0",
+  "id": "nerd-default",
+  "displayName": "Nerd default",
+  "version": "1.0.0",
+  "updatedAt": "2026-07-17",
+  "previewPrimaryHex": "#113A5D",
+  "tokens": {
+    "light.primary": "#113A5D",
+    "light.secondary": "#ff7a8a",
+    "light.appbar.background": "#113A5D",
+    "light.background": "#fafafa",
+    "light.surface": "#ffffff",
+    "dark.primary": "#90CAF9",
+    "dark.background": "#121212",
+    "dark.surface": "#1E1E1E"
+  }
+}

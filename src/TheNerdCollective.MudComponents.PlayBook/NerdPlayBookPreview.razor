@@ -2,20 +2,24 @@
 @switch (ComponentId)
 {
     case "button":
-        <MudStack Row="true" Spacing="1" Class="flex-wrap gap-1">
-            <MudButton Variant="Variant.Filled" Color="Color.Inherit" Size="Size.Small">Filled</MudButton>
-            <MudButton Variant="Variant.Outlined" Color="Color.Inherit" Size="Size.Small">Outlined</MudButton>
-            <MudButton Variant="Variant.Text" Color="Color.Inherit" Size="Size.Small">Text</MudButton>
-        </MudStack>
+        @if (IsPlayground)
+        {
+            <MudButton Variant="@PVariant()" Color="Color.Inherit" Size="@PSize()" Disabled="@PBool("disabled")">@PText("text", "Button")</MudButton>
+        }
+        else
+        {
+            <MudStack Row="true" Spacing="1" Class="flex-wrap gap-1">
+                <MudButton Variant="Variant.Filled" Color="Color.Inherit" Size="Size.Small">Filled</MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Inherit" Size="Size.Small">Outlined</MudButton>
+                <MudButton Variant="Variant.Text" Color="Color.Inherit" Size="Size.Small">Text</MudButton>
+            </MudStack>
+        }
         break;
     case "icon-button":
-        <MudStack Row="true" Spacing="1">
-            <MudIconButton Icon="@Icons.Material.Filled.Favorite" Color="Color.Inherit" />
-            <MudIconButton Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" Color="Color.Inherit" />
-        </MudStack>
+        <MudIconButton Icon="@Icons.Material.Filled.Favorite" Color="Color.Inherit" Variant="@PVariant(Variant.Filled)" Size="@PSize()" Disabled="@PBool("disabled")" />
         break;
     case "fab":
-        <MudFab Color="Color.Inherit" Icon="@Icons.Material.Filled.Add" Size="Size.Small" />
+        <MudFab Color="Color.Inherit" Icon="@Icons.Material.Filled.Add" Size="@PSize()" Disabled="@PBool("disabled")" />
         break;
     case "toggle-group":
         <MudToggleGroup T="string" @bind-Value="_toggleValue" Color="Color.Inherit" Size="Size.Small">
@@ -30,47 +34,50 @@
         </MudButtonGroup>
         break;
     case "text-field":
-        <MudTextField T="string" @bind-Value="_textValue" Label="Name" Variant="Variant.Outlined" Margin="Margin.Dense" />
+        <MudTextField T="string" @bind-Value="_textValue" Label="@PText("label", "Name")" Placeholder="@PText("placeholder", "Enter value")"
+                      Variant="@PVariant(Variant.Outlined)" ReadOnly="@PBool("readOnly")" Disabled="@PBool("disabled")" Margin="Margin.Dense" />
         break;
     case "numeric-field":
-        <MudNumericField T="int" @bind-Value="_numericValue" Label="Amount" Variant="Variant.Outlined" Margin="Margin.Dense" />
+        <MudNumericField T="int" @bind-Value="_numericValue" Label="@PText("label", "Amount")" Placeholder="@PText("placeholder", "0")"
+                         Variant="@PVariant(Variant.Outlined)" ReadOnly="@PBool("readOnly")" Disabled="@PBool("disabled")" Margin="Margin.Dense" />
         break;
     case "select":
-        <MudSelect T="string" @bind-Value="_selectValue" Label="Option" Variant="Variant.Outlined" Margin="Margin.Dense">
+        <MudSelect T="string" @bind-Value="_selectValue" Label="@PText("label", "Option")" Variant="@PVariant(Variant.Outlined)"
+                   Disabled="@PBool("disabled")" Margin="Margin.Dense">
             <MudSelectItem Value="@("alpha")">Alpha</MudSelectItem>
             <MudSelectItem Value="@("beta")">Beta</MudSelectItem>
         </MudSelect>
         break;
     case "autocomplete":
-        <MudAutocomplete T="string" @bind-Value="_autocompleteValue" Label="City" Variant="Variant.Outlined"
-                         SearchFunc="@SearchCities" Margin="Margin.Dense" />
+        <MudAutocomplete T="string" @bind-Value="_autocompleteValue" Label="@PText("label", "City")" Variant="@PVariant(Variant.Outlined)"
+                         Disabled="@PBool("disabled")" ReadOnly="@PBool("readOnly")" SearchFunc="@SearchCities" Margin="Margin.Dense" />
         break;
     case "checkbox":
-        <MudCheckBox @bind-Value="_checkValue" Label="Accept" Color="Color.Inherit" />
+        <MudCheckBox @bind-Value="_checkValue" Label="@PText("label", "Accept")" Color="Color.Inherit" Disabled="@PBool("disabled")" />
         break;
     case "radio":
         <MudRadioGroup T="string" @bind-Value="_radioValue">
-            <MudRadio Value="@("a")" Color="Color.Inherit">A</MudRadio>
-            <MudRadio Value="@("b")" Color="Color.Inherit">B</MudRadio>
+            <MudRadio Value="@("a")" Color="Color.Inherit" Disabled="@PBool("disabled")">A</MudRadio>
+            <MudRadio Value="@("b")" Color="Color.Inherit" Disabled="@PBool("disabled")">B</MudRadio>
         </MudRadioGroup>
         break;
     case "switch":
-        <MudSwitch @bind-Value="_switchValue" Label="Enabled" Color="Color.Inherit" />
+        <MudSwitch @bind-Value="_switchValue" Label="@PText("label", "Enabled")" Color="Color.Inherit" Disabled="@PBool("disabled")" />
         break;
     case "slider":
-        <MudSlider @bind-Value="_sliderValue" Min="0" Max="100" Color="Color.Inherit" />
+        <MudSlider @bind-Value="_sliderValue" Min="@PInt("min", 0)" Max="@PInt("max", 100)" Color="Color.Inherit" Disabled="@PBool("disabled")" />
         break;
     case "rating":
-        <MudRating @bind-SelectedValue="_ratingValue" MaxValue="5" Color="Color.Inherit" />
+        <MudRating @bind-SelectedValue="_ratingValue" MaxValue="@PInt("max", 5)" ReadOnly="@PBool("readOnly")" Color="Color.Inherit" />
         break;
     case "date-picker":
-        <MudDatePicker @bind-Date="_dateValue" Label="Date" Variant="Variant.Outlined" Margin="Margin.Dense" />
+        <MudDatePicker @bind-Date="_dateValue" Label="@PText("label", "Date")" Variant="@PVariant(Variant.Outlined)" Disabled="@PBool("disabled")" Margin="Margin.Dense" />
         break;
     case "time-picker":
-        <MudTimePicker @bind-Time="_timeValue" Label="Time" Variant="Variant.Outlined" Margin="Margin.Dense" />
+        <MudTimePicker @bind-Time="_timeValue" Label="@PText("label", "Time")" Variant="@PVariant(Variant.Outlined)" Disabled="@PBool("disabled")" Margin="Margin.Dense" />
         break;
     case "date-range-picker":
-        <MudDateRangePicker @bind-DateRange="_dateRangeValue" Label="Range" Variant="Variant.Outlined" Margin="Margin.Dense" />
+        <MudDateRangePicker @bind-DateRange="_dateRangeValue" Label="@PText("label", "Range")" Variant="@PVariant(Variant.Outlined)" Disabled="@PBool("disabled")" Margin="Margin.Dense" />
         break;
     case "file-upload":
         <MudButton Variant="Variant.Outlined" Color="Color.Inherit" Size="Size.Small" StartIcon="@Icons.Material.Filled.Upload">
@@ -78,7 +85,7 @@
         </MudButton>
         break;
     case "table":
-        <MudTable Items="_tableItems" Dense="true" Hover="true" Bordered="true">
+        <MudTable Items="_tableItems" Dense="@PDense()" Hover="true" Bordered="true">
             <HeaderContent>
                 <MudTh>Name</MudTh>
                 <MudTh>Qty</MudTh>
@@ -90,7 +97,7 @@
         </MudTable>
         break;
     case "simple-table":
-        <MudSimpleTable Dense="true" Bordered="true">
+        <MudSimpleTable Dense="@PDense()" Bordered="true">
             <tbody>
                 <tr><td>Row</td><td>1</td></tr>
                 <tr><td>Row</td><td>2</td></tr>
@@ -98,7 +105,7 @@
         </MudSimpleTable>
         break;
     case "data-grid":
-        <MudDataGrid T="PlayBookRow" Items="_tableItems" Dense="true" Bordered="true" Style="max-height:120px">
+        <MudDataGrid T="PlayBookRow" Items="_tableItems" Dense="@PDense()" Bordered="true" Style="max-height:120px">
             <Columns>
                 <PropertyColumn Property="x => x.Name" Title="Name" />
                 <PropertyColumn Property="x => x.Quantity" Title="Qty" />
@@ -106,10 +113,17 @@
         </MudDataGrid>
         break;
     case "chip":
-        <MudStack Row="true" Spacing="1" Class="flex-wrap gap-1">
-            <MudChip T="string" Variant="Variant.Filled" Color="Color.Inherit">Filled</MudChip>
-            <MudChip T="string" Variant="Variant.Outlined" Color="Color.Inherit">Outlined</MudChip>
-        </MudStack>
+        @if (IsPlayground)
+        {
+            <MudChip T="string" Variant="@PVariant()" Color="Color.Inherit" Disabled="@PBool("disabled")">@PText("text", "Chip")</MudChip>
+        }
+        else
+        {
+            <MudStack Row="true" Spacing="1" Class="flex-wrap gap-1">
+                <MudChip T="string" Variant="Variant.Filled" Color="Color.Inherit">Filled</MudChip>
+                <MudChip T="string" Variant="Variant.Outlined" Color="Color.Inherit">Outlined</MudChip>
+            </MudStack>
+        }
         break;
     case "badge":
         <MudBadge Content="3" Color="Color.Inherit" Overlap="true">
@@ -147,10 +161,7 @@
         </MudTimeline>
         break;
     case "typography":
-        <MudStack Spacing="0">
-            <MudText Typo="Typo.h6">Heading</MudText>
-            <MudText Typo="Typo.body2">Body text preview</MudText>
-        </MudStack>
+        <MudText Typo="@PTypo()">@PText("text", "Typography preview")</MudText>
         break;
     case "icon":
         <MudStack Row="true" Spacing="1">
@@ -165,13 +176,13 @@
         <MudText Typo="Typo.body2"><b>Bold</b> and <i>italic</i> text preview.</MudText>
         break;
     case "alert":
-        <MudAlert Severity="Severity.Info" Variant="Variant.Filled" Dense="true">Alert preview</MudAlert>
+        <MudAlert Severity="@PSeverity()" Variant="@PVariant(Variant.Filled)" Dense="@PDense()">@PText("text", "Alert preview")</MudAlert>
         break;
     case "progress-circular":
-        <MudProgressCircular Color="Color.Inherit" Indeterminate="true" Size="Size.Small" />
+        <MudProgressCircular Color="Color.Inherit" Indeterminate="@PBool("indeterminate", true)" Value="@PInt("value", 60)" Size="Size.Small" />
         break;
     case "progress-linear":
-        <MudProgressLinear Color="Color.Inherit" Value="60" />
+        <MudProgressLinear Color="Color.Inherit" Indeterminate="@PBool("indeterminate")" Value="@PInt("value", 60)" />
         break;
     case "skeleton":
         <MudSkeleton Width="100%" Height="40px" Animation="Animation.Wave" />

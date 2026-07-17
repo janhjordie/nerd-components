@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "1.0",
+  "defaultThemeId": "nerd-default",
+  "updatedAt": "2026-07-17",
+  "themes": [
+    {
+      "id": "nerd-default",
+      "displayName": "Nerd default",
+      "version": "1.0.0",
+      "updatedAt": "2026-07-17",
+      "previewPrimaryHex": "#113A5D",
+      "file": "nerd-default.theme.json",
+      "source": "shared-ui"
+    },
+    {
+      "id": "nerd-brand",
+      "displayName": "Nerd brand",
+      "version": "1.0.0",
+      "updatedAt": "2026-07-17",
+      "previewPrimaryHex": "#365C3A",
+      "file": "nerd-brand.theme.json",
+      "source": "shared-ui"
+    },
+    {
+      "id": "playbook-sandbox",
+      "displayName": "Playbook sandbox",
+      "version": "0.1.0",
+      "updatedAt": "2026-07-17",
+      "previewPrimaryHex": "#594AE2",
+      "file": "playbook-sandbox.theme.json",
+      "source": "playbook-local"
+    }
+  ]
+}

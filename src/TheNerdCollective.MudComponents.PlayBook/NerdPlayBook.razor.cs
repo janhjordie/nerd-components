@@ -1,14 +1,16 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using MudBlazor;
+using TheNerdCollective.Blazor.ThemeKit;
 using TheNerdCollective.MudComponents.DesignTokens;
 using TheNerdCollective.MudComponents.ResponsiveTypography;
 using TheNerdCollective.MudComponents.Shared;
 
 namespace TheNerdCollective.MudComponents.PlayBook;
 
-public partial class NerdPlayBook
+public partial class NerdPlayBook : IDisposable
 {
     [Inject]
     private NerdPlayBookOptions Options { get; set; } = default!;
@@ -25,6 +27,11 @@ public partial class NerdPlayBook
     [Inject]
     private IWebHostEnvironment HostEnvironment { get; set; } = default!;
 
+    [Inject]
+    private IServiceProvider Services { get; set; } = default!;
+
+    private IMudThemeStateService? _themeState;
+
     private bool _previewDark;
     private string _typographyPreset = NerdPlayBookTypography.DefaultPreset;
     private string _selectedTokenFilter = "all";
@@ -37,6 +44,12 @@ public partial class NerdPlayBook
     {
         _tokenNames = TokenOptions.Colors.Keys.OrderBy(name => name, StringComparer.Ordinal).ToList();
         ApplyTypographyPreset();
+
+        if (Options.EnableThemeKit)
+        {
+            _themeState = Services.GetRequiredService<IMudThemeStateService>();
+            _themeState.Changed += OnThemeStateChanged;
+        }
     }
 
     private bool IsAvailable =>
@@ -47,6 +60,15 @@ public partial class NerdPlayBook
         _selectedTokenFilter == "all"
             ? _tokenNames.Select(name => $"{TokenOptions.Prefix}-{name}").ToList()
             : [$"{TokenOptions.Prefix}-{_selectedTokenFilter}"];
+
+    private string PlaygroundTokenClass =>
+        _selectedTokenFilter == "all"
+            ? VisibleTokens.FirstOrDefault() ?? string.Empty
+            : $"{TokenOptions.Prefix}-{_selectedTokenFilter}";
+
+    private string ThemeMode => Options.EnableThemeKit && _themeState is not null
+        ? _themeState.IsDarkMode ? "dark" : "light"
+        : _previewDark ? "dark" : "light";
 
     private IReadOnlyList<MudBlazorPlayBookEntry> FilteredEntries
     {
@@ -82,5 +104,15 @@ public partial class NerdPlayBook
         _typographyPreset = value;
         ApplyTypographyPreset();
         return Task.CompletedTask;
+    }
+
+    private void OnThemeStateChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        if (Options.EnableThemeKit && _themeState is not null)
+        {
+            _themeState.Changed -= OnThemeStateChanged;
+        }
     }
 }

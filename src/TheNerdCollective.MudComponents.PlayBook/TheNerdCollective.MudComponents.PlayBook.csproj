@@ -4,7 +4,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <PackageId>TheNerdCollective.MudComponents.PlayBook</PackageId>
-    <Version>1.0.0</Version>
+    <Version>1.2.0</Version>
     <Authors>The Nerd Collective</Authors>
     <Description>Interactive MudBlazor component playground with design tokens and responsive typography.</Description>
     <PackageTags>mudblazor;blazor;playbook;design-system;storybook</PackageTags>
@@ -27,6 +27,12 @@
     <ProjectReference Include="..\TheNerdCollective.MudComponents.Shared\TheNerdCollective.MudComponents.Shared.csproj" />
     <ProjectReference Include="..\TheNerdCollective.MudComponents.DesignTokens\TheNerdCollective.MudComponents.DesignTokens.csproj" />
     <ProjectReference Include="..\TheNerdCollective.MudComponents.ResponsiveTypography\TheNerdCollective.MudComponents.ResponsiveTypography.csproj" />
+    <ProjectReference Include="..\TheNerdCollective.Blazor.ThemeKit\TheNerdCollective.Blazor.ThemeKit.csproj" />
+    <ProjectReference Include="..\TheNerdCollective.MudComponents.ThemeKit\TheNerdCollective.MudComponents.ThemeKit.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="Themes\**\*" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

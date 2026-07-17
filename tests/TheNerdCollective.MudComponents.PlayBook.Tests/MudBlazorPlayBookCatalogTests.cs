@@ -55,4 +55,24 @@ public class MudBlazorPlayBookCatalogTests
         Assert.NotNull(marketing);
         Assert.NotNull(dense);
     }
+
+    [Fact]
+    public void Playground_registry_covers_all_catalog_components()
+    {
+        foreach (var entry in MudBlazorPlayBookCatalog.All)
+        {
+            Assert.True(NerdPlayBookPlaygroundRegistry.SupportsPlayground(entry.Id), $"Missing playground props for {entry.Id}");
+        }
+    }
+
+    [Fact]
+    public void Playground_state_reads_typed_values()
+    {
+        var state = NerdPlayBookPlaygroundRegistry.CreateState("button");
+        state.Set("disabled", "true");
+        state.Set("variant", "Outlined");
+
+        Assert.True(state.GetBool("disabled"));
+        Assert.Equal(MudBlazor.Variant.Outlined, state.GetEnum("variant", MudBlazor.Variant.Filled));
+    }
 }

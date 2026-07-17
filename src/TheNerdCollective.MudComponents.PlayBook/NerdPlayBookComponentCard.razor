@@ -9,10 +9,21 @@
                 <MudText Typo="Typo.caption" Color="Color.Secondary">@Entry.Description</MudText>
             }
         </div>
-        <MudButton Href="@Entry.ApiUrl(DocsBaseUrl)" Target="_blank" Variant="Variant.Text" Size="Size.Small"
-                   StartIcon="@Icons.Material.Filled.OpenInNew">
-            MudBlazor API
-        </MudButton>
+        <MudStack Row="true" Spacing="1" Class="flex-wrap">
+            @if (EnablePlayground && NerdPlayBookPlaygroundRegistry.SupportsPlayground(Entry.Id))
+            {
+                <MudButton Variant="Variant.Outlined"
+                           Size="Size.Small"
+                           StartIcon="@Icons.Material.Filled.Tune"
+                           OnClick="OpenPlayground">
+                    Playground
+                </MudButton>
+            }
+            <MudButton Href="@Entry.ApiUrl(DocsBaseUrl)" Target="_blank" Variant="Variant.Text" Size="Size.Small"
+                       StartIcon="@Icons.Material.Filled.OpenInNew">
+                MudBlazor API
+            </MudButton>
+        </MudStack>
     </MudStack>
 
     <MudGrid Spacing="2">
@@ -32,6 +43,17 @@
     </MudGrid>
 </MudPaper>
 
+@if (EnablePlayground && NerdPlayBookPlaygroundRegistry.SupportsPlayground(Entry.Id))
+{
+    <NerdPlayBookComponentPlayground @bind-Open="_playgroundOpen"
+                                     Entry="Entry"
+                                     State="_playgroundState"
+                                     Definitions="_playgroundDefinitions"
+                                     TokenClass="@PlaygroundTokenClass"
+                                     ThemeMode="@ThemeMode"
+                                     DocsBaseUrl="@DocsBaseUrl" />
+}
+
 @code {
     [Parameter, EditorRequired]
     public MudBlazorPlayBookEntry Entry { get; set; } = default!;
@@ -44,4 +66,25 @@
 
     [Parameter]
     public string ThemeMode { get; set; } = "light";
+
+    [Parameter]
+    public bool EnablePlayground { get; set; } = true;
+
+    [Parameter]
+    public string PlaygroundTokenClass { get; set; } = string.Empty;
+
+    private bool _playgroundOpen;
+    private NerdPlayBookPlaygroundState _playgroundState = NerdPlayBookPlaygroundRegistry.CreateState("button");
+    private IReadOnlyList<NerdPlayBookPropDefinition> _playgroundDefinitions = [];
+
+    protected override void OnParametersSet()
+    {
+        _playgroundDefinitions = NerdPlayBookPlaygroundRegistry.GetProps(Entry.Id);
+        if (_playgroundDefinitions.Count > 0)
+        {
+            _playgroundState = NerdPlayBookPlaygroundRegistry.CreateState(Entry.Id);
+        }
+    }
+
+    private void OpenPlayground() => _playgroundOpen = true;
 }
