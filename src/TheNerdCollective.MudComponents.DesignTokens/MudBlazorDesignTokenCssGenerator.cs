@@ -8,13 +8,24 @@ public static class MudBlazorDesignTokenCssGenerator
     {
         ArgumentNullException.ThrowIfNull(options);
         NerdTokenNameValidator.Validate(options.Prefix);
-
-        var css = new StringBuilder("@layer nerd-design-tokens {\n");
-        foreach (var pair in options.Colors)
+        NerdTokenNameValidator.Validate(options.CssLayerName);
+        if (options.ScopeSelector is not null &&
+            (options.ScopeSelector.Contains('{') || options.ScopeSelector.Contains('}')))
         {
-            AppendToken(css, options.Prefix, pair.Key, pair.Value);
+            throw new ArgumentException("ScopeSelector cannot contain CSS declarations.", nameof(options));
         }
-        foreach (var alias in options.Aliases)
+
+        var css = new StringBuilder($"/* MudBlazor {options.MudBlazorVersion} design token mapping */\n");
+        if (options.UseCssLayer)
+        {
+            css.AppendLine($"@layer {options.CssLayerName} {{");
+        }
+
+        foreach (var pair in options.Colors.OrderBy(pair => pair.Key, StringComparer.Ordinal))
+        {
+            AppendToken(css, options, pair.Key, pair.Value);
+        }
+        foreach (var alias in options.Aliases.OrderBy(pair => pair.Key, StringComparer.Ordinal))
         {
             css.AppendLine($".{options.Prefix}-{alias.Key} {{");
             css.AppendLine($"  --{options.Prefix}-color-{alias.Key}: var(--{options.Prefix}-color-{alias.Value});");
@@ -22,22 +33,28 @@ public static class MudBlazorDesignTokenCssGenerator
             css.AppendLine($"  --{options.Prefix}-color-{alias.Key}-hover: var(--{options.Prefix}-color-{alias.Value}-hover);");
             css.AppendLine("}");
         }
-        foreach (var radius in options.Radii)
+        foreach (var radius in options.Radii.OrderBy(pair => pair.Key, StringComparer.Ordinal))
         {
             css.AppendLine($".{options.Prefix}-radius-{radius.Key} {{ border-radius: {radius.Value}; }}");
         }
-        foreach (var shadow in options.Shadows)
+        foreach (var shadow in options.Shadows.OrderBy(pair => pair.Key, StringComparer.Ordinal))
         {
             css.AppendLine($".{options.Prefix}-shadow-{shadow.Key} {{ box-shadow: {shadow.Value}; }}");
         }
-        css.AppendLine("}");
+        if (options.UseCssLayer)
+        {
+            css.AppendLine("}");
+        }
 
-        return css.ToString();
+        var result = css.ToString();
+        return options.MinifyCss
+            ? System.Text.RegularExpressions.Regex.Replace(result, @"\s+", " ").Replace(" {", "{").Replace("; }", ";}")
+            : result;
     }
 
     private static void AppendToken(
         StringBuilder css,
-        string prefix,
+        NerdDesignTokenOptions options,
         string name,
         NerdColorToken token)
     {
@@ -47,7 +64,10 @@ public static class MudBlazorDesignTokenCssGenerator
         var contrast = NerdColorValue.Validate(
             token.ContrastText ?? NerdColorValue.ContrastText(light),
             nameof(token.ContrastText));
-        var root = $".{prefix}-{name}";
+        var root = string.IsNullOrWhiteSpace(options.ScopeSelector)
+            ? $".{options.Prefix}-{name}"
+            : $"{options.ScopeSelector} .{options.Prefix}-{name}";
+        var prefix = options.Prefix;
         var variable = $"--{prefix}-color-{name}";
         var textVariable = $"{variable}-text";
         var hoverVariable = $"{variable}-hover";

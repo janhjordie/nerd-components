@@ -2,7 +2,12 @@ using System.Text.Json;
 
 namespace TheNerdCollective.MudComponents.DesignTokens;
 
-public sealed record NerdAccessibilityResult(string Name, double ContrastRatio, bool MeetsAa);
+public sealed record NerdAccessibilityResult(
+    string Name,
+    double ContrastRatio,
+    bool MeetsAa,
+    bool MeetsAaa,
+    string RecommendedContrastText);
 
 public static class NerdDesignTokenTools
 {
@@ -17,6 +22,25 @@ public static class NerdDesignTokenTools
     {
         ArgumentNullException.ThrowIfNull(options);
         return JsonSerializer.Serialize(options.Colors);
+    }
+
+    public static string ExportStitchDesignMd(NerdDesignTokenOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        var builder = new System.Text.StringBuilder("# Design tokens\n\n");
+        builder.AppendLine("## Colors");
+        builder.AppendLine();
+        foreach (var pair in options.Colors.OrderBy(pair => pair.Key, StringComparer.Ordinal))
+        {
+            builder.AppendLine($"- **{pair.Key}**: `{pair.Value.Value}`");
+        }
+
+        builder.AppendLine();
+        builder.AppendLine("## Implementation notes");
+        builder.AppendLine();
+        builder.AppendLine("- Apply tokens as CSS classes with the configured prefix.");
+        builder.AppendLine("- Preserve WCAG contrast between foreground and background.");
+        return builder.ToString();
     }
 
     public static NerdDesignTokenOptions ImportJson(string json, string prefix = "nerd")
@@ -42,7 +66,12 @@ public static class NerdDesignTokenTools
             {
                 var text = pair.Value.ContrastText ?? NerdColorValue.ContrastText(pair.Value.Value);
                 var ratio = ContrastRatio(pair.Value.Value, text);
-                return new NerdAccessibilityResult(pair.Key, ratio, ratio >= 4.5);
+                return new NerdAccessibilityResult(
+                    pair.Key,
+                    ratio,
+                    ratio >= 4.5,
+                    ratio >= 7,
+                    NerdColorValue.ContrastText(pair.Value.Value));
             })
             .ToArray();
     }

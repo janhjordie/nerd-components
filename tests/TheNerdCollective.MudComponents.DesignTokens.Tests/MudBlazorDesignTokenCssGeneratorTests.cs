@@ -7,7 +7,7 @@ public class MudBlazorDesignTokenCssGeneratorTests
     [Fact]
     public void Generate_emits_variables_and_mudblazor_component_variants()
     {
-        var options = new NerdDesignTokenOptions { Prefix = "dnf" }
+        var options = new NerdDesignTokenOptions { Prefix = "dnf", UseCssLayer = true }
             .Add("forest", new NerdColorToken
             {
                 Value = "#365C3A",
@@ -87,7 +87,7 @@ public class MudBlazorDesignTokenCssGeneratorTests
 
         var css = MudBlazorDesignTokenCssGenerator.Generate(options);
 
-        Assert.StartsWith("@layer nerd-design-tokens", css);
+        Assert.Contains("@layer nerd-design-tokens", css);
         Assert.Contains(".dnf-primary-action", css);
         Assert.Contains(".dnf-radius-card", css);
         Assert.Contains(".dnf-shadow-elevated", css);
@@ -103,6 +103,19 @@ public class MudBlazorDesignTokenCssGeneratorTests
 
         Assert.True(result.MeetsAa);
         Assert.True(result.ContrastRatio >= 4.5);
+    }
+
+    [Fact]
+    public void Stitch_export_contains_customer_tokens()
+    {
+        var options = new NerdDesignTokenOptions { Prefix = "dnf" }
+            .Add("forest", new NerdColorToken { Value = "#365C3A" });
+
+        var design = NerdDesignTokenTools.ExportStitchDesignMd(options);
+
+        Assert.Contains("# Design tokens", design);
+        Assert.Contains("forest", design);
+        Assert.Contains("#365C3A", design);
     }
 
     [Theory]

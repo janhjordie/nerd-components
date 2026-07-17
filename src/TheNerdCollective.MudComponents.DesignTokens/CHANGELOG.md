@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.3.0
+
+- Added opt-in CSS layers, scopes, deterministic ordering, and minification option.
+- Added AAA accessibility reporting and recommended contrast text.
+- Added Google Stitch `DESIGN.md` export support.
+- Added configurable fallback and version-profile hooks for MudBlazor mappings.
+
 ## 1.2.0
 
 - Added CSS `@layer nerd-design-tokens` isolation.

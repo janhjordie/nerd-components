@@ -91,3 +91,39 @@ NerdDesignTokenTools.WriteCss(options, "wwwroot/css/dnf-tokens.css");
 Tokens can be exported with `NerdDesignTokenTools.ExportJson(options)`, and
 `NerdDesignTokenTools.CheckAccessibility(options)` reports WCAG AA contrast
 failures.
+
+## CSS layers and scopes
+
+CSS layers are opt-in because unlayered application CSS and MudBlazor CSS can
+otherwise have different cascade precedence:
+
+```csharp
+options.UseCssLayer = true;
+options.CssLayerName = "dnf-tokens";
+options.ScopeSelector = "[data-brand='dnf']";
+```
+
+The package never imports Bootstrap or Tailwind. The layer only groups this
+package's generated MudBlazor overrides. Scopes generate selectors such as
+`[data-brand='dnf'] .dnf-forest`.
+
+## Google Stitch
+
+Tokens can be exported to a portable Stitch `DESIGN.md` handoff:
+
+```csharp
+File.WriteAllText(
+    "DESIGN.md",
+    NerdDesignTokenTools.ExportStitchDesignMd(options));
+```
+
+Google Stitch's open `DESIGN.md` format can then be imported into Stitch or
+converted with Google's tooling, for example:
+
+```bash
+npx @google/design.md export --format dtcg DESIGN.md > tokens.json
+npx @google/design.md export --format css-tailwind DESIGN.md > theme.css
+```
+
+The generated DTCG/Tailwind files can be reviewed alongside the generated
+MudBlazor CSS, keeping the customer's design source portable across tools.
