@@ -2,6 +2,16 @@ namespace TheNerdCollective.MudComponents.ResponsiveTypography;
 
 public static class ResponsiveFontSize
 {
+    /// <summary>
+    /// Creates a CSS <c>clamp()</c> expression for a responsive font size.
+    /// </summary>
+    /// <param name="minimum">The smallest CSS font-size value.</param>
+    /// <param name="preferred">The fluid preferred CSS font-size value.</param>
+    /// <param name="maximum">The largest CSS font-size value.</param>
+    /// <returns>A CSS <c>clamp(minimum, preferred, maximum)</c> expression.</returns>
+    /// <exception cref="ArgumentException">
+    /// Thrown when an argument is empty, whitespace, or contains a comma.
+    /// </exception>
     public static string Clamp(string minimum, string preferred, string maximum)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(minimum);

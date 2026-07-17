@@ -4,6 +4,15 @@ namespace TheNerdCollective.MudComponents.ResponsiveTypography;
 
 public static class MudThemeResponsiveTypographyExtensions
 {
+    /// <summary>
+    /// Applies configured responsive font sizes to a MudBlazor theme.
+    /// </summary>
+    /// <remarks>
+    /// Only non-null options are applied. Existing values for omitted roles are preserved.
+    /// </remarks>
+    /// <param name="theme">The theme to update.</param>
+    /// <param name="configure">Callback used to configure responsive typography roles.</param>
+    /// <returns>The same theme instance, after applying the configured values.</returns>
     public static MudTheme UseResponsiveTypography(
         this MudTheme theme,
         Action<ResponsiveTypographyOptions> configure)
