@@ -80,4 +80,29 @@ public class ResponsiveTypographyTests
         Assert.Equal(originalH2, theme.Typography.H2.FontSize);
         Assert.Equal("responsive", theme.Typography.H3.FontSize);
     }
+
+    [Fact]
+    public void Typography_accessibility_passes_for_relative_clamp_values()
+    {
+        var options = new NerdResponsiveTypographyOptions();
+        options.Typography.H3 = ResponsiveFontSize.Clamp("1.75rem", "3vw", "2.5rem");
+
+        var result = NerdTypographyAccessibilityTools.CheckAccessibility(options)
+            .Single(item => item.Role == "H3");
+
+        Assert.True(result.MeetsResizeGuidance);
+        Assert.True(result.MeetsMinimumSize);
+        Assert.Equal(28, result.MinimumPixels);
+    }
+
+    [Fact]
+    public void Typography_accessibility_warns_for_small_fixed_px_values()
+    {
+        var options = new NerdResponsiveTypographyOptions();
+        options.Typography.Body1 = "10px";
+
+        var warnings = NerdTypographyAccessibilityTools.GetAccessibilityWarnings(options);
+
+        Assert.Contains(warnings, warning => warning.Role == "Body1");
+    }
 }

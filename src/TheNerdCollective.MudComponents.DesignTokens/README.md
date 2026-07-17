@@ -137,15 +137,18 @@ Register the catalog page assembly and browse all tokens at
 builder.Services.AddNerdDesignTokens(options =>
 {
     options.Prefix = "dnf";
+    options.EnableCatalogPage = true; // default
     options.CatalogRoute = "/nerd-design-tokens";
-    options.EnableCatalogPage = true;
-    options.RestrictCatalogToDevelopment = true;
 });
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode()
-    .AddNerdDesignTokenCatalog();
+    .AddNerdDesignTokenCatalog(app.Services);
 ```
+
+Call `AddNerdDesignTokenCatalog(app.Services)` only when you want the catalog
+page. It is enabled by default through `EnableCatalogPage`, but skipped when
+that option is `false`.
 
 The catalog shows color swatches, light/dark preview, WCAG 2.1 AA/AAA badges
 with contrast ratios, live MudBlazor component previews, aliases, radius, and

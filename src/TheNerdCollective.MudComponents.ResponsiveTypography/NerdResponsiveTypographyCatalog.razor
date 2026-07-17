@@ -1,0 +1,91 @@
+@if (!IsAvailable)
+{
+    <MudContainer MaxWidth="MaxWidth.Medium" Class="my-8">
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Filled">
+            Responsive typography catalog is disabled or only available in Development.
+        </MudAlert>
+    </MudContainer>
+}
+else
+{
+    <MudThemeProvider Theme="_previewTheme">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-6">
+            <MudStack Spacing="3">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-3">
+                    <div>
+                        <MudText Typo="Typo.h4">Responsive typography</MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">
+                            CSS <code>clamp()</code> values applied through <code>MudTheme.Typography</code>
+                        </MudText>
+                    </div>
+                    <MudChip T="string" Color="Color.Info" Variant="Variant.Outlined">
+                        @Options.CatalogRoute
+                    </MudChip>
+                </MudStack>
+
+                @if (_warnings.Count > 0)
+                {
+                    <MudAlert Severity="Severity.Error" Variant="Variant.Filled">
+                        <MudText Typo="Typo.subtitle2" Class="mb-2">
+                            @_warnings.Count WCAG @Options.WcagVersion typography warning@(_warnings.Count == 1 ? "" : "s")
+                        </MudText>
+                        <MudStack Spacing="1">
+                            @foreach (var warning in _warnings)
+                            {
+                                <MudText Typo="Typo.body2">
+                                    <strong>@warning.Role</strong> (<code>@warning.FontSize</code>): @warning.Message
+                                </MudText>
+                            }
+                        </MudStack>
+                    </MudAlert>
+                }
+                else
+                {
+                    <MudAlert Severity="Severity.Success" Variant="Variant.Outlined">
+                        All typography roles pass WCAG @Options.WcagVersion resize and minimum-size guidance.
+                    </MudAlert>
+                }
+
+                @foreach (var role in _roles)
+                {
+                    var accessibility = GetAccessibility(role.Role);
+
+                    <MudPaper Outlined="true" Class="pa-4">
+                        <MudStack Spacing="2">
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-2">
+                                <MudText Typo="Typo.h6">@role.Role</MudText>
+                                @if (accessibility is not null)
+                                {
+                                    <MudStack Row="true" Spacing="1" Class="flex-wrap">
+                                        <MudChip T="string"
+                                                 Size="Size.Small"
+                                                 Color="@(accessibility.MeetsResizeGuidance ? Color.Success : Color.Error)"
+                                                 Variant="Variant.Filled">
+                                            WCAG @accessibility.WcagVersion resize @(accessibility.MeetsResizeGuidance ? "pass" : "fail")
+                                        </MudChip>
+                                        <MudChip T="string"
+                                                 Size="Size.Small"
+                                                 Color="@(accessibility.MeetsMinimumSize ? Color.Success : Color.Warning)"
+                                                 Variant="Variant.Outlined">
+                                            Min @(accessibility.MinimumPixels?.ToString("0.#") ?? "?")px / @(accessibility.RequiredMinimumPixels.ToString("0.#"))px
+                                        </MudChip>
+                                    </MudStack>
+                                }
+                            </MudStack>
+
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                <code>@role.FontSize</code>
+                            </MudText>
+
+                            <MudPaper Class="pa-4" Outlined="true">
+                                <MudText Typo="@role.Typo">
+                                    The quick brown fox jumps over the lazy dog — @role.Role preview
+                                </MudText>
+                            </MudPaper>
+                        </MudStack>
+                    </MudPaper>
+                }
+            </MudStack>
+        </MudContainer>
+    </MudThemeProvider>
+}

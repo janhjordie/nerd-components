@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.6.0
+
+- `AddNerdDesignTokenCatalog(app.Services)` now respects `EnableCatalogPage` and skips registration when disabled.
+
 ## 1.5.0
 
 - WCAG badges now show version, contrast ratio, and separate light/dark results.

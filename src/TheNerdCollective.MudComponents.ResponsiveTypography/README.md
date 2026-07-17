@@ -48,3 +48,39 @@ theme.UseResponsiveTypography(options =>
 
 No JavaScript, `IBrowserViewportService`, breakpoint detection, or
 resize-triggered render is involved.
+
+## Visual catalog
+
+Register typography in DI and optionally enable the catalog page:
+
+```csharp
+builder.Services.AddNerdResponsiveTypography(options =>
+{
+    options.EnableCatalogPage = true; // default
+    options.CatalogRoute = "/nerd-typography";
+    options.Typography.H1 = ResponsiveFontSize.Clamp("2rem", "4vw", "4rem");
+    options.Typography.H3 = ResponsiveFontSize.Clamp("1.75rem", "3vw", "2.5rem");
+});
+
+app.MapRazorComponents<App>()
+    .AddInteractiveServerRenderMode()
+    .AddNerdResponsiveTypographyCatalog(app.Services);
+```
+
+The catalog shows every MudBlazor typography role, the effective `font-size`
+value, live `MudText` previews, and WCAG 2.1 badges for resize-friendly units
+and minimum readable sizes. Startup warnings are logged when guidance fails.
+
+To disable the page:
+
+```csharp
+options.EnableCatalogPage = false;
+```
+
+Custom route:
+
+```razor
+@page "/kunde/typography"
+@rendermode InteractiveServer
+<NerdResponsiveTypographyCatalog />
+```
