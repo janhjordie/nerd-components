@@ -42,12 +42,13 @@ Use the customer vocabulary in markup:
 </MudGrid>
 ```
 
-The generator emits CSS variables and selectors for MudBlazor filled,
-outlined, and text buttons, chips, alerts, badges, progress bars, icon
-buttons, links, typography, hover, focus, active, and disabled states.
-Generic container classes also set inherited foreground and background colors,
-so the same token can be applied to `MudGrid`, `MudPaper`, `MudCard`, and
-other components.
+The generator emits the MudBlazor palette variables used by all components
+that consume the theme variables, so the token works generically on
+`MudGrid`, `MudPaper`, `MudCard`, and other components. It also emits explicit
+selectors for filled, outlined, and text buttons, chips, alerts, badges,
+progress bars, icon buttons, links, typography, hover, focus, active, and
+disabled states. This covers both inherited theme behavior and component
+variants where MudBlazor uses a more specific selector.
 
 Token names must be lowercase CSS identifiers, such as `sand`,
 `forest-dark`, or `sea-2`. Each application can define a different set of
