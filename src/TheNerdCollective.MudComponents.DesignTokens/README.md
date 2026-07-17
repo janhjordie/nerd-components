@@ -68,3 +68,26 @@ The generated selectors are intentionally versioned against MudBlazor 9.6.
 The package emits both MudBlazor palette variables and explicit selectors for
 component variants and states, so updates to MudBlazor can be checked with the
 CSS snapshot tests before changing the package dependency.
+
+## Design-system extras
+
+```csharp
+options.Alias("primary-action", "forest");
+options.AddRadius("card", "12px");
+options.AddShadow("elevated", "0 4px 16px rgba(0,0,0,.16)");
+```
+
+This produces `dnf-primary-action`, `dnf-radius-card`, and
+`dnf-shadow-elevated`. MudBlazor CSS is isolated in
+`@layer nerd-design-tokens`; this does not import or mix Bootstrap or
+Tailwind styles.
+
+For static hosting, generate a CSS artifact at build time:
+
+```csharp
+NerdDesignTokenTools.WriteCss(options, "wwwroot/css/dnf-tokens.css");
+```
+
+Tokens can be exported with `NerdDesignTokenTools.ExportJson(options)`, and
+`NerdDesignTokenTools.CheckAccessibility(options)` reports WCAG AA contrast
+failures.

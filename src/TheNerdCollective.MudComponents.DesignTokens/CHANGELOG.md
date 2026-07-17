@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.0
+
+- Added CSS `@layer nerd-design-tokens` isolation.
+- Added token aliases, radius and shadow tokens.
+- Added build-time CSS writing, JSON export, and WCAG AA checks.
+- Added documented fallback behavior for missing token variants.
+
 ## 1.1.0
 
 - Added light/dark token values and automatic contrast text fallback.

@@ -9,11 +9,28 @@ public static class MudBlazorDesignTokenCssGenerator
         ArgumentNullException.ThrowIfNull(options);
         NerdTokenNameValidator.Validate(options.Prefix);
 
-        var css = new StringBuilder();
+        var css = new StringBuilder("@layer nerd-design-tokens {\n");
         foreach (var pair in options.Colors)
         {
             AppendToken(css, options.Prefix, pair.Key, pair.Value);
         }
+        foreach (var alias in options.Aliases)
+        {
+            css.AppendLine($".{options.Prefix}-{alias.Key} {{");
+            css.AppendLine($"  --{options.Prefix}-color-{alias.Key}: var(--{options.Prefix}-color-{alias.Value});");
+            css.AppendLine($"  --{options.Prefix}-color-{alias.Key}-text: var(--{options.Prefix}-color-{alias.Value}-text);");
+            css.AppendLine($"  --{options.Prefix}-color-{alias.Key}-hover: var(--{options.Prefix}-color-{alias.Value}-hover);");
+            css.AppendLine("}");
+        }
+        foreach (var radius in options.Radii)
+        {
+            css.AppendLine($".{options.Prefix}-radius-{radius.Key} {{ border-radius: {radius.Value}; }}");
+        }
+        foreach (var shadow in options.Shadows)
+        {
+            css.AppendLine($".{options.Prefix}-shadow-{shadow.Key} {{ box-shadow: {shadow.Value}; }}");
+        }
+        css.AppendLine("}");
 
         return css.ToString();
     }

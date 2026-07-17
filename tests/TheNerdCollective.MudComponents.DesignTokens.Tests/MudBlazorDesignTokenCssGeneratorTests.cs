@@ -76,6 +76,35 @@ public class MudBlazorDesignTokenCssGeneratorTests
         Assert.Contains("--test-color-sun-text: #1F2937", css);
     }
 
+    [Fact]
+    public void Generate_isolates_css_and_emits_design_system_helpers()
+    {
+        var options = new NerdDesignTokenOptions { Prefix = "dnf" }
+            .Add("forest", new NerdColorToken { Value = "#365C3A" })
+            .Alias("primary-action", "forest")
+            .AddRadius("card", "12px")
+            .AddShadow("elevated", "0 4px 16px rgba(0,0,0,.16)");
+
+        var css = MudBlazorDesignTokenCssGenerator.Generate(options);
+
+        Assert.StartsWith("@layer nerd-design-tokens", css);
+        Assert.Contains(".dnf-primary-action", css);
+        Assert.Contains(".dnf-radius-card", css);
+        Assert.Contains(".dnf-shadow-elevated", css);
+    }
+
+    [Fact]
+    public void Accessibility_check_reports_wcag_aa_status()
+    {
+        var options = new NerdDesignTokenOptions { Prefix = "test" }
+            .Add("light", new NerdColorToken { Value = "#FFFFFF", ContrastText = "#000000" });
+
+        var result = NerdDesignTokenTools.CheckAccessibility(options).Single();
+
+        Assert.True(result.MeetsAa);
+        Assert.True(result.ContrastRatio >= 4.5);
+    }
+
     [Theory]
     [InlineData("Sand")]
     [InlineData("sand color")]
