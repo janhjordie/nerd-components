@@ -127,3 +127,34 @@ npx @google/design.md export --format css-tailwind DESIGN.md > theme.css
 
 The generated DTCG/Tailwind files can be reviewed alongside the generated
 MudBlazor CSS, keeping the customer's design source portable across tools.
+
+## Visual catalog
+
+Register the catalog page assembly and browse all tokens at
+`/nerd-design-tokens`:
+
+```csharp
+builder.Services.AddNerdDesignTokens(options =>
+{
+    options.Prefix = "dnf";
+    options.CatalogRoute = "/nerd-design-tokens";
+    options.EnableCatalogPage = true;
+    options.RestrictCatalogToDevelopment = true;
+});
+
+app.MapRazorComponents<App>()
+    .AddInteractiveServerRenderMode()
+    .AddNerdDesignTokenCatalog();
+```
+
+The catalog shows color swatches, light/dark preview, WCAG AA/AAA badges,
+live MudBlazor component previews, aliases, radius, and shadow tokens.
+
+To use a custom route, create a host page and render the shared catalog
+component:
+
+```razor
+@page "/kunde/design-tokens"
+@rendermode InteractiveServer
+<NerdDesignTokensCatalog />
+```

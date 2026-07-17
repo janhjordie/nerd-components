@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.0
+
+- Added visual design token catalog page at `/nerd-design-tokens` (configurable).
+- Added dark mode preview, WCAG badges, aliases, radius, and shadow sections.
+- Added `AddNerdDesignTokenCatalog()` for Razor component discovery.
+
 ## 1.3.0
 
 - Added opt-in CSS layers, scopes, deterministic ordering, and minification option.

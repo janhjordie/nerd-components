@@ -1,0 +1,155 @@
+@if (!IsAvailable)
+{
+    <MudContainer MaxWidth="MaxWidth.Medium" Class="my-8">
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Filled">
+            Design token catalog is disabled or only available in Development.
+        </MudAlert>
+    </MudContainer>
+}
+else
+{
+    <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-6">
+        <MudStack Spacing="3">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-3">
+                <div>
+                    <MudText Typo="Typo.h4">Design tokens</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        Prefix <code>@Options.Prefix</code> · MudBlazor @Options.MudBlazorVersion
+                    </MudText>
+                </div>
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="flex-wrap">
+                    <MudSwitch @bind-Value="_previewDark" Color="Color.Primary" Label="Preview dark mode" />
+                    <MudChip T="string" Color="Color.Info" Variant="Variant.Outlined">
+                        @Options.CatalogRoute
+                    </MudChip>
+                </MudStack>
+            </MudStack>
+
+            <MudText Typo="Typo.h6">Color tokens (@Options.Colors.Count)</MudText>
+
+            @foreach (var pair in Options.Colors.OrderBy(pair => pair.Key, StringComparer.Ordinal))
+            {
+                var token = pair.Value;
+                var className = GetClassName(pair.Key);
+                var accessibility = GetAccessibility(pair.Key);
+                var previewTheme = _previewDark ? "dark" : "light";
+                var previewColor = ResolveColor(token, _previewDark);
+
+                <MudPaper Outlined="true" Class="pa-4">
+                    <MudStack Spacing="2">
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-2">
+                            <MudText Typo="Typo.h6">@pair.Key</MudText>
+                            <MudStack Row="true" Spacing="1" Class="flex-wrap">
+                                <MudChip T="string" Variant="Variant.Outlined" Size="Size.Small">
+                                    <code>.@className</code>
+                                </MudChip>
+                                @if (accessibility is not null)
+                                {
+                                    <MudChip T="string"
+                                             Size="Size.Small"
+                                             Color="@(accessibility.MeetsAa ? Color.Success : Color.Error)"
+                                             Variant="Variant.Filled">
+                                        WCAG AA @(accessibility.MeetsAa ? "pass" : "fail")
+                                    </MudChip>
+                                    <MudChip T="string"
+                                             Size="Size.Small"
+                                             Color="@(accessibility.MeetsAaa ? Color.Success : Color.Warning)"
+                                             Variant="Variant.Outlined">
+                                        AAA @(accessibility.MeetsAaa ? "pass" : "fail")
+                                    </MudChip>
+                                }
+                            </MudStack>
+                        </MudStack>
+
+                        <MudGrid Spacing="2">
+                            <MudItem xs="12" md="4">
+                                <MudPaper Class="pa-3" Outlined="true">
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Swatch (@previewTheme)</MudText>
+                                    <div data-theme="@previewTheme" class="@($"{className} pa-4 mt-2")" style="border-radius: 8px; min-height: 96px;">
+                                        <MudText Typo="Typo.body2">Sample text</MudText>
+                                    </div>
+                                    <MudText Typo="Typo.caption" Class="mt-2"><code>@previewColor</code></MudText>
+                                </MudPaper>
+                            </MudItem>
+                            <MudItem xs="12" md="8">
+                                <MudPaper Class="pa-3" Outlined="true" data-theme="@previewTheme">
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-2">MudBlazor previews</MudText>
+                                    <MudStack Row="true" Spacing="1" Class="flex-wrap gap-1 mb-2">
+                                        <MudButton Class="@className" Variant="Variant.Filled">Filled</MudButton>
+                                        <MudButton Class="@className" Variant="Variant.Outlined">Outlined</MudButton>
+                                        <MudButton Class="@className" Variant="Variant.Text">Text</MudButton>
+                                    </MudStack>
+                                    <MudStack Row="true" Spacing="1" Class="flex-wrap gap-1 mb-2">
+                                        <MudChip T="string" Class="@className" Variant="Variant.Filled">Chip</MudChip>
+                                        <MudText Class="@className" Typo="Typo.h6">Heading</MudText>
+                                    </MudStack>
+                                    <MudAlert Class="@className" Severity="Severity.Info" Variant="Variant.Filled" Dense="true">
+                                        Alert preview
+                                    </MudAlert>
+                                </MudPaper>
+                            </MudItem>
+                        </MudGrid>
+
+                        <MudSimpleTable Dense="true" Hover="true" Bordered="true">
+                            <tbody>
+                                <tr><td>Value</td><td><code>@token.Value</code></td></tr>
+                                <tr><td>Light</td><td><code>@(token.Light ?? token.Value)</code></td></tr>
+                                <tr><td>Dark</td><td><code>@(token.Dark ?? token.Light ?? token.Value)</code></td></tr>
+                                <tr><td>ContrastText</td><td><code>@(token.ContrastText ?? accessibility?.RecommendedContrastText)</code></td></tr>
+                                <tr><td>Surface</td><td><code>@(token.Surface ?? "-")</code></td></tr>
+                                <tr><td>Content</td><td><code>@(token.Content ?? "-")</code></td></tr>
+                                <tr><td>Interactive</td><td><code>@(token.Interactive ?? "-")</code></td></tr>
+                                <tr><td>Hover</td><td><code>@(token.Hover ?? "-")</code></td></tr>
+                            </tbody>
+                        </MudSimpleTable>
+                    </MudStack>
+                </MudPaper>
+            }
+
+            @if (Options.Aliases.Count > 0)
+            {
+                <MudText Typo="Typo.h6">Aliases</MudText>
+                <MudSimpleTable Dense="true" Hover="true" Bordered="true">
+                    <thead>
+                        <tr><th>Alias</th><th>Target</th><th>Class</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var alias in Options.Aliases.OrderBy(pair => pair.Key, StringComparer.Ordinal))
+                        {
+                            <tr>
+                                <td>@alias.Key</td>
+                                <td>@alias.Value</td>
+                                <td><code>.@GetClassName(alias.Key)</code></td>
+                            </tr>
+                        }
+                    </tbody>
+                </MudSimpleTable>
+            }
+
+            @if (Options.Radii.Count > 0 || Options.Shadows.Count > 0)
+            {
+                <MudText Typo="Typo.h6">Radius and shadows</MudText>
+                <MudGrid Spacing="2">
+                    @foreach (var radius in Options.Radii.OrderBy(pair => pair.Key, StringComparer.Ordinal))
+                    {
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudPaper Class="@($"{Options.Prefix}-radius-{radius.Key} pa-4")" Outlined="true">
+                                <MudText Typo="Typo.subtitle2">@radius.Key</MudText>
+                                <MudText Typo="Typo.caption"><code>@radius.Value</code></MudText>
+                            </MudPaper>
+                        </MudItem>
+                    }
+                    @foreach (var shadow in Options.Shadows.OrderBy(pair => pair.Key, StringComparer.Ordinal))
+                    {
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudPaper Class="@($"{Options.Prefix}-shadow-{shadow.Key} pa-4")" Outlined="true">
+                                <MudText Typo="Typo.subtitle2">@shadow.Key</MudText>
+                                <MudText Typo="Typo.caption"><code>@shadow.Value</code></MudText>
+                            </MudPaper>
+                        </MudItem>
+                    }
+                </MudGrid>
+            }
+        </MudStack>
+    </MudContainer>
+}

@@ -79,7 +79,7 @@ public class MudBlazorDesignTokenCssGeneratorTests
     [Fact]
     public void Generate_isolates_css_and_emits_design_system_helpers()
     {
-        var options = new NerdDesignTokenOptions { Prefix = "dnf" }
+        var options = new NerdDesignTokenOptions { Prefix = "dnf", UseCssLayer = true }
             .Add("forest", new NerdColorToken { Value = "#365C3A" })
             .Alias("primary-action", "forest")
             .AddRadius("card", "12px")
@@ -116,6 +116,16 @@ public class MudBlazorDesignTokenCssGeneratorTests
         Assert.Contains("# Design tokens", design);
         Assert.Contains("forest", design);
         Assert.Contains("#365C3A", design);
+    }
+
+    [Fact]
+    public void Catalog_options_have_sensible_defaults()
+    {
+        var options = new NerdDesignTokenOptions();
+
+        Assert.True(options.EnableCatalogPage);
+        Assert.Equal("/nerd-design-tokens", options.CatalogRoute);
+        Assert.True(options.RestrictCatalogToDevelopment);
     }
 
     [Theory]

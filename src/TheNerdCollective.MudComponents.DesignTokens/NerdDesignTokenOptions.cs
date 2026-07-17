@@ -13,6 +13,9 @@ public sealed class NerdDesignTokenOptions
     public string CssLayerName { get; set; } = "nerd-design-tokens";
     public string? ScopeSelector { get; set; }
     public bool MinifyCss { get; set; }
+    public bool EnableCatalogPage { get; set; } = true;
+    public string CatalogRoute { get; set; } = "/nerd-design-tokens";
+    public bool RestrictCatalogToDevelopment { get; set; } = true;
 
     public IReadOnlyDictionary<string, NerdColorToken> Colors => _colors;
     public IReadOnlyDictionary<string, string> Aliases => _aliases;
