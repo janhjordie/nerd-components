@@ -8,6 +8,11 @@ public sealed class ResponsiveTypographyOptions
     public string? LetterSpacing { get; set; }
     public string? FontWeight { get; set; }
 
+    /// <summary>
+    /// Per-role line-height, letter-spacing, and font-weight overrides.
+    /// </summary>
+    public ResponsiveTypographyRoleStyles Roles { get; } = new();
+
     public IReadOnlySet<string> ConfiguredRoles => _configuredRoles;
 
     public string? Default { get => _default; set => SetRole(nameof(Default), ref _default, value); }

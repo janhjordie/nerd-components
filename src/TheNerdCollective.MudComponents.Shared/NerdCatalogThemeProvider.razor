@@ -1,8 +1,7 @@
 @using MudBlazor
 
-<MudThemeProvider Theme="@EffectiveTheme" IsDarkMode="@IsDarkMode">
-    @ChildContent
-</MudThemeProvider>
+<MudThemeProvider Theme="@EffectiveTheme" IsDarkMode="@IsDarkMode" />
+@ChildContent
 
 @code {
     [Parameter] public RenderFragment? ChildContent { get; set; }

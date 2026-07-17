@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.9.0
+
+- WCAG contrast checks now resolve CSS variables such as `var(--dnf-color-forest)`.
+
 ## 1.8.0
 
 - Design token catalog now wraps MudBlazor previews in `NerdCatalogThemeProvider` with dark-mode toggle.

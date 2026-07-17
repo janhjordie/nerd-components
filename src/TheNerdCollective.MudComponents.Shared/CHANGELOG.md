@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.0
+
+- Added `hsl()` / `hsla()` and `var(--token)` resolution to `NerdColorParser`.
+- Added XML documentation for the Shared public API.
+
 ## 1.1.0
 
 - Added `NerdDesignSystemScripts` to load `nerd-shared.js` for clipboard and download helpers.

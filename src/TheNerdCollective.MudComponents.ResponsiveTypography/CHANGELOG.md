@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.0
+
+- Added per-role `Roles.H1.LineHeight`, `Roles.Body1.LetterSpacing`, and related overrides.
+- Global `LineHeight`, `LetterSpacing`, and `FontWeight` remain as fallbacks.
+
 ## 1.3.0
 
 - Typography catalog uses shared `NerdCatalogThemeProvider` and `NerdDesignSystemScripts`.

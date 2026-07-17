@@ -3,17 +3,81 @@ using System.Text.RegularExpressions;
 
 namespace TheNerdCollective.MudComponents.Shared;
 
+/// <summary>
+/// Parses CSS color values and calculates WCAG contrast ratios.
+/// </summary>
 public static partial class NerdColorParser
 {
-    public static bool TryGetRgb(string color, out int red, out int green, out int blue)
+    private const int MaxVariableDepth = 8;
+
+    public static bool TryGetRgb(string color, out int red, out int green, out int blue) =>
+        TryGetRgb(color, variables: null, out red, out green, out blue);
+
+    public static bool TryGetRgb(
+        string color,
+        IReadOnlyDictionary<string, string>? variables,
+        out int red,
+        out int green,
+        out int blue) =>
+        TryResolve(color, variables, out red, out green, out blue, depth: 0);
+
+    public static string ContrastText(string color) => ContrastText(color, variables: null);
+
+    public static string ContrastText(string color, IReadOnlyDictionary<string, string>? variables)
+    {
+        if (!TryGetRgb(color, variables, out var red, out var green, out var blue))
+        {
+            return "#FFFFFF";
+        }
+
+        return RelativeLuminance(red, green, blue) > 0.179 ? "#1F2937" : "#FFFFFF";
+    }
+
+    public static double ContrastRatio(string background, string foreground) =>
+        ContrastRatio(background, foreground, variables: null);
+
+    public static double ContrastRatio(
+        string background,
+        string foreground,
+        IReadOnlyDictionary<string, string>? variables)
+    {
+        if (!TryGetRgb(background, variables, out var bgR, out var bgG, out var bgB) ||
+            !TryGetRgb(foreground, variables, out var fgR, out var fgG, out var fgB))
+        {
+            return 0;
+        }
+
+        var first = RelativeLuminance(bgR, bgG, bgB);
+        var second = RelativeLuminance(fgR, fgG, fgB);
+        return (Math.Max(first, second) + 0.05) / (Math.Min(first, second) + 0.05);
+    }
+
+    private static bool TryResolve(
+        string color,
+        IReadOnlyDictionary<string, string>? variables,
+        out int red,
+        out int green,
+        out int blue,
+        int depth)
     {
         red = green = blue = 0;
-        if (string.IsNullOrWhiteSpace(color))
+        if (string.IsNullOrWhiteSpace(color) || depth > MaxVariableDepth)
         {
             return false;
         }
 
         var trimmed = color.Trim();
+        if (trimmed.StartsWith("var(", StringComparison.OrdinalIgnoreCase))
+        {
+            var variableName = trimmed[4..].TrimEnd(')').Trim();
+            if (variables is null || !variables.TryGetValue(variableName, out var resolved))
+            {
+                return false;
+            }
+
+            return TryResolve(resolved, variables, out red, out green, out blue, depth + 1);
+        }
+
         if (trimmed.StartsWith('#'))
         {
             return TryParseHex(trimmed, out red, out green, out blue);
@@ -42,29 +106,6 @@ public static partial class NerdColorParser
         }
 
         return false;
-    }
-
-    public static string ContrastText(string color)
-    {
-        if (!TryGetRgb(color, out var red, out var green, out var blue))
-        {
-            return "#FFFFFF";
-        }
-
-        return RelativeLuminance(red, green, blue) > 0.179 ? "#1F2937" : "#FFFFFF";
-    }
-
-    public static double ContrastRatio(string background, string foreground)
-    {
-        if (!TryGetRgb(background, out var bgR, out var bgG, out var bgB) ||
-            !TryGetRgb(foreground, out var fgR, out var fgG, out var fgB))
-        {
-            return 0;
-        }
-
-        var first = RelativeLuminance(bgR, bgG, bgB);
-        var second = RelativeLuminance(fgR, fgG, fgB);
-        return (Math.Max(first, second) + 0.05) / (Math.Min(first, second) + 0.05);
     }
 
     private static bool TryParseHex(string value, out int red, out int green, out int blue)

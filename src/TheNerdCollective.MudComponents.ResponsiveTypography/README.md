@@ -71,6 +71,15 @@ app.MapRazorComponents<App>()
 `AddNerdResponsiveTypographyCatalog(app.Services)` registers the catalog when
 `EnableCatalogPage` is `true`. The default route is `/nerd-typography`.
 
+`NerdTypographyPresets.ApplyMarketing` sets per-role line heights. Override individual roles:
+
+```csharp
+options.Typography.H1 = ResponsiveFontSize.Clamp("2rem", "4vw", "4rem");
+options.Typography.Roles.H1.LineHeight = "1.15";
+options.Typography.Roles.Body1.LineHeight = "1.7";
+options.Typography.LineHeight = "1.5"; // fallback for roles without overrides
+```
+
 Presets and shared spacing:
 
 ```csharp

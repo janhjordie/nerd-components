@@ -180,6 +180,19 @@ public class MudBlazorDesignTokenCssGeneratorTests
         Assert.Equal(expected, TheNerdCollective.MudComponents.Shared.NerdColorParser.TryGetRgb(color, out _, out _, out _));
     }
 
+    [Fact]
+    public void Color_parser_resolves_token_css_variables()
+    {
+        var variables = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["--test-color-forest"] = "#365C3A",
+            ["--test-color-forest-text"] = "#FFFFFF"
+        };
+
+        Assert.True(TheNerdCollective.MudComponents.Shared.NerdColorParser.TryGetRgb(
+            "var(--test-color-forest)", variables, out _, out _, out _));
+    }
+
     [Theory]
     [InlineData("Sand")]
     [InlineData("sand color")]

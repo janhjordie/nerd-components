@@ -1,0 +1,47 @@
+@page "/design-system"
+@rendermode InteractiveServer
+@using TheNerdCollective.MudComponents.DesignTokens
+@using TheNerdCollective.MudComponents.ResponsiveTypography
+
+<PageTitle>Design System - The Nerd Collective</PageTitle>
+
+<div class="mb-6">
+    <MudText Typo="Typo.h3" GutterBottom="true">Nerd design system</MudText>
+    <MudText Typo="Typo.subtitle1">
+        Customer design tokens and responsive typography for MudBlazor 9.6
+    </MudText>
+</div>
+
+<MudGrid Class="mb-6">
+    <MudItem xs="12" md="6">
+        <MudPaper Class="pa-4 demo-forest" Outlined="true">
+            <MudText Typo="Typo.h5">Token preview</MudText>
+            <MudText Typo="Typo.body2" Class="mt-2">
+                Use semantic classes such as <code>demo-forest</code> and <code>demo-sand</code> on any MudBlazor component.
+            </MudText>
+            <MudStack Row="true" Spacing="1" Class="mt-3 flex-wrap">
+                <MudButton Class="demo-forest" Variant="Variant.Filled">Forest</MudButton>
+                <MudButton Class="demo-sand" Variant="Variant.Filled">Sand</MudButton>
+                <MudChip T="string" Class="demo-forest" Variant="Variant.Filled">Chip</MudChip>
+            </MudStack>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12" md="6">
+        <MudPaper Class="pa-4" Outlined="true">
+            <MudText Typo="Typo.h5">Responsive typography</MudText>
+            <MudText Typo="Typo.h3" Class="mt-2">Clamp-driven heading</MudText>
+            <MudText Typo="Typo.body1" Class="mt-2">
+                Typography is configured through <code>MudTheme.Typography</code> using CSS <code>clamp()</code>.
+            </MudText>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+<MudPaper Class="pa-4" Outlined="true">
+    <MudText Typo="Typo.h6" Class="mb-3">Live catalogs</MudText>
+    <MudStack Row="true" Spacing="2" Class="flex-wrap">
+        <MudButton Href="/nerd-design-system" Variant="Variant.Filled" Color="Color.Primary">Design system hub</MudButton>
+        <MudButton Href="/nerd-design-tokens" Variant="Variant.Outlined" Color="Color.Primary">Design tokens</MudButton>
+        <MudButton Href="/nerd-typography" Variant="Variant.Outlined" Color="Color.Primary">Responsive typography</MudButton>
+    </MudStack>
+</MudPaper>

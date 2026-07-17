@@ -8,6 +8,9 @@ public static class NerdTypographyPresets
         options.H1 = ResponsiveFontSize.Clamp("2.5rem", "5vw", "4.5rem");
         options.H2 = ResponsiveFontSize.Clamp("2rem", "4vw", "3.5rem");
         options.Body1 = ResponsiveFontSize.Clamp("1rem", "2.2vw", "1.25rem");
+        options.Roles.H1.LineHeight = "1.15";
+        options.Roles.H2.LineHeight = "1.2";
+        options.Roles.Body1.LineHeight = "1.6";
         options.LineHeight = "1.5";
         options.LetterSpacing = "0.01em";
         options.FontWeight = "500";

@@ -1,7 +1,10 @@
 ﻿@inherits LayoutComponentBase
+@using TheNerdCollective.MudComponents.DesignTokens
+@using TheNerdCollective.MudComponents.ResponsiveTypography
 @inject IJSRuntime JS
 
 <MudThemeProvider Theme="@_theme" IsDarkMode="_isDarkMode" />
+<NerdDesignTokenStyles />
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
@@ -44,7 +47,13 @@
     protected override void OnInitialized()
     {
         base.OnInitialized();
-        
+
+        _nerdTheme.UseResponsiveTypography(options =>
+        {
+            NerdTypographyPresets.ApplyMarketing(options);
+            options.H3 = ResponsiveFontSize.Clamp("1.75rem", "3vw", "2.5rem");
+        });
+
         _theme = _nerdTheme;
     }
 

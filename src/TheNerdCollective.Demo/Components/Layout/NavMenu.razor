@@ -2,6 +2,13 @@
 <MudNavMenu>
     <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
     
+    <MudNavGroup Title="Design System" Icon="@Icons.Material.Filled.Palette" Expanded="true">
+        <MudNavLink Href="/design-system" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Hub">Overview</MudNavLink>
+        <MudNavLink Href="/nerd-design-tokens" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Style">Design tokens</MudNavLink>
+        <MudNavLink Href="/nerd-typography" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.TextFields">Typography</MudNavLink>
+        <MudNavLink Href="/nerd-design-system" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Dashboard">Catalog hub</MudNavLink>
+    </MudNavGroup>
+
     <MudNavGroup Title="MudComponents" Icon="@Icons.Material.Filled.Dashboard" Expanded="true">
         <MudNavLink Href="/theme-kit" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Palette">ThemeKit</MudNavLink>
         <MudNavLink Href="/mud-quill-editor" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Edit">MudQuillEditor</MudNavLink>

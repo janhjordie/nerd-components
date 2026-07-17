@@ -24,5 +24,6 @@ public static class ResponsiveTypographyOptionsExtensions
         target.LineHeight = source.LineHeight;
         target.LetterSpacing = source.LetterSpacing;
         target.FontWeight = source.FontWeight;
+        target.Roles.CopyFrom(source.Roles);
     }
 }

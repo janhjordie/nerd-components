@@ -2,6 +2,9 @@ using MudBlazor;
 
 namespace TheNerdCollective.MudComponents.ResponsiveTypography;
 
+/// <summary>
+/// Applies responsive typography options to a <see cref="MudTheme"/>.
+/// </summary>
 public static class MudThemeResponsiveTypographyExtensions
 {
     public static MudTheme UseResponsiveTypography(
@@ -14,49 +17,56 @@ public static class MudThemeResponsiveTypographyExtensions
         var options = new ResponsiveTypographyOptions();
         configure(options);
 
-        Set(options.Default, value => theme.Typography.Default.FontSize = value, theme.Typography.Default, options);
-        Set(options.H1, value => theme.Typography.H1.FontSize = value, theme.Typography.H1, options);
-        Set(options.H2, value => theme.Typography.H2.FontSize = value, theme.Typography.H2, options);
-        Set(options.H3, value => theme.Typography.H3.FontSize = value, theme.Typography.H3, options);
-        Set(options.H4, value => theme.Typography.H4.FontSize = value, theme.Typography.H4, options);
-        Set(options.H5, value => theme.Typography.H5.FontSize = value, theme.Typography.H5, options);
-        Set(options.H6, value => theme.Typography.H6.FontSize = value, theme.Typography.H6, options);
-        Set(options.Subtitle1, value => theme.Typography.Subtitle1.FontSize = value, theme.Typography.Subtitle1, options);
-        Set(options.Subtitle2, value => theme.Typography.Subtitle2.FontSize = value, theme.Typography.Subtitle2, options);
-        Set(options.Body1, value => theme.Typography.Body1.FontSize = value, theme.Typography.Body1, options);
-        Set(options.Body2, value => theme.Typography.Body2.FontSize = value, theme.Typography.Body2, options);
-        Set(options.Button, value => theme.Typography.Button.FontSize = value, theme.Typography.Button, options);
-        Set(options.Caption, value => theme.Typography.Caption.FontSize = value, theme.Typography.Caption, options);
-        Set(options.Overline, value => theme.Typography.Overline.FontSize = value, theme.Typography.Overline, options);
+        Apply(theme.Typography.Default, nameof(ResponsiveTypographyOptions.Default), options);
+        Apply(theme.Typography.H1, nameof(ResponsiveTypographyOptions.H1), options);
+        Apply(theme.Typography.H2, nameof(ResponsiveTypographyOptions.H2), options);
+        Apply(theme.Typography.H3, nameof(ResponsiveTypographyOptions.H3), options);
+        Apply(theme.Typography.H4, nameof(ResponsiveTypographyOptions.H4), options);
+        Apply(theme.Typography.H5, nameof(ResponsiveTypographyOptions.H5), options);
+        Apply(theme.Typography.H6, nameof(ResponsiveTypographyOptions.H6), options);
+        Apply(theme.Typography.Subtitle1, nameof(ResponsiveTypographyOptions.Subtitle1), options);
+        Apply(theme.Typography.Subtitle2, nameof(ResponsiveTypographyOptions.Subtitle2), options);
+        Apply(theme.Typography.Body1, nameof(ResponsiveTypographyOptions.Body1), options);
+        Apply(theme.Typography.Body2, nameof(ResponsiveTypographyOptions.Body2), options);
+        Apply(theme.Typography.Button, nameof(ResponsiveTypographyOptions.Button), options);
+        Apply(theme.Typography.Caption, nameof(ResponsiveTypographyOptions.Caption), options);
+        Apply(theme.Typography.Overline, nameof(ResponsiveTypographyOptions.Overline), options);
 
         return theme;
     }
 
-    private static void Set(
-        string? value,
-        Action<string> setFontSize,
-        BaseTypography typography,
-        ResponsiveTypographyOptions options)
+    private static void Apply(BaseTypography typography, string role, ResponsiveTypographyOptions options)
     {
-        if (value is null)
+        var fontSize = GetFontSize(options, role);
+        if (fontSize is null)
         {
             return;
         }
 
-        setFontSize(value);
-        if (options.LineHeight is not null)
-        {
-            typography.LineHeight = options.LineHeight;
-        }
+        typography.FontSize = fontSize;
 
-        if (options.LetterSpacing is not null)
-        {
-            typography.LetterSpacing = options.LetterSpacing;
-        }
-
-        if (options.FontWeight is not null)
-        {
-            typography.FontWeight = options.FontWeight;
-        }
+        var roleStyle = options.Roles.TryGet(role, out var style) ? style : null;
+        typography.LineHeight = roleStyle?.LineHeight ?? options.LineHeight ?? typography.LineHeight;
+        typography.LetterSpacing = roleStyle?.LetterSpacing ?? options.LetterSpacing ?? typography.LetterSpacing;
+        typography.FontWeight = roleStyle?.FontWeight ?? options.FontWeight ?? typography.FontWeight;
     }
+
+    private static string? GetFontSize(ResponsiveTypographyOptions options, string role) => role switch
+    {
+        nameof(ResponsiveTypographyOptions.Default) => options.Default,
+        nameof(ResponsiveTypographyOptions.H1) => options.H1,
+        nameof(ResponsiveTypographyOptions.H2) => options.H2,
+        nameof(ResponsiveTypographyOptions.H3) => options.H3,
+        nameof(ResponsiveTypographyOptions.H4) => options.H4,
+        nameof(ResponsiveTypographyOptions.H5) => options.H5,
+        nameof(ResponsiveTypographyOptions.H6) => options.H6,
+        nameof(ResponsiveTypographyOptions.Subtitle1) => options.Subtitle1,
+        nameof(ResponsiveTypographyOptions.Subtitle2) => options.Subtitle2,
+        nameof(ResponsiveTypographyOptions.Body1) => options.Body1,
+        nameof(ResponsiveTypographyOptions.Body2) => options.Body2,
+        nameof(ResponsiveTypographyOptions.Button) => options.Button,
+        nameof(ResponsiveTypographyOptions.Caption) => options.Caption,
+        nameof(ResponsiveTypographyOptions.Overline) => options.Overline,
+        _ => null
+    };
 }

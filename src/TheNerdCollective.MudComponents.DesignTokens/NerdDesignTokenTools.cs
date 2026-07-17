@@ -63,6 +63,7 @@ public static class NerdDesignTokenTools
         var wcagVersion = string.IsNullOrWhiteSpace(options.WcagVersion)
             ? DefaultWcagVersion
             : options.WcagVersion;
+        var variables = NerdDesignTokenColorVariables.Build(options);
 
         return options.Colors
             .OrderBy(pair => pair.Key, StringComparer.Ordinal)
@@ -77,8 +78,8 @@ public static class NerdDesignTokenTools
                 return new NerdAccessibilityResult(
                     pair.Key,
                     wcagVersion,
-                    Evaluate("light", lightBackground, lightForeground, wcagVersion),
-                    Evaluate("dark", darkBackground, darkForeground, wcagVersion));
+                    Evaluate("light", lightBackground, lightForeground, wcagVersion, variables),
+                    Evaluate("dark", darkBackground, darkForeground, wcagVersion, variables));
             })
             .ToArray();
     }
@@ -142,10 +143,11 @@ public static class NerdDesignTokenTools
         string mode,
         string background,
         string foreground,
-        string wcagVersion)
+        string wcagVersion,
+        IReadOnlyDictionary<string, string> variables)
     {
-        var ratio = NerdColorParser.ContrastRatio(background, foreground);
-        var recommended = NerdColorValue.ContrastText(background);
+        var ratio = NerdColorParser.ContrastRatio(background, foreground, variables);
+        var recommended = NerdColorParser.ContrastText(background, variables);
         return new NerdContrastEvaluation(
             mode,
             background,

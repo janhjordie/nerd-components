@@ -123,7 +123,26 @@ public class ResponsiveTypographyTests
         NerdTypographyPresets.ApplyMarketing(options);
 
         Assert.Contains("H1", options.ConfiguredRoles);
+        Assert.Equal("1.15", options.Roles.H1.LineHeight);
+        Assert.Equal("1.6", options.Roles.Body1.LineHeight);
         Assert.Equal("1.5", options.LineHeight);
         Assert.Equal("0.01em", options.LetterSpacing);
+    }
+
+    [Fact]
+    public void Per_role_line_height_overrides_global_default()
+    {
+        var theme = new MudTheme();
+        theme.UseResponsiveTypography(options =>
+        {
+            options.H1 = "2rem";
+            options.Body1 = "1rem";
+            options.LineHeight = "1.4";
+            options.Roles.H1.LineHeight = "1.1";
+            options.Roles.Body1.LineHeight = "1.7";
+        });
+
+        Assert.Equal("1.1", theme.Typography.H1.LineHeight);
+        Assert.Equal("1.7", theme.Typography.Body1.LineHeight);
     }
 }
