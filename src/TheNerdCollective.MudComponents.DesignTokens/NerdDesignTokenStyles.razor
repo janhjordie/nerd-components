@@ -1,6 +1,6 @@
 @using Microsoft.Extensions.DependencyInjection
-@inject IServiceProvider Services
+@inject NerdDesignTokenCss TokenCss
 
 <style data-nerd-design-tokens="true">
-@((MarkupString)Services.GetRequiredService<string>())
+@((MarkupString)TokenCss.Content)
 </style>

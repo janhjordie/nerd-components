@@ -41,6 +41,41 @@ public class MudBlazorDesignTokenCssGeneratorTests
         Assert.DoesNotContain(".kunde-forest", css);
     }
 
+    [Fact]
+    public void Generate_emits_dark_mode_and_semantic_role_variables()
+    {
+        var options = new NerdDesignTokenOptions { Prefix = "dnf" }
+            .Add("forest", new NerdColorToken
+            {
+                Value = "#365C3A",
+                Light = "#4D7A50",
+                Dark = "#203B25",
+                Surface = "#F0F7F0",
+                Content = "#19301D",
+                Interactive = "#2D4D30"
+            });
+
+        var css = MudBlazorDesignTokenCssGenerator.Generate(options);
+
+        Assert.Contains("[data-theme=\"dark\"] .dnf-forest", css);
+        Assert.Contains("--dnf-color-forest-surface: #F0F7F0", css);
+        Assert.Contains("--dnf-color-forest-content: #19301D", css);
+        Assert.Contains("--dnf-color-forest-interactive: #2D4D30", css);
+        Assert.Contains(".dnf-forest.mud-selected", css);
+        Assert.Contains("[aria-pressed=\"true\"]", css);
+    }
+
+    [Fact]
+    public void Generate_computes_contrast_text_when_omitted()
+    {
+        var options = new NerdDesignTokenOptions { Prefix = "test" }
+            .Add("sun", new NerdColorToken { Value = "#FFFFFF" });
+
+        var css = MudBlazorDesignTokenCssGenerator.Generate(options);
+
+        Assert.Contains("--test-color-sun-text: #1F2937", css);
+    }
+
     [Theory]
     [InlineData("Sand")]
     [InlineData("sand color")]
