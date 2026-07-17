@@ -24,6 +24,12 @@ public static class MudBlazorDesignTokenCssGenerator
         string name,
         NerdColorToken token)
     {
+        var value = NerdColorValue.Validate(token.Value, nameof(token.Value));
+        var light = NerdColorValue.Validate(token.Light ?? value, nameof(token.Light));
+        var dark = NerdColorValue.Validate(token.Dark ?? light, nameof(token.Dark));
+        var contrast = NerdColorValue.Validate(
+            token.ContrastText ?? NerdColorValue.ContrastText(light),
+            nameof(token.ContrastText));
         var root = $".{prefix}-{name}";
         var variable = $"--{prefix}-color-{name}";
         var textVariable = $"{variable}-text";
@@ -33,12 +39,15 @@ public static class MudBlazorDesignTokenCssGenerator
         var disabledVariable = $"{variable}-disabled";
 
         css.AppendLine($"{root} {{");
-        css.AppendLine($"  {variable}: {token.Value};");
-        css.AppendLine($"  {textVariable}: {token.ContrastText};");
-        css.AppendLine($"  {hoverVariable}: {token.Hover ?? token.Value};");
-        css.AppendLine($"  {activeVariable}: {token.Active ?? token.Hover ?? token.Value};");
-        css.AppendLine($"  {borderVariable}: {token.Border ?? token.Value};");
-        css.AppendLine($"  {disabledVariable}: {token.Disabled ?? token.Value};");
+        css.AppendLine($"  {variable}: {light};");
+        css.AppendLine($"  {textVariable}: {contrast};");
+        css.AppendLine($"  {hoverVariable}: {token.Hover ?? light};");
+        css.AppendLine($"  {activeVariable}: {token.Active ?? token.Hover ?? light};");
+        css.AppendLine($"  {borderVariable}: {token.Border ?? light};");
+        css.AppendLine($"  {disabledVariable}: {token.Disabled ?? light};");
+        css.AppendLine($"  --{prefix}-color-{name}-surface: {token.Surface ?? light};");
+        css.AppendLine($"  --{prefix}-color-{name}-content: {token.Content ?? contrast};");
+        css.AppendLine($"  --{prefix}-color-{name}-interactive: {token.Interactive ?? light};");
         css.AppendLine("  --mud-palette-primary: var(" + variable + ");");
         css.AppendLine("  --mud-palette-primary-text: var(" + textVariable + ");");
         css.AppendLine("  --mud-palette-primary-hover: var(" + hoverVariable + ");");
@@ -62,6 +71,10 @@ public static class MudBlazorDesignTokenCssGenerator
         css.AppendLine("  color: var(" + textVariable + ");");
         css.AppendLine("  background-color: var(" + variable + ");");
         css.AppendLine("}");
+        css.AppendLine($"[data-theme=\"dark\"] {root} {{");
+        css.AppendLine($"  {variable}: {dark};");
+        css.AppendLine($"  {textVariable}: {NerdColorValue.ContrastText(dark)};");
+        css.AppendLine("}");
 
         css.AppendLine($"{root}.mud-button-filled, {root}.mud-chip, {root}.mud-alert,");
         css.AppendLine($"{root}.mud-badge, {root}.mud-progress-linear {{");
@@ -83,11 +96,14 @@ public static class MudBlazorDesignTokenCssGenerator
         css.AppendLine($"  background-color: var({hoverVariable}) !important;");
         css.AppendLine("}");
 
-        css.AppendLine($"{root}:focus-visible, {root}.mud-button:active, {root}.mud-chip:active {{");
+        css.AppendLine($"{root}:focus-visible, {root}.mud-button:focus, {root}.mud-button:active,");
+        css.AppendLine($"{root}.mud-chip:active, {root}.mud-selected, {root}.mud-checked,");
+        css.AppendLine($"{root}.mud-expanded, {root}[aria-pressed=\"true\"] {{");
         css.AppendLine($"  outline-color: var({activeVariable}) !important;");
         css.AppendLine("}");
 
-        css.AppendLine($"{root}.mud-disabled, {root}[disabled], {root}.mud-button:disabled {{");
+        css.AppendLine($"{root}.mud-disabled, {root}[disabled], {root}.mud-button:disabled,");
+        css.AppendLine($"{root}.mud-chip.mud-disabled, {root}[aria-disabled=\"true\"] {{");
         css.AppendLine($"  color: var({disabledVariable}) !important;");
         css.AppendLine("}");
         css.AppendLine();

@@ -20,8 +20,12 @@ builder.Services.AddNerdDesignTokens(options =>
     options.Add("forest", new NerdColorToken
     {
         Value = "#365C3A",
-        ContrastText = "#FFFFFF",
-        Hover = "#2D4D30"
+        Light = "#4D7A50",
+        Dark = "#203B25",
+        Hover = "#2D4D30",
+        Surface = "#F0F7F0",
+        Content = "#19301D",
+        Interactive = "#2D4D30"
     });
 });
 ```
@@ -53,3 +57,14 @@ variants where MudBlazor uses a more specific selector.
 Token names must be lowercase CSS identifiers, such as `sand`,
 `forest-dark`, or `sea-2`. Each application can define a different set of
 tokens and a different prefix.
+
+`ContrastText` is optional for hex colors and is calculated automatically when
+omitted. `Light` and `Dark` provide mode-specific values; dark values are
+activated below an ancestor with `data-theme="dark"`. `Surface`, `Content`,
+and `Interactive` are semantic roles that can be consumed by application CSS
+without changing the token's component selectors.
+
+The generated selectors are intentionally versioned against MudBlazor 9.6.
+The package emits both MudBlazor palette variables and explicit selectors for
+component variants and states, so updates to MudBlazor can be checked with the
+CSS snapshot tests before changing the package dependency.
