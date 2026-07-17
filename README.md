@@ -34,6 +34,9 @@ MudBlazor theme switcher, light/dark toggle, and token editor for design-time th
 #### [TheNerdCollective.MudComponents.DesignTokens](src/TheNerdCollective.MudComponents.DesignTokens/README.md)
 Customer-specific CSS design tokens and MudBlazor component color variants.
 
+#### [TheNerdCollective.MudComponents.ResponsiveTypography](src/TheNerdCollective.MudComponents.ResponsiveTypography/README.md)
+CSS-native responsive typography helpers for MudBlazor themes using `clamp()`.
+
 #### [TheNerdCollective.Blazor.ThemeKit](src/TheNerdCollective.Blazor.ThemeKit/README.md)
 Theme catalog contracts, runtime state, localStorage preferences, and editor gating.
 
