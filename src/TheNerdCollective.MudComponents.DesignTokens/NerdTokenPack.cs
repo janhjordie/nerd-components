@@ -33,6 +33,22 @@ public sealed class NerdTokenPack
         };
     }
 
+    public static NerdTokenPack FromPreset(string name, string clientId = "default")
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        var options = new NerdDesignTokenOptions { Prefix = name.Equals("dnf", StringComparison.OrdinalIgnoreCase) ? "dnf" : "nerd" };
+        if (name.Equals("dnf", StringComparison.OrdinalIgnoreCase))
+        {
+            NerdDnfDesignTokenPresets.Apply(options);
+        }
+        else
+        {
+            throw new ArgumentException($"Unknown token preset '{name}'.", nameof(name));
+        }
+
+        return FromOptions(options, clientId);
+    }
+
     public NerdDesignTokenOptions ToOptions()
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(ClientId);

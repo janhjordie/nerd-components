@@ -57,4 +57,21 @@ public sealed class NerdTokenPackTests
 
         NerdTokenPack.FromOptions(options, "acme").Validate();
     }
+
+    [Fact]
+    public void FromPreset_loads_dnf_pack()
+    {
+        var pack = NerdTokenPack.FromPreset("dnf", "acme");
+
+        Assert.Equal("acme", pack.ClientId);
+        Assert.Equal("dnf", pack.Prefix);
+        Assert.Equal(12, pack.Colors.Count);
+        Assert.Contains("kridt-himmel", pack.Recipes.Keys);
+    }
+
+    [Fact]
+    public void FromPreset_rejects_unknown_preset()
+    {
+        Assert.Throws<ArgumentException>(() => NerdTokenPack.FromPreset("unknown"));
+    }
 }
