@@ -33,6 +33,12 @@ public partial class NerdResponsiveTypographyCatalog
     private bool _showAllRoles;
     private double _viewportWidth = 1280;
     private string _deviceSampleRole = "H1";
+    private double _editorMinimum = 16;
+    private double _editorPreferred = 2;
+    private double _editorMaximum = 48;
+
+    private string EditorClamp =>
+        ResponsiveFontSize.Clamp($"{_editorMinimum:0.#}px", $"{_editorPreferred:0.#}vw", $"{_editorMaximum:0.#}px");
 
     protected override void OnInitialized()
     {

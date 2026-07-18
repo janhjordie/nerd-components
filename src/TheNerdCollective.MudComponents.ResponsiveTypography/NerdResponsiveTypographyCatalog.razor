@@ -31,6 +31,28 @@ else
                     <MudSlider @bind-Value="_viewportWidth" Min="320" Max="1920" Step="10" Style="max-width: 320px;" />
                 </MudStack>
 
+                <MudPaper Outlined="true" Class="pa-4">
+                    <MudStack Spacing="2">
+                        <MudText Typo="Typo.h6">Live clamp editor</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                            Tune minimum, preferred viewport value and maximum without changing the configured preset.
+                        </MudText>
+                        <MudSlider @bind-Value="_editorMinimum" Min="8" Max="64" Step="1" Immediate="true">
+                            Minimum @_editorMinimum.ToString("0.#")px
+                        </MudSlider>
+                        <MudSlider @bind-Value="_editorPreferred" Min="0.5" Max="8" Step="0.1" Immediate="true">
+                            Preferred @_editorPreferred.ToString("0.#")vw
+                        </MudSlider>
+                        <MudSlider @bind-Value="_editorMaximum" Min="16" Max="96" Step="1" Immediate="true">
+                            Maximum @_editorMaximum.ToString("0.#")px
+                        </MudSlider>
+                        <MudText Typo="Typo.h5" Style="@($"font-size:{EditorClamp}")">
+                            Live typography preview
+                        </MudText>
+                        <code>@EditorClamp</code>
+                    </MudStack>
+                </MudPaper>
+
                 @if (_warnings.Count > 0)
                 {
                     <MudAlert Severity="Severity.Error" Variant="Variant.Filled">

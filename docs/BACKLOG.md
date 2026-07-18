@@ -78,7 +78,7 @@ Spec: nerd-rules `00-ai-system/13-master-backlog-spec.md` · Prompts: `backlog-s
 | HR-032 | P2 | open | Type Scale Curve | Graf H1→Caption ved viewport + overlay | | RT-FEATURE-03 |
 | HR-033 | P1 | open | Save as Client Typography Pack | `INerdTypographyPackStore` + JSON; “Gem som klient” i catalog | | RT-FEATURE-04 · RT-ROADMAP-F2 |
 | HR-034 | P2 | open | Modular Scale Generator | Input base + ratio → generér alle roller + clamp wrap | | RT-FEATURE-05 |
-| HR-035 | P1 | open | Live Clamp Editor | Sliders min/preferred/max + live MudText preview i catalog | | RT-FEATURE-06 |
+| HR-035 | P1 | in_progress | Live Clamp Editor | Sliders min/preferred/max + live MudText preview i catalog | Catalog editor UI implemented; persistence/configured-role binding pending | RT-FEATURE-06 |
 | HR-036 | P2 | open | Accessibility Storyboard | Resize 200%, min 16px body, line-height — pass/fail pr. role i UI | | RT-FEATURE-07 |
 | HR-038 | P2 | open | Brand Pack Bundle | Én JSON/zip: colors + typography + recipes | | RT-FEATURE-09 |
 | HR-039 | P3 | open | Figma / Tokens Studio Sync (typography) | Eksport/import font-size tokens | | RT-FEATURE-10 |
