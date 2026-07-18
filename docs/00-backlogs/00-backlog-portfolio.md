@@ -2,7 +2,7 @@
 title: "Backlog Portfolio — Design System"
 status: Active
 author: "@janhjordie"
-last_updated: "18-07-2026 09:26 UTC"
+last_updated: "18-07-2026 09:35 UTC"
 ---
 
 # Backlog Portfolio — Design System
@@ -79,7 +79,7 @@ HR-054 Demo dedupe
 - HR-006 Portal-aware pickers (in progress)
 - HR-002 Client token packs
 - HR-054 Demo startup fix
-- HR-021 Token pack DTO
+- HR-021 Token pack DTO (in progress)
 
 ### Next (P1 catalog UX)
 

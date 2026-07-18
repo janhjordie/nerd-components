@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Nerd design token pack",
+  "type": "object",
+  "required": ["clientId", "prefix", "version", "colors"],
+  "properties": {
+    "clientId": { "type": "string", "minLength": 1 },
+    "prefix": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+    "version": { "type": "integer", "minimum": 1 },
+    "updatedAt": { "type": "string", "format": "date-time" },
+    "colors": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["value"],
+        "properties": {
+          "value": { "type": "string", "minLength": 1 },
+          "light": { "type": "string" },
+          "dark": { "type": "string" },
+          "contrastText": { "type": "string" },
+          "darkContrastText": { "type": "string" }
+        },
+        "additionalProperties": true
+      }
+    },
+    "aliases": { "type": "object", "additionalProperties": { "type": "string" } },
+    "radii": { "type": "object", "additionalProperties": { "type": "string" } },
+    "shadows": { "type": "object", "additionalProperties": { "type": "string" } },
+    "recipes": { "type": "object", "additionalProperties": { "type": "object" } }
+  },
+  "additionalProperties": false
+}

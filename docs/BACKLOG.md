@@ -2,7 +2,7 @@
 title: "TheNerdCollective.Components — Master Backlog"
 status: Active
 author: "@janhjordie"
-last_updated: "18-07-2026 09:26 UTC"
+last_updated: "18-07-2026 09:35 UTC"
 id_prefix: "HR"
 ---
 
@@ -63,7 +63,7 @@ Spec: nerd-rules `00-ai-system/13-master-backlog-spec.md` · Prompts: `backlog-s
 
 | ID | P | Status | Task | DoD (verifiable) | Evidence | Source |
 |----|---|--------|------|------------------|----------|--------|
-| HR-021 | P1 | open | `NerdTokenPack` JSON DTO + schema | Serialiserbar pack; `token-pack.schema.json`; validation pipeline (navne, hex, WCAG, recipe refs) | | DT-ROADMAP-F1 |
+| HR-021 | P1 | in_progress | `NerdTokenPack` JSON DTO + schema | Serialiserbar pack; `token-pack.schema.json`; validation pipeline (navne, hex, WCAG, recipe refs) | DTO, options round-trip, schema; validation hardening pending | DT-ROADMAP-F1 |
 | HR-022 | P1 | open | Token pack loaders | `FromJson`, `FromPreset("dnf")`, merge med `FromOptions` | | DT-ROADMAP-F1 |
 | HR-023 | P1 | open | DNF snapshot tests | bUnit/CSS snapshot for alle 12 DNF tokens + recipes | | DT-ROADMAP-F0 |
 | HR-024 | P2 | open | Live editor & export (fase 4) | Inline picker + “Promote to preset”; export CSS/JSON/Stitch/Figma | | DT-ROADMAP-F4 |
