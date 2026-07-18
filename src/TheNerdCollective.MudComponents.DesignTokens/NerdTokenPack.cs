@@ -49,6 +49,34 @@ public sealed class NerdTokenPack
         return FromOptions(options, clientId);
     }
 
+    public NerdTokenPack Merge(NerdTokenPack overrides)
+    {
+        ArgumentNullException.ThrowIfNull(overrides);
+        var merged = ToOptions();
+        foreach (var color in overrides.Colors)
+        {
+            merged.Add(color.Key, color.Value);
+        }
+        foreach (var alias in overrides.Aliases)
+        {
+            merged.Alias(alias.Key, alias.Value);
+        }
+        foreach (var radius in overrides.Radii)
+        {
+            merged.AddRadius(radius.Key, radius.Value);
+        }
+        foreach (var shadow in overrides.Shadows)
+        {
+            merged.AddShadow(shadow.Key, shadow.Value);
+        }
+        foreach (var recipe in overrides.Recipes)
+        {
+            merged.AddRecipe(recipe.Key, recipe.Value);
+        }
+
+        return FromOptions(merged, overrides.ClientId);
+    }
+
     public NerdDesignTokenOptions ToOptions()
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(ClientId);

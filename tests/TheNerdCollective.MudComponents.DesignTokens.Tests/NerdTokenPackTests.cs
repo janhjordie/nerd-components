@@ -74,4 +74,21 @@ public sealed class NerdTokenPackTests
     {
         Assert.Throws<ArgumentException>(() => NerdTokenPack.FromPreset("unknown"));
     }
+
+    [Fact]
+    public void Merge_overrides_existing_tokens_and_keeps_base_tokens()
+    {
+        var basePack = NerdTokenPack.FromPreset("dnf", "base");
+        var overrides = NerdTokenPack.FromOptions(
+            new NerdDesignTokenOptions { Prefix = "acme" }
+                .Add("aurora", new NerdColorToken { Value = "#7C5CFF", ContrastText = "#FFFFFF" }),
+            "acme");
+
+        var merged = basePack.Merge(overrides);
+
+        Assert.Equal("acme", merged.ClientId);
+        Assert.Equal(13, merged.Colors.Count);
+        Assert.Contains("skov", merged.Colors.Keys);
+        Assert.Equal("#7C5CFF", merged.Colors["aurora"].Value);
+    }
 }
