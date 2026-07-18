@@ -19,9 +19,14 @@ public partial class NerdDesignTokensCatalog
     [Inject]
     private NerdDownloadService DownloadService { get; set; } = default!;
 
+    [Inject]
+    private INerdTokenPackStore TokenPackStore { get; set; } = default!;
+
     private bool _previewDark;
     private string? _studioToken;
     private string _studioColor = "#365C3A";
+    private string _clientId = "client";
+    private string? _saveStatus;
     private int _activeTabIndex;
     private string _previewRadioValue = "radio";
     private IReadOnlyList<NerdAccessibilityResult> _accessibility = [];
@@ -133,4 +138,10 @@ public partial class NerdDesignTokensCatalog
 
     private Task DownloadStitchAsync() =>
         DownloadService.DownloadTextAsync("DESIGN.md", NerdDesignTokenTools.ExportStitchDesignMd(Options)).AsTask();
+
+    private async Task SaveClientPackAsync()
+    {
+        await TokenPackStore.SaveAsync(NerdTokenPack.FromOptions(Options, _clientId));
+        _saveStatus = $"Saved {_clientId}.";
+    }
 }

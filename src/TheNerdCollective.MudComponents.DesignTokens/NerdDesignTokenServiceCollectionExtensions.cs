@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using TheNerdCollective.MudComponents.Shared;
 
 namespace TheNerdCollective.MudComponents.DesignTokens;
@@ -27,6 +28,8 @@ public static class NerdDesignTokenServiceCollectionExtensions
 
         services.AddNerdDesignSystem(hub => hub.DesignTokensRoute = options.CatalogRoute);
         services.AddSingleton(options);
+        services.TryAddSingleton<INerdTokenPackStore>(
+            _ => new FileNerdTokenPackStore("App_Data/token-packs"));
         services.AddSingleton(sp => new NerdDesignTokenCss(
             MudBlazorDesignTokenCssGenerator.Generate(sp.GetRequiredService<NerdDesignTokenOptions>())));
 

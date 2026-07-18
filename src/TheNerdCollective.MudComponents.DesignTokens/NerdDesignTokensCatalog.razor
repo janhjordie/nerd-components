@@ -35,6 +35,17 @@ else
                 <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="DownloadStitchAsync">Export Stitch DESIGN.md</MudButton>
             </MudStack>
 
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="flex-wrap">
+                <MudTextField @bind-Value="_clientId" Label="ClientId" Immediate="true" />
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveClientPackAsync">
+                    Gem som klient
+                </MudButton>
+                @if (_saveStatus is not null)
+                {
+                    <MudChip T="string" Color="Color.Success" Variant="Variant.Outlined">@_saveStatus</MudChip>
+                }
+            </MudStack>
+
             <MudPaper Outlined="true" Class="pa-4">
                 <MudStack Spacing="2">
                     <MudText Typo="Typo.h6">Live token studio</MudText>
