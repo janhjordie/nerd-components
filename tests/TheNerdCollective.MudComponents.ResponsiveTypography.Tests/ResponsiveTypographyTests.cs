@@ -203,6 +203,26 @@ public class ResponsiveTypographyTests
     }
 
     [Fact]
+    public void Modular_scale_generator_returns_roles_and_clamp_values()
+    {
+        var scale = NerdModularScaleGenerator.Generate(1, 1.25);
+
+        Assert.Equal(7, scale.Count);
+        Assert.Contains("H1", scale.Keys);
+        Assert.StartsWith("clamp(", scale["H1"]);
+        Assert.StartsWith("clamp(", scale["Caption"]);
+    }
+
+    [Theory]
+    [InlineData(0, 1.25)]
+    [InlineData(1, 1)]
+    public void Modular_scale_generator_rejects_invalid_inputs(double baseRem, double ratio)
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(
+            () => NerdModularScaleGenerator.Generate(baseRem, ratio));
+    }
+
+    [Fact]
     public void Editorial_and_dashboard_presets_configure_distinct_scales()
     {
         var editorial = new ResponsiveTypographyOptions();

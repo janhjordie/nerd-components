@@ -77,7 +77,7 @@ Spec: nerd-rules `00-ai-system/13-master-backlog-spec.md` · Prompts: `backlog-s
 |----|---|--------|------|------------------|----------|--------|
 | HR-032 | P2 | in_progress | Type Scale Curve | Graf H1→Caption ved viewport + overlay | Catalog curve visualization with 320px baseline and selected viewport; polish pending | RT-FEATURE-03 |
 | HR-033 | P1 | in_progress | Save as Client Typography Pack | `INerdTypographyPackStore` + JSON; “Gem som klient” i catalog | `NerdTypographyPack` DTO + file store + DI registration + save/load/list tests; catalog save flow pending | RT-FEATURE-04 · RT-ROADMAP-F2 |
-| HR-034 | P2 | open | Modular Scale Generator | Input base + ratio → generér alle roller + clamp wrap | | RT-FEATURE-05 |
+| HR-034 | P2 | in_progress | Modular Scale Generator | Input base + ratio → generér alle roller + clamp wrap | `NerdModularScaleGenerator` med base/ratio-validering, 7 roller og clamp-output; catalog-input pending | RT-FEATURE-05 |
 | HR-035 | P1 | in_progress | Live Clamp Editor | Sliders min/preferred/max + live MudText preview i catalog | Catalog editor UI implemented; persistence/configured-role binding pending | RT-FEATURE-06 |
 | HR-036 | P2 | done | Accessibility Storyboard | Resize 200%, min 16px body, line-height — pass/fail pr. role i UI | Catalog chips + accessibility result coverage test for configured roles | RT-FEATURE-07 |
 | HR-038 | P2 | open | Brand Pack Bundle | Én JSON/zip: colors + typography + recipes | | RT-FEATURE-09 |
