@@ -19,12 +19,45 @@ public class MudBlazorDesignTokenCssGeneratorTests
 
         Assert.Contains(".dnf-forest", css);
         Assert.Contains("--dnf-color-forest: #365C3A", css);
+        Assert.Contains(".dnf-forest[class*=\"mud-chip-filled\"]", css);
+        Assert.DoesNotContain("[class*=\"mud-chip\"],", css);
         Assert.Contains(".dnf-forest[class*=\"mud-button-filled\"]", css);
         Assert.Contains(".dnf-forest[class*=\"mud-button-outlined\"]", css);
         Assert.Contains(".dnf-forest[class*=\"mud-button-text\"]", css);
         Assert.Contains(".dnf-forest[class*=\"mud-typography\"]", css);
         Assert.Contains(".dnf-forest.mud-disabled", css);
         Assert.Contains("!important", css);
+    }
+
+    [Fact]
+    public void Generate_styles_chip_without_matching_chip_content()
+    {
+        var options = new NerdDesignTokenOptions { Prefix = "dnf", UseImportantOverrides = false }
+            .Add("kridt", new NerdColorToken { Value = "#E8E0D3", ContrastText = "#002D26" });
+
+        var css = MudBlazorDesignTokenCssGenerator.Generate(options);
+
+        Assert.Contains(".dnf-kridt[class*=\"mud-chip-filled\"]", css);
+        Assert.Contains(".dnf-kridt .mud-chip-content", css);
+        Assert.DoesNotContain("[class*=\"mud-chip\"],", css);
+        Assert.DoesNotContain("[class*=\"mud-chip\"] {", css);
+        Assert.Contains(".dnf-kridt .mud-chip-filled:hover", css);
+    }
+
+    [Fact]
+    public void Generate_uses_content_color_for_outlined_and_text_variants()
+    {
+        var options = new NerdDesignTokenOptions { Prefix = "dnf", UseImportantOverrides = false }
+            .Add("graes", new NerdColorToken { Value = "#A6E54C", ContrastText = "#002D26" })
+            .Add("skov", new NerdColorToken { Value = "#002D26", ContrastText = "#FDFAF3" });
+
+        var css = MudBlazorDesignTokenCssGenerator.Generate(options);
+
+        Assert.Contains(".dnf-graes[class*=\"mud-button-outlined\"]", css);
+        Assert.Contains("color: var(--dnf-color-graes-content); border-color: var(--dnf-color-graes-border);", css);
+        Assert.Contains(".dnf-graes[class*=\"mud-button-text\"]", css);
+        Assert.Contains("--dnf-color-graes-content: #002D26;", css);
+        Assert.Contains("--dnf-color-skov-content: #002D26;", css);
     }
 
     [Fact]
@@ -98,7 +131,7 @@ public class MudBlazorDesignTokenCssGeneratorTests
         Assert.Contains("[class*=\"mud-data-grid\"]", css);
         Assert.Contains("[class*=\"mud-nav-link\"]", css);
         Assert.Contains("[class*=\"mud-rating\"]", css);
-        Assert.Contains(".dnf-forest .mud-switch.mud-checked .mud-switch-thumb", css);
+        Assert.Contains(".dnf-forest .mud-checkbox .mud-icon-button", css);
     }
 
     [Fact]

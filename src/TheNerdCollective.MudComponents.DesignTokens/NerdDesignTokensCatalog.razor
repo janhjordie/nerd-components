@@ -60,134 +60,97 @@ else
                 </MudAlert>
             }
 
-            <MudText Typo="Typo.h6">Color tokens (@Options.Colors.Count)</MudText>
-
-            @foreach (var pair in Options.Colors.OrderBy(pair => pair.Key, StringComparer.Ordinal))
-            {
-                var token = pair.Value;
-                var className = GetClassName(pair.Key);
-                var accessibility = GetAccessibility(pair.Key);
-                var previewTheme = _previewDark ? "dark" : "light";
-                var previewColor = ResolveColor(token, _previewDark);
-
-                <MudPaper Outlined="true" Class="pa-4">
-                    <MudStack Spacing="2">
-                        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-2">
-                            <MudText Typo="Typo.h6">@pair.Key</MudText>
-                            <MudStack Row="true" Spacing="1" Class="flex-wrap">
-                                @if (Options.IsAlias(pair.Key))
-                                {
-                                    <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined">alias</MudChip>
-                                }
-                                else if (Options.ConfiguredColors.Contains(pair.Key))
-                                {
-                                    <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">configured</MudChip>
-                                }
-                                <NerdClipboardButton Text="@($".{className}")" Label="Copy class" />
-                                <MudChip T="string" Variant="Variant.Outlined" Size="Size.Small">
-                                    <code>.@className</code>
-                                </MudChip>
-                                @if (accessibility is not null)
-                                {
-                                    <MudChip T="string"
-                                             Size="Size.Small"
-                                             Color="@(accessibility.Light.MeetsAa ? Color.Success : Color.Error)"
-                                             Variant="Variant.Filled">
-                                        WCAG @accessibility.WcagVersion AA light @(accessibility.Light.MeetsAa ? "pass" : "fail") (@FormatRatio(accessibility.Light.ContrastRatio))
-                                    </MudChip>
-                                    <MudChip T="string"
-                                             Size="Size.Small"
-                                             Color="@(accessibility.Dark.MeetsAa ? Color.Success : Color.Error)"
-                                             Variant="Variant.Filled">
-                                        WCAG @accessibility.WcagVersion AA dark @(accessibility.Dark.MeetsAa ? "pass" : "fail") (@FormatRatio(accessibility.Dark.ContrastRatio))
-                                    </MudChip>
-                                    <MudChip T="string"
-                                             Size="Size.Small"
-                                             Color="@(accessibility.Light.MeetsAaa ? Color.Success : Color.Warning)"
-                                             Variant="Variant.Outlined">
-                                        AAA light @(accessibility.Light.MeetsAaa ? "pass" : "fail")
-                                    </MudChip>
-                                    <MudChip T="string"
-                                             Size="Size.Small"
-                                             Color="@(accessibility.Dark.MeetsAaa ? Color.Success : Color.Warning)"
-                                             Variant="Variant.Outlined">
-                                        AAA dark @(accessibility.Dark.MeetsAaa ? "pass" : "fail")
-                                    </MudChip>
-                                }
-                            </MudStack>
-                        </MudStack>
-
-                        @if (accessibility is not null && (!accessibility.Light.MeetsAa || !accessibility.Dark.MeetsAa))
+            <MudTabs @bind-ActivePanelIndex="_activeTabIndex" Elevation="1" Rounded="true" KeepPanelsAlive="true">
+                <MudTabPanel Text="Swatches">
+                    <MudText Typo="Typo.h6" Class="mt-4 mb-3">Color tokens (@Options.Colors.Count)</MudText>
+                    <MudGrid Spacing="2">
+                        @foreach (var pair in Options.Colors.OrderBy(pair => pair.Key, StringComparer.Ordinal))
                         {
-                            <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true">
-                                Contrast is too low for WCAG @accessibility.WcagVersion AA.
-                                Light: @FormatRatio(accessibility.Light.ContrastRatio), dark: @FormatRatio(accessibility.Dark.ContrastRatio).
-                                Recommended foreground:
-                                light <code>@accessibility.Light.RecommendedForeground</code>,
-                                dark <code>@accessibility.Dark.RecommendedForeground</code>.
-                            </MudAlert>
-                        }
-
-                        <MudGrid Spacing="2">
-                            <MudItem xs="12" md="4">
-                                <MudPaper Class="pa-3" Outlined="true">
-                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Swatch (@previewTheme)</MudText>
-                                    <div data-theme="@previewTheme" class="@($"{className} pa-4 mt-2")" style="border-radius: 8px; min-height: 96px;">
-                                        <MudText Typo="Typo.body2">Sample text</MudText>
+                            var token = pair.Value;
+                            var accessibility = GetAccessibility(pair.Key);
+                            var previewTheme = _previewDark ? "dark" : "light";
+                            var previewColor = ResolveColor(token, _previewDark);
+                            var previewContrast = ResolveContrastText(token, accessibility, _previewDark);
+                            var className = GetClassName(pair.Key);
+                            <MudItem xs="12" sm="6" md="4" lg="3">
+                                <MudPaper Outlined="true"
+                                          Class="@($"pa-3 {className}")"
+                                          Style="cursor:pointer;"
+                                          @onclick="@(() => OpenTokenTab(pair.Key))">
+                                    <MudText Typo="Typo.subtitle1">@pair.Key</MudText>
+                                    <div data-theme="@previewTheme"
+                                         class="@($"{className} mt-2")"
+                                         style="@($"border-radius: 8px; min-height: 120px; display:flex; flex-direction:column; justify-content:flex-end; gap:.35rem; padding:1rem; background:var(--{Options.Prefix}-color-{pair.Key}); color:var(--{Options.Prefix}-color-{pair.Key}-text);")">
+                                        <span style="color:inherit; font-weight:500;">Sample text</span>
+                                        <code style="color:inherit;">@previewContrast</code>
                                     </div>
-                                    <MudText Typo="Typo.caption" Class="mt-2"><code>@previewColor</code></MudText>
+                                    <MudStack Row="true" Spacing="1" Class="mt-2 flex-wrap">
+                                        @ColorValue(previewColor)
+                                        @ColorValue(previewContrast)
+                                    </MudStack>
+                                    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mt-2">
+                                        <code>.@className</code>
+                                        <NerdClipboardButton Text="@($".{className}")" Label="Copy" />
+                                    </MudStack>
                                 </MudPaper>
                             </MudItem>
-                            <MudItem xs="12" md="8">
-                                <MudPaper Class="pa-3" Outlined="true" data-theme="@previewTheme">
-                                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-2">MudBlazor previews</MudText>
-                                    <MudStack Row="true" Spacing="1" Class="flex-wrap gap-1 mb-2">
-                                        <MudButton Class="@className" Variant="Variant.Filled">Filled</MudButton>
-                                        <MudButton Class="@className" Variant="Variant.Outlined">Outlined</MudButton>
-                                        <MudButton Class="@className" Variant="Variant.Text">Text</MudButton>
-                                        <MudIconButton Class="@className" Icon="@Icons.Material.Filled.Favorite" />
-                                        <MudFab Class="@className" Color="Color.Inherit" Icon="@Icons.Material.Filled.Add" />
-                                    </MudStack>
-                                    <MudStack Row="true" Spacing="1" Class="flex-wrap gap-1 mb-2">
-                                        <MudChip T="string" Class="@className" Variant="Variant.Filled">Chip</MudChip>
-                                        <MudBadge Class="@className" Content="3" Color="Color.Inherit" Overlap="true">
-                                            <MudIcon Icon="@Icons.Material.Filled.Notifications" />
-                                        </MudBadge>
-                                        <MudText Class="@className" Typo="Typo.h6">Heading</MudText>
-                                        <MudLink Class="@className" Href="#">Link</MudLink>
-                                    </MudStack>
-                                    <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="flex-wrap gap-2 mb-2">
-                                        <MudSwitch Class="@className" Value="true" Color="Color.Inherit" Label="Switch" />
-                                        <MudCheckBox Class="@className" Value="true" Color="Color.Inherit" Label="Checkbox" />
-                                        <MudRadio Class="@className" Value="true" Color="Color.Inherit" Label="Radio" />
-                                        <MudRating Class="@className" Value="3" MaxValue="5" />
-                                    </MudStack>
-                                    <MudTextField T="string" Class="@className" Label="Text field" Variant="Variant.Outlined" />
-                                    <MudProgressLinear Class="@($"{className} mt-2")" Value="60" Color="Color.Inherit" />
-                                    <MudAlert Class="@($"{className} mt-2")" Severity="Severity.Info" Variant="Variant.Filled" Dense="true">
-                                        Alert preview
-                                    </MudAlert>
-                                </MudPaper>
-                            </MudItem>
-                        </MudGrid>
+                        }
+                    </MudGrid>
+                </MudTabPanel>
 
-                        <MudSimpleTable Dense="true" Hover="true" Bordered="true">
-                            <tbody>
-                                <tr><td>Value</td><td><code>@token.Value</code></td></tr>
-                                <tr><td>Light</td><td><code>@(token.Light ?? token.Value)</code></td></tr>
-                                <tr><td>Dark</td><td><code>@(token.Dark ?? token.Light ?? token.Value)</code></td></tr>
-                                <tr><td>ContrastText</td><td><code>@(token.ContrastText ?? accessibility?.Light.RecommendedForeground)</code></td></tr>
-                                <tr><td>Light contrast</td><td><code>@(accessibility is null ? "-" : FormatRatio(accessibility.Light.ContrastRatio))</code></td></tr>
-                                <tr><td>Dark contrast</td><td><code>@(accessibility is null ? "-" : FormatRatio(accessibility.Dark.ContrastRatio))</code></td></tr>
-                                <tr><td>Surface</td><td><code>@(token.Surface ?? "-")</code></td></tr>
-                                <tr><td>Content</td><td><code>@(token.Content ?? "-")</code></td></tr>
-                                <tr><td>Interactive</td><td><code>@(token.Interactive ?? "-")</code></td></tr>
-                                <tr><td>Hover</td><td><code>@(token.Hover ?? "-")</code></td></tr>
-                            </tbody>
-                        </MudSimpleTable>
-                    </MudStack>
-                </MudPaper>
-            }
+                @foreach (var pair in Options.Colors.OrderBy(pair => pair.Key, StringComparer.Ordinal))
+                {
+                    var token = pair.Value;
+                    var className = GetClassName(pair.Key);
+                    var accessibility = GetAccessibility(pair.Key);
+                    var previewTheme = _previewDark ? "dark" : "light";
+                    var previewContrast = ResolveContrastText(token, accessibility, _previewDark);
+                    <MudTabPanel Text="@pair.Key">
+                        <MudStack Spacing="3" Class="@($"pa-4 {className}")">
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-2">
+                                <MudText Typo="Typo.h5">@pair.Key components</MudText>
+                                <NerdClipboardButton Text="@($".{className}")" Label="Copy class" />
+                            </MudStack>
+                            <MudPaper Class="pa-3" Outlined="true" data-theme="@previewTheme">
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Buttons and actions</MudText>
+                                <MudStack Row="true" Spacing="1" Class="flex-wrap gap-1 mt-2">
+                                    <MudButton Class="@className" Variant="Variant.Filled">Filled</MudButton>
+                                    <MudButton Class="@className" Variant="Variant.Outlined">Outlined</MudButton>
+                                    <MudButton Class="@className" Variant="Variant.Text">Text</MudButton>
+                                    <MudButton Class="@className" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Favorite">Favorite</MudButton>
+                                    <MudButton Class="@className" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add">Add</MudButton>
+                                    <MudChip T="string" Class="@className" Variant="Variant.Filled">Chip</MudChip>
+                                    <MudBadge Class="@className" Content="3" Color="Color.Inherit" Overlap="true">
+                                        <MudIcon Icon="@Icons.Material.Filled.Notifications" />
+                                    </MudBadge>
+                                    <MudLink Class="@className" Href="#">Link</MudLink>
+                                </MudStack>
+                            </MudPaper>
+                            <MudPaper Class="pa-3" Outlined="true" data-theme="@previewTheme">
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Inputs and selection</MudText>
+                                <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="flex-wrap gap-2 mt-2">
+                                    <MudSwitch Class="@className" Value="true" Color="Color.Inherit" Label="Switch" DisableRipple="true" />
+                                    <MudCheckBox Class="@className" Value="true" Color="Color.Inherit" Label="Checkbox" DisableRipple="true" />
+                                    <MudRadioGroup T="string" @bind-Value="_previewRadioValue">
+                                        <MudRadio Class="@className" Value="@("radio")" Color="Color.Inherit" DisableRipple="true">Radio</MudRadio>
+                                    </MudRadioGroup>
+                                    <MudRating Class="@className" SelectedValue="3" MaxValue="5" />
+                                    <MudTextField T="string" Class="@className" Label="Text field" Variant="Variant.Outlined" />
+                                </MudStack>
+                            </MudPaper>
+                            <MudPaper Class="pa-3" Outlined="true" data-theme="@previewTheme">
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Feedback and structure</MudText>
+                                <MudProgressLinear Class="@($"{className} mt-3")" Value="60" Color="Color.Inherit" />
+                                <MudAlert Class="@($"{className} mt-3")" Severity="Severity.Info" Variant="Variant.Filled" Dense="true">Alert preview</MudAlert>
+                                <MudText Class="@($"{className} mt-3")" Typo="Typo.h6">Heading</MudText>
+                                <MudSimpleTable Dense="true" Hover="true" Bordered="true" Class="@className">
+                                    <tbody><tr><td>Value</td><td>@ColorValue(token.Value)</td></tr><tr><td>Contrast</td><td>@ColorValue(previewContrast)</td></tr></tbody>
+                                </MudSimpleTable>
+                            </MudPaper>
+                        </MudStack>
+                    </MudTabPanel>
+                }
+            </MudTabs>
 
             @if (Options.Aliases.Count > 0)
             {

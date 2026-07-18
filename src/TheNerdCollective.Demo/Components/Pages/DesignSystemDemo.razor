@@ -14,15 +14,15 @@
 
 <MudGrid Class="mb-6">
     <MudItem xs="12" md="6">
-        <MudPaper Class="pa-4 demo-forest" Outlined="true">
+        <MudPaper Class="pa-4 dnf-skov" Outlined="true">
             <MudText Typo="Typo.h5">Token preview</MudText>
             <MudText Typo="Typo.body2" Class="mt-2">
-                Use semantic classes such as <code>demo-forest</code> and <code>demo-sand</code> on any MudBlazor component.
+                Use semantic classes such as <code>dnf-skov</code> and <code>dnf-kridt</code> on any MudBlazor component.
             </MudText>
             <MudStack Row="true" Spacing="1" Class="mt-3 flex-wrap">
-                <MudButton Class="demo-forest" Variant="Variant.Filled">Forest</MudButton>
-                <MudButton Class="demo-sand" Variant="Variant.Filled">Sand</MudButton>
-                <MudChip T="string" Class="demo-forest" Variant="Variant.Filled">Chip</MudChip>
+                <MudButton Class="dnf-skov" Variant="Variant.Filled">Skov</MudButton>
+                <MudButton Class="dnf-kridt" Variant="Variant.Filled">Kridt</MudButton>
+                <MudChip T="string" Class="dnf-skov" Variant="Variant.Filled">Chip</MudChip>
             </MudStack>
         </MudPaper>
     </MudItem>
@@ -36,6 +36,42 @@
         </MudPaper>
     </MudItem>
 </MudGrid>
+
+<MudPaper Class="pa-4 mb-6 dnf-recipe-kridt-himmel" Outlined="true">
+    <MudText Typo="Typo.h5">Token combinations</MudText>
+    <MudText Typo="Typo.body2" Class="mt-2">
+        Combine tokens by assigning one class to the surface and another to its content.
+        Here, <code>dnf-recipe-kridt-himmel</code> provides the paper/card surface and <code>dnf-himmel</code>
+        provides the action and supporting text.
+    </MudText>
+    <MudGrid Class="mt-3" Spacing="2">
+        <MudItem xs="12" md="6">
+            <MudCard Class="dnf-recipe-kridt-himmel" Outlined="true">
+                <MudCardContent>
+                    <MudText Typo="Typo.h6">Kridt surface</MudText>
+                    <MudText Class="dnf-himmel" Typo="Typo.body1">
+                        Himmel is used for the action text and supporting content.
+                    </MudText>
+                    <MudButton Class="dnf-himmel mt-3" Variant="Variant.Filled">
+                        Himmel action
+                    </MudButton>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+        <MudItem xs="12" md="6">
+            <MudPaper Class="pa-4 dnf-recipe-kridt-himmel" Elevation="1">
+                <MudText Class="dnf-himmel" Typo="Typo.h6">Secondary panel</MudText>
+                <MudText Class="dnf-himmel mt-2" Typo="Typo.body2">
+                    This demonstrates the same combination with MudPaper.
+                </MudText>
+                <MudStack Row="true" Spacing="1" Class="mt-3">
+                    <MudButton Class="dnf-himmel" Variant="Variant.Outlined">Outlined</MudButton>
+                    <MudButton Class="dnf-himmel" Variant="Variant.Text">Text</MudButton>
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</MudPaper>
 
 <MudPaper Class="pa-4" Outlined="true">
     <MudText Typo="Typo.h6" Class="mb-3">Live catalogs</MudText>

@@ -71,6 +71,11 @@ app.MapRazorComponents<App>()
 `AddNerdResponsiveTypographyCatalog(app.Services)` registers the catalog when
 `EnableCatalogPage` is `true`. The default route is `/nerd-typography`.
 
+The catalog includes **device frames** (phone / tablet / desktop), a
+**breakpoint comparison table**, viewport slider previews, WCAG chips, and
+copy buttons for CSS + Razor. See [docs/EXAMPLES.md](docs/EXAMPLES.md) and
+[docs/FEATURES.md](docs/FEATURES.md).
+
 `NerdTypographyPresets.ApplyMarketing` sets per-role line heights. Override individual roles:
 
 ```csharp

@@ -6,12 +6,11 @@ internal static class MudBlazorComponentRuleBuilder
 {
     private static readonly string[] FilledPatterns =
     [
-        "mud-button-filled", "mud-chip", "mud-alert-filled", "mud-fab", "mud-avatar-filled",
+        "mud-button-filled", "mud-chip-filled", "mud-alert-filled", "mud-fab", "mud-avatar-filled",
         "mud-badge", "mud-progress-linear", "mud-progress-circular", "mud-snackbar",
-        "mud-pagination-item-selected", "mud-stepper-step-primary", "mud-primary",
-        "mud-secondary", "mud-tertiary", "mud-info", "mud-success", "mud-warning", "mud-error",
-        "mud-theme-primary", "mud-theme-secondary", "mud-theme-tertiary", "mud-theme-info",
-        "mud-theme-success", "mud-theme-warning", "mud-theme-error"
+        "mud-pagination-item-selected", "mud-stepper-step-primary", "mud-theme-primary",
+        "mud-theme-secondary", "mud-theme-tertiary", "mud-theme-info", "mud-theme-success",
+        "mud-theme-warning", "mud-theme-error"
     ];
 
     private static readonly string[] OutlinedPatterns =
@@ -27,7 +26,7 @@ internal static class MudBlazorComponentRuleBuilder
         "mud-nav-link", "mud-tab", "mud-breadcrumb-item", "mud-list-item", "mud-menu-item",
         "mud-treeview-item-content", "mud-timeline-item-content", "mud-primary-text",
         "mud-secondary-text", "mud-tertiary-text", "mud-info-text", "mud-success-text",
-        "mud-warning-text", "mud-error-text", "mud-button-root", "mud-fab-color-inherit",
+        "mud-warning-text", "mud-error-text", "mud-fab-color-inherit",
         "mud-icon-button-color-inherit", "mud-button-color-inherit", "mud-button-text-inherit",
         "mud-button-outlined-inherit"
     ];
@@ -54,6 +53,7 @@ internal static class MudBlazorComponentRuleBuilder
         string root,
         string variable,
         string textVariable,
+        string contentVariable,
         string hoverVariable,
         string activeVariable,
         string borderVariable,
@@ -66,21 +66,26 @@ internal static class MudBlazorComponentRuleBuilder
             $"background-color: var({variable}){importantSuffix}; color: var({textVariable}){importantSuffix};");
 
         AppendPatternRules(css, root, OutlinedPatterns,
-            $"color: var({variable}){importantSuffix}; border-color: var({borderVariable}){importantSuffix};");
+            $"color: var({contentVariable}){importantSuffix}; border-color: var({borderVariable}){importantSuffix}; background-color: transparent{importantSuffix};");
 
         AppendPatternRules(css, root, TextPatterns,
-            $"color: var({variable}){importantSuffix};");
+            $"color: var({contentVariable}){importantSuffix}; background-color: transparent{importantSuffix};");
 
         AppendPatternRules(css, root, InputPatterns,
-            $"color: var({textVariable}){importantSuffix}; caret-color: var({variable}){importantSuffix}; border-color: var({borderVariable}){importantSuffix};");
+            $"color: var({contentVariable}){importantSuffix}; caret-color: var({variable}){importantSuffix}; border-color: var({borderVariable}){importantSuffix};");
 
         AppendPatternRules(css, root, StructurePatterns,
-            $"color: var({textVariable}){importantSuffix}; border-color: var({borderVariable}){importantSuffix};");
+            $"color: var({contentVariable}){importantSuffix}; border-color: var({borderVariable}){importantSuffix};");
 
-        css.AppendLine($"{root} .mud-checked, {root}.mud-checked,");
-        css.AppendLine($"{root} .mud-selected, {root}.mud-selected,");
-        css.AppendLine($"{root} .mud-radio.mud-checked .mud-radio-content, {root}.mud-radio.mud-checked .mud-radio-content,");
-        css.AppendLine($"{root} .mud-switch.mud-checked .mud-switch-thumb, {root}.mud-switch.mud-checked .mud-switch-thumb {{");
+        var surfaceVariable = contentVariable.Replace("-content", "-surface", StringComparison.Ordinal);
+        css.AppendLine($"{root}[class*=\"mud-popover\"], {root} :where([class*=\"mud-popover\"]) {{");
+        css.AppendLine($"  background-color: var({surfaceVariable}){importantSuffix};");
+        css.AppendLine($"  color: var({contentVariable}){importantSuffix};");
+        css.AppendLine("}");
+
+        css.AppendLine($"{root} .mud-checked:not(.mud-switch-base):not(.mud-ripple-radio):not(.mud-ripple-checkbox),");
+        css.AppendLine($"{root}.mud-checked:not(.mud-switch-base):not(.mud-ripple-radio):not(.mud-ripple-checkbox),");
+        css.AppendLine($"{root} .mud-selected, {root}.mud-selected {{");
         css.AppendLine($"  background-color: var({variable}){importantSuffix};");
         css.AppendLine($"  color: var({textVariable}){importantSuffix};");
         css.AppendLine($"  border-color: var({variable}){importantSuffix};");
@@ -90,10 +95,21 @@ internal static class MudBlazorComponentRuleBuilder
         css.AppendLine($"  background-color: var({hoverVariable}){importantSuffix};");
         css.AppendLine("}");
 
+        css.AppendLine($"{root} .mud-checkbox .mud-icon-button, {root}.mud-checkbox .mud-icon-button,");
+        css.AppendLine($"{root} .mud-radio .mud-icon-button, {root}.mud-radio .mud-icon-button,");
+        css.AppendLine($"{root} .mud-switch .mud-switch-base, {root}.mud-switch .mud-switch-base {{");
+        css.AppendLine($"  color: var({variable}){importantSuffix};");
+        css.AppendLine($"  --mud-ripple-color: var({variable}){importantSuffix};");
+        css.AppendLine("}");
+
         css.AppendLine($"{root} .mud-rating-root, {root}.mud-rating-root,");
         css.AppendLine($"{root} .mud-rating-item, {root}.mud-rating-item {{");
         css.AppendLine($"  color: var({variable}){importantSuffix};");
         css.AppendLine($"  --mud-ripple-color: var({variable}){importantSuffix};");
+        css.AppendLine("}");
+
+        css.AppendLine($"{root} .mud-chip-content, {root}.mud-chip-content {{");
+        css.AppendLine($"  background-color: transparent{importantSuffix};");
         css.AppendLine("}");
 
         css.AppendLine($"{root}:focus-visible, {root}:focus-within, {root} .mud-button:focus, {root}.mud-button:focus,");
@@ -111,13 +127,36 @@ internal static class MudBlazorComponentRuleBuilder
         css.AppendLine("}");
 
         css.AppendLine($"{root} .mud-button-filled:hover, {root}.mud-button-filled:hover,");
-        css.AppendLine($"{root} .mud-button-outlined:hover, {root}.mud-button-outlined:hover,");
-        css.AppendLine($"{root} .mud-button-text:hover, {root}.mud-button-text:hover,");
-        css.AppendLine($"{root} .mud-chip:hover, {root}.mud-chip:hover,");
         css.AppendLine($"{root} .mud-list-item-clickable:hover, {root}.mud-list-item-clickable:hover,");
         css.AppendLine($"{root} .mud-nav-link:hover, {root}.mud-nav-link:hover,");
         css.AppendLine($"{root} .mud-tab:hover, {root}.mud-tab:hover {{");
         css.AppendLine($"  background-color: var({hoverVariable}){importantSuffix};");
+        css.AppendLine($"  color: var({textVariable}){importantSuffix};");
+        css.AppendLine("}");
+
+        css.AppendLine($"{root} .mud-chip-filled:hover, {root}.mud-chip-filled:hover {{");
+        css.AppendLine($"  background-color: var({hoverVariable}){importantSuffix};");
+        css.AppendLine($"  color: var({textVariable}){importantSuffix};");
+        css.AppendLine("}");
+
+        css.AppendLine($"{root} .mud-chip-outlined:hover, {root}.mud-chip-outlined:hover {{");
+        css.AppendLine($"  background-color: color-mix(in srgb, var({variable}) 12%, transparent){importantSuffix};");
+        css.AppendLine($"  color: var({contentVariable}){importantSuffix};");
+        css.AppendLine("}");
+
+        css.AppendLine($"{root}.mud-button-outlined:hover, {root} .mud-button-outlined:hover,");
+        css.AppendLine($"{root}.mud-button-text:hover, {root} .mud-button-text:hover {{");
+        css.AppendLine($"  background-color: color-mix(in srgb, var({variable}) 12%, transparent){importantSuffix};");
+        css.AppendLine($"  color: var({contentVariable}){importantSuffix};");
+        css.AppendLine("}");
+
+        css.AppendLine($"{root} .mud-switch-base:hover,");
+        css.AppendLine($"{root} .mud-checkbox .mud-icon-button:hover,");
+        css.AppendLine($"{root} .mud-radio .mud-icon-button:hover,");
+        css.AppendLine($"{root} .mud-ripple-switch:hover,");
+        css.AppendLine($"{root} .mud-ripple-checkbox:hover,");
+        css.AppendLine($"{root} .mud-ripple-radio:hover {{");
+        css.AppendLine($"  background-color: color-mix(in srgb, var({variable}) 8%, transparent){importantSuffix};");
         css.AppendLine("}");
 
         css.AppendLine();
@@ -137,7 +176,9 @@ internal static class MudBlazorComponentRuleBuilder
         for (var i = 0; i < patterns.Count; i++)
         {
             var pattern = patterns[i];
-            css.Append($"{root}[class*=\"{pattern}\"], {root} [class*=\"{pattern}\"]");
+            // Keep nested token classes overridable: a direct `.dnf-himmel`
+            // class must win over an ancestor `.dnf-kridt` scope.
+            css.Append($"{root}[class*=\"{pattern}\"], {root} :where([class*=\"{pattern}\"])");
             css.AppendLine(i == patterns.Count - 1 ? " {" : ",");
         }
 

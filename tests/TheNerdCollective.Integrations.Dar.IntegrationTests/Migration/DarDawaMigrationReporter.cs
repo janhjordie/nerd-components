@@ -348,10 +348,10 @@ internal static class DarDawaMigrationReporter
 
         var dfOk = df.Success
             && df.Value!.Any(p => p.Postnummer == "3000")
-            && df.Value.Any(p => p.Postnummer == "3050");
+            && df.Value!.Any(p => p.Postnummer == "3050");
         var dawaOk = dawa.Success
             && dawa.Value!.Any(p => p.Postnummer == "3000")
-            && dawa.Value.Any(p => p.Postnummer == "3050");
+            && dawa.Value!.Any(p => p.Postnummer == "3050");
 
         return BuildRow(
             "Postnummer.GetByCircleAsync",
@@ -371,8 +371,8 @@ internal static class DarDawaMigrationReporter
         var df = await TryAsync(() => datafordelerOnly.Dar.Postnummer.GetByMunicipalityCodeWithKommunerAsync("0217"));
         var dawa = await TryAsync(() => withDawa.Dar.Postnummer.GetByMunicipalityCodeWithKommunerAsync("0217"));
 
-        var dfOk = df.Success && df.Value!.Count > 0 && df.Value.All(p => p.Kommuner.Count > 0);
-        var dawaOk = dawa.Success && dawa.Value!.Count > 0 && dawa.Value.All(p => p.Kommuner.Count > 0);
+        var dfOk = df.Success && df.Value!.Count > 0 && df.Value!.All(p => p.Kommuner.Count > 0);
+        var dawaOk = dawa.Success && dawa.Value!.Count > 0 && dawa.Value!.All(p => p.Kommuner.Count > 0);
 
         return BuildRow(
             "Postnummer.GetByMunicipalityCodeWithKommunerAsync",

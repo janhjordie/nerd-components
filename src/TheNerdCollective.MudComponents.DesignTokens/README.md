@@ -5,6 +5,9 @@ colors such as `sand`, `forest`, `sun`, and `sea`, then use the generated
 classes directly on any MudBlazor component. No wrappers, JavaScript, or
 MudBlazor fork is required.
 
+See [docs/DESIGN-TOKENS.md](../../docs/DESIGN-TOKENS.md) for architecture,
+design principles, and the brand-token model.
+
 ## Setup
 
 ```csharp

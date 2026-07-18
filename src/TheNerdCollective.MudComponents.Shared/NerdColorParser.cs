@@ -33,6 +33,19 @@ public static partial class NerdColorParser
         return RelativeLuminance(red, green, blue) > 0.179 ? "#1F2937" : "#FFFFFF";
     }
 
+    public static bool IsLight(string color, IReadOnlyDictionary<string, string>? variables = null)
+    {
+        if (!TryGetRgb(color, variables, out var red, out var green, out var blue))
+        {
+            return false;
+        }
+
+        return RelativeLuminance(red, green, blue) > 0.179;
+    }
+
+    public static string ContentText(string brandColor, string contrastText, IReadOnlyDictionary<string, string>? variables = null) =>
+        IsLight(brandColor, variables) ? contrastText : brandColor;
+
     public static double ContrastRatio(string background, string foreground) =>
         ContrastRatio(background, foreground, variables: null);
 

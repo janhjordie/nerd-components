@@ -1,4 +1,5 @@
 using System.Text;
+using TheNerdCollective.MudComponents.Shared;
 
 namespace TheNerdCollective.MudComponents.DesignTokens;
 
@@ -41,6 +42,10 @@ public static class MudBlazorDesignTokenCssGenerator
         {
             css.AppendLine($".{options.Prefix}-shadow-{shadow.Key} {{ box-shadow: {shadow.Value}; }}");
         }
+        foreach (var recipe in options.Recipes.OrderBy(pair => pair.Key, StringComparer.Ordinal))
+        {
+            AppendRecipe(css, options, recipe.Key, recipe.Value);
+        }
         if (options.UseCssLayer)
         {
             css.AppendLine("}");
@@ -50,6 +55,45 @@ public static class MudBlazorDesignTokenCssGenerator
         return options.MinifyCss
             ? System.Text.RegularExpressions.Regex.Replace(result, @"\s+", " ").Replace(" {", "{").Replace("; }", ";}")
             : result;
+    }
+
+    private static void AppendRecipe(
+        StringBuilder css,
+        NerdDesignTokenOptions options,
+        string name,
+        NerdDesignTokenRecipe recipe)
+    {
+        var root = $".{options.Prefix}-recipe-{name}";
+        var surfaceToken = options.Colors[recipe.Surface];
+        var contentToken = options.Colors[recipe.Content];
+        var actionToken = recipe.Action is null ? surfaceToken : options.Colors[recipe.Action];
+        var borderToken = recipe.Border is null ? surfaceToken : options.Colors[recipe.Border];
+        var surfaceColor = NerdColorDerivatives.Lighten(surfaceToken.Light ?? surfaceToken.Value, 0.42);
+        var contentColor = contentToken.Content
+                           ?? NerdColorParser.ContentText(
+                               contentToken.Light ?? contentToken.Value,
+                               contentToken.ContrastText ?? NerdColorValue.ContrastText(contentToken.Light ?? contentToken.Value));
+        var actionColor = actionToken.Light ?? actionToken.Value;
+        var actionText = actionToken.ContrastText ?? NerdColorValue.ContrastText(actionColor);
+        var borderColor = borderToken.Border ?? borderToken.Light ?? borderToken.Value;
+        var important = options.UseImportantOverrides ? " !important" : string.Empty;
+
+        css.AppendLine($"{root} {{");
+        css.AppendLine($"  background-color: {surfaceColor}{important};");
+        css.AppendLine($"  color: {contentColor}{important};");
+        css.AppendLine($"  border-color: {borderColor}{important};");
+        css.AppendLine("}");
+        css.AppendLine($"{root} .mud-button, {root} .mud-link, {root} .mud-icon-button {{");
+        css.AppendLine($"  color: {actionColor}{important};");
+        css.AppendLine("}");
+        css.AppendLine($"{root} .mud-button-filled {{");
+        css.AppendLine($"  background-color: {actionColor}{important};");
+        css.AppendLine($"  color: {actionText}{important};");
+        css.AppendLine("}");
+        css.AppendLine($"{root} .mud-card, {root} .mud-paper {{");
+        css.AppendLine($"  background-color: {surfaceColor}{important};");
+        css.AppendLine($"  color: {contentColor}{important};");
+        css.AppendLine("}");
     }
 
     private static void AppendToken(
@@ -77,6 +121,7 @@ public static class MudBlazorDesignTokenCssGenerator
         var activeVariable = $"{variable}-active";
         var borderVariable = $"{variable}-border";
         var disabledVariable = $"{variable}-disabled";
+        var contentVariable = $"--{prefix}-color-{name}-content";
 
         css.AppendLine($"{root} {{");
         MudBlazorPaletteMapper.AppendPaletteVariables(
@@ -106,6 +151,7 @@ public static class MudBlazorDesignTokenCssGenerator
             root,
             variable,
             textVariable,
+            contentVariable,
             hoverVariable,
             activeVariable,
             borderVariable,

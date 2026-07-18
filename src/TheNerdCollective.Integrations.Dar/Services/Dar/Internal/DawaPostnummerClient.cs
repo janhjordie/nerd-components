@@ -217,9 +217,9 @@ internal sealed class DawaPostnummerClient
 
         return new PostnummerMedKommuneDto
         {
-            Postnummer = postnummer,
+            Postnummer = postnummer!,
             Postdistrikt = postdistrikt ?? string.Empty,
-            Kommunekode = kommunekode,
+            Kommunekode = kommunekode!,
             Kommunenavn = kommunenavn ?? string.Empty
         };
     }
@@ -246,7 +246,7 @@ internal sealed class DawaPostnummerClient
             {
                 kommuner.Add(new KommuneRefDto
                 {
-                    Kommunekode = kommunekode,
+            Kommunekode = kommunekode!,
                     Navn = kommunenavn ?? string.Empty
                 });
             }
@@ -254,7 +254,7 @@ internal sealed class DawaPostnummerClient
 
         return new PostnummerMedKommunerDto
         {
-            Postnummer = postnummer,
+            Postnummer = postnummer!,
             Postdistrikt = postdistrikt ?? string.Empty,
             Kommuner = kommuner
         };
@@ -304,7 +304,7 @@ internal sealed class DawaPostnummerClient
         {
             var match = entries.FirstOrDefault(k =>
                 string.Equals(k.Navn, postdistrikt, StringComparison.CurrentCultureIgnoreCase));
-            if (match.Kode is not null)
+            if (!string.IsNullOrWhiteSpace(match.Kode))
             {
                 return match;
             }

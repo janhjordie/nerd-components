@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
-using TheNerdCollective.MudComponents.Shared;
 
 namespace TheNerdCollective.MudComponents.DesignTokens;
 
@@ -20,8 +19,6 @@ public static class NerdDesignTokenWebApplicationExtensions
             return builder;
         }
 
-        return builder
-            .AddNerdDesignSystemAssets()
-            .AddAdditionalAssemblies(typeof(NerdDesignTokenWebApplicationExtensions).Assembly);
+        return builder.AddAdditionalAssemblies(typeof(NerdDesignTokenWebApplicationExtensions).Assembly);
     }
 }

@@ -15,25 +15,15 @@ builder.Services.AddMudServices();
 
 builder.Services.AddNerdDesignTokens(options =>
 {
-    options.Prefix = "demo";
+    options.Prefix = "dnf";
     options.RestrictCatalogToDevelopment = false;
-    options.Add("forest", new NerdColorToken
-    {
-        Value = "#365C3A",
-        ContrastText = "#FFFFFF",
-        Hover = "#2D4D30"
-    });
-    options.Add("sand", new NerdColorToken
-    {
-        Value = "#E8D8AD",
-        ContrastText = "#2D2D2D",
-        Hover = "#D8C58E"
-    });
+    NerdDnfDesignTokenPresets.Apply(options);
 });
 
 builder.Services.AddNerdResponsiveTypography(options =>
 {
     options.RestrictCatalogToDevelopment = false;
+    options.WarnOnAccessibilityFailuresAtStartup = false;
     NerdTypographyPresets.ApplyMarketing(options.Typography);
     options.Typography.H3 = ResponsiveFontSize.Clamp("1.75rem", "3vw", "2.5rem");
 });

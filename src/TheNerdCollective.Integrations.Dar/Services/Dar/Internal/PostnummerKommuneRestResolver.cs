@@ -114,11 +114,12 @@ internal sealed class PostnummerKommuneRestResolver
             return Array.Empty<PostnummerMedKommunerDto>();
         }
 
+        var resolvedKommuneId = kommuneId!;
         var postnumre = new HashSet<string>(StringComparer.Ordinal);
         var temporal = GraphQlDataAccessor.CreateTemporalVariables();
         var nodes = await _accessor.FetchAllDarNodesAsync(
             GraphQlQueries.GetHusnumreByKommuneId,
-            after => new HusnumreByKommuneVariables(kommuneId, temporal.Virkningstid, temporal.Registreringstid, after),
+            after => new HusnumreByKommuneVariables(resolvedKommuneId, temporal.Virkningstid, temporal.Registreringstid, after),
             "DAR_Husnummer",
             cancellationToken).ConfigureAwait(false);
 
@@ -127,7 +128,7 @@ internal sealed class PostnummerKommuneRestResolver
             var postnr = ReadGraphQlPostnummer(node);
             if (!string.IsNullOrWhiteSpace(postnr))
             {
-                postnumre.Add(postnr);
+                postnumre.Add(postnr!);
             }
         }
 
@@ -159,11 +160,12 @@ internal sealed class PostnummerKommuneRestResolver
             return Array.Empty<string>();
         }
 
+        var resolvedKommuneId = kommuneId!;
         var postnumre = new HashSet<string>(StringComparer.Ordinal);
         var temporal = GraphQlDataAccessor.CreateTemporalVariables();
         var nodes = await _accessor.FetchAllDarNodesAsync(
             GraphQlQueries.GetHusnumreByKommuneId,
-            after => new HusnumreByKommuneVariables(kommuneId, temporal.Virkningstid, temporal.Registreringstid, after),
+            after => new HusnumreByKommuneVariables(resolvedKommuneId, temporal.Virkningstid, temporal.Registreringstid, after),
             "DAR_Husnummer",
             cancellationToken).ConfigureAwait(false);
 
@@ -172,7 +174,7 @@ internal sealed class PostnummerKommuneRestResolver
             var postnr = ReadGraphQlPostnummer(node);
             if (!string.IsNullOrWhiteSpace(postnr))
             {
-                postnumre.Add(postnr);
+                postnumre.Add(postnr!);
             }
         }
 
@@ -237,21 +239,21 @@ internal sealed class PostnummerKommuneRestResolver
                     continue;
                 }
 
-                if (!byPostnummer.TryGetValue(postnr, out var entry))
+                if (!byPostnummer.TryGetValue(postnr!, out var entry))
                 {
                     entry = (string.Empty, new Dictionary<string, KommuneRefDto>(StringComparer.Ordinal));
-                    byPostnummer[postnr] = entry;
+                    byPostnummer[postnr!] = entry;
                 }
 
                 var postdistrikt = entry.Postdistrikt;
                 if (string.IsNullOrWhiteSpace(postdistrikt)
                     && husnummer.TryGetProperty("adgangsadressebetegnelse", out var betegnelse))
                 {
-                    postdistrikt = ExtractPostdistrikt(betegnelse.GetString(), postnr);
+                    postdistrikt = ExtractPostdistrikt(betegnelse.GetString(), postnr!);
                 }
 
                 AddKommune(entry.Kommuner, husnummer);
-                byPostnummer[postnr] = (postdistrikt, entry.Kommuner);
+                byPostnummer[postnr!] = (postdistrikt, entry.Kommuner);
             }
 
             if (husnumre.Count < PageSize)
@@ -328,7 +330,7 @@ internal sealed class PostnummerKommuneRestResolver
             return;
         }
 
-        var normalized = kode.PadLeft(4, '0');
+        var normalized = kode!.PadLeft(4, '0');
         kommuner[normalized] = new KommuneRefDto
         {
             Kommunekode = normalized,
@@ -371,14 +373,15 @@ internal sealed class PostnummerKommuneRestResolver
             return string.Empty;
         }
 
+        var address = adgangsadresse!;
         var marker = $", {postnummer} ";
-        var index = adgangsadresse.IndexOf(marker, StringComparison.Ordinal);
+        var index = address.IndexOf(marker, StringComparison.Ordinal);
         if (index >= 0)
         {
-            return adgangsadresse.Substring(index + marker.Length).Trim();
+            return address.Substring(index + marker.Length).Trim();
         }
 
-        var parts = adgangsadresse.Split(',');
+        var parts = address.Split(',');
         return parts.Length >= 2 ? parts[parts.Length - 1].Trim() : string.Empty;
     }
 
@@ -389,7 +392,7 @@ internal sealed class PostnummerKommuneRestResolver
             return null;
         }
 
-        var parts = adgangsadresse.Split(',');
+        var parts = adgangsadresse!.Split(',');
         foreach (var part in parts)
         {
             var trimmed = part.Trim();

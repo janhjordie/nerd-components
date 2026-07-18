@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
-using TheNerdCollective.MudComponents.Shared;
 
 namespace TheNerdCollective.MudComponents.PlayBook;
 
@@ -20,8 +19,6 @@ public static class NerdPlayBookWebApplicationExtensions
             return builder;
         }
 
-        return builder
-            .AddNerdDesignSystemAssets()
-            .AddAdditionalAssemblies(typeof(NerdPlayBookWebApplicationExtensions).Assembly);
+        return builder.AddAdditionalAssemblies(typeof(NerdPlayBookWebApplicationExtensions).Assembly);
     }
 }

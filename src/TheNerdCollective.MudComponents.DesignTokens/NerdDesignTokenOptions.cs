@@ -8,6 +8,7 @@ public sealed class NerdDesignTokenOptions
     private readonly HashSet<string> _configuredAliases = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, string> _radii = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, string> _shadows = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, NerdDesignTokenRecipe> _recipes = new(StringComparer.OrdinalIgnoreCase);
 
     public string Prefix { get; set; } = "nerd";
     public string MudBlazorVersion { get; set; } = "9.6";
@@ -28,6 +29,7 @@ public sealed class NerdDesignTokenOptions
     public IReadOnlySet<string> ConfiguredAliases => _configuredAliases;
     public IReadOnlyDictionary<string, string> Radii => _radii;
     public IReadOnlyDictionary<string, string> Shadows => _shadows;
+    public IReadOnlyDictionary<string, NerdDesignTokenRecipe> Recipes => _recipes;
 
     public bool IsAlias(string name) => _aliases.ContainsKey(name);
 
@@ -60,6 +62,25 @@ public sealed class NerdDesignTokenOptions
     {
         NerdTokenNameValidator.Validate(name);
         _shadows[name] = NerdColorValue.Validate(value, nameof(value));
+        return this;
+    }
+
+    public NerdDesignTokenOptions AddRecipe(string name, NerdDesignTokenRecipe recipe)
+    {
+        NerdTokenNameValidator.Validate(name);
+        ArgumentNullException.ThrowIfNull(recipe);
+        NerdTokenNameValidator.Validate(recipe.Surface);
+        NerdTokenNameValidator.Validate(recipe.Content);
+        if (recipe.Action is not null)
+        {
+            NerdTokenNameValidator.Validate(recipe.Action);
+        }
+        if (recipe.Border is not null)
+        {
+            NerdTokenNameValidator.Validate(recipe.Border);
+        }
+
+        _recipes[name] = recipe;
         return this;
     }
 }

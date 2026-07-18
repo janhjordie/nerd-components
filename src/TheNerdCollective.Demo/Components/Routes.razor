@@ -1,4 +1,16 @@
-﻿<Router AppAssembly="typeof(Program).Assembly">
+@using TheNerdCollective.MudComponents.DesignTokens.Pages
+@using TheNerdCollective.MudComponents.PlayBook.Pages
+@using TheNerdCollective.MudComponents.ResponsiveTypography.Pages
+@using TheNerdCollective.MudComponents.Shared.Pages
+
+<Router AppAssembly="typeof(Program).Assembly"
+       AdditionalAssemblies="new[]
+    {
+        typeof(NerdDesignSystemPage).Assembly,
+        typeof(NerdDesignTokensPage).Assembly,
+        typeof(NerdTypographyPage).Assembly,
+        typeof(NerdPlayBookPage).Assembly
+    }">
     <Found Context="routeData">
         <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
         <FocusOnNavigate RouteData="routeData" Selector="h1" />

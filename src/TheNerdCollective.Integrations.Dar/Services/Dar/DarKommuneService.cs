@@ -342,10 +342,11 @@ public sealed class DarKommuneService
             return kommune;
         }
 
+        var kommuneId = kommune.IdLokalId!;
         var temporal = GraphQlDataAccessor.CreateTemporalVariables();
         var nodes = await _accessor.FetchDagiNodesAsync(
             GraphQlQueries.GetKommuneById,
-            new KommuneByIdVariables(kommune.IdLokalId, temporal.Virkningstid, temporal.Registreringstid),
+            new KommuneByIdVariables(kommuneId, temporal.Virkningstid, temporal.Registreringstid),
             "DAGI_Kommuneinddeling",
             cancellationToken).ConfigureAwait(false);
 

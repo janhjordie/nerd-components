@@ -24,7 +24,7 @@ internal static class MudBlazorPaletteMapper
         var lightRgb = NerdColorDerivatives.ToRgbString(light);
         var darkRgb = NerdColorDerivatives.ToRgbString(dark);
         var surface = token.Surface ?? Lighten(light, 0.42);
-        var content = token.Content ?? lightContrast;
+        var content = token.Content ?? NerdColorParser.ContentText(light, lightContrast);
         var interactive = token.Interactive ?? token.Hover ?? light;
 
         AppendChannel(css, "primary", variable, textVariable, hoverVariable, light);
@@ -77,8 +77,7 @@ internal static class MudBlazorPaletteMapper
         css.AppendLine($"  --mud-palette-gray-darker: {Darken(light, 0.2)};");
         css.AppendLine($"  --mud-palette-white: #FFFFFF;");
         css.AppendLine($"  --mud-palette-border-opacity: 1;");
-        css.AppendLine("  color: var(" + textVariable + ");");
-        css.AppendLine("  background-color: var(" + variable + ");");
+        css.AppendLine($"  --mud-ripple-color: var({variable});");
     }
 
     private static void AppendChannel(
