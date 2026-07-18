@@ -162,4 +162,18 @@ public class ResponsiveTypographyTests
 
         Assert.Equal(expected, actual ?? double.NaN, precision: 1);
     }
+
+    [Fact]
+    public void Typography_pack_round_trips_configured_roles()
+    {
+        var source = new NerdResponsiveTypographyOptions();
+        source.Typography.H1 = "clamp(2rem, 4vw, 4rem)";
+        source.Typography.Body1 = "1rem";
+
+        var restored = NerdTypographyPack.FromJson(
+            NerdTypographyPack.FromOptions(source, "acme").ToJson()).ToOptions();
+
+        Assert.Equal("clamp(2rem, 4vw, 4rem)", restored.Typography.H1);
+        Assert.Equal("1rem", restored.Typography.Body1);
+    }
 }
