@@ -65,7 +65,7 @@ Spec: nerd-rules `00-ai-system/13-master-backlog-spec.md` · Prompts: `backlog-s
 |----|---|--------|------|------------------|----------|--------|
 | HR-021 | P1 | done | `NerdTokenPack` JSON DTO + schema | Serialiserbar pack; `token-pack.schema.json`; validation pipeline (navne, hex, WCAG, recipe refs) | DTO, schema, reference validation and accessibility evaluation; 37 unit tests | DT-ROADMAP-F1 |
 | HR-022 | P1 | done | Token pack loaders | `FromJson`, `FromPreset("dnf")`, merge med `FromOptions` | `NerdTokenPack` loaders and merge; 37 unit tests | DT-ROADMAP-F1 |
-| HR-023 | P1 | open | DNF snapshot tests | bUnit/CSS snapshot for alle 12 DNF tokens + recipes | | DT-ROADMAP-F0 |
+| HR-023 | P1 | done | DNF snapshot tests | bUnit/CSS snapshot for alle 12 DNF tokens + recipes | Deterministisk DNF baseline-test for 12 tokens, recipe og genereret CSS | DT-ROADMAP-F0 |
 | HR-024 | P2 | open | Live editor & export (fase 4) | Inline picker + “Promote to preset”; export CSS/JSON/Stitch/Figma | | DT-ROADMAP-F4 |
 | HR-025 | P2 | open | Dark mode recipe variants | Recipes med light/dark varianter i generator + catalog | | DT-ROADMAP-F6 |
 
