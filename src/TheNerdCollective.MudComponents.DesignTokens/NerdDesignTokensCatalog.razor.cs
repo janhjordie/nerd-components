@@ -20,6 +20,8 @@ public partial class NerdDesignTokensCatalog
     private NerdDownloadService DownloadService { get; set; } = default!;
 
     private bool _previewDark;
+    private string? _studioToken;
+    private string _studioColor = "#365C3A";
     private int _activeTabIndex;
     private string _previewRadioValue = "radio";
     private IReadOnlyList<NerdAccessibilityResult> _accessibility = [];
@@ -39,6 +41,11 @@ public partial class NerdDesignTokensCatalog
 
         _accessibility = NerdDesignTokenTools.CheckAccessibility(Options);
         _warnings = NerdDesignTokenTools.GetAccessibilityWarnings(Options);
+        var firstToken = Options.Colors.Keys.OrderBy(name => name, StringComparer.Ordinal).FirstOrDefault();
+        if (firstToken is not null)
+        {
+            SelectStudioToken(firstToken);
+        }
     }
 
     private bool IsAvailable =>
@@ -46,6 +53,12 @@ public partial class NerdDesignTokensCatalog
         (!Options.RestrictCatalogToDevelopment || HostEnvironment.IsDevelopment());
 
     private string GetClassName(string tokenName) => $"{Options.Prefix}-{tokenName}";
+
+    private void SelectStudioToken(string tokenName)
+    {
+        _studioToken = tokenName;
+        _studioColor = Options.Colors[tokenName].Value;
+    }
 
     private void OpenTokenTab(string tokenName)
     {

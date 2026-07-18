@@ -35,6 +35,30 @@ else
                 <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="DownloadStitchAsync">Export Stitch DESIGN.md</MudButton>
             </MudStack>
 
+            <MudPaper Outlined="true" Class="pa-4">
+                <MudStack Spacing="2">
+                    <MudText Typo="Typo.h6">Live token studio</MudText>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="flex-wrap">
+                        <MudSelect T="string" Label="Token" @bind-Value="_studioToken">
+                            @foreach (var tokenName in Options.Colors.Keys.OrderBy(name => name, StringComparer.Ordinal))
+                            {
+                                <MudSelectItem Value="@tokenName">@tokenName</MudSelectItem>
+                            }
+                        </MudSelect>
+                        <MudTextField @bind-Value="_studioColor" Label="Hex / RGB / HSL" Immediate="true" />
+                    </MudStack>
+                    @if (!string.IsNullOrWhiteSpace(_studioToken))
+                    {
+                        <MudPaper Class="pa-4" Style="@($"background:{_studioColor};color:{NerdColorValue.ContrastText(_studioColor)}")">
+                            <MudText Typo="Typo.h6">Live preview: @_studioToken</MudText>
+                            <MudButton Variant="Variant.Filled" Color="Color.Inherit">Preview button</MudButton>
+                            <MudChip T="string" Color="Color.Inherit">Preview chip</MudChip>
+                            @ColorValue(_studioColor)
+                        </MudPaper>
+                    }
+                </MudStack>
+            </MudPaper>
+
             @if (_warnings.Count > 0)
             {
                 <MudAlert Severity="Severity.Error" Variant="Variant.Filled">
