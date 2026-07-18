@@ -82,7 +82,7 @@ Spec: nerd-rules `00-ai-system/13-master-backlog-spec.md` · Prompts: `backlog-s
 | HR-036 | P2 | open | Accessibility Storyboard | Resize 200%, min 16px body, line-height — pass/fail pr. role i UI | | RT-FEATURE-07 |
 | HR-038 | P2 | open | Brand Pack Bundle | Én JSON/zip: colors + typography + recipes | | RT-FEATURE-09 |
 | HR-039 | P3 | open | Figma / Tokens Studio Sync (typography) | Eksport/import font-size tokens | | RT-FEATURE-10 |
-| HR-040 | P1 | open | Typography snapshot tests | bUnit: computed sizes ved 320/768/1280/1920 for presets | | RT-ROADMAP-F0 |
+| HR-040 | P1 | done | Typography snapshot tests | bUnit: computed sizes ved 320/768/1280/1920 for presets | Deterministiske viewport-tests for H1 og Body1 ved 320/768/1280/1920 | RT-ROADMAP-F0 |
 
 ---
 

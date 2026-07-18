@@ -145,4 +145,21 @@ public class ResponsiveTypographyTests
         Assert.Equal("1.1", theme.Typography.H1.LineHeight);
         Assert.Equal("1.7", theme.Typography.Body1.LineHeight);
     }
+
+    [Theory]
+    [InlineData("clamp(2.5rem, 5vw, 4.5rem)", 320, 40)]
+    [InlineData("clamp(2.5rem, 5vw, 4.5rem)", 768, 40)]
+    [InlineData("clamp(2.5rem, 5vw, 4.5rem)", 1280, 64)]
+    [InlineData("clamp(2.5rem, 5vw, 4.5rem)", 1920, 72)]
+    [InlineData("clamp(1rem, 2.2vw, 1.25rem)", 320, 16)]
+    [InlineData("clamp(1rem, 2.2vw, 1.25rem)", 768, 16.9)]
+    [InlineData("clamp(1rem, 2.2vw, 1.25rem)", 1280, 20)]
+    [InlineData("clamp(1rem, 2.2vw, 1.25rem)", 1920, 20)]
+    public void Marketing_preset_has_stable_sizes_at_supported_viewports(
+        string fontSize, double viewport, double expected)
+    {
+        var actual = NerdClampEvaluator.EvaluateAtViewport(fontSize, viewport);
+
+        Assert.Equal(expected, actual ?? double.NaN, precision: 1);
+    }
 }
