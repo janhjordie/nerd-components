@@ -16,10 +16,17 @@ Alle punkter skal være opfyldt i **produktions-lignende miljø** (whitelisted I
 Kør probe lokalt eller i CI:
 
 ```bash
-./scripts/check-datafordeler-dagi-readiness.sh
-# eller
+./scripts/check-datafordeler-migration.sh
+# alias: ./scripts/check-datafordeler-dagi-readiness.sh
+```
+
+Rapport gemmes i `artifacts/datafordeler-migration-report-*.txt`.
+
+Alternativt:
+
+```bash
 dotnet test tests/TheNerdCollective.Integrations.Dar.IntegrationTests \
-  --filter "FullyQualifiedName~DarDagiReadinessProbeTests"
+  --filter "FullyQualifiedName~DarDawaMigrationProbeTests"
 ```
 
 Output-linjen `READY_TO_DISABLE_DAWA_FALLBACK=true` betyder at I bør planlægge fjernelse af fallback (stadig manuel beslutning + release).
@@ -64,7 +71,7 @@ Tom DAGI GraphQL er **ikke** det samme som “Datafordeler er nede” — det sk
 |-----------|-----|----------|
 | Cursor Automation (agent) | `.cursor/automations/datafordeler-dawa-weekly-watch.yaml` | Mandage kl. 09:00 (Europe/Copenhagen) |
 | GitHub Actions | `.github/workflows/datafordeler-dawa-watch.yml` | Mandage kl. 07:00 UTC |
-| Probe-script | `scripts/check-datafordeler-dagi-readiness.sh` | Manuelt / CI |
+| Probe-script | `scripts/check-datafordeler-migration.sh` | Manuelt / CI |
 
 ### GitHub Actions
 
