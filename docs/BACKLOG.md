@@ -38,7 +38,7 @@ Spec: nerd-rules `00-ai-system/13-master-backlog-spec.md` · Prompts: `backlog-s
 | ID | P | Status | Task | DoD (verifiable) | Evidence | Source |
 |----|---|--------|------|------------------|----------|--------|
 | HR-001 | P1 | in_progress | Live Token Studio (in-browser) | Color picker + hex/rgb/hsl på `/nerd-design-tokens`; live MudButton/Chip/TextField preview; WCAG-meter opdateres live; undo/redo | Basic token selector, color input and live Button/Chip/Text preview; persistence and undo/redo pending | DT-FEATURE-01 |
-| HR-002 | P0 | open | Save as Client Pack (Design Tokens) | `INerdTokenPackStore` + JSON DTO; “Gem som klient” i catalog; gem/load under `App_Data/token-packs/`; aktivt pack efter genstart | | DT-FEATURE-02 · ROADMAP-F2 |
+| HR-002 | P0 | in_progress | Save as Client Pack (Design Tokens) | `INerdTokenPackStore` + JSON DTO; “Gem som klient” i catalog; gem/load under `App_Data/token-packs/`; aktivt pack efter genstart | `INerdTokenPackStore`, file implementation, DI registration and save/load/list test; catalog flow pending | DT-FEATURE-02 · ROADMAP-F2 |
 | HR-003 | P1 | open | Token Discovery Everywhere | Ny token i pack → swatches i catalog, matrix i PlayBook, badge i Hub, export — uden hardcoded Razor-lister | | DT-FEATURE-03 |
 | HR-004 | P1 | open | Recipe Composer | UI: vælg surface + content + action → generér recipe-klasse; preview MudCard + MudButton + MudText | | DT-FEATURE-04 |
 | HR-005 | P2 | open | Contrast Pair Matrix | Tabel forgrund × baggrund med ratio + AA/AAA i catalog (DNF-style) | | DT-FEATURE-05 |

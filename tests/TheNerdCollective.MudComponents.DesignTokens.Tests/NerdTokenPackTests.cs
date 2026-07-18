@@ -91,4 +91,27 @@ public sealed class NerdTokenPackTests
         Assert.Contains("skov", merged.Colors.Keys);
         Assert.Equal("#7C5CFF", merged.Colors["aurora"].Value);
     }
+
+    [Fact]
+    public async Task Token_pack_store_saves_loads_and_lists_clients()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), $"nerd-token-{Guid.NewGuid():N}");
+        try
+        {
+            var store = new FileNerdTokenPackStore(directory);
+            await store.SaveAsync(NerdTokenPack.FromPreset("dnf", "acme"));
+
+            var loaded = await store.LoadAsync("acme");
+
+            Assert.Equal(12, loaded?.Colors.Count);
+            Assert.Equal(["acme"], await store.ListAsync());
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+    }
 }

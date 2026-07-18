@@ -5,6 +5,16 @@ namespace TheNerdCollective.MudComponents.DesignTokens;
 
 public static class NerdDesignTokenServiceCollectionExtensions
 {
+    public static IServiceCollection AddNerdTokenPackStore(
+        this IServiceCollection services,
+        string directory = "App_Data/token-packs")
+    {
+        ArgumentNullException.ThrowIfNull(services);
+        services.AddSingleton<INerdTokenPackStore>(
+            _ => new FileNerdTokenPackStore(directory));
+        return services;
+    }
+
     public static IServiceCollection AddNerdDesignTokens(
         this IServiceCollection services,
         Action<NerdDesignTokenOptions> configure)
