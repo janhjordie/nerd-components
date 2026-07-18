@@ -93,7 +93,7 @@ Spec: nerd-rules `00-ai-system/13-master-backlog-spec.md` · Prompts: `backlog-s
 | HR-050 | P1 | open | PlayBook typography panel | Typo-scale preview i PlayBook med aktive packs | | RT-ROADMAP-F4 |
 | HR-051 | P1 | open | Hub dynamic token/typo counts | Design System Hub viser “Tokens (N)” + link til aktivt pack | | DT-ROADMAP-F3 |
 | HR-052 | P2 | open | Demo design-system recipes from DI | `/design-system` læser recipes fra DI, ikke hardcode | | DT-ROADMAP-F3 |
-| HR-053 | P2 | open | Editorial / Dashboard typography presets | `NerdTypographyPresets` udvidet med 2 nye presets | | RT-ROADMAP-F3 |
+| HR-053 | P2 | done | Editorial / Dashboard typography presets | `NerdTypographyPresets` udvidet med 2 nye presets | `ApplyEditorial` og `ApplyDashboard` med tests | RT-ROADMAP-F3 |
 
 ---
 

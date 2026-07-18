@@ -201,4 +201,20 @@ public class ResponsiveTypographyTests
             }
         }
     }
+
+    [Fact]
+    public void Editorial_and_dashboard_presets_configure_distinct_scales()
+    {
+        var editorial = new ResponsiveTypographyOptions();
+        var dashboard = new ResponsiveTypographyOptions();
+
+        NerdTypographyPresets.ApplyEditorial(editorial);
+        NerdTypographyPresets.ApplyDashboard(dashboard);
+
+        Assert.StartsWith("clamp(", editorial.H1);
+        Assert.StartsWith("clamp(", dashboard.H1);
+        Assert.NotEqual(editorial.H1, dashboard.H1);
+        Assert.Equal("1rem", dashboard.Body1);
+        Assert.Equal("1.7", editorial.Roles.Body1.LineHeight);
+    }
 }
