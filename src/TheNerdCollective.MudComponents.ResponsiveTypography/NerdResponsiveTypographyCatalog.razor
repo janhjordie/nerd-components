@@ -152,6 +152,29 @@ else
                     </MudStack>
                 </MudPaper>
 
+                <MudPaper Outlined="true" Class="pa-4">
+                    <MudStack Spacing="2">
+                        <MudText Typo="Typo.h6">Type scale curve</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                            Relative role sizes at the selected viewport, with a 320px baseline.
+                        </MudText>
+                        @foreach (var role in VisibleRoles)
+                        {
+                            var current = NerdClampEvaluator.EvaluateAtViewport(role.FontSize, _viewportWidth) ?? 0;
+                            var baseline = NerdClampEvaluator.EvaluateAtViewport(role.FontSize, 320) ?? 0;
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                <MudText Style="width:80px">@role.Role</MudText>
+                                <div style="flex:1;background:var(--mud-palette-background-grey);height:10px;border-radius:5px;">
+                                    <div style="@($"width:{Math.Clamp(current / 72d * 100d, 2d, 100d):0.#}%;height:10px;border-radius:5px;background:var(--mud-palette-primary);")"></div>
+                                </div>
+                                <MudText Typo="Typo.caption" Style="width:150px">
+                                    @baseline.ToString("0.#")px → @current.ToString("0.#")px
+                                </MudText>
+                            </MudStack>
+                        }
+                    </MudStack>
+                </MudPaper>
+
                 <MudText Typo="Typo.h6">Role previews</MudText>
                 <MudText Typo="Typo.caption" Color="Color.Secondary">
                     Live preview constrained to the viewport slider (@_viewportWidth.ToString("0")px).

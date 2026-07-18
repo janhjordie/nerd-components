@@ -75,7 +75,7 @@ Spec: nerd-rules `00-ai-system/13-master-backlog-spec.md` · Prompts: `backlog-s
 
 | ID | P | Status | Task | DoD (verifiable) | Evidence | Source |
 |----|---|--------|------|------------------|----------|--------|
-| HR-032 | P2 | open | Type Scale Curve | Graf H1→Caption ved viewport + overlay | | RT-FEATURE-03 |
+| HR-032 | P2 | in_progress | Type Scale Curve | Graf H1→Caption ved viewport + overlay | Catalog curve visualization with 320px baseline and selected viewport; polish pending | RT-FEATURE-03 |
 | HR-033 | P1 | in_progress | Save as Client Typography Pack | `INerdTypographyPackStore` + JSON; “Gem som klient” i catalog | `NerdTypographyPack` DTO + file store + DI registration + save/load/list tests; catalog save flow pending | RT-FEATURE-04 · RT-ROADMAP-F2 |
 | HR-034 | P2 | open | Modular Scale Generator | Input base + ratio → generér alle roller + clamp wrap | | RT-FEATURE-05 |
 | HR-035 | P1 | in_progress | Live Clamp Editor | Sliders min/preferred/max + live MudText preview i catalog | Catalog editor UI implemented; persistence/configured-role binding pending | RT-FEATURE-06 |
