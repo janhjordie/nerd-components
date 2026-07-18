@@ -2,7 +2,7 @@
 title: "Backlog Portfolio — Design System"
 status: Active
 author: "@janhjordie"
-last_updated: "18-07-2026 11:30"
+last_updated: "18-07-2026 11:40"
 ---
 
 # Backlog Portfolio — Design System
@@ -16,7 +16,7 @@ Master register: [../BACKLOG.md](../BACKLOG.md)
 
 | Stream | Epic focus | Open | Partial | Done | Next slice |
 |--------|------------|-----:|--------:|-----:|------------|
-| Design Tokens | Fleksible brand-packs + UX catalog | 25 | 1 | 2 | **HR-006** Portal pickers |
+| Design Tokens | Fleksible brand-packs + UX catalog | 24 | 1 | 2 | **HR-006** Portal pickers (in progress) |
 | Responsive Typography | Fluid type + client packs | 9 | 2 | 2 | **HR-035** Live clamp editor |
 | Cross-cutting | Hub, PlayBook, Demo | 5 | 0 | 1 | **HR-054** Demo dedupe |
 
@@ -60,6 +60,7 @@ HR-054 Demo dedupe
 | 18-07-2026 | PORT-001 | Master backlog i `docs/BACKLOG.md` med `HR-###` IDs per nerd-rules host template |
 | 18-07-2026 | PORT-002 | Features importeret fra package `docs/FEATURES.md` + roadmap stabilisering |
 | 18-07-2026 | PORT-003 | HR-030/HR-031 baseline markeret partial/done efter catalog-forbedring |
+| 18-07-2026 | PORT-004 | HR-006 startet: portal-scope for token-klasser på `.mud-popover-open` |
 
 ---
 
@@ -76,7 +77,7 @@ HR-054 Demo dedupe
 
 ### Now (P0–P1, unblockers)
 
-- HR-006 Portal-aware pickers
+- HR-006 Portal-aware pickers (in progress)
 - HR-002 Client token packs
 - HR-054 Demo startup fix
 - HR-021 Token pack DTO

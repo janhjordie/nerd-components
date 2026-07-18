@@ -15,6 +15,8 @@ public sealed class NerdDesignTokenOptions
     public bool UseCssLayer { get; set; }
     public string CssLayerName { get; set; } = "nerd-design-tokens";
     public string? ScopeSelector { get; set; }
+    public bool EnablePortalTokenScope { get; set; } = true;
+    public string PortalScopeSelector { get; set; } = ".mud-popover-open";
     public bool MinifyCss { get; set; }
     public bool UseImportantOverrides { get; set; } = true;
     public bool EnableCatalogPage { get; set; } = true;
