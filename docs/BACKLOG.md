@@ -2,7 +2,7 @@
 title: "TheNerdCollective.Components — Master Backlog"
 status: Active
 author: "@janhjordie"
-last_updated: "18-07-2026 11:30"
+last_updated: "18-07-2026 09:42"
 id_prefix: "HR"
 ---
 
@@ -42,7 +42,7 @@ Spec: nerd-rules `00-ai-system/13-master-backlog-spec.md` · Prompts: `backlog-s
 | HR-003 | P1 | open | Token Discovery Everywhere | Ny token i pack → swatches i catalog, matrix i PlayBook, badge i Hub, export — uden hardcoded Razor-lister | | DT-FEATURE-03 |
 | HR-004 | P1 | open | Recipe Composer | UI: vælg surface + content + action → generér recipe-klasse; preview MudCard + MudButton + MudText | | DT-FEATURE-04 |
 | HR-005 | P2 | open | Contrast Pair Matrix | Tabel forgrund × baggrund med ratio + AA/AAA i catalog (DNF-style) | | DT-FEATURE-05 |
-| HR-006 | P0 | open | Portal-aware Pickers | Date/Time/Select/Menu-popovers arver token-klasse; Playwright bekræfter `dnf-*` på `.mud-popover-open` | | DT-FEATURE-06 · ROADMAP-F0 |
+| HR-006 | P0 | in_progress | Portal-aware Pickers | Date/Time/Select/Menu-popovers arver token-klasse; Playwright bekræfter `dnf-*` på `.mud-popover-open` | `src/TheNerdCollective.MudComponents.Shared/wwwroot/nerd-shared.js` har portal observer-baseline; E2E-verifikation mangler | DT-FEATURE-06 · ROADMAP-F0 |
 | HR-007 | P2 | open | Figma / Tokens Studio Export | Eksport + import Tokens Studio JSON for farver | | DT-FEATURE-07 |
 | HR-008 | P2 | open | Stitch / DESIGN.md Sync | Udvid eksport med recipes, radii, shadows, typography hooks | | DT-FEATURE-08 |
 | HR-009 | P1 | open | Accessibility Gate in CI | Test eller build-step fejler ved WCAG AA-brud på tokens | | DT-FEATURE-09 |
@@ -94,7 +94,6 @@ Spec: nerd-rules `00-ai-system/13-master-backlog-spec.md` · Prompts: `backlog-s
 | HR-051 | P1 | open | Hub dynamic token/typo counts | Design System Hub viser “Tokens (N)” + link til aktivt pack | | DT-ROADMAP-F3 |
 | HR-052 | P2 | open | Demo design-system recipes from DI | `/design-system` læser recipes fra DI, ikke hardcode | | DT-ROADMAP-F3 |
 | HR-053 | P2 | open | Editorial / Dashboard typography presets | `NerdTypographyPresets` udvidet med 2 nye presets | | RT-ROADMAP-F3 |
-| HR-054 | P1 | open | Fix Demo `AddAdditionalAssemblies` dedupe | `TheNerdCollective.Demo` starter uden “Assembly already defined” | | AGENTS.md |
 
 ---
 
@@ -125,6 +124,7 @@ Spec: nerd-rules `00-ai-system/13-master-backlog-spec.md` · Prompts: `backlog-s
 | HR-061 | done | Responsive Typography strategy/roadmap/features/docs | `src/.../ResponsiveTypography/docs/` |
 | HR-062 | done | DNF presets + recipes (baseline) | `NerdDnfDesignTokenPresets`, `NerdDesignTokenRecipe` |
 | HR-063 | done | Responsive catalog device frames (baseline) | `NerdResponsiveTypographyCatalog` device frames |
+| HR-054 | done | Fix Demo `AddAdditionalAssemblies` dedupe | Demo smoke test via HTTP launch profile starter uden “Assembly already defined” |
 
 ---
 
@@ -132,9 +132,10 @@ Spec: nerd-rules `00-ai-system/13-master-backlog-spec.md` · Prompts: `backlog-s
 
 | Status | Count |
 |--------|------:|
-| **open** | **37** |
+| **open** | **35** |
+| **in_progress** | **1** |
 | **partial** | **3** |
-| **done** | **5** |
+| **done** | **6** |
 | **parked** | **0** |
 | **Total** | **45** |
 
