@@ -67,7 +67,42 @@ public sealed class NerdTokenPack
     public static NerdTokenPack FromJson(string json, JsonSerializerOptions? serializerOptions = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(json);
-        return JsonSerializer.Deserialize<NerdTokenPack>(json, serializerOptions)
+        serializerOptions ??= new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        var pack = JsonSerializer.Deserialize<NerdTokenPack>(json, serializerOptions)
             ?? throw new ArgumentException("The token pack JSON was empty.", nameof(json));
+        pack.Validate();
+        return pack;
+    }
+
+    public void Validate()
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(ClientId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(Prefix);
+        var options = ToOptions();
+
+        foreach (var alias in Aliases)
+        {
+            if (!Colors.ContainsKey(alias.Value) && !Aliases.ContainsKey(alias.Value))
+            {
+                throw new ArgumentException(
+                    $"Alias '{alias.Key}' references missing token '{alias.Value}'.",
+                    nameof(Aliases));
+            }
+        }
+
+        foreach (var recipe in Recipes)
+        {
+            if (!Colors.ContainsKey(recipe.Value.Surface) ||
+                !Colors.ContainsKey(recipe.Value.Content) ||
+                (recipe.Value.Action is not null && !Colors.ContainsKey(recipe.Value.Action)) ||
+                (recipe.Value.Border is not null && !Colors.ContainsKey(recipe.Value.Border)))
+            {
+                throw new ArgumentException(
+                    $"Recipe '{recipe.Key}' references a missing color token.",
+                    nameof(Recipes));
+            }
+        }
+
+        _ = NerdDesignTokenTools.CheckAccessibility(options);
     }
 }

@@ -28,4 +28,33 @@ public sealed class NerdTokenPackTests
         Assert.Throws<ArgumentException>(() => NerdTokenPack.FromJson(" "));
         Assert.Throws<JsonException>(() => NerdTokenPack.FromJson("{"));
     }
+
+    [Fact]
+    public void FromJsonRejectsReferences_to_missing_tokens()
+    {
+        var json = """
+        {
+          "clientId": "acme",
+          "prefix": "acme",
+          "colors": {
+            "ocean": { "value": "#123456", "contrastText": "#FFFFFF" }
+          },
+          "aliases": { "primary": "missing" },
+          "recipes": {}
+        }
+        """;
+
+        Assert.Throws<ArgumentException>(() => NerdTokenPack.FromJson(json));
+    }
+
+    [Fact]
+    public void Validate_accepts_a_complete_pack()
+    {
+        var options = new NerdDesignTokenOptions { Prefix = "acme" }
+            .Add("ocean", new NerdColorToken { Value = "#123456", ContrastText = "#FFFFFF" })
+            .Alias("primary", "ocean")
+            .AddRecipe("cta", new NerdDesignTokenRecipe("ocean", "ocean", "ocean"));
+
+        NerdTokenPack.FromOptions(options, "acme").Validate();
+    }
 }
