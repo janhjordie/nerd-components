@@ -13,6 +13,8 @@ public static class NerdDesignSystemServiceCollectionExtensions
     {
         services.TryAddScoped<NerdClipboardService>();
         services.TryAddScoped<NerdDownloadService>();
+        services.TryAddSingleton<INerdCatalogEntitlements, NerdOpenCatalogEntitlements>();
+        services.TryAddSingleton<INerdCatalogUpgradeUi, NerdDefaultCatalogUpgradeUi>();
 
         services.TryAddSingleton<NerdDesignSystemOptions>(sp =>
         {

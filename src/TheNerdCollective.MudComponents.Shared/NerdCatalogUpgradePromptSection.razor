@@ -1,0 +1,39 @@
+@inject INerdCatalogUpgradeUi UpgradeUi
+
+@if (Show)
+{
+    @if (UpgradeUi.UpgradePromptComponentType is { } componentType)
+    {
+        <DynamicComponent Type="componentType" Parameters="_parameters" />
+    }
+    else
+    {
+        <MudAlert Severity="Severity.Info" Variant="Variant.Filled" Class="mb-3">
+            <MudText Typo="Typo.subtitle2" Class="mb-2">@Title</MudText>
+            <MudText Typo="Typo.body2">@Description</MudText>
+        </MudAlert>
+    }
+}
+
+@code {
+    [Parameter]
+    public bool Show { get; set; }
+
+    [Parameter]
+    public string Title { get; set; } = "Upgrade required";
+
+    [Parameter]
+    public string Description { get; set; } =
+        "This workflow requires a product licence. Configure entitlements in your host application.";
+
+    private Dictionary<string, object> _parameters = new();
+
+    protected override void OnParametersSet()
+    {
+        _parameters = new Dictionary<string, object>
+        {
+            [nameof(Title)] = Title,
+            [nameof(Description)] = Description
+        };
+    }
+}
