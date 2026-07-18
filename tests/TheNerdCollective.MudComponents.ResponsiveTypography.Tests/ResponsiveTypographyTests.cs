@@ -217,4 +217,17 @@ public class ResponsiveTypographyTests
         Assert.Equal("1rem", dashboard.Body1);
         Assert.Equal("1.7", editorial.Roles.Body1.LineHeight);
     }
+
+    [Fact]
+    public void Accessibility_storyboard_reports_all_configured_roles()
+    {
+        var options = new NerdResponsiveTypographyOptions();
+        NerdTypographyPresets.ApplyEditorial(options.Typography);
+
+        var results = NerdTypographyAccessibilityTools.CheckAccessibility(options);
+
+        Assert.Contains(results, result => result.Role == "H1");
+        Assert.Contains(results, result => result.Role == "Body1");
+        Assert.All(results, result => Assert.False(string.IsNullOrWhiteSpace(result.WcagVersion)));
+    }
 }
