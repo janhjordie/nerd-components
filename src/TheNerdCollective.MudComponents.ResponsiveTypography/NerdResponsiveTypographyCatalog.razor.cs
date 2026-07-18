@@ -26,6 +26,9 @@ public partial class NerdResponsiveTypographyCatalog
     [Inject]
     private IWebHostEnvironment HostEnvironment { get; set; } = default!;
 
+    [Inject]
+    private INerdTypographyPackStore TypographyPackStore { get; set; } = default!;
+
     private MudTheme _previewTheme = new();
     private IReadOnlyList<NerdTypographyRole> _roles = [];
     private IReadOnlyList<NerdTypographyAccessibilityResult> _accessibility = [];
@@ -36,6 +39,8 @@ public partial class NerdResponsiveTypographyCatalog
     private double _editorMinimum = 16;
     private double _editorPreferred = 2;
     private double _editorMaximum = 48;
+    private string _clientId = "client";
+    private string? _saveStatus;
 
     private string EditorClamp =>
         ResponsiveFontSize.Clamp($"{_editorMinimum:0.#}px", $"{_editorPreferred:0.#}vw", $"{_editorMaximum:0.#}px");
@@ -114,4 +119,11 @@ public partial class NerdResponsiveTypographyCatalog
         "<MudText Typo=\"Typo." + ToTypoLiteral(role.Typo) + "\">...</MudText>";
 
     private static string ToTypoLiteral(Typo typo) => typo.ToString();
+
+    private async Task SaveClientPackAsync()
+    {
+        await TypographyPackStore.SaveAsync(
+            NerdTypographyPack.FromOptions(Options, _clientId));
+        _saveStatus = $"Saved {_clientId}.";
+    }
 }
