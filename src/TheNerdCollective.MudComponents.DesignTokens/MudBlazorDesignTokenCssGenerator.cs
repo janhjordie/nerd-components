@@ -10,6 +10,12 @@ public static class MudBlazorDesignTokenCssGenerator
         ArgumentNullException.ThrowIfNull(options);
         NerdTokenNameValidator.Validate(options.Prefix);
         NerdTokenNameValidator.Validate(options.CssLayerName);
+        if (string.IsNullOrWhiteSpace(options.PortalScopeSelector) ||
+            options.PortalScopeSelector.Contains('{') ||
+            options.PortalScopeSelector.Contains('}'))
+        {
+            throw new ArgumentException("PortalScopeSelector must be a valid CSS selector.", nameof(options));
+        }
         if (options.ScopeSelector is not null &&
             (options.ScopeSelector.Contains('{') || options.ScopeSelector.Contains('}')))
         {
@@ -157,5 +163,21 @@ public static class MudBlazorDesignTokenCssGenerator
             borderVariable,
             disabledVariable,
             options.UseImportantOverrides);
+
+        if (options.EnablePortalTokenScope)
+        {
+            var portalRoot = $"{root}{options.PortalScopeSelector}";
+            MudBlazorComponentRuleBuilder.AppendRules(
+                css,
+                portalRoot,
+                variable,
+                textVariable,
+                contentVariable,
+                hoverVariable,
+                activeVariable,
+                borderVariable,
+                disabledVariable,
+                options.UseImportantOverrides);
+        }
     }
 }

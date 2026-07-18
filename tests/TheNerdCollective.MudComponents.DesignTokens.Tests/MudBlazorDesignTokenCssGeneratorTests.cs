@@ -135,6 +135,29 @@ public class MudBlazorDesignTokenCssGeneratorTests
     }
 
     [Fact]
+    public void Generate_scopes_token_rules_to_portaled_popovers()
+    {
+        var options = new NerdDesignTokenOptions { Prefix = "dnf" }
+            .Add("forest", new NerdColorToken { Value = "#365C3A", ContrastText = "#FFFFFF" });
+
+        var css = MudBlazorDesignTokenCssGenerator.Generate(options);
+
+        Assert.Contains(".dnf-forest.mud-popover-open", css);
+        Assert.Contains(".dnf-forest.mud-popover-open :where([class*=\"mud-select\"])", css);
+    }
+
+    [Fact]
+    public void Generate_can_disable_portaled_popover_scope()
+    {
+        var options = new NerdDesignTokenOptions { Prefix = "dnf", EnablePortalTokenScope = false }
+            .Add("forest", new NerdColorToken { Value = "#365C3A", ContrastText = "#FFFFFF" });
+
+        var css = MudBlazorDesignTokenCssGenerator.Generate(options);
+
+        Assert.DoesNotContain(".dnf-forest.mud-popover-open", css);
+    }
+
+    [Fact]
     public void Generate_computes_contrast_text_when_omitted()
     {
         var options = new NerdDesignTokenOptions { Prefix = "test" }

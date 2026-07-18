@@ -2,7 +2,7 @@
 title: "Backlog Portfolio — Design System"
 status: Active
 author: "@janhjordie"
-last_updated: "18-07-2026 09:35 UTC"
+last_updated: "18-07-2026 11:40"
 ---
 
 # Backlog Portfolio — Design System
@@ -60,6 +60,7 @@ HR-054 Demo dedupe
 | 18-07-2026 | PORT-001 | Master backlog i `docs/BACKLOG.md` med `HR-###` IDs per nerd-rules host template |
 | 18-07-2026 | PORT-002 | Features importeret fra package `docs/FEATURES.md` + roadmap stabilisering |
 | 18-07-2026 | PORT-003 | HR-030/HR-031 baseline markeret partial/done efter catalog-forbedring |
+| 18-07-2026 | PORT-004 | HR-006 startet: portal-scope for token-klasser på `.mud-popover-open` |
 
 ---
 
