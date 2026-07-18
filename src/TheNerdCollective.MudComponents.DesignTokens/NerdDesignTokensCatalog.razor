@@ -75,6 +75,7 @@ else
                             <MudItem xs="12" sm="6" md="4" lg="3">
                                 <MudPaper Outlined="true"
                                           Class="@($"pa-3 {className}")"
+                                          data-nerd-token="@className"
                                           Style="cursor:pointer;"
                                           @onclick="@(() => OpenTokenTab(pair.Key))">
                                     <MudText Typo="Typo.subtitle1">@pair.Key</MudText>
@@ -106,7 +107,7 @@ else
                     var previewTheme = _previewDark ? "dark" : "light";
                     var previewContrast = ResolveContrastText(token, accessibility, _previewDark);
                     <MudTabPanel Text="@pair.Key">
-                        <MudStack Spacing="3" Class="@($"pa-4 {className}")">
+                        <MudStack Spacing="3" Class="@($"pa-4 {className}")" data-nerd-token="@className">
                             <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-2">
                                 <MudText Typo="Typo.h5">@pair.Key components</MudText>
                                 <NerdClipboardButton Text="@($".{className}")" Label="Copy class" />

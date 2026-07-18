@@ -42,7 +42,7 @@ Spec: nerd-rules `00-ai-system/13-master-backlog-spec.md` · Prompts: `backlog-s
 | HR-003 | P1 | open | Token Discovery Everywhere | Ny token i pack → swatches i catalog, matrix i PlayBook, badge i Hub, export — uden hardcoded Razor-lister | | DT-FEATURE-03 |
 | HR-004 | P1 | open | Recipe Composer | UI: vælg surface + content + action → generér recipe-klasse; preview MudCard + MudButton + MudText | | DT-FEATURE-04 |
 | HR-005 | P2 | open | Contrast Pair Matrix | Tabel forgrund × baggrund med ratio + AA/AAA i catalog (DNF-style) | | DT-FEATURE-05 |
-| HR-006 | P0 | in_progress | Portal-aware Pickers | Date/Time/Select/Menu-popovers arver token-klasse; Playwright bekræfter `dnf-*` på `.mud-popover-open` | `src/TheNerdCollective.MudComponents.Shared/wwwroot/nerd-shared.js` har portal observer-baseline; E2E-verifikation mangler | DT-FEATURE-06 · ROADMAP-F0 |
+| HR-006 | P0 | in_progress | Portal-aware Pickers | Date/Time/Select/Menu-popovers arver token-klasse; Playwright bekræfter `dnf-*` på `.mud-popover-open` | Shared portal bridge + CSS portal-scope; E2E-verifikation mangler | DT-FEATURE-06 · ROADMAP-F0 |
 | HR-007 | P2 | open | Figma / Tokens Studio Export | Eksport + import Tokens Studio JSON for farver | | DT-FEATURE-07 |
 | HR-008 | P2 | open | Stitch / DESIGN.md Sync | Udvid eksport med recipes, radii, shadows, typography hooks | | DT-FEATURE-08 |
 | HR-009 | P1 | open | Accessibility Gate in CI | Test eller build-step fejler ved WCAG AA-brud på tokens | | DT-FEATURE-09 |
@@ -63,7 +63,7 @@ Spec: nerd-rules `00-ai-system/13-master-backlog-spec.md` · Prompts: `backlog-s
 
 | ID | P | Status | Task | DoD (verifiable) | Evidence | Source |
 |----|---|--------|------|------------------|----------|--------|
-| HR-021 | P1 | open | `NerdTokenPack` JSON DTO + schema | Serialiserbar pack; `token-pack.schema.json`; validation pipeline (navne, hex, WCAG, recipe refs) | | DT-ROADMAP-F1 |
+| HR-021 | P1 | in_progress | `NerdTokenPack` JSON DTO + schema | Serialiserbar pack; `token-pack.schema.json`; validation pipeline (navne, hex, WCAG, recipe refs) | DTO, options round-trip, schema; validation hardening pending | DT-ROADMAP-F1 |
 | HR-022 | P1 | open | Token pack loaders | `FromJson`, `FromPreset("dnf")`, merge med `FromOptions` | | DT-ROADMAP-F1 |
 | HR-023 | P1 | open | DNF snapshot tests | bUnit/CSS snapshot for alle 12 DNF tokens + recipes | | DT-ROADMAP-F0 |
 | HR-024 | P2 | open | Live editor & export (fase 4) | Inline picker + “Promote to preset”; export CSS/JSON/Stitch/Figma | | DT-ROADMAP-F4 |

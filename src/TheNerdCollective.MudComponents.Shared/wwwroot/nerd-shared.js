@@ -29,6 +29,20 @@ window.nerdShared = window.nerdShared || {
   }
 
   let activeToken;
+  const setActiveToken = (tokenHost) => {
+    const token = tokenHost?.dataset?.nerdToken;
+    if (!token || token === activeToken) {
+      return;
+    }
+
+    const previousToken = activeToken;
+    activeToken = token;
+    document.querySelectorAll('.mud-popover, .mud-picker-popover').forEach((popover) => {
+      if (previousToken) {
+        popover.classList.remove(previousToken);
+      }
+    });
+  };
   const copyTokenToPopovers = (root) => {
     if (!activeToken) {
       return;
@@ -48,16 +62,12 @@ window.nerdShared = window.nerdShared || {
 
   document.addEventListener('pointerdown', (event) => {
     const tokenHost = event.target.closest?.('[data-nerd-token]');
-    if (tokenHost) {
-      activeToken = tokenHost.dataset.nerdToken;
-    }
+    setActiveToken(tokenHost);
   }, true);
 
   document.addEventListener('focusin', (event) => {
     const tokenHost = event.target.closest?.('[data-nerd-token]');
-    if (tokenHost) {
-      activeToken = tokenHost.dataset.nerdToken;
-    }
+    setActiveToken(tokenHost);
   }, true);
 
   const observer = new MutationObserver((mutations) => {
