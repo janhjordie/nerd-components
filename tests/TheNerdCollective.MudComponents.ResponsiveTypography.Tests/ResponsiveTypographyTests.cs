@@ -176,4 +176,29 @@ public class ResponsiveTypographyTests
         Assert.Equal("clamp(2rem, 4vw, 4rem)", restored.Typography.H1);
         Assert.Equal("1rem", restored.Typography.Body1);
     }
+
+    [Fact]
+    public async Task Typography_pack_store_saves_loads_and_lists_clients()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), $"nerd-typo-{Guid.NewGuid():N}");
+        try
+        {
+            var store = new FileNerdTypographyPackStore(directory);
+            var options = new NerdResponsiveTypographyOptions();
+            options.Typography.H1 = "2rem";
+            await store.SaveAsync(NerdTypographyPack.FromOptions(options, "acme"));
+
+            var loaded = await store.LoadAsync("acme");
+
+            Assert.Equal("2rem", loaded?.Roles["H1"]);
+            Assert.Equal(["acme"], await store.ListAsync());
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+    }
 }
