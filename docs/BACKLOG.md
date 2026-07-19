@@ -2,7 +2,7 @@
 title: "TheNerdCollective.Components — Master Backlog"
 status: Active
 author: "@janhjordie"
-last_updated: "18-07-2026 21:55"
+last_updated: "19-07-2026 19.00"
 id_prefix: "HR"
 ---
 
@@ -204,19 +204,150 @@ Spec: nerd-rules `00-ai-system/13-master-backlog-spec.md` · Prompts: `backlog-s
 
 | ID | P | Status | Task | DoD (verifiable) | Evidence | Source |
 |----|---|--------|------|------------------|----------|--------|
-| HR-098 | P1 | open | Full token taxonomy (tree) | Udvid pack/schema + `NerdDesignTokenOptions` med **spacing**, **motion** (duration/easing), **breakpoints**, **z-index**, **border-width**; hierarkisk token-træ i catalog/workbook | | Mud Studio vision |
-| HR-099 | P2 | open | Token tree navigator | Sidebar: grupper (color · spacing · typography · motion · recipes) med expand/collapse, søg og “jump to token” — Tokens Studio-style | | Mud Studio vision |
-| HR-100 | P2 | open | Spacing scale generator | Base unit + ratio → spacing-skala; live preview på MudStack/MudGrid gap og `pa-*` | | Tokens Studio-inspired |
-| HR-101 | P2 | open | Breakpoint tokens | Navngivne breakpoints (xs–xl) som tokens; kobling til responsive typography og MudBlazor `Breakpoint` | | Tokens Studio-inspired |
-| HR-102 | P3 | open | Motion tokens | Duration + easing tokens; preview på transitions (collapse, progress, snackbar timing) | | Tokens Studio-inspired |
-| HR-103 | P2 | open | Token transforms | Reference-baserede transforms (lighten, darken, alpha, math) uden Figma — genererer afledte tokens i pack | | Tokens Studio-inspired |
-| HR-104 | P2 | open | Theme sets (light/dark) | First-class **token sets** pr. mode i pack + tree UI; ud over nuværende dual swatch preview | | Tokens Studio-inspired |
-| HR-105 | P1 | open | Recipe semantic layer i træet | Recipes som top-level “semantic tokens” (surface + content + action); link til PlayBook layout kits og Mud patterns | | Product focus |
-| HR-106 | P2 | open | DTCG / W3C Design Tokens format | Import/export [Design Tokens Format](https://design-tokens.github.io/community-group/format/) ved siden af Tokens Studio JSON | | Tokens Studio-inspired |
-| HR-107 | P3 | open | Token documentation panel | Per-token `description`, usage, do/don’t i tree + PlayBook tooltip/chip | | Tokens Studio-inspired |
-| HR-108 | P3 | open | Naming & structure linter | Catalog/CI advarsler for navngivning, duplikater, ubrugte tokens, manglende recipe coverage | | Tokens Studio-inspired |
-| HR-109 | P2 | open | Composite / alias chains i UI | Visuel kæde `primary-action → himmel → #hex` med edit på alias-niveau i træet | | Tokens Studio-inspired |
-| HR-110 | P3 | open | Multi-export pipeline | Én “Export pack” dialog: CSS, JSON, DTCG, Tokens Studio, Stitch — filtreret pr. token-gruppe | | Tokens Studio-inspired |
+| HR-098 | P1 | done | Full token taxonomy (tree) | Breakpoints, motion durations/easings, z-index i pack/schema/CSS + token tree | `NerdFoundationTaxonomyTools`, `token-pack.schema.json` | Mud Studio vision |
+| HR-099 | P2 | done | Token tree navigator | Sidebar i colors catalog: grupper (color · spacing · aliases · recipes · theme sets), søg og jump-to-token | `NerdTokenTreeNavigator`, `token-tree-navigator.spec.ts` | Mud Studio vision |
+| HR-100 | P2 | done | Spacing scale generator | Workbook step: base unit + ratio (linear/geometric); `GenerateScale` + CSS utilities | `NerdSpacingScaleTools`, workbook spacing step | Tokens Studio-inspired |
+| HR-101 | P2 | done | Breakpoint tokens | xs–xl tokens koblet til typography catalog + MudBlazor `Breakpoint` map | `NerdBreakpointTools`, typography breakpoint chips | Tokens Studio-inspired |
+| HR-102 | P3 | done | Motion tokens | Duration/easing preview (collapse, progress, snackbar) i colors catalog | `NerdMotionPreviewPanel` | Tokens Studio-inspired |
+| HR-103 | P2 | done | Token transforms | lighten/darken/alpha transforms i pack/schema; derived colors on pack load; workbook editor step | `NerdTokenTransformTools`, workbook transforms step, `transforms` i schema | Tokens Studio-inspired |
+| HR-104 | P2 | done | Theme sets (light/dark) | `themeSets` i pack/schema; CSS merge via `SyncColorTokensFromThemeSets`; catalog + workbook editor | `NerdThemeSetTools`, workbook theme step | Tokens Studio-inspired |
+| HR-105 | P1 | done | Recipe semantic layer i træet | Recipes med surface/content/action children; PlayBook layout-kit anchors; tree navigation | `NerdRecipePlayBookLinks`, `NerdTokenTreeTools` | Product focus |
+| HR-106 | P2 | done | DTCG / W3C Design Tokens format | Export/import DTCG JSON for colors/spacing/motion/breakpoints/z-index; catalog importer + filtered export | `NerdDtcgTokenTools`, `NerdDtcgImporter` | Tokens Studio-inspired |
+| HR-107 | P3 | done | Token documentation panel | Per-token `description`, usage, do/don’t i tree + catalog panel; swatch tooltip | `NerdTokenDocumentationTools`, `NerdTokenDocumentationPanel` | Tokens Studio-inspired |
+| HR-108 | P3 | done | Naming & structure linter | Catalog advarsler for navngivning, duplikater, ubrugte tokens, manglende recipe coverage | `NerdTokenStructureLinterTools`, `NerdTokenStructureLinterPanel` | Tokens Studio-inspired |
+| HR-109 | P2 | done | Composite / alias chains i UI | Visuel alias-kæde i tree + `NerdAliasChainPanel` i catalog | `NerdAliasChainTools` | Tokens Studio-inspired |
+| HR-110 | P3 | done | Multi-export pipeline | Én “Export pack” dialog: CSS, JSON, DTCG, Tokens Studio, Stitch — filtreret pr. token-gruppe | `NerdTokenPackExportTools`, `NerdTokenPackExportPanel` | Tokens Studio-inspired |
+
+---
+
+## Open — Cross-framework intents & shell (HR-119–HR-124)
+
+**Strategi:** [STRATEGY.md](../src/TheNerdCollective.MudComponents.DesignTokens/docs/STRATEGY.md) §7–10.  
+**Referencebrand:** DNF designmanual 2025 (`Danmarks Naturfredningsforening.pdf`) — hero, nav, footer, CTA, formular-variationer.
+
+| ID | P | Status | Task | DoD (verifiable) | Evidence | Source |
+|----|---|--------|------|------------------|----------|--------|
+| HR-119 | P0 | done | Component intent vocabulary (core) | Udvid `NerdDesignSystemUi` + pack aliases: `nav-surface`, `nav-item`, `nav-item-active`, `input-surface`, `input-border`, `focus-ring`, `secondary-action`; dokumenteret i STRATEGY; WCAG på defaults | `NerdDesignSystemUi`, TNC/DNF packs |
+| HR-120 | P0 | done | Sidebar shell recipe | `sidebar` recipe i DNF/TNC JSON + presets; `dnf-recipe-sidebar` / `tnc-recipe-sidebar` CSS; workbook + layout kits | `NerdDnfDesignTokenPresets`, `NerdTncDesignTokenPresets` |
+| HR-121 | P1 | done | Mud nav-link rules i recipe scope | `AppendRecipeNavigationRules` i generator; unit + Playwright | `MudBlazorDesignTokenCssGenerator` |
+| HR-122 | P1 | done | `shell` + `frameworkDefaults` i pack schema | Schema v3 felter; `frameworkDefaults.mudblazor` mapper intents → komponenter; validering i CI | `NerdTokenPackShell`, `NerdFrameworkDefaults`, JSON packs | STRATEGY §9 |
+| HR-123 | P2 | done | DNF manual layout kit udvidelse | PlayBook layout kits: `hero-photo`, `hero-organic`, `hero-light`, `footer-minimal`, `feature-panel`, `partner-row`, `formular` fra PDF/skærmbilleder | `NerdPlayBookLayoutKits`, `docs/DNF-DESIGN-GUIDE.md` |
+| HR-124 | P2 | done | `NerdAppShell` consumer | Valgfri layout-komponent læser `shell` + `frameworkDefaults` fra aktivt pack; demo + Token Studio Host | `NerdAppShell.razor`, Host `MainLayout` | STRATEGY §9 |
+
+## Open — Design guide & handoff (HR-125–HR-129)
+
+| ID | P | Status | Task | DoD | Evidence |
+|----|---|--------|------|-----|----------|
+| HR-125 | P1 | done | Live design guide route | `/nerd-design-guide` med palette, par, intents, scenes, parity; brand switcher | `NerdDesignGuide`, `NerdDesignGuidePage` |
+| HR-126 | P2 | done | Design-to-code parity score | `NerdDesignParityTools` — shell, recipes, pairings, framework defaults | Design guide parity panel |
+| HR-127 | P2 | done | PlayBook intent inspector | Klik preview → intent/token/framework default | `NerdPlayBookIntentInspector` |
+| HR-128 | P2 | done | Recipe layout scenes | Storybook-style hero/nav/footer scene fra pack | `NerdDesignGuideScenes` |
+| HR-129 | P2 | done | Handoff ZIP export | token-pack + CSS + JSON + DESIGN.md + WCAG report + README | `NerdDesignHandoffTools`, `NerdDesignHandoffExporter` |
+
+## Open — MudBlazor CSS harvest & state fidelity (HR-130–HR-138)
+
+**Analyse (Token Studio):** `docs/01-mudblazor-css-generator-analysis.md` i nerd-token-studio.  
+**Problem:** Blanket `!important` + forkerte selektorer flader MudTabs/MudSwitch state; catalog chrome/toolbar er plaster.
+
+| ID | P | Status | Task | DoD (verifiable) | Evidence | Source |
+|----|---|--------|------|------------------|----------|--------|
+| HR-130 | P0 | done | Mud version-pin + **gemt CSS-analysearkiv** | Archive + coverage; wave 14 (flexbreak, internal docs SCSS, harvest CI gate) | `9.7.0/` 74× inventory YAML, `ValidateHarvestCoverage`, `layout-utilities-dogfood.spec.ts` | CSS-GENERATOR-ANALYSIS §5.4 |
+| HR-131 | P0 | done | MudTabs state-bridge | Fjern `mud-tab` fra AccentTextPatterns; explicit inactive / `.mud-tab-active` / `.mud-tab-slider`; unit + Playwright: active ≠ inactive under token scope | `MudBlazorComponentStateBridgeTests`, `mud-state-dogfood.spec.ts` | CSS-GENERATOR-ANALYSIS |
+| HR-132 | P0 | done | MudSwitch (+ checkbox/radio) state-bridge | Korrekt `.mud-switch-base.mud-checked + .mud-switch-track`; thumb kun via `.mud-switch-thumb-*`; track mix mod `transparent` (ikke accent-surface når identisk); wrapper `tnc-primary-action` når Mud ignorerer `Class` | `MudBlazorComponentStateBridgeTests`, `mud-state-dogfood.spec.ts`, `catalog-chrome-dogfood.spec.ts` | CSS-GENERATOR-ANALYSIS |
+| HR-133 | P1 | done | SCSS harvest pipeline | Agent/script + validator; 74× inventory YAML (wave 1–14); `ValidateHarvestCoverage` CI gate | wave 14: `_flexbreak.yaml`, internal docs YAML, `layout-utilities-dogfood.spec.ts` | CSS-GENERATOR-ANALYSIS |
+| HR-134 | P1 | done | Generated rule tables | `NerdMudInventoryRuleTable` validerer alle 20 inventory YAML mod CSS (TNC+DNF); harvest script CI gate + `generated-rule-table.md` | `harvest-mudblazor-inventory.sh`, `NerdMudInventoryRuleTableTests` | CSS-GENERATOR-ANALYSIS · HR-114 |
+| HR-135 | P2 | done | Retire catalog switch/tab band-aids | Fjernet tab/switch state fra catalog chrome/toolbar CSS; placement markers + label readability; style guard skipper switch-kontrast i `catalog-toolbar` (kun label-tekst) | `NerdMudInventoryRuleTableTests`, `MudBlazorComponentStateBridgeTests`, `catalog-chrome-dogfood.spec.ts` | CSS-GENERATOR-ANALYSIS |
+| HR-136 | P2 | done | Full 66-component coverage matrix | 72 SCSS-filer klassificeret P0–P4 i `coverage-matrix.md`; harvest script lister upstream | `coverage-matrix.md`, `sources/COMPONENTS.md` | CSS-GENERATOR-ANALYSIS |
+| HR-137 | P1 | done | Picker/portal composite harvest | Date/Time/Color/Select portal: state rules, inventory, Playwright dogfood (TNC/DNF) | `AppendPickerPortalStateRules`, `*-portal-dogfood.spec.ts`, catalog `time-picker-*`/`color-picker-*` testids | CSS-GENERATOR-ANALYSIS §5.5 |
+| HR-138 | P1 | done | Component-family intent map (Core) | Framework-neutrale `reference/component-families/*.yaml` (picker.day-selected → primary-action); bruges af Mud nu og Fluent/Blazorise senere | `reference/component-families/picker.yaml` | CSS-GENERATOR-ANALYSIS §5.6 · HR-114 |
+
+## Open — MudBlazor 100% fidelity / palette-first reskin (HR-139–HR-147)
+
+**Analyse (Token Studio):** [02-mudblazor-100-percent-fidelity.md](https://github.com/janhjordie/nerd-token-studio/blob/main/docs/02-mudblazor-100-percent-fidelity.md) · companion [01-mudblazor-css-generator-analysis.md](https://github.com/janhjordie/nerd-token-studio/blob/main/docs/01-mudblazor-css-generator-analysis.md).
+
+| ID | P | Status | Task | DoD (verifiable) | Evidence | Source |
+|----|---|--------|------|------------------|----------|--------|
+| HR-139 | P0 | done | Mud palette manifest v9.7.0 | Alle `--mud-palette-*` fra `MudThemeProvider` dokumenteret + C# catalog | `reference/mudblazor/9.7.0/PALETTE-MANIFEST.md`, `MudBlazorPaletteManifest.cs` | 02-FIDELITY §2 |
+| HR-140 | P0 | done | Brand-root palette generator | `.{prefix}-mud-brand` + `.mud-theme-provider` emitter fuld palette én gang | `MudBlazorBrandPaletteGenerator`, `NerdMudBrandPaletteMap` | 02-FIDELITY §3 |
+| HR-141 | P0 | done | MudThemeProvider sync | Host `MudTheme` bygges fra samme map som CSS; `NerdAppShell` brand root class | `NerdMudThemeFactory`, `MainLayout.razor`, `NerdAppShell.razor` | 02-FIDELITY §3 |
+| HR-142 | P0 | done | Intent-scoped palette overrides | Action + surface intents overskriver korrekte palette slots; bridges-only på action aliases | `AppendIntentPaletteOverrides`, `AppendSurfacePaletteLines`, `bridgesOnly` | 02-FIDELITY §4 |
+| HR-143 | P1 | done | Deprecate ComponentRuleBuilder bulk | `bridgesOnly` for alle palette-first semantic aliases; bulk kun raw tokens + legacy | `MudBlazorComponentRuleBuilder`, `IsContentIntentAlias` | 02-FIDELITY §5 |
+| HR-144 | P1 | done | Schema `mudPalette` i token pack | `frameworkDefaults.mudblazor.palette` i schema + alle reference packs | `token-pack.schema.json`, `*.token-pack.json` | 02-FIDELITY §5 |
+| HR-145 | P1 | done | Playwright full-fidelity suite | Palette root, tab slider, design guide panel, catalog swatch button ≠ Mud purple | `mud-palette-fidelity*.spec.ts`, `NerdMudPaletteParityTools` | 02-FIDELITY §7 |
+| HR-146 | P2 | done | Visual regression vs Mud reference | Playwright locator screenshots (TNC/DNF) under `reference/mudblazor/9.7.0/visual/` | `mud-visual-regression.spec.ts` | 02-FIDELITY §7 |
+| HR-147 | P2 | done | Mud upgrade playbook | `diff-mudblazor-upgrade.sh` + `upgrades/*.md` ritual | `NerdMudUpgradeDiffTools`, `upgrades/9.7.0-to-9.8.0.md` | 02-FIDELITY §6 |
+
+## Open — Product ideas from Token Studio (HR-148+)
+
+Kilde: nerd-token-studio `docs/ideas.md`.
+
+| ID | P | Status | Task | DoD (verifiable) | Evidence | Source |
+|----|---|--------|------|------------------|----------|--------|
+| HR-148 | P1 | done | Intent picker workbook step | Workbook “Intents” step: vælg standard intent, live MudButton preview, alias target + apply | `NerdIntentCatalogTools`, `NerdBrandWorkbook` step 3 | ideas #1 |
+| HR-149 | P1 | done | DNF manual compliance score | Score 0–100 for shell recipes, approved pairings, hero-overlay tokens; panel i recipes catalog | `NerdManualComplianceTools`, recipes catalog panel | ideas #2 |
+| HR-150 | P2 | done | Composition export til Stitch | Stitch/DESIGN.md sektion med shell layout-blokke fra pack recipes | `NerdLayoutCompositionCatalog`, `ExportStitchDesignMd` | ideas #4 |
+| HR-151 | P2 | done | Hero overlay opacity i layout kits | `hero-photo` / `hero-organic` bruger `hero-overlay` opacity token når defineret | `NerdPlayBookLayoutKits.razor` | ideas #7 |
+| HR-152 | P2 | done | Recipe ≠ komponent onboarding | Dokumentér ~12 shell recipes + ~15 intents + `frameworkDefaults`; onboarding i STRATEGY/quickstart | `docs/RECIPE-INTENT-MODEL.md`, QUICKSTART §6 | ideas #3 |
+| HR-153 | P3 | done | Bootstrap Blazor adapter spike | `--bs-*` bridge CSS; PlayBook map + preview; `reference/bootstrap/5.3/` | `NerdBootstrapDesignTokenCssGenerator` | ideas #5 |
+| HR-114 | P2 | done | DesignTokens.Core extract | Wave 1–3: Core + `NerdMudHarvestAdapter` + `NerdCoreAssemblyGuardTests`; `CORE-EXTRACT.md` | `DesignTokens.Core` | TS-014 |
+| HR-154 | P2 | done | Workbook intent Radzen side-by-side | Intents step: Mud + live `RadzenButton` preview; `Radzen.Blazor` i Catalog | `NerdBrandWorkbook` step 3 | ideas #1 |
+| HR-155 | P2 | done | Workbook intent E2E | Host + Demo `workbook-intent-radzen.spec.ts`: Mud + Radzen primary ≠ Mud purple | `tests/e2e/workbook-intent-radzen.spec.ts` | TS-055 |
+| HR-156 | P3 | done | HR-114 polish (deferred) | Wave 4 namespace migration dokumenteret som parked i `CORE-EXTRACT.md` | `CORE-EXTRACT.md` §Wave 4 | HR-114 |
+
+## Open — Mud theme + PseudoCss (HR-157–175)
+
+Strategi: **Fase 1** `NerdMudThemeFactory` ejer global `:root` brand → **Fase 2** `PseudoCss.Scope` per intent/recipe → **Fase 3** samlet `NerdMudThemeProvider`.  
+Slet overflødig CSS/generator-kode når theme-laget overtager (ingen deprecation — ingen eksterne brugere).
+
+### Fase 1 — Theme Provider First
+
+| ID | P | Status | Task | DoD (verifiable) | Evidence | Source |
+|----|---|--------|------|------------------|----------|--------|
+| HR-157 | P0 | done | `NerdMudThemeFactory` fuld palette | `PaletteLight` + `PaletteDark` fra pack `themeSets` via `MudColor` (rgb/hover/darken/lighten); parity med `MudBlazorPaletteManifest` | `NerdMudThemeFactory.cs`, `NerdMudBrandPaletteTests` | theme strategy fase 1 |
+| HR-158 | P0 | done | Fjern CSS global palette-duplikat | `MudBlazorBrandPaletteGenerator.AppendBrandRootPalette` emitter ikke længere `--mud-palette-*` på `.mud-theme-provider`; `.tnc-mud-brand` er layout-klasse only | `MudBlazorBrandPaletteGenerator.cs` | theme strategy fase 1 |
+| HR-159 | P0 | open | Slet ComponentRuleBuilder bulk for intents | Fjern `AccentTextPatterns`/`InputPatterns`/`FilledPatterns` for semantic aliases; behold kun raw color token rules + inventory bridges | `MudBlazorComponentRuleBuilder.cs` | theme strategy fase 1 |
+| HR-160 | P1 | open | Slet alias palette-flattening | `MudBlazorPaletteMapper.AppendPaletteVariables` kaldes ikke for aliases; semantic intents bruger ikke per-alias `--mud-palette-*` flattening | `MudBlazorDesignTokenCssGenerator.cs`, `MudBlazorPaletteMapper.cs` | theme strategy fase 1 |
+| HR-161 | P1 | open | Minimal Mud bridges CSS | Switch thumb + inventory `generator_required` hardcoded hex i dedikeret bridge (ikke ComponentRuleBuilder bulk) | `reference/mudblazor/9.7.0/inventory/_switch.yaml` | theme strategy fase 1 |
+| HR-162 | P1 | done | Theme/CSS parity tests | Unit: factory palette keys = manifest; CSS indeholder ikke duplikat global palette block; `NerdMudPaletteParityTools` fejler ved regression | `NerdMudPaletteParityTools.cs`, tests | theme strategy fase 1 |
+| HR-163 | P2 | open | Opdatér fidelity docs fase 1 | `02-mudblazor-100-percent-fidelity.md` §4: global brand = `MudThemeProvider` only; CSS = intents + bridges | `docs/02-mudblazor-100-percent-fidelity.md` (Token Studio) | theme strategy fase 1 |
+
+### Fase 2 — PseudoCss intents + recipes
+
+| ID | P | Status | Task | DoD (verifiable) | Evidence | Source |
+|----|---|--------|------|------------------|----------|--------|
+| HR-164 | P0 | open | `NerdMudIntentThemeFactory` | Bygger `MudTheme` pr. semantic intent fra pack aliases + `frameworkDefaults.mudblazor.palette` slot mapping | `NerdMudIntentThemeFactory.cs` | theme strategy fase 2 |
+| HR-165 | P1 | open | Intent → palette slot map | Dokumenteret + testet mapping: `primary-action` → Primary + action-default; `page-surface` → surface/background/text; `nav-surface` → drawer-*; osv. (~15 intents) | `NerdMudIntentPaletteMap.cs`, unit tests | theme strategy fase 2 |
+| HR-166 | P0 | parked | `NerdMudThemeStack` (multi-provider) | **Parked** — flere `MudThemeProvider` risikerer popover-duplikater; brug HR-170 single `GenerateTheme` i stedet | — | theme strategy fase 2 |
+| HR-167 | P0 | open | Slet intent palette CSS | Fjern `AppendIntentPaletteOverrides` m.m. **efter** HR-170 spike beviser PseudoCss scopes | `MudBlazorBrandPaletteGenerator.cs` | theme strategy fase 2 |
+| HR-168 | P1 | open | Recipe PseudoCss themes | `NerdMudRecipeThemeFactory`: shell recipes (`sidebar`, `hero-photo`, …) får `MudTheme` + scope `":root .{prefix}-recipe-{name}"` | `NerdMudRecipeThemeFactory.cs` | theme strategy fase 2 |
+| HR-169 | P1 | open | PseudoCss unit tests | Assert scope strings + emitted palette slots pr. intent/recipe; ingen manuel `--mud-palette-*` i intent CSS for covered aliases | `NerdMudIntentThemeFactoryTests.cs` | theme strategy fase 2 |
+
+### Fase 3 — NerdMudThemeProvider + polish
+
+| ID | P | Status | Task | DoD (verifiable) | Evidence | Source |
+|----|---|--------|------|------------------|----------|--------|
+| HR-170 | P0 | open | `NerdMudThemeProvider` (fase 2 spike) | Arver `MudThemeProvider`; `GenerateTheme` emitter `:root` brand + intent/recipe scopes (`:root .{prefix}-{intent}`) i **ét** `<style>` — erstat HR-166 | `NerdMudThemeProvider.cs` | theme strategy fase 2 |
+| HR-171 | P1 | open | Host migration til `NerdMudThemeProvider` | `MainLayout`/`NerdAppShell` bruger én provider; fjern løs `MudThemeProvider` + redundant theme CSS | `NerdAppShell.razor` | theme strategy fase 3 |
+| HR-172 | P1 | open | `CurrentPalette` brand switch API | `INerdMudThemeController` opdaterer aktiv palette fra pack; catalogs trigger refresh uden CSS regen | `INerdMudThemeController.cs` | theme strategy fase 3 |
+| HR-173 | P2 | open | Typography i `MudTheme` | `NerdMudThemeFactory` mapper `NerdResponsiveTypographyOptions` → `MudTheme.Typography` | `NerdMudThemeFactory.cs` | theme strategy fase 3 |
+| HR-174 | P2 | open | Layout + shadows i `MudTheme` | `LayoutProperties` (border-radius, drawer width) + `Shadows` fra token pack | `NerdMudThemeFactory.cs` | theme strategy fase 3 |
+| HR-175 | P2 | open | STRATEGY docs PseudoCss model | `STRATEGY.md` §8 opdateret: theme-first + PseudoCss; fjern multi-framework theme refs i Mud-sektion | `docs/STRATEGY.md` | theme strategy fase 3 |
+
+## Open — Cross-framework adapters (HR-115–HR-118)
+
+| ID | P | Status | Task | DoD (verifiable) | Evidence | Source |
+|----|---|--------|------|------------------|----------|--------|
+| HR-117 | P3 | done | Fluent UI Blazor adapter spike | `--nerd-intent-*` + Fluent `--colorBrand*` bridge CSS; `NerdBrandRootClasses` på shell; `reference/fluent/4.11.0/` | `NerdIntentCssGenerator`, `NerdFluentDesignTokenCssGenerator`, `NerdPlayBookFrameworkBridge` | STRATEGY §7 |
+| HR-115 | P2 | done | Radzen adapter spike | `--rz-*` intent bridge CSS + `RadzenComponentRuleBuilder`; `reference/radzen/5.7.0/` | `NerdRadzenDesignTokenCssGenerator`, `RadzenComponentRuleBuilder` | STRATEGY §7 |
+| HR-116 | P3 | done | Blazorise adapter spike | Reuses Bootstrap `--bs-*` bridge; `NerdBlazorisePaletteManifest`; PlayBook preview | `NerdBlazoriseDesignTokenCssGenerator`, `reference/blazorise/1.7.3/` | ideas #5 · TS-016 |
+| HR-118 | P2 | done | PlayBook framework switcher | Mud + Fluent map + live Radzen `RadzenButton`/`RadzenCard` preview | `NerdPlayBookFrameworkBridge.razor` | TS-018 |
+
+## Docs (OSS + Studio)
+
+| ID | P | Status | Task | DoD | Evidence |
+|----|---|--------|------|-----|----------|
+| HR-112 | P1 | done | Token Studio quickstart | 15-min guide: clone, tier, first pack | nerd-token-studio `docs/QUICKSTART.md` |
+| HR-113 | P2 | done | Docker / hosted Studio | `docker compose up`, `NerdTokenStudio__Tier` env | nerd-token-studio `Dockerfile`, `docker-compose.yml` |
 
 ---
 
@@ -228,19 +359,23 @@ Licence gate, pricing, hosted Studio, multi-framework adapters (**HR-111–HR-11
 
 | Status | Count |
 |--------|------:|
-| **open** | **13** |
+| **open** | **18** |
 | **in_progress** | **0** |
 | **partial** | **0** |
-| **done** | **76** |
-| **parked** | **0** |
-| **Total** | **89** |
+| **done** | **117** |
+| **parked** | **1** |
+| **Total** | **136** |
 
 ### Recommended next slices (MVP)
 
 **Product (OSS):**
-1. **HR-098** — Full token taxonomy
-2. **HR-105** — Recipes som semantic layer
-3. **HR-099** — Token tree navigator
+1. **HR-157–163** — Fase 1: Theme Provider First; slet CSS palette-duplikat + bulk rules
+2. **HR-164–165, HR-167–169** + **HR-170 spike** — Fase 2: PseudoCss via single `GenerateTheme` (HR-166 parked)
+3. **HR-171–175** — Fase 3: fuld `NerdMudThemeProvider` + polish
+4. **TS-064–072** — Host + E2E (nerd-token-studio backlog)
+5. **TS-072** — Luk platform gate; derefter Stripe (private)
+
+Fuld rækkefølge: nerd-token-studio `docs/BACKLOG.md` + `docs/ideas.md`.
 
 ### Agent commands
 

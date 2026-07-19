@@ -1,5 +1,8 @@
+using MudBlazor.Utilities;
+using TheNerdCollective.Brand.Dnf;
 using TheNerdCollective.Brand.Tnc;
 using TheNerdCollective.MudComponents.DesignTokens;
+using TheNerdCollective.MudComponents.Shared;
 
 namespace TheNerdCollective.MudComponents.DesignTokens.Tests;
 
@@ -72,9 +75,9 @@ public class MudBlazorDesignTokenCssGeneratorTests
 
         var css = MudBlazorDesignTokenCssGenerator.Generate(options);
 
-        Assert.Contains(".tnc-primary-action[class*=\"mud-button-outlined\"]", css);
-        Assert.Contains("color: var(--tnc-color-primary-action);", css);
-        Assert.DoesNotContain(".tnc-primary-action[class*=\"mud-button-outlined\"] {  color: var(--tnc-color-primary-action-content);", css);
+        Assert.Contains("--mud-palette-primary: var(--tnc-color-primary-action)", css);
+        Assert.DoesNotContain(".tnc-primary-action[class*=\"mud-button-outlined\"]", css);
+        Assert.Contains(".tnc-coral[class*=\"mud-button-outlined\"]", css);
     }
 
     [Fact]
@@ -116,22 +119,43 @@ public class MudBlazorDesignTokenCssGeneratorTests
     }
 
     [Fact]
-    public void Generate_maps_all_mudblazor_palette_variables()
+    public void Generate_maps_mud_palette_via_theme_factory_not_css_brand_root()
     {
         var options = new NerdDesignTokenOptions { Prefix = "dnf" }
+            .Add("forest", new NerdColorToken { Value = "#365C3A", ContrastText = "#FFFFFF" });
+        NerdDnfDesignTokenPresets.Apply(options);
+
+        var css = MudBlazorDesignTokenCssGenerator.Generate(options);
+        var theme = NerdMudThemeFactory.Create(options);
+
+        Assert.DoesNotContain(".dnf-mud-brand, .mud-theme-provider {", css);
+        AssertPaletteSlotSet(theme.PaletteLight.Primary);
+        AssertPaletteSlotSet(theme.PaletteLight.Secondary);
+        AssertPaletteSlotSet(theme.PaletteLight.Surface);
+        AssertPaletteSlotSet(theme.PaletteLight.TableHover);
+        AssertPaletteSlotSet(theme.PaletteLight.OverlayLight);
+        AssertPaletteSlotSet(theme.PaletteLight.Skeleton);
+        AssertPaletteSlotSet(theme.PaletteLight.ActionDisabledBackground);
+        Assert.DoesNotContain("--mud-palette-secondary: var(--dnf-color-forest)", css);
+    }
+
+    private static void AssertPaletteSlotSet(MudColor color) =>
+        Assert.NotEqual(default(MudColor), color);
+
+    [Fact]
+    public void Generate_legacy_mode_flattens_palette_onto_token_class()
+    {
+        var options = new NerdDesignTokenOptions
+        {
+            Prefix = "dnf",
+            UsePaletteFirstAdapter = false
+        }
             .Add("forest", new NerdColorToken { Value = "#365C3A", ContrastText = "#FFFFFF" });
 
         var css = MudBlazorDesignTokenCssGenerator.Generate(options);
 
         Assert.Contains("--mud-palette-primary: var(--dnf-color-forest)", css);
-        Assert.Contains("--mud-palette-primary-darken:", css);
-        Assert.Contains("--mud-palette-primary-lighten:", css);
-        Assert.Contains("--mud-palette-primary-rgb:", css);
         Assert.Contains("--mud-palette-secondary: var(--dnf-color-forest)", css);
-        Assert.Contains("--mud-palette-table-hover:", css);
-        Assert.Contains("--mud-palette-overlay-light:", css);
-        Assert.Contains("--mud-palette-skeleton:", css);
-        Assert.Contains("--mud-palette-action-disabled-background:", css);
     }
 
     [Fact]
@@ -143,7 +167,7 @@ public class MudBlazorDesignTokenCssGeneratorTests
         var css = MudBlazorDesignTokenCssGenerator.Generate(options);
 
         Assert.Contains("[class*=\"mud-text-field\"]", css);
-        Assert.Contains("[class*=\"mud-switch\"]", css);
+        Assert.Contains(".dnf-forest .mud-switch .mud-switch-base", css);
         Assert.Contains("[class*=\"mud-table\"]", css);
         Assert.Contains("[class*=\"mud-data-grid\"]", css);
         Assert.Contains("[class*=\"mud-nav-link\"]", css);
@@ -151,6 +175,40 @@ public class MudBlazorDesignTokenCssGeneratorTests
         Assert.Contains("[class*=\"mud-popover\"] [class*=\"mud-list-item\"]", css);
         Assert.Contains("[class*=\"mud-rating\"]", css);
         Assert.Contains(".dnf-forest .mud-checkbox .mud-icon-button", css);
+    }
+
+    [Fact]
+    public void Generate_nav_link_inherits_under_muted_content_palette_first()
+    {
+        var options = new NerdDesignTokenOptions { Prefix = "tnc" }
+            .Add("ink", new NerdColorToken { Value = "#111827", ContrastText = "#FFFFFF" })
+            .Alias("muted-content", "ink");
+
+        var css = MudBlazorDesignTokenCssGenerator.Generate(options);
+
+        Assert.Contains(".tnc-muted-content {", css);
+        Assert.Contains("--mud-palette-text-secondary: var(--tnc-color-muted-content-content)", css);
+        Assert.Contains(".tnc-muted-content .mud-nav-link .mud-nav-link-text", css);
+        Assert.Contains("color: inherit", css);
+        Assert.DoesNotContain(".tnc-muted-content[class*=\"mud-button-filled\"]", css);
+        Assert.DoesNotContain(".tnc-muted-content .mud-nav-link:hover .mud-nav-link-text", css);
+    }
+
+    [Fact]
+    public void Generate_sidebar_recipe_styles_nav_links()
+    {
+        var options = new NerdDesignTokenOptions { Prefix = "tnc" }
+            .Add("snow", new NerdColorToken { Value = "#FFFFFF", ContrastText = "#111827" })
+            .Add("ink", new NerdColorToken { Value = "#111827", ContrastText = "#FFFFFF" })
+            .Add("coral", new NerdColorToken { Value = "#F27271", ContrastText = "#FFFFFF" })
+            .AddRecipe(NerdDesignSystemUi.SidebarRecipe, new NerdDesignTokenRecipe("snow", "ink", "coral"));
+
+        var css = MudBlazorDesignTokenCssGenerator.Generate(options);
+
+        Assert.Contains(".tnc-recipe-sidebar .mud-nav-link:hover", css);
+        Assert.Contains(".tnc-recipe-sidebar .mud-nav-link.active .mud-nav-link-icon", css);
+        Assert.Contains("font-size: 0.875rem !important;", css);
+        Assert.Contains("#F27271", css);
     }
 
     [Fact]
@@ -199,6 +257,7 @@ public class MudBlazorDesignTokenCssGeneratorTests
 
         Assert.Contains(".dnf-page-surface {", css);
         Assert.Contains("background-color: var(--dnf-color-page-surface-surface)", css);
+        Assert.Contains("--mud-palette-surface: var(--dnf-color-page-surface-surface)", css);
         Assert.Contains(".dnf-page-surface.mud-popover-open .mud-selected-item", css);
         Assert.Contains("color: var(--dnf-color-page-surface-content)", css);
         Assert.DoesNotContain(".dnf-page-surface[class*=\"mud-button-filled\"]", css);
@@ -212,15 +271,21 @@ public class MudBlazorDesignTokenCssGeneratorTests
             .Add("forest", new NerdColorToken { Value = "#365C3A" })
             .Alias("primary-action", "forest")
             .AddRadius("card", "12px")
-            .AddShadow("elevated", "0 4px 16px rgba(0,0,0,.16)");
+            .AddShadow("elevated", "0 4px 16px rgba(0,0,0,.16)")
+            .AddSpacing("4", "16px");
 
         var css = MudBlazorDesignTokenCssGenerator.Generate(options);
 
         Assert.Contains("@layer nerd-design-tokens", css);
         Assert.Contains(".dnf-primary-action", css);
-        Assert.Contains(".dnf-primary-action[class*=\"mud-button-filled\"]", css);
+        Assert.Contains("--mud-palette-primary: var(--dnf-color-primary-action)", css);
+        Assert.DoesNotContain(".dnf-primary-action[class*=\"mud-button-filled\"]", css);
+        Assert.Contains(".dnf-primary-action .mud-tab-slider", css);
         Assert.Contains(".dnf-radius-card", css);
         Assert.Contains(".dnf-shadow-elevated", css);
+        Assert.Contains(".dnf-space-4", css);
+        Assert.Contains("--dnf-space-4: 16px", css);
+        Assert.Contains(".dnf-pa-4", css);
     }
 
     [Fact]
