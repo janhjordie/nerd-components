@@ -80,9 +80,13 @@
         <MudDateRangePicker @bind-DateRange="_dateRangeValue" Class="@Tc" Label="@PText("label", "Range")" Variant="@PVariant(Variant.Outlined)" Disabled="@PBool("disabled")" Margin="Margin.Dense" />
         break;
     case "file-upload":
-        <MudButton Class="@Tc" Variant="Variant.Outlined" Size="Size.Small" StartIcon="@Icons.Material.Filled.Upload">
-            Upload
-        </MudButton>
+        <MudFileUpload T="IBrowserFile" Class="@Tc" Accept="image/*">
+            <CustomContent>
+                <MudButton Class="@Tc" Variant="Variant.Outlined" Size="Size.Small" StartIcon="@Icons.Material.Filled.Upload">
+                    Upload
+                </MudButton>
+            </CustomContent>
+        </MudFileUpload>
         break;
     case "table":
         <MudTable Items="_tableItems" Class="@Tc" Dense="@PDense()" Hover="true" Bordered="true">
@@ -126,7 +130,7 @@
         }
         break;
     case "badge":
-        <MudBadge Content="3" Overlap="true">
+        <MudBadge Content="3" Overlap="true" Class="@Tc">
             <MudIcon Icon="@Icons.Material.Filled.Notifications" />
         </MudBadge>
         break;
@@ -142,16 +146,16 @@
         </MudTooltip>
         break;
     case "list":
-        <MudList T="string" Dense="true">
+        <MudList T="string" Dense="true" Class="@Tc">
             <MudListItem Icon="@Icons.Material.Filled.Home">Home</MudListItem>
             <MudListItem Icon="@Icons.Material.Filled.Settings">Settings</MudListItem>
         </MudList>
         break;
     case "tree-view":
-        <MudTreeView T="string" Items="_treeItems" Dense="true" />
+        <MudTreeView T="string" Items="_treeItems" Dense="true" Class="@Tc" />
         break;
     case "timeline":
-        <MudTimeline TimelinePosition="TimelinePosition.Start">
+        <MudTimeline TimelinePosition="TimelinePosition.Start" Class="@Tc">
             <MudTimelineItem>
                 <MudText Typo="Typo.body2">Step one</MudText>
             </MudTimelineItem>
@@ -161,7 +165,7 @@
         </MudTimeline>
         break;
     case "typography":
-        <MudText Typo="@PTypo()">@PText("text", "Typography preview")</MudText>
+        <MudText Typo="@PTypo()" Class="@Tc">@PText("text", "Typography preview")</MudText>
         break;
     case "icon":
         <MudStack Row="true" Spacing="1">
@@ -173,39 +177,43 @@
         <MudImage Class="@Tc" Src="@NerdPlayBookPreviewAssets.PreviewImageSrc" Alt="Preview" Width="120" Height="48" ObjectFit="ObjectFit.Cover" />
         break;
     case "markdown":
-        <MudText Typo="Typo.body2"><b>Bold</b> and <i>italic</i> text preview.</MudText>
+        <MudText Typo="Typo.body2" Class="@Tc"><b>Bold</b> and <i>italic</i> text preview.</MudText>
         break;
     case "alert":
         <MudAlert Class="@Tc" Severity="@PSeverity()" Variant="@PVariant(Variant.Filled)" Dense="@PDense()">@PText("text", "Alert preview")</MudAlert>
         break;
     case "progress-circular":
-        <MudProgressCircular Indeterminate="@PBool("indeterminate", true)" Value="@PInt("value", 60)" Size="Size.Small" />
+        <MudProgressCircular Class="@Tc" Indeterminate="@PBool("indeterminate", true)" Value="@PInt("value", 60)" Size="Size.Small" />
         break;
     case "progress-linear":
-        <MudProgressLinear Indeterminate="@PBool("indeterminate")" Value="@PInt("value", 60)" />
+        <MudProgressLinear Class="@Tc" Indeterminate="@PBool("indeterminate")" Value="@PInt("value", 60)" />
         break;
     case "skeleton":
-        <MudSkeleton Width="100%" Height="40px" Animation="Animation.Wave" />
+        <MudSkeleton Class="@Tc" Width="100%" Height="40px" Animation="Animation.Wave" />
         break;
     case "paper":
-        <MudPaper Class="pa-3" Elevation="1">Paper surface</MudPaper>
+        <MudPaper Class="@($"{Tc} pa-3")" Elevation="1">Paper surface</MudPaper>
         break;
     case "card":
-        <MudCard Elevation="1">
+        <MudCard Class="@Tc" Elevation="1">
             <MudCardContent>
                 <MudText Typo="Typo.body2">Card content</MudText>
             </MudCardContent>
         </MudCard>
         break;
     case "expansion-panel":
-        <MudExpansionPanels Elevation="0">
+        <MudExpansionPanels Class="@Tc" Elevation="0">
             <MudExpansionPanel Text="Panel" Dense="true">
                 <MudText Typo="Typo.body2">Expanded content</MudText>
             </MudExpansionPanel>
         </MudExpansionPanels>
         break;
     case "drawer":
-        <MudPaper Class="pa-3" Outlined="true" Style="width:140px">Drawer preview</MudPaper>
+        <div style="position:relative;height:100px;overflow:hidden">
+            <MudDrawer Open="true" Variant="DrawerVariant.Persistent" Class="@Tc" ClipMode="DrawerClipMode.Never" Style="position:absolute;width:120px">
+                <MudText Typo="Typo.caption" Class="pa-2">Drawer</MudText>
+            </MudDrawer>
+        </div>
         break;
     case "popover":
         <MudButton Class="@Tc" Variant="Variant.Outlined" Size="Size.Small" OnClick="@(() => _popoverOpen = !_popoverOpen)">
@@ -216,67 +224,69 @@
         </MudPopover>
         break;
     case "app-bar":
-        <MudPaper Class="pa-2 d-flex align-center" Elevation="1">
-            <MudIcon Icon="@Icons.Material.Filled.Menu" Class="mr-2" />
-            <MudText Typo="Typo.subtitle2">App bar</MudText>
-        </MudPaper>
+        <div style="position:relative">
+            <MudAppBar Class="@Tc" Dense="true" Fixed="false" Elevation="0">
+                <MudIconButton Icon="@Icons.Material.Filled.Menu" Size="Size.Small" />
+                <MudText Typo="Typo.subtitle2">App bar</MudText>
+            </MudAppBar>
+        </div>
         break;
     case "nav-menu":
-        <MudNavMenu Dense="true">
+        <MudNavMenu Dense="true" Class="@Tc">
             <MudNavLink Icon="@Icons.Material.Filled.Home" Href="#">Home</MudNavLink>
             <MudNavLink Icon="@Icons.Material.Filled.Settings" Href="#">Settings</MudNavLink>
         </MudNavMenu>
         break;
     case "tabs":
-        <MudTabs Elevation="0" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-2">
+        <MudTabs Class="@Tc" Elevation="0" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-2">
             <MudTabPanel Text="Tab 1"><MudText Typo="Typo.body2">One</MudText></MudTabPanel>
             <MudTabPanel Text="Tab 2"><MudText Typo="Typo.body2">Two</MudText></MudTabPanel>
         </MudTabs>
         break;
     case "breadcrumbs":
-        <MudBreadcrumbs Items="_breadcrumbs" />
+        <MudBreadcrumbs Class="@Tc" Items="_breadcrumbs" />
         break;
     case "menu":
-        <MudMenu Label="Menu" Dense="true">
+        <MudMenu Label="Menu" Dense="true" Class="@Tc">
             <MudMenuItem>Item 1</MudMenuItem>
             <MudMenuItem>Item 2</MudMenuItem>
         </MudMenu>
         break;
     case "pagination":
-        <MudPagination Count="5" Selected="_page" SelectedChanged="p => _page = p" />
+        <MudPagination Class="@Tc" Count="5" Selected="_page" SelectedChanged="p => _page = p" />
         break;
     case "stepper":
-        <MudStepper @bind-ActiveIndex="_stepIndex" Style="max-width:280px">
+        <MudStepper Class="@Tc" @bind-ActiveIndex="_stepIndex" Style="max-width:280px">
             <MudStep Title="Start" />
             <MudStep Title="Done" />
         </MudStepper>
         break;
     case "grid":
-        <MudGrid Spacing="1">
+        <MudGrid Class="@Tc" Spacing="1">
             <MudItem xs="6"><MudPaper Class="pa-2" Outlined="true">A</MudPaper></MudItem>
             <MudItem xs="6"><MudPaper Class="pa-2" Outlined="true">B</MudPaper></MudItem>
         </MudGrid>
         break;
     case "container":
-        <MudContainer MaxWidth="MaxWidth.Small" Class="pa-0">
+        <MudContainer MaxWidth="MaxWidth.Small" Class="@($"{Tc} pa-0")">
             <MudPaper Class="pa-2" Outlined="true">Container</MudPaper>
         </MudContainer>
         break;
     case "divider":
-        <MudStack Spacing="1">
+        <MudStack Spacing="1" Class="@Tc">
             <MudText Typo="Typo.caption">Above</MudText>
             <MudDivider />
             <MudText Typo="Typo.caption">Below</MudText>
         </MudStack>
         break;
     case "stack":
-        <MudStack Spacing="1">
+        <MudStack Class="@Tc" Spacing="1">
             <MudPaper Class="pa-1" Outlined="true">Stack 1</MudPaper>
             <MudPaper Class="pa-1" Outlined="true">Stack 2</MudPaper>
         </MudStack>
         break;
     case "spacer":
-        <MudStack Row="true" AlignItems="AlignItems.Center" Style="width:100%">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Class="@Tc" Style="width:100%">
             <MudText Typo="Typo.caption">Left</MudText>
             <MudSpacer />
             <MudText Typo="Typo.caption">Right</MudText>

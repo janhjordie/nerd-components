@@ -251,7 +251,8 @@ public class MudBlazorDesignTokenCssGeneratorTests
         var options = new NerdDesignTokenOptions { Prefix = "dnf" }
             .Add("kridt-lys", new NerdColorToken { Value = "#FDFAF3", ContrastText = "#002D26" })
             .Alias("page-surface", "kridt-lys")
-            .Alias("brand-chrome", "kridt-lys");
+            .Alias("brand-chrome", "kridt-lys")
+            .Alias("secondary-action", "kridt-lys");
 
         var css = MudBlazorDesignTokenCssGenerator.Generate(options);
 
@@ -260,8 +261,10 @@ public class MudBlazorDesignTokenCssGeneratorTests
         Assert.Contains("--mud-palette-surface: var(--dnf-color-page-surface-surface)", css);
         Assert.Contains(".dnf-page-surface.mud-popover-open .mud-selected-item", css);
         Assert.Contains("color: var(--dnf-color-page-surface-content)", css);
-        Assert.DoesNotContain(".dnf-page-surface[class*=\"mud-button-filled\"]", css);
-        Assert.DoesNotContain(".dnf-brand-chrome[class*=\"mud-button-filled\"]", css);
+        Assert.Contains(":root .dnf-page-surface.mud-button-outlined", css);
+        Assert.Contains(":root .dnf-page-surface.mud-button-filled", css);
+        Assert.Contains("color: var(--dnf-color-secondary-action)", css);
+        Assert.Contains(":root .dnf-brand-chrome.mud-button-outlined", css);
     }
 
     [Fact]
