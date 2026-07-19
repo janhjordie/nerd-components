@@ -1,0 +1,323 @@
+{
+  "clientId": "dnf",
+  "brandId": "dnf",
+  "displayName": "DNF",
+  "prefix": "dnf",
+  "version": 2,
+  "brandIdentityVersion": "1.0.0",
+  "pairingGuideName": "DNF",
+  "updatedAt": "2026-07-18T20:16:01.526019+00:00",
+  "colors": {
+    "jord": {
+      "value": "#3B342E",
+      "light": null,
+      "dark": null,
+      "contrastText": "#FDFAF3",
+      "darkContrastText": null,
+      "surface": null,
+      "content": null,
+      "interactive": null,
+      "hover": "#36302A",
+      "active": null,
+      "border": null,
+      "disabled": null,
+      "description": null,
+      "roles": null
+    },
+    "ler": {
+      "value": "#6D5346",
+      "light": null,
+      "dark": null,
+      "contrastText": "#FDFAF3",
+      "darkContrastText": null,
+      "surface": null,
+      "content": null,
+      "interactive": null,
+      "hover": "#644C40",
+      "active": null,
+      "border": null,
+      "disabled": null,
+      "description": null,
+      "roles": null
+    },
+    "kridt": {
+      "value": "#E8E0D3",
+      "light": null,
+      "dark": null,
+      "contrastText": "#002D26",
+      "darkContrastText": null,
+      "surface": null,
+      "content": "#FDFAF3",
+      "interactive": null,
+      "hover": "#CCC5BA",
+      "active": null,
+      "border": null,
+      "disabled": null,
+      "description": null,
+      "roles": null
+    },
+    "kridt-lys": {
+      "value": "#FDFAF3",
+      "light": null,
+      "dark": null,
+      "contrastText": "#002D26",
+      "darkContrastText": null,
+      "surface": null,
+      "content": null,
+      "interactive": null,
+      "hover": "#DFDCD6",
+      "active": null,
+      "border": null,
+      "disabled": null,
+      "description": null,
+      "roles": null
+    },
+    "sol": {
+      "value": "#FE993F",
+      "light": null,
+      "dark": null,
+      "contrastText": "#002D26",
+      "darkContrastText": null,
+      "surface": null,
+      "content": null,
+      "interactive": null,
+      "hover": "#E08737",
+      "active": null,
+      "border": null,
+      "disabled": null,
+      "description": null,
+      "roles": null
+    },
+    "morgenrode": {
+      "value": "#FF5E63",
+      "light": null,
+      "dark": null,
+      "contrastText": "#002D26",
+      "darkContrastText": null,
+      "surface": null,
+      "content": null,
+      "interactive": null,
+      "hover": "#E05357",
+      "active": null,
+      "border": null,
+      "disabled": null,
+      "description": null,
+      "roles": null
+    },
+    "hav": {
+      "value": "#0C2E3A",
+      "light": null,
+      "dark": null,
+      "contrastText": "#FDFAF3",
+      "darkContrastText": null,
+      "surface": null,
+      "content": null,
+      "interactive": null,
+      "hover": "#0B2A35",
+      "active": null,
+      "border": null,
+      "disabled": null,
+      "description": null,
+      "roles": null
+    },
+    "himmel": {
+      "value": "#81ABFF",
+      "light": null,
+      "dark": null,
+      "contrastText": "#002D26",
+      "darkContrastText": null,
+      "surface": null,
+      "content": null,
+      "interactive": null,
+      "hover": "#7296E0",
+      "active": null,
+      "border": null,
+      "disabled": null,
+      "description": null,
+      "roles": null
+    },
+    "flod": {
+      "value": "#6BE6E4",
+      "light": null,
+      "dark": null,
+      "contrastText": "#002D26",
+      "darkContrastText": null,
+      "surface": null,
+      "content": null,
+      "interactive": null,
+      "hover": "#5ECAC9",
+      "active": null,
+      "border": null,
+      "disabled": null,
+      "description": null,
+      "roles": null
+    },
+    "skov": {
+      "value": "#002D26",
+      "light": null,
+      "dark": null,
+      "contrastText": "#FDFAF3",
+      "darkContrastText": null,
+      "surface": null,
+      "content": null,
+      "interactive": null,
+      "hover": "#002923",
+      "active": null,
+      "border": null,
+      "disabled": null,
+      "description": null,
+      "roles": null
+    },
+    "blad": {
+      "value": "#0E4D3A",
+      "light": null,
+      "dark": null,
+      "contrastText": "#FDFAF3",
+      "darkContrastText": null,
+      "surface": null,
+      "content": null,
+      "interactive": null,
+      "hover": "#0D4735",
+      "active": null,
+      "border": null,
+      "disabled": null,
+      "description": null,
+      "roles": null
+    },
+    "graes": {
+      "value": "#A6E54C",
+      "light": null,
+      "dark": null,
+      "contrastText": "#002D26",
+      "darkContrastText": null,
+      "surface": null,
+      "content": null,
+      "interactive": null,
+      "hover": "#92CA43",
+      "active": null,
+      "border": null,
+      "disabled": null,
+      "description": null,
+      "roles": null
+    }
+  },
+  "aliases": {
+    "primary-action": "himmel",
+    "page-surface": "kridt-lys",
+    "brand-chrome": "skov",
+    "on-brand-chrome": "kridt-lys",
+    "muted-content": "hav",
+    "info": "flod",
+    "highlight": "sol",
+    "danger": "morgenrode",
+    "success": "graes"
+  },
+  "radii": {},
+  "shadows": {},
+  "recipes": {
+    "kridt-himmel": {
+      "surface": "kridt",
+      "content": "skov",
+      "action": "himmel",
+      "border": "himmel",
+      "label": "Kridt card",
+      "usage": "Default card with skov text and himmel action"
+    },
+    "hero": {
+      "surface": "kridt-lys",
+      "content": "skov",
+      "action": "himmel",
+      "border": null,
+      "label": "Hero surface",
+      "usage": "Light hero with skov headline"
+    },
+    "cta-strip": {
+      "surface": "skov",
+      "content": "kridt",
+      "action": "sol",
+      "border": null,
+      "label": "CTA strip",
+      "usage": "Skov strip with kridt text and sol action"
+    },
+    "link-card": {
+      "surface": "kridt",
+      "content": "skov",
+      "action": "hav",
+      "border": null,
+      "label": "Link card",
+      "usage": "Kridt card with skov content"
+    },
+    "footer": {
+      "surface": "jord",
+      "content": "kridt",
+      "action": "himmel",
+      "border": null,
+      "label": "Footer",
+      "usage": "Dark jord footer with kridt text"
+    }
+  },
+  "opacities": {
+    "watermark": {
+      "baseToken": "skov",
+      "opacity": 0.12
+    },
+    "hero-overlay": {
+      "baseToken": "jord",
+      "opacity": 0.35
+    }
+  },
+  "approvedPairings": [
+    {
+      "content": "kridt",
+      "surface": "jord"
+    },
+    {
+      "content": "kridt",
+      "surface": "ler"
+    },
+    {
+      "content": "kridt",
+      "surface": "hav"
+    },
+    {
+      "content": "kridt",
+      "surface": "skov"
+    },
+    {
+      "content": "kridt",
+      "surface": "blad"
+    },
+    {
+      "content": "skov",
+      "surface": "kridt"
+    },
+    {
+      "content": "skov",
+      "surface": "kridt-lys"
+    },
+    {
+      "content": "skov",
+      "surface": "sol"
+    },
+    {
+      "content": "skov",
+      "surface": "morgenrode"
+    },
+    {
+      "content": "skov",
+      "surface": "himmel"
+    },
+    {
+      "content": "skov",
+      "surface": "flod"
+    },
+    {
+      "content": "skov",
+      "surface": "graes"
+    }
+  ],
+  "lockedTokens": [
+    "skov",
+    "kridt"
+  ]
+}

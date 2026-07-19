@@ -29,21 +29,30 @@ public static partial class NerdTypographyAccessibilityTools
 
     public static IReadOnlyList<NerdTypographyRole> GetConfiguredRoles(MudTheme theme) =>
     [
-        new("Default", theme.Typography.Default.FontSize, theme.Typography.Default.LineHeight, theme.Typography.Default.LetterSpacing, Typo.body1, 16),
-        new("H1", theme.Typography.H1.FontSize, theme.Typography.H1.LineHeight, theme.Typography.H1.LetterSpacing, Typo.h1, 24),
-        new("H2", theme.Typography.H2.FontSize, theme.Typography.H2.LineHeight, theme.Typography.H2.LetterSpacing, Typo.h2, 21),
-        new("H3", theme.Typography.H3.FontSize, theme.Typography.H3.LineHeight, theme.Typography.H3.LetterSpacing, Typo.h3, 18),
-        new("H4", theme.Typography.H4.FontSize, theme.Typography.H4.LineHeight, theme.Typography.H4.LetterSpacing, Typo.h4, 16),
-        new("H5", theme.Typography.H5.FontSize, theme.Typography.H5.LineHeight, theme.Typography.H5.LetterSpacing, Typo.h5, 14),
-        new("H6", theme.Typography.H6.FontSize, theme.Typography.H6.LineHeight, theme.Typography.H6.LetterSpacing, Typo.h6, 14),
-        new("Subtitle1", theme.Typography.Subtitle1.FontSize, theme.Typography.Subtitle1.LineHeight, theme.Typography.Subtitle1.LetterSpacing, Typo.subtitle1, 16),
-        new("Subtitle2", theme.Typography.Subtitle2.FontSize, theme.Typography.Subtitle2.LineHeight, theme.Typography.Subtitle2.LetterSpacing, Typo.subtitle2, 14),
-        new("Body1", theme.Typography.Body1.FontSize, theme.Typography.Body1.LineHeight, theme.Typography.Body1.LetterSpacing, Typo.body1, 16),
-        new("Body2", theme.Typography.Body2.FontSize, theme.Typography.Body2.LineHeight, theme.Typography.Body2.LetterSpacing, Typo.body2, 14),
-        new("Button", theme.Typography.Button.FontSize, theme.Typography.Button.LineHeight, theme.Typography.Button.LetterSpacing, Typo.button, 14),
-        new("Caption", theme.Typography.Caption.FontSize, theme.Typography.Caption.LineHeight, theme.Typography.Caption.LetterSpacing, Typo.caption, 12),
-        new("Overline", theme.Typography.Overline.FontSize, theme.Typography.Overline.LineHeight, theme.Typography.Overline.LetterSpacing, Typo.overline, 10)
+        CreateRole("Default", theme.Typography.Default, Typo.body1),
+        CreateRole("H1", theme.Typography.H1, Typo.h1),
+        CreateRole("H2", theme.Typography.H2, Typo.h2),
+        CreateRole("H3", theme.Typography.H3, Typo.h3),
+        CreateRole("H4", theme.Typography.H4, Typo.h4),
+        CreateRole("H5", theme.Typography.H5, Typo.h5),
+        CreateRole("H6", theme.Typography.H6, Typo.h6),
+        CreateRole("Subtitle1", theme.Typography.Subtitle1, Typo.subtitle1),
+        CreateRole("Subtitle2", theme.Typography.Subtitle2, Typo.subtitle2),
+        CreateRole("Body1", theme.Typography.Body1, Typo.body1),
+        CreateRole("Body2", theme.Typography.Body2, Typo.body2),
+        CreateRole("Button", theme.Typography.Button, Typo.button),
+        CreateRole("Caption", theme.Typography.Caption, Typo.caption),
+        CreateRole("Overline", theme.Typography.Overline, Typo.overline)
     ];
+
+    private static NerdTypographyRole CreateRole(string role, BaseTypography typography, Typo typo) =>
+        new(
+            role,
+            FontSizeOrDefault(typography.FontSize),
+            typography.LineHeight,
+            typography.LetterSpacing,
+            typo,
+            WcagStandards.GetTypographyRoleMinimumPixels(role));
 
     public static IReadOnlyList<NerdTypographyAccessibilityResult> CheckAccessibility(
         NerdResponsiveTypographyOptions options)
@@ -53,8 +62,10 @@ public static partial class NerdTypographyAccessibilityTools
             ? DefaultWcagVersion
             : options.WcagVersion;
         var theme = options.CreatePreviewTheme();
+        var configuredRoles = options.Typography.ConfiguredRoles;
 
         return GetConfiguredRoles(theme)
+            .Where(role => configuredRoles.Contains(role.Role))
             .Select(role => Evaluate(role, wcagVersion))
             .ToArray();
     }
@@ -72,7 +83,7 @@ public static partial class NerdTypographyAccessibilityTools
             }
 
             var message = !result.MeetsMinimumSize
-                ? $"Minimum size {(result.MinimumPixels?.ToString("0.#") ?? "unknown")}px is below WCAG {result.WcagVersion} recommended {result.RequiredMinimumPixels:0.#}px."
+                ? $"Minimum size {(result.MinimumPixels?.ToString("0.#") ?? "unknown")}px is below WCAG {result.WcagVersion} storyboard floor ({WcagStandards.GetTypographyRoleMinimumLabel(result.Role)})."
                 : !result.MeetsResizeGuidance
                     ? $"Font size '{result.FontSize}' should use relative units for WCAG {result.WcagVersion} resize guidance."
                     : !result.MeetsLineHeightGuidance
@@ -116,6 +127,9 @@ public static partial class NerdTypographyAccessibilityTools
                value.Contains('%') ||
                value.StartsWith("clamp(", StringComparison.OrdinalIgnoreCase);
     }
+
+    private static string FontSizeOrDefault(string? fontSize) =>
+        string.IsNullOrWhiteSpace(fontSize) ? "1rem" : fontSize;
 
     private static NerdTypographyAccessibilityResult Evaluate(
         NerdTypographyRole role,

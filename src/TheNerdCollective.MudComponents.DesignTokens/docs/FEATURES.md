@@ -173,13 +173,53 @@ Annotationer på tokens: “brug ikke til body text”, “CTA only”.
 
 ## Prioriteret MVP (næste 3 sprints)
 
-1. Token packs (JSON) + client save/load  
+1. Token packs (JSON) + client save/load — **leveret (HR-084–092)**
 2. Live Token Studio (basic) + dual preview  
 3. Portal-aware pickers + Recipe Composer  
 4. Figma/Tokens Studio export + CI accessibility gate  
+
+## JSON-first brand UX (HR-084–092)
+
+- **Schema v2** (`token-pack.schema.json`): `brandId`, `displayName`, `approvedPairings`, `lockedTokens`, recipe metadata.
+- **Reference packs**: `reference/brands/{tnc,dnf,acme,demo}.token-pack.json` — embedded i `DesignTokens`; `Brand.*` loader via `NerdEmbeddedBrandPack`.
+- **Import**: colors catalog + **Brand workbook** (`/nerd-brand-workbook`) med `NerdTokenPackImporter` og valideringsfeedback.
+- **Workbook wizard**: palette → aliases → recipes/templates → export JSON.
+- **Preview templates**: `NerdBrandPreviewTemplates` (hero, card, form-strip) i workbook og recipes studio.
+- **Locked tokens**: `lockedTokens` i pack; studio blokerer Apply + viser badge.
+
+## Næste backlog (HR-093–097) — leveret
+
+- Workbook **redigerer** palette, aliases, recipes og pairings (HR-093, HR-097)
+- Hub drag-drop import via `INerdBrandPackImportSink` (HR-094)
+- Schema validation ved import + reference-pack tests (HR-096)
+- Playwright matrix inkl. workbook navigation (HR-095)
 
 ## Succeskriterier
 
 - En UX’er kan oprette og gemme et klient-brand uden C#
 - En frontend kan kopiere snippeds og stole på PlayBook-farver (inkl. pickers)
-- Et designteam kan eksportere til Figma/Stitch uden manuel mapping
+- Et designteam kan eksportere til Stitch/Tokens Studio JSON uden manuel mapping (Figma-plugin er ikke krav)
+
+---
+
+## Mud Token Studio (vision — HR-098–110)
+
+**Positionering:** MudBlazor-native token studio. Tokens + recipes er det vigtige; direkte Figma-integration er bevidst udenfor scope.
+
+| # | Feature | Prioritet |
+|---|---------|-----------|
+| 21 | **Full token taxonomy** — spacing, motion, breakpoints, z-index, border-width som hierarkisk træ | 🔥 P1 |
+| 22 | **Token tree navigator** — sidebar med grupper, søg, jump-to-token | ⭐ P2 |
+| 23 | **Spacing scale generator** — base + ratio → MudStack/MudGrid preview | ⭐ P2 |
+| 24 | **Breakpoint tokens** — xs–xl koblet til typography + MudBlazor breakpoints | ⭐ P2 |
+| 25 | **Motion tokens** — duration/easing med transition preview | 💡 P3 |
+| 26 | **Token transforms** — lighten/darken/alpha/math på references | ⭐ P2 |
+| 27 | **Theme sets** — light/dark som first-class token sets i pack | ⭐ P2 |
+| 28 | **Recipe semantic layer** — recipes i træet som semantic tokens | 🔥 P1 |
+| 29 | **DTCG format** — W3C Design Tokens import/export | ⭐ P2 |
+| 30 | **Token docs panel** — description, usage, do/don’t per token | 💡 P3 |
+| 31 | **Naming linter** — CI/catalog struktur- og navngivningschecks | 💡 P3 |
+| 32 | **Alias chain UI** — visuel `alias → target → hex` i træet | ⭐ P2 |
+| 33 | **Multi-export pipeline** — én dialog, flere formater pr. gruppe | 💡 P3 |
+
+*Tokens Studio bruges som inspirationskilde for modellering og UX — ikke som integrationsmål.*

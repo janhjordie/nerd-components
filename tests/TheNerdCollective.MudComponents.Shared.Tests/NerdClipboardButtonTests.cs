@@ -11,7 +11,7 @@ public class NerdClipboardButtonTests : MudComponentTestContext
     {
         Services.AddScoped<NerdClipboardService>();
 
-        var cut = RenderComponent<NerdClipboardButton>(parameters => parameters
+        var cut = Render<NerdClipboardButton>(parameters => parameters
             .Add(p => p.Text, ".demo-forest")
             .Add(p => p.Label, "Copy class"));
 

@@ -1,3 +1,4 @@
+using TheNerdCollective.Brand.Dnf;
 using TheNerdCollective.MudComponents.DesignTokens;
 using TheNerdCollective.MudComponents.Shared;
 
@@ -52,7 +53,16 @@ public class NerdDnfDesignTokenPresetsTests
                 "kridt", "kridt-lys", "ler", "morgenrode", "skov", "sol"
             ],
             options.Colors.Keys.OrderBy(name => name, StringComparer.Ordinal));
-        Assert.Single(options.Recipes);
+        Assert.Equal(5, options.Recipes.Count);
+        Assert.Equal(9, options.Aliases.Count);
+        Assert.Equal(2, options.Opacities.Count);
+        Assert.Contains("watermark", options.Opacities.Keys);
+        Assert.Contains("hero-overlay", options.Opacities.Keys);
+        Assert.Contains("kridt-himmel", options.Recipes.Keys);
+        Assert.Contains("hero", options.Recipes.Keys);
+        Assert.Contains("cta-strip", options.Recipes.Keys);
+        Assert.Contains("link-card", options.Recipes.Keys);
+        Assert.Contains("footer", options.Recipes.Keys);
         Assert.Equal("kridt", options.Recipes["kridt-himmel"].Surface);
         Assert.Equal("skov", options.Recipes["kridt-himmel"].Content);
         Assert.Equal("himmel", options.Recipes["kridt-himmel"].Action);
@@ -65,6 +75,30 @@ public class NerdDnfDesignTokenPresetsTests
             Assert.Contains($".dnf-{tokenName}", css);
         }
         Assert.Contains(".dnf-recipe-kridt-himmel", css);
+        Assert.Contains(".dnf-recipe-hero", css);
+        Assert.Contains(".dnf-recipe-footer", css);
+    }
+
+    [Fact]
+    public void Dnf_preset_passes_wcag_aa_accessibility_gate()
+    {
+        var options = new NerdDesignTokenOptions { Prefix = "dnf" };
+        NerdDnfDesignTokenPresets.Apply(options);
+
+        var exception = Record.Exception(() => NerdDesignTokenTools.AssertAccessibilityCompliance(options));
+        Assert.Null(exception);
+    }
+
+    [Fact]
+    public void AssertAccessibilityCompliance_throws_for_failing_token()
+    {
+        var options = new NerdDesignTokenOptions { Prefix = "dnf" };
+        options.Add("bad", new NerdColorToken { Value = "#777777", ContrastText = "#888888" });
+
+        var exception = Assert.Throws<InvalidOperationException>(
+            () => NerdDesignTokenTools.AssertAccessibilityCompliance(options));
+
+        Assert.Contains("accessibility gate failed", exception.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Theory]

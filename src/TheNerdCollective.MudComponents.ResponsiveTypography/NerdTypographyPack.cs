@@ -5,6 +5,9 @@ namespace TheNerdCollective.MudComponents.ResponsiveTypography;
 public sealed class NerdTypographyPack
 {
     public string ClientId { get; init; } = "default";
+    public string? BrandId { get; init; }
+    public string? DisplayName { get; init; }
+    public string? BrandIdentityVersion { get; init; }
     public Dictionary<string, string> Roles { get; init; } = new(StringComparer.OrdinalIgnoreCase);
     public string? LineHeight { get; init; }
     public string? LetterSpacing { get; init; }
@@ -36,16 +39,29 @@ public sealed class NerdTypographyPack
         };
     }
 
+    public void ApplyTo(NerdResponsiveTypographyOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        ApplyTo(options.Typography);
+    }
+
+    public void ApplyTo(ResponsiveTypographyOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        foreach (var role in Roles)
+        {
+            typeof(ResponsiveTypographyOptions).GetProperty(role.Key)?.SetValue(options, role.Value);
+        }
+
+        options.LineHeight = LineHeight;
+        options.LetterSpacing = LetterSpacing;
+        options.FontWeight = FontWeight;
+    }
+
     public NerdResponsiveTypographyOptions ToOptions()
     {
         var options = new NerdResponsiveTypographyOptions();
-        foreach (var role in Roles)
-        {
-            typeof(ResponsiveTypographyOptions).GetProperty(role.Key)?.SetValue(options.Typography, role.Value);
-        }
-        options.Typography.LineHeight = LineHeight;
-        options.Typography.LetterSpacing = LetterSpacing;
-        options.Typography.FontWeight = FontWeight;
+        ApplyTo(options);
         return options;
     }
 

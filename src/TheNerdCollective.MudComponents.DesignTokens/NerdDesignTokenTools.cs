@@ -17,13 +17,21 @@ public static class NerdDesignTokenTools
         File.WriteAllText(path, MudBlazorDesignTokenCssGenerator.Generate(options));
     }
 
-    public static string ExportJson(NerdDesignTokenOptions options)
+    public static string ExportJson(NerdDesignTokenOptions options) =>
+        ExportPackJson(options);
+
+    public static string ExportPackJson(NerdDesignTokenOptions options, string clientId = "export") =>
+        NerdTokenPack.FromOptions(options, clientId).ToJson();
+
+    public static string ExportColorsJson(NerdDesignTokenOptions options)
     {
         ArgumentNullException.ThrowIfNull(options);
         return JsonSerializer.Serialize(options.Colors);
     }
 
-    public static string ExportStitchDesignMd(NerdDesignTokenOptions options)
+    public static string ExportStitchDesignMd(
+        NerdDesignTokenOptions options,
+        IReadOnlyDictionary<string, string>? typographyRoles = null)
     {
         ArgumentNullException.ThrowIfNull(options);
         var builder = new System.Text.StringBuilder("# Design tokens\n\n");
@@ -34,12 +42,91 @@ public static class NerdDesignTokenTools
             builder.AppendLine($"- **{pair.Key}**: `{pair.Value.Value}`");
         }
 
+        if (options.Aliases.Count > 0)
+        {
+            builder.AppendLine();
+            builder.AppendLine("## Aliases");
+            builder.AppendLine();
+            foreach (var pair in options.Aliases.OrderBy(pair => pair.Key, StringComparer.Ordinal))
+            {
+                builder.AppendLine($"- **{pair.Key}** → `{pair.Value}`");
+            }
+        }
+
+        if (options.Recipes.Count > 0)
+        {
+            builder.AppendLine();
+            builder.AppendLine("## Recipes");
+            builder.AppendLine();
+            foreach (var pair in options.Recipes.OrderBy(pair => pair.Key, StringComparer.Ordinal))
+            {
+                builder.AppendLine(
+                    $"- **{pair.Key}**: surface `{pair.Value.Surface}`, content `{pair.Value.Content}`, action `{pair.Value.Action ?? pair.Value.Surface}`");
+            }
+        }
+
+        if (options.Radii.Count > 0)
+        {
+            builder.AppendLine();
+            builder.AppendLine("## Radii");
+            builder.AppendLine();
+            foreach (var pair in options.Radii.OrderBy(pair => pair.Key, StringComparer.Ordinal))
+            {
+                builder.AppendLine($"- **{pair.Key}**: `{pair.Value}`");
+            }
+        }
+
+        if (options.Shadows.Count > 0)
+        {
+            builder.AppendLine();
+            builder.AppendLine("## Shadows");
+            builder.AppendLine();
+            foreach (var pair in options.Shadows.OrderBy(pair => pair.Key, StringComparer.Ordinal))
+            {
+                builder.AppendLine($"- **{pair.Key}**: `{pair.Value}`");
+            }
+        }
+
+        if (typographyRoles is { Count: > 0 })
+        {
+            builder.AppendLine();
+            builder.AppendLine("## Typography");
+            builder.AppendLine();
+            foreach (var pair in typographyRoles.OrderBy(pair => pair.Key, StringComparer.Ordinal))
+            {
+                builder.AppendLine($"- **{pair.Key}**: `{pair.Value}`");
+            }
+        }
+
         builder.AppendLine();
         builder.AppendLine("## Implementation notes");
         builder.AppendLine();
         builder.AppendLine("- Apply tokens as CSS classes with the configured prefix.");
         builder.AppendLine("- Preserve WCAG contrast between foreground and background.");
         return builder.ToString();
+    }
+
+    public static string ExportTokensStudioJson(NerdDesignTokenOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        var colorTokens = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+        foreach (var pair in options.Colors.OrderBy(pair => pair.Key, StringComparer.Ordinal))
+        {
+            colorTokens[pair.Key] = new Dictionary<string, string>
+            {
+                ["value"] = pair.Value.Value,
+                ["type"] = "color"
+            };
+        }
+
+        var payload = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["$schema"] = "https://tokens.studio/schemas/1.0.0",
+            ["prefix"] = options.Prefix,
+            ["color"] = colorTokens
+        };
+
+        return JsonSerializer.Serialize(payload, new JsonSerializerOptions { WriteIndented = true });
     }
 
     public static NerdDesignTokenOptions ImportJson(string json, string prefix = "nerd")
@@ -95,6 +182,60 @@ public static class NerdDesignTokenTools
         }
 
         return warnings;
+    }
+
+    public static void AssertAccessibilityCompliance(NerdDesignTokenOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        var warnings = GetAccessibilityWarnings(options);
+        if (warnings.Count == 0)
+        {
+            return;
+        }
+
+        var summary = string.Join(
+            Environment.NewLine,
+            warnings.Select(warning =>
+                $"{warning.TokenName} ({warning.Mode}): {warning.ContrastRatio:0.0}:1 < {warning.RequiredRatio:0.0}:1"));
+        throw new InvalidOperationException(
+            $"Design token accessibility gate failed with {warnings.Count} WCAG violation(s):{Environment.NewLine}{summary}");
+    }
+
+    public static IReadOnlyList<NerdContrastPairResult> BuildContrastMatrix(
+        NerdDesignTokenOptions options,
+        bool dark = false)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        var variables = NerdDesignTokenColorVariables.Build(options);
+        var tokenNames = options.Colors.Keys.OrderBy(name => name, StringComparer.Ordinal).ToArray();
+        var results = new List<NerdContrastPairResult>(tokenNames.Length * tokenNames.Length);
+
+        foreach (var foregroundName in tokenNames)
+        {
+            var foregroundToken = options.Colors[foregroundName];
+            var foregroundColor = dark
+                ? foregroundToken.Dark ?? foregroundToken.Light ?? foregroundToken.Value
+                : foregroundToken.Light ?? foregroundToken.Value;
+
+            foreach (var backgroundName in tokenNames)
+            {
+                var backgroundToken = options.Colors[backgroundName];
+                var backgroundColor = dark
+                    ? backgroundToken.Dark ?? backgroundToken.Light ?? backgroundToken.Value
+                    : backgroundToken.Light ?? backgroundToken.Value;
+                var ratio = NerdColorParser.ContrastRatio(backgroundColor, foregroundColor, variables);
+                results.Add(new NerdContrastPairResult(
+                    foregroundName,
+                    backgroundName,
+                    foregroundColor,
+                    backgroundColor,
+                    ratio,
+                    ratio >= AaNormalTextRatio,
+                    ratio >= AaaNormalTextRatio));
+            }
+        }
+
+        return results;
     }
 
     public static void LogAccessibilityWarnings(

@@ -1,0 +1,36 @@
+@using TheNerdCollective.MudComponents.Shared
+
+<MudStack Row="true" Spacing="1" Class="flex-wrap mb-2">
+    <MudButton Href="@Options.CatalogRoute"
+               Variant="@(Current == "colors" ? Variant.Filled : Variant.Outlined)"
+               Size="Size.Small"
+               Class="@(Current == "colors" ? Ui(NerdDesignSystemUi.BrandChrome) : Ui(NerdDesignSystemUi.MutedContent))">
+        Colors@(Options.Colors.Count > 0 ? $" ({Options.Colors.Count})" : "")
+    </MudButton>
+    <MudButton Href="@Options.RecipesCatalogRoute"
+               Variant="@(Current == "recipes" ? Variant.Filled : Variant.Outlined)"
+               Size="Size.Small"
+               Class="@(Current == "recipes" ? Ui(NerdDesignSystemUi.BrandChrome) : Ui(NerdDesignSystemUi.MutedContent))">
+        Recipes@(Options.Recipes.Count > 0 ? $" ({Options.Recipes.Count})" : "")
+    </MudButton>
+    <MudButton Href="@HubOptions.PlayBookRoute"
+               Variant="Variant.Text"
+               Size="Size.Small"
+               Class="@Ui(NerdDesignSystemUi.MutedContent)">
+        Layout kits
+    </MudButton>
+</MudStack>
+
+@code {
+    [Parameter, EditorRequired]
+    public NerdDesignTokenOptions Options { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public NerdDesignSystemOptions HubOptions { get; set; } = default!;
+
+    [Parameter]
+    public string Current { get; set; } = "colors";
+
+    private string Ui(string semanticAlias) =>
+        NerdDesignSystemUi.TokenClass(Options.Prefix, semanticAlias);
+}

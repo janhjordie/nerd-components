@@ -1,0 +1,324 @@
+@if (!IsAvailable)
+{
+    <MudContainer MaxWidth="MaxWidth.Medium" Class="my-8">
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Filled">
+            Design token recipes catalog is disabled or only available in Development.
+        </MudAlert>
+    </MudContainer>
+}
+else
+{
+    <NerdDesignSystemScripts />
+    <NerdCatalogThemeProvider IsDarkMode="_previewDark">
+        <NerdDesignTokenStyles />
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-6 pa-4" Style="@NerdDesignSystemUi.PageSurfaceStyle(Options.Prefix)">
+            <MudStack Spacing="3">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-3">
+                    <div>
+                        <MudText Typo="Typo.h4">Design token recipes</MudText>
+                        <MudText Typo="Typo.body2" Class="@Ui(NerdDesignSystemUi.MutedContent)">
+                            Surface + content + action pairings · Prefix <code>@Options.Prefix</code>
+                        </MudText>
+                    </div>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="flex-wrap" data-nerd-token="@Ui(NerdDesignSystemUi.PageSurface)">
+                        <MudSwitch @bind-Value="_previewDark" Label="Preview dark mode" />
+                        <MudSelect T="string" Value="_selectedBrand" ValueChanged="SwitchBrandAsync" Label="Brand" Style="min-width: 140px;">
+                            @foreach (var brandPack in InstalledBrandPacks)
+                            {
+                                <MudSelectItem Value="@brandPack.Id">@NerdBrandPackLabels.Format(brandPack)</MudSelectItem>
+                            }
+                        </MudSelect>
+                        <MudButton Href="@HubOptions.HubRoute" Variant="Variant.Text" Class="@Ui(NerdDesignSystemUi.MutedContent)">Design system</MudButton>
+                    </MudStack>
+                </MudStack>
+
+                <NerdDesignTokenCatalogNav Options="Options" HubOptions="HubOptions" Current="recipes" />
+
+                @if (_saveStatus is not null)
+                {
+                    <MudChip T="string" Color="Color.Success" Variant="Variant.Outlined">@_saveStatus</MudChip>
+                }
+
+                @if (HasBrandPairingGuide)
+                {
+                    <MudPaper Outlined="true" Class="pa-4">
+                        <MudText Typo="Typo.h6">@BrandGuideName godkendte par (identity guide)</MudText>
+                        <MudText Typo="Typo.caption" Class="@Ui(NerdDesignSystemUi.MutedContent)">
+                            Content on surface — fx skov on kridt, kridt on skov.
+                        </MudText>
+                        <MudGrid Spacing="2" Class="mt-2">
+                            @foreach (var pair in ActivePairingPolicy!.GetApprovedPairings())
+                            {
+                                var validation = ValidateApprovedPairing(pair.Content, pair.Surface);
+                                <MudItem xs="12" sm="6" md="4" lg="3">
+                                    <NerdPairingSurface Validation="validation" Variant="NerdPairingSurfaceVariant.Swatch">
+                                        <p class="nerd-pairing-swatch__title">
+                                            @pair.Content on @pair.Surface
+                                        </p>
+                                        <p class="nerd-pairing-swatch__meta">
+                                            WCAG @FormatRatio(validation.ContrastRatio)
+                                        </p>
+                                        <span class="nerd-pairing-swatch__badge" style="display:inline-block;margin-top:8px;padding:2px 8px;border:1px solid currentColor;border-radius:12px;font-size:.75rem;">
+                                            @(validation.MeetsAa ? "AA" : "Fail")
+                                        </span>
+                                    </NerdPairingSurface>
+                                </MudItem>
+                            }
+                        </MudGrid>
+                    </MudPaper>
+                }
+
+                @if (Options.Recipes.Count > 0)
+                {
+                    <MudPaper Outlined="true" Class="pa-4">
+                        <MudText Typo="Typo.h6">Named recipes</MudText>
+                        <MudText Typo="Typo.caption" Class="@Ui(NerdDesignSystemUi.MutedContent)">
+                            Reusable area classes: <code>.@Options.Prefix-recipe-*</code>
+                        </MudText>
+                        <MudGrid Spacing="2" Class="mt-2">
+                            @foreach (var recipe in Options.Recipes.OrderBy(pair => pair.Key, StringComparer.Ordinal))
+                            {
+                                var recipeClass = GetRecipeClassName(recipe.Key);
+                                <MudItem xs="12" sm="6" md="4">
+                                    <MudPaper Outlined="true"
+                                              Class="@($"pa-3 {recipeClass}")"
+                                              data-theme="@(_previewDark ? "dark" : "light")">
+                                        <MudText Typo="Typo.subtitle1" Style="color:inherit;">@recipe.Key</MudText>
+                                        <MudText Typo="Typo.caption" Style="color:inherit;">
+                                            @recipe.Value.Content on @recipe.Value.Surface
+                                            @if (recipe.Value.Action is not null)
+                                            {
+                                                <span> · action @recipe.Value.Action</span>
+                                            }
+                                        </MudText>
+                                        <code class="d-block mt-2">.@recipeClass</code>
+                                        @if (recipe.Value.Action is not null)
+                                        {
+                                            <MudButton Class="@($"{GetClassName(recipe.Value.Action)} mt-2")" Variant="Variant.Filled" Size="Size.Small">
+                                                @recipe.Value.Action
+                                            </MudButton>
+                                        }
+                                    </MudPaper>
+                                </MudItem>
+                            }
+                        </MudGrid>
+                    </MudPaper>
+                }
+
+                <MudPaper Outlined="true" Class="pa-4">
+                    <MudStack Spacing="2">
+                        <MudText Typo="Typo.h6">Live token studio</MudText>
+                        <MudText Typo="Typo.body2" Class="@Ui(NerdDesignSystemUi.MutedContent)">
+                            Edit one token value, preview it in a pairing (content on surface).
+                        </MudText>
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="flex-wrap">
+                            <MudSelect T="string" Value="_studioToken" ValueChanged="OnStudioTokenChanged" Label="Edit token">
+                                @foreach (var tokenName in TokenNames)
+                                {
+                                    <MudSelectItem Value="@tokenName">@tokenName</MudSelectItem>
+                                }
+                            </MudSelect>
+                            <MudColorPicker @bind-Text="_studioColor"
+                                            Label="Color picker"
+                                            ColorPickerMode="ColorPickerMode.HEX"
+                                            Variant="Variant.Outlined"
+                                            Style="min-width: 220px;" />
+                            <MudTextField @bind-Value="_studioColor" Label="Hex / RGB / HSL" Immediate="true" />
+                            <MudButton Variant="Variant.Filled" Class="@Ui(NerdDesignSystemUi.BrandChrome)" OnClick="ApplyStudioColorAsync" Disabled="@(string.IsNullOrWhiteSpace(_studioToken) || Options.IsTokenLocked(_studioToken))">
+                                Apply
+                            </MudButton>
+                            @if (!string.IsNullOrWhiteSpace(_studioToken) && Options.IsTokenLocked(_studioToken))
+                            {
+                                <MudChip T="string" Color="Color.Warning" Variant="Variant.Outlined">Locked by brand guide</MudChip>
+                            }
+                            <MudButton Variant="Variant.Outlined" OnClick="UndoStudioEditAsync" Disabled="@(!CanUndo)">Undo</MudButton>
+                            <MudButton Variant="Variant.Outlined" OnClick="RedoStudioEditAsync" Disabled="@(!CanRedo)">Redo</MudButton>
+                            <MudButton Variant="Variant.Outlined" Size="Size.Small" Class="@Ui(NerdDesignSystemUi.MutedContent)" OnClick="DownloadCssAsync">Export CSS</MudButton>
+                        </MudStack>
+                        @if (!string.IsNullOrWhiteSpace(_studioToken))
+                        {
+                            <MudDivider Class="my-2" />
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="flex-wrap">
+                                <MudSelect T="string" Value="_studioSurface" ValueChanged="OnStudioSurfaceChanged" Label="Surface">
+                                    @foreach (var tokenName in StudioSurfaceOptions)
+                                    {
+                                        <MudSelectItem Value="@tokenName">@tokenName</MudSelectItem>
+                                    }
+                                </MudSelect>
+                                <MudSelect T="string" Value="_studioContent" ValueChanged="OnStudioContentChanged" Label="Content">
+                                    @foreach (var tokenName in StudioContentOptions)
+                                    {
+                                        <MudSelectItem Value="@tokenName">@tokenName</MudSelectItem>
+                                    }
+                                </MudSelect>
+                                <MudSelect T="string" Value="_studioAction" ValueChanged="OnStudioActionChanged" Label="Action">
+                                    @foreach (var tokenName in StudioActionOptions)
+                                    {
+                                        <MudSelectItem Value="@tokenName">@tokenName</MudSelectItem>
+                                    }
+                                </MudSelect>
+                            </MudStack>
+                            <MudStack Row="true" Spacing="1" Class="flex-wrap">
+                                <MudChip T="string" Variant="Variant.Outlined">@StudioPairingLabel</MudChip>
+                                @if (HasBrandPairingGuide)
+                                {
+                                    <MudChip T="string" Color="@(StudioPairingValidation.IsBrandApproved ? Color.Success : Color.Warning)" Variant="Variant.Outlined">
+                                        @(StudioPairingValidation.IsBrandApproved ? $"{BrandGuideName} godkendt" : $"Ikke i {BrandGuideName}-guiden")
+                                    </MudChip>
+                                }
+                                <MudChip T="string" Color="@(StudioPairingValidation.MeetsAa ? Color.Success : Color.Error)" Variant="Variant.Outlined">
+                                    WCAG @FormatRatio(StudioPairingValidation.ContrastRatio) @(StudioPairingValidation.MeetsAa ? "AA" : "Fail")
+                                </MudChip>
+                            </MudStack>
+                            <NerdPairingSurface Class="pa-4"
+                                                Validation="StudioPairingValidation"
+                                                Variant="NerdPairingSurfaceVariant.Studio"
+                                                DataTheme="@(_previewDark ? "dark" : "light")">
+                                <p class="nerd-pairing-swatch__title">
+                                    @StudioPairingLabel
+                                </p>
+                                <p>
+                                    Body text preview on @_studioSurface with @_studioContent content.
+                                </p>
+                                <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="flex-wrap">
+                                    @if (StudioActionClassName is not null)
+                                    {
+                                        <MudButton Class="@StudioActionClassName" Variant="Variant.Filled">@_studioAction action</MudButton>
+                                    }
+                                    <MudButton Variant="Variant.Outlined">Outlined</MudButton>
+                                </MudStack>
+                                <MudStack Row="true" Spacing="2" Class="flex-wrap">
+                                    @ColorValue(StudioPairingValidation.SurfaceColor)
+                                    @ColorValue(StudioPairingValidation.ContentColor)
+                                </MudStack>
+                            </NerdPairingSurface>
+                            @if (!string.IsNullOrWhiteSpace(_studioToken))
+                            {
+                                <MudDivider Class="my-3" />
+                                <MudText Typo="Typo.h6">Layout templates</MudText>
+                                <NerdBrandPreviewTemplates Recipe="StudioPreviewRecipe"
+                                                           Validation="StudioPairingValidation"
+                                                           Prefix="Options.Prefix"
+                                                           RecipeName="@StudioPreviewRecipeName" />
+                            }
+                        }
+                    </MudStack>
+                </MudPaper>
+
+                <MudPaper Outlined="true" Class="pa-4">
+                    <MudStack Spacing="2">
+                        <MudText Typo="Typo.h6">Recipe composer</MudText>
+                        <MudStack Row="true" Spacing="2" Class="flex-wrap">
+                            <MudTextField @bind-Value="_recipeName" Label="Recipe name" Immediate="true" />
+                            <MudSelect T="string" Label="Surface" @bind-Value="_recipeSurface">
+                                @foreach (var tokenName in TokenNames)
+                                {
+                                    <MudSelectItem Value="@tokenName">@tokenName</MudSelectItem>
+                                }
+                            </MudSelect>
+                            <MudSelect T="string" Label="Content" @bind-Value="_recipeContent">
+                                @foreach (var tokenName in TokenNames)
+                                {
+                                    <MudSelectItem Value="@tokenName">@tokenName</MudSelectItem>
+                                }
+                            </MudSelect>
+                            <MudSelect T="string" Label="Action" @bind-Value="_recipeAction">
+                                @foreach (var tokenName in TokenNames)
+                                {
+                                    <MudSelectItem Value="@tokenName">@tokenName</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudStack>
+                        <code>.@ComposerClassName</code>
+                        <MudCard Class="@($"pa-4 {ComposerClassName}")"
+                                 Outlined="true"
+                                 data-theme="@(_previewDark ? "dark" : "light")">
+                            <MudText Style="color:inherit;" Typo="Typo.h6">@_recipeName recipe preview</MudText>
+                            <MudText Style="color:inherit;">@_recipeContent on @_recipeSurface</MudText>
+                            <MudButton Class="@GetClassName(_recipeAction)" Variant="Variant.Filled">@_recipeAction action</MudButton>
+                        </MudCard>
+                    </MudStack>
+                </MudPaper>
+
+                <MudPaper Outlined="true" Class="pa-4">
+                    <MudStack Spacing="2">
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-2">
+                            <MudText Typo="Typo.h6">Contrast pair matrix</MudText>
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="flex-wrap">
+                                <MudSwitch @bind-Value="_contrastDark" @bind-Value:after="RefreshContrastMatrix" Label="Dark mode pairs" />
+                                <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="@(() => _showContrastMatrix = !_showContrastMatrix)">
+                                    @(_showContrastMatrix ? "Hide matrix" : "Show matrix")
+                                </MudButton>
+                            </MudStack>
+                        </MudStack>
+                        @if (_showContrastMatrix)
+                        {
+                            <div style="overflow:auto; max-height: 420px;">
+                                <MudSimpleTable Dense="true" Bordered="true" Hover="true" Style="min-width: 720px;">
+                                    <thead>
+                                        <tr>
+                                            <th>Fg \ Bg</th>
+                                            @foreach (var backgroundName in TokenNames)
+                                            {
+                                                <th>@backgroundName</th>
+                                            }
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var foregroundName in TokenNames)
+                                        {
+                                            <tr>
+                                                <td><strong>@foregroundName</strong></td>
+                                                @foreach (var backgroundName in TokenNames)
+                                                {
+                                                    var pair = GetContrastPair(foregroundName, backgroundName);
+                                                    <td style="@($"background:{pair?.BackgroundColor}; color:{pair?.ForegroundColor};")">
+                                                        @if (pair is not null)
+                                                        {
+                                                            <span>@FormatRatio(pair.Ratio)</span>
+                                                            <span style="margin-left:.35rem; font-size:.7rem; font-weight:600;">
+                                                                @(pair.MeetsAaa ? "AAA" : pair.MeetsAa ? "AA" : "Fail")
+                                                            </span>
+                                                        }
+                                                    </td>
+                                                }
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </MudSimpleTable>
+                            </div>
+                        }
+                    </MudStack>
+                </MudPaper>
+
+                @if (_brandHealth is not null)
+                {
+                    <MudPaper Outlined="true" Class="pa-4">
+                        <MudStack Spacing="2">
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-2">
+                                <MudText Typo="Typo.h6">Brand health score</MudText>
+                                <MudChip T="string" Class="@Ui(_brandHealth.Score >= 80 ? NerdDesignSystemUi.Success : _brandHealth.Score >= 50 ? NerdDesignSystemUi.Highlight : NerdDesignSystemUi.Danger)" Variant="Variant.Filled">
+                                    @_brandHealth.Score / 100
+                                </MudChip>
+                            </MudStack>
+                            <MudGrid Spacing="2">
+                                @foreach (var metric in _brandHealth.Metrics)
+                                {
+                                    <MudItem xs="12" sm="6" md="3">
+                                        <MudPaper Outlined="true" Class="pa-3">
+                                            <MudText Typo="Typo.subtitle2">@metric.Name</MudText>
+                                            <MudText Typo="Typo.h5" Class="@Ui(metric.Score >= 80 ? NerdDesignSystemUi.Success : metric.Score >= 50 ? NerdDesignSystemUi.Highlight : NerdDesignSystemUi.Danger)">
+                                                @metric.Score
+                                            </MudText>
+                                            <MudText Typo="Typo.caption" Class="@Ui(NerdDesignSystemUi.MutedContent)">@metric.Detail</MudText>
+                                        </MudPaper>
+                                    </MudItem>
+                                }
+                            </MudGrid>
+                        </MudStack>
+                    </MudPaper>
+                }
+            </MudStack>
+        </MudContainer>
+    </NerdCatalogThemeProvider>
+}

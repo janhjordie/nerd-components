@@ -63,6 +63,8 @@ public sealed class ResponsiveTypographyRoleStyles
         }
     }
 
+    internal void Clear() => _roles.Clear();
+
     internal static readonly string[] RoleNames =
     [
         nameof(Default), nameof(H1), nameof(H2), nameof(H3), nameof(H4), nameof(H5), nameof(H6),

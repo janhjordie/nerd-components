@@ -51,7 +51,11 @@ resize-triggered render is involved.
 
 ## Visual catalog
 
-Register typography in DI and optionally enable the catalog page:
+Install the optional catalog package:
+
+```xml
+<PackageReference Include="TheNerdCollective.MudComponents.ResponsiveTypography.Catalog" />
+```
 
 ```csharp
 builder.Services.AddNerdResponsiveTypography(options =>

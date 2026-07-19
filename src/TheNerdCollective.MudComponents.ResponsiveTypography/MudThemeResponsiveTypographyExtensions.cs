@@ -17,38 +17,82 @@ public static class MudThemeResponsiveTypographyExtensions
         var options = new ResponsiveTypographyOptions();
         configure(options);
 
-        Apply(theme.Typography.Default, nameof(ResponsiveTypographyOptions.Default), options);
-        Apply(theme.Typography.H1, nameof(ResponsiveTypographyOptions.H1), options);
-        Apply(theme.Typography.H2, nameof(ResponsiveTypographyOptions.H2), options);
-        Apply(theme.Typography.H3, nameof(ResponsiveTypographyOptions.H3), options);
-        Apply(theme.Typography.H4, nameof(ResponsiveTypographyOptions.H4), options);
-        Apply(theme.Typography.H5, nameof(ResponsiveTypographyOptions.H5), options);
-        Apply(theme.Typography.H6, nameof(ResponsiveTypographyOptions.H6), options);
-        Apply(theme.Typography.Subtitle1, nameof(ResponsiveTypographyOptions.Subtitle1), options);
-        Apply(theme.Typography.Subtitle2, nameof(ResponsiveTypographyOptions.Subtitle2), options);
-        Apply(theme.Typography.Body1, nameof(ResponsiveTypographyOptions.Body1), options);
-        Apply(theme.Typography.Body2, nameof(ResponsiveTypographyOptions.Body2), options);
-        Apply(theme.Typography.Button, nameof(ResponsiveTypographyOptions.Button), options);
-        Apply(theme.Typography.Caption, nameof(ResponsiveTypographyOptions.Caption), options);
-        Apply(theme.Typography.Overline, nameof(ResponsiveTypographyOptions.Overline), options);
+        foreach (var (role, _, selector) in MudBlazorTypographyRoleMap.Roles)
+        {
+            Apply(selector(theme.Typography), role, options);
+        }
 
         return theme;
     }
 
-    private static void Apply(BaseTypography typography, string role, ResponsiveTypographyOptions options)
+    public static MudTheme UseResponsiveTypography(
+        this MudTheme theme,
+        ResponsiveTypographyOptions options)
     {
-        var fontSize = GetFontSize(options, role);
-        if (fontSize is null)
+        ArgumentNullException.ThrowIfNull(theme);
+        ArgumentNullException.ThrowIfNull(options);
+
+        foreach (var (role, _, selector) in MudBlazorTypographyRoleMap.Roles)
         {
-            return;
+            Apply(selector(theme.Typography), role, options);
         }
 
-        typography.FontSize = fontSize;
+        return theme;
+    }
+
+    internal static string? ResolveFontSize(ResponsiveTypographyOptions options, string role)
+    {
+        var explicitSize = GetFontSize(options, role);
+        if (explicitSize is not null)
+        {
+            return explicitSize;
+        }
+
+        if (!string.Equals(role, nameof(ResponsiveTypographyOptions.Default), StringComparison.Ordinal) &&
+            options.Default is not null)
+        {
+            return options.Default;
+        }
+
+        return null;
+    }
+
+    private static void Apply(BaseTypography typography, string role, ResponsiveTypographyOptions options)
+    {
+        var fontSize = ResolveFontSize(options, role);
+        if (fontSize is not null)
+        {
+            typography.FontSize = fontSize;
+        }
 
         var roleStyle = options.Roles.TryGet(role, out var style) ? style : null;
-        typography.LineHeight = roleStyle?.LineHeight ?? options.LineHeight ?? typography.LineHeight;
-        typography.LetterSpacing = roleStyle?.LetterSpacing ?? options.LetterSpacing ?? typography.LetterSpacing;
-        typography.FontWeight = roleStyle?.FontWeight ?? options.FontWeight ?? typography.FontWeight;
+
+        if (roleStyle?.LineHeight is not null)
+        {
+            typography.LineHeight = roleStyle.LineHeight;
+        }
+        else if (options.LineHeight is not null)
+        {
+            typography.LineHeight = options.LineHeight;
+        }
+
+        if (roleStyle?.LetterSpacing is not null)
+        {
+            typography.LetterSpacing = roleStyle.LetterSpacing;
+        }
+        else if (options.LetterSpacing is not null)
+        {
+            typography.LetterSpacing = options.LetterSpacing;
+        }
+
+        if (roleStyle?.FontWeight is not null)
+        {
+            typography.FontWeight = roleStyle.FontWeight;
+        }
+        else if (options.FontWeight is not null)
+        {
+            typography.FontWeight = options.FontWeight;
+        }
     }
 
     private static string? GetFontSize(ResponsiveTypographyOptions options, string role) => role switch

@@ -1,0 +1,327 @@
+@if (!IsAvailable)
+{
+    <MudContainer MaxWidth="MaxWidth.Medium" Class="my-8">
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Filled">
+            Responsive typography catalog is disabled or only available in Development.
+        </MudAlert>
+    </MudContainer>
+}
+else
+{
+    <NerdDesignSystemScripts />
+    <NerdResponsiveTypographyStyles />
+    <NerdCatalogThemeProvider Theme="_previewTheme" IsDarkMode="false">
+        @if (TokenOptions is not null)
+        {
+            <NerdDesignTokenStyles />
+        }
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="@($"my-6 {Ui(NerdDesignSystemUi.PageSurface)} pa-4")">
+            <MudStack Spacing="4">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-3">
+                    <div>
+                        <MudText Typo="Typo.h4">Responsive typography</MudText>
+                        <MudText Typo="Typo.body2" Class="@Ui(NerdDesignSystemUi.MutedContent)">
+                            CSS <code>clamp()</code> through <code>MudTheme.Typography</code> — no JS, no viewport service.
+                        </MudText>
+                    </div>
+                    <MudStack Row="true" Spacing="1" Class="flex-wrap">
+                        <MudButton Href="@HubOptions.HubRoute" Variant="Variant.Text">Design system</MudButton>
+                        <MudButton Href="@HubOptions.WcagGuideRoute" Variant="Variant.Text">WCAG guide</MudButton>
+                        <MudChip T="string" Class="@Ui(NerdDesignSystemUi.Info)" Variant="Variant.Outlined">@Options.CatalogRoute</MudChip>
+                    </MudStack>
+                </MudStack>
+
+                @if (_warnings.Count > 0)
+                {
+                    <MudAlert Class="@Ui(NerdDesignSystemUi.Danger)" Severity="Severity.Error" Variant="Variant.Filled">
+                        <MudText Typo="Typo.subtitle2" Class="mb-2">
+                            @_warnings.Count WCAG @Options.WcagVersion typography warning@(_warnings.Count == 1 ? "" : "s")
+                        </MudText>
+                        <MudStack Spacing="1">
+                            @foreach (var warning in _warnings)
+                            {
+                                <MudText Typo="Typo.body2">
+                                    <strong>@warning.Role</strong> (<code>@warning.FontSize</code>): @warning.Message
+                                </MudText>
+                            }
+                        </MudStack>
+                    </MudAlert>
+                }
+
+                <MudPaper Outlined="true" Class="pa-3">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3" Class="flex-wrap">
+                        <MudSwitch @bind-Value="_showAllRoles" Label="Show all roles" />
+                        <MudText Typo="Typo.caption">Viewport @_viewportWidth.ToString("0")px</MudText>
+                        <MudSlider @bind-Value="_viewportWidth" Min="320" Max="1920" Step="10" Style="max-width: 320px;" />
+                    </MudStack>
+                </MudPaper>
+
+                <MudTabs @bind-ActivePanelIndex="_activeTabIndex" Elevation="1" Rounded="true" ApplyEffectsToContainer="true">
+                    <MudTabPanel Text="Previews" Icon="@Icons.Material.Filled.Preview">
+                        <MudStack Spacing="3">
+                            <div>
+                                <MudText Typo="Typo.h6">Role previews</MudText>
+                                <MudText Typo="Typo.caption" Class="@Ui(NerdDesignSystemUi.MutedContent)">
+                                    Live preview constrained to the viewport slider (@_viewportWidth.ToString("0")px).
+                                </MudText>
+                            </div>
+
+                            @foreach (var role in VisibleRoles)
+                            {
+                                var accessibility = GetAccessibility(role.Role);
+
+                                <MudPaper Outlined="true" Class="pa-4">
+                                    <MudStack Spacing="2">
+                                        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-2">
+                                            <MudText Typo="Typo.h6">@role.Role</MudText>
+                                            <MudStack Row="true" Spacing="1" Class="flex-wrap">
+                                                @if (Options.Typography.ConfiguredRoles.Contains(role.Role))
+                                                {
+                                                    <MudChip T="string" Size="Size.Small" Class="@Ui(NerdDesignSystemUi.PrimaryAction)" Variant="Variant.Outlined">configured</MudChip>
+                                                }
+                                                <NerdClipboardButton Text="@role.FontSize" Label="Copy CSS" />
+                                                <NerdClipboardButton Text="@BuildRazorSnippet(role)" Label="Copy Razor" />
+                                                <NerdClipboardButton Text="@BuildOptionsSnippet(role)" Label="Copy Options" />
+                                                @if (accessibility is not null)
+                                                {
+                                                    <MudChip T="string" Size="Size.Small" Class="@Ui(accessibility.MeetsResizeGuidance ? NerdDesignSystemUi.Success : NerdDesignSystemUi.Danger)" Variant="Variant.Filled">
+                                                        WCAG @accessibility.WcagVersion resize @(accessibility.MeetsResizeGuidance ? "pass" : "fail")
+                                                    </MudChip>
+                                                    <MudChip T="string" Size="Size.Small" Class="@Ui(accessibility.MeetsMinimumSize ? NerdDesignSystemUi.Success : NerdDesignSystemUi.Highlight)" Variant="Variant.Outlined">
+                                                        Min @(accessibility.MinimumPixels?.ToString("0.#") ?? "?")px
+                                                    </MudChip>
+                                                    <MudChip T="string" Size="Size.Small" Class="@Ui(accessibility.MeetsLineHeightGuidance ? NerdDesignSystemUi.Success : NerdDesignSystemUi.Highlight)" Variant="Variant.Outlined">
+                                                        Line-height @(accessibility.MeetsLineHeightGuidance ? "pass" : "fail")
+                                                    </MudChip>
+                                                }
+                                            </MudStack>
+                                        </MudStack>
+
+                                        <MudText Typo="Typo.caption" Class="@Ui(NerdDesignSystemUi.MutedContent)">
+                                            <code>@role.FontSize</code> · computed @GetComputedSize(role) at @_viewportWidth.ToString("0")px
+                                            · phone @GetComputedSize(role, 375) · tablet @GetComputedSize(role, 768) · desktop @GetComputedSize(role, 1440)
+                                        </MudText>
+
+                                        <MudPaper Class="pa-4" Outlined="true" Style="@($"max-width:{_viewportWidth}px")">
+                                            <MudText Typo="@role.Typo">
+                                                The quick brown fox jumps over the lazy dog — @role.Role preview
+                                            </MudText>
+                                        </MudPaper>
+                                    </MudStack>
+                                </MudPaper>
+                            }
+                        </MudStack>
+                    </MudTabPanel>
+
+                    <MudTabPanel Text="Breakpoints" Icon="@Icons.Material.Filled.TableChart">
+                        <MudStack Spacing="4">
+                            <MudPaper Outlined="true" Class="pa-4">
+                                <MudStack Spacing="3">
+                                    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-2">
+                                        <div>
+                                            <MudText Typo="Typo.h6">Device frames</MudText>
+                                            <MudText Typo="Typo.caption" Class="@Ui(NerdDesignSystemUi.MutedContent)">
+                                                Same sample at phone / tablet / desktop — no browser resize needed.
+                                            </MudText>
+                                        </div>
+                                        <MudSelect T="string" @bind-Value="_deviceSampleRole" Label="Sample role" Style="max-width: 220px;">
+                                            @foreach (var role in VisibleRoles)
+                                            {
+                                                <MudSelectItem Value="@role.Role">@role.Role</MudSelectItem>
+                                            }
+                                        </MudSelect>
+                                        <MudTextField T="string" @bind-Value="_deviceSampleText" Label="Sample text" Immediate="true" Style="min-width: 260px;" />
+                                    </MudStack>
+
+                                    @{
+                                        var sampleRole = GetRole(_deviceSampleRole);
+                                    }
+                                    @if (sampleRole is not null)
+                                    {
+                                        <MudText Typo="Typo.caption" Class="@Ui(NerdDesignSystemUi.MutedContent)">
+                                            <code>@sampleRole.FontSize</code>
+                                            @if (!string.IsNullOrWhiteSpace(DeviceSampleSnippet))
+                                            {
+                                                <text> · </text>
+                                                <NerdClipboardButton Text="@DeviceSampleSnippet" Label="Copy Razor" />
+                                            }
+                                        </MudText>
+
+                                        <MudStack Row="true" Spacing="3" Class="flex-wrap" AlignItems="AlignItems.Start">
+                                            @foreach (var device in DeviceFrames)
+                                            {
+                                                <MudPaper Outlined="true" Class="pa-3" Style="@($"width:min(100%,{Math.Min(device.Width, 420)}px)")">
+                                                    <MudStack Spacing="2">
+                                                        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                                                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@device.Label</MudChip>
+                                                            <MudText Typo="Typo.caption">@device.Width.ToString("0")px · @GetComputedSize(sampleRole, device.Width)</MudText>
+                                                        </MudStack>
+                                                        <div style="@($"width:{device.Width}px;max-width:100%;overflow:hidden;border:1px dashed var(--mud-palette-lines-default);padding:0.75rem;")">
+                                                            <MudText Typo="@sampleRole.Typo">
+                                                                @_deviceSampleText — @device.Label
+                                                            </MudText>
+                                                        </div>
+                                                    </MudStack>
+                                                </MudPaper>
+                                            }
+                                        </MudStack>
+                                    }
+                                </MudStack>
+                            </MudPaper>
+
+                            <MudPaper Outlined="true" Class="pa-4">
+                                <MudStack Spacing="2">
+                                    <div>
+                                        <MudText Typo="Typo.h6">Breakpoint comparison</MudText>
+                                        <MudText Typo="Typo.caption" Class="@Ui(NerdDesignSystemUi.MutedContent)">
+                                            Computed pixel sizes from <code>clamp()</code> at common viewports.
+                                        </MudText>
+                                    </div>
+                                    <MudTable Items="VisibleRoles.ToList()" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" Style="overflow-x:auto;">
+                                        <HeaderContent>
+                                            <MudTh>Role</MudTh>
+                                            <MudTh>clamp()</MudTh>
+                                            @foreach (var width in BreakpointColumns)
+                                            {
+                                                <MudTh>@width.ToString("0")</MudTh>
+                                            }
+                                        </HeaderContent>
+                                        <RowTemplate>
+                                            <MudTd DataLabel="Role"><strong>@context.Role</strong></MudTd>
+                                            <MudTd DataLabel="clamp()"><code style="font-size:0.75rem;">@context.FontSize</code></MudTd>
+                                            @foreach (var width in BreakpointColumns)
+                                            {
+                                                <MudTd DataLabel="@($"{width}px")">@GetComputedSize(context, width)</MudTd>
+                                            }
+                                        </RowTemplate>
+                                    </MudTable>
+                                </MudStack>
+                            </MudPaper>
+
+                            <MudPaper Outlined="true" Class="pa-4">
+                                <MudStack Spacing="2">
+                                    <MudText Typo="Typo.h6">Type scale curve</MudText>
+                                    <MudText Typo="Typo.caption" Class="@Ui(NerdDesignSystemUi.MutedContent)">
+                                        Relative role sizes at the selected viewport, compared with a 320px baseline.
+                                    </MudText>
+                                    @foreach (var role in VisibleRoles)
+                                    {
+                                        var current = NerdClampEvaluator.EvaluateAtViewport(role.FontSize, _viewportWidth) ?? 0;
+                                        var baseline = NerdClampEvaluator.EvaluateAtViewport(role.FontSize, 320) ?? 0;
+                                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                            <MudText Style="width:80px;flex-shrink:0">@role.Role</MudText>
+                                            <div style="flex:1;min-width:120px;background:var(--mud-palette-background-grey);height:14px;border-radius:7px;position:relative;">
+                                                <div style="@($"width:{FormatCssPercent(GetCurveWidth(current))};height:14px;border-radius:7px;")" class="@Ui(NerdDesignSystemUi.PrimaryAction)"></div>
+                                                <div title="@($"320px baseline: {FormatCssLength(baseline, "px")}")" style="@($"position:absolute;left:{FormatCssPercent(GetCurveWidth(baseline))};top:-3px;width:2px;height:20px;")" class="@Ui(NerdDesignSystemUi.MutedContent)"></div>
+                                            </div>
+                                            <MudText Typo="Typo.caption" Style="width:180px;flex-shrink:0">
+                                                @FormatCssLength(baseline, "px") baseline → @FormatCssLength(current, "px")
+                                            </MudText>
+                                        </MudStack>
+                                    }
+                                </MudStack>
+                            </MudPaper>
+                        </MudStack>
+                    </MudTabPanel>
+
+                    <MudTabPanel Text="Editor" Icon="@Icons.Material.Filled.Tune">
+                        <MudStack Spacing="4">
+                            <MudPaper Outlined="true" Class="pa-4">
+                                <MudStack Spacing="2">
+                                    <MudText Typo="Typo.h6">Live clamp editor</MudText>
+                                    <MudText Typo="Typo.caption" Class="@Ui(NerdDesignSystemUi.MutedContent)">
+                                        Tune minimum, preferred viewport value and maximum for a configured role.
+                                    </MudText>
+                                    <MudSelect T="string" Value="_editorRole" ValueChanged="OnEditorRoleChanged" Label="Role" Style="max-width: 220px;">
+                                        @foreach (var role in VisibleRoles)
+                                        {
+                                            <MudSelectItem Value="@role.Role">@role.Role</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                    <MudSlider @bind-Value="_editorMinimum" Min="8" Max="64" Step="1" Immediate="true">
+                                        Minimum @_editorMinimum.ToString("0.#")px
+                                    </MudSlider>
+                                    <MudSlider @bind-Value="_editorPreferred" Min="0.5" Max="8" Step="0.1" Immediate="true">
+                                        Preferred @_editorPreferred.ToString("0.#")vw
+                                    </MudSlider>
+                                    <MudSlider @bind-Value="_editorMaximum" Min="16" Max="96" Step="1" Immediate="true">
+                                        Maximum @_editorMaximum.ToString("0.#")px
+                                    </MudSlider>
+                                    <MudText Typo="Typo.h5" Style="@($"font-size:{EditorClamp}")">
+                                        Live typography preview (@_editorRole)
+                                    </MudText>
+                                    <code>@EditorClamp</code>
+                                    <MudButton Variant="Variant.Outlined" Class="@Ui(NerdDesignSystemUi.PrimaryAction)" OnClick="ApplyEditorToRole">
+                                        Apply to @_editorRole
+                                    </MudButton>
+                                </MudStack>
+                            </MudPaper>
+
+                            <MudPaper Outlined="true" Class="pa-4">
+                                <MudStack Spacing="2">
+                                    <MudText Typo="Typo.h6">Modular scale generator</MudText>
+                                    <MudStack Row="true" Spacing="2" Class="flex-wrap">
+                                        <MudNumericField @bind-Value="_scaleBaseRem" Label="Base (rem)" Min="0.5" Max="4" Step="0.125" Immediate="true" />
+                                        <MudNumericField @bind-Value="_scaleRatio" Label="Ratio" Min="1.05" Max="2" Step="0.05" Immediate="true" />
+                                        <MudButton Variant="Variant.Outlined" Class="@Ui(NerdDesignSystemUi.PrimaryAction)" OnClick="RefreshModularScalePreview">Preview scale</MudButton>
+                                        <MudButton Variant="Variant.Filled" Class="@Ui(NerdDesignSystemUi.PrimaryAction)" OnClick="ApplyModularScaleToPreview">Apply to preview</MudButton>
+                                    </MudStack>
+                                    <MudSimpleTable Dense="true" Bordered="true" Hover="true">
+                                        <thead><tr><th>Role</th><th>Clamp</th></tr></thead>
+                                        <tbody>
+                                            @foreach (var pair in _scalePreview)
+                                            {
+                                                <tr>
+                                                    <td>@pair.Key</td>
+                                                    <td><code>@pair.Value</code></td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </MudSimpleTable>
+                                </MudStack>
+                            </MudPaper>
+                        </MudStack>
+                    </MudTabPanel>
+
+                    <MudTabPanel Text="Packs" Icon="@Icons.Material.Filled.FolderOpen">
+                        <MudStack Spacing="3">
+                            <MudText Typo="Typo.body2" Class="@Ui(NerdDesignSystemUi.MutedContent)">
+                                Save, load and exchange typography packs as JSON (client overrides or Tokens Studio).
+                            </MudText>
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="flex-wrap">
+                                <MudTextField @bind-Value="_clientId" Label="ClientId" Immediate="true" />
+                                <MudButton Variant="Variant.Filled" Class="@Ui(NerdDesignSystemUi.PrimaryAction)" OnClick="SaveClientPackAsync"
+                                           Disabled="@(!Entitlements.CanSaveAnotherPack(_packIds.Count))">
+                                    Gem som klient
+                                </MudButton>
+                                @if (_packIds.Count > 0)
+                                {
+                                    <MudSelect T="string" Label="Saved packs" @bind-Value="_selectedPackId" Style="min-width: 180px;">
+                                        @foreach (var packId in _packIds)
+                                        {
+                                            <MudSelectItem Value="@packId">@packId</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                    <MudButton Variant="Variant.Outlined" Class="@Ui(NerdDesignSystemUi.PrimaryAction)" OnClick="LoadClientPackAsync">
+                                        Indlæs
+                                    </MudButton>
+                                }
+                                @if (_saveStatus is not null)
+                                {
+                                    <MudChip T="string" Class="@Ui(NerdDesignSystemUi.Success)" Variant="Variant.Outlined">@_saveStatus</MudChip>
+                                }
+                            </MudStack>
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="flex-wrap">
+                                <MudButton Variant="Variant.Outlined" Class="@Ui(NerdDesignSystemUi.PrimaryAction)" OnClick="DownloadTokensStudioAsync">
+                                    Export Tokens Studio
+                                </MudButton>
+                                <InputFile OnChange="ImportTokensStudioAsync" accept=".json,application/json" class="@($"mud-button-root mud-button mud-button-outlined mud-ripple {Ui(NerdDesignSystemUi.PrimaryAction)}")" style="width:auto;padding:.375rem .75rem;" />
+                            </MudStack>
+                            <NerdCatalogUpgradePromptSection Show="@(!Entitlements.CanSaveClientPacks())" />
+                        </MudStack>
+                    </MudTabPanel>
+                </MudTabs>
+            </MudStack>
+        </MudContainer>
+    </NerdCatalogThemeProvider>
+}

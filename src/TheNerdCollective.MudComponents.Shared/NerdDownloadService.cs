@@ -10,4 +10,12 @@ public sealed class NerdDownloadService(IJSRuntime jsRuntime)
     /// <summary>Triggers a browser download for the provided file name and text content.</summary>
     public ValueTask DownloadTextAsync(string fileName, string content) =>
         jsRuntime.InvokeVoidAsync("nerdShared.downloadText", fileName, content);
+
+    /// <summary>Triggers a browser download for binary content.</summary>
+    public ValueTask DownloadBytesAsync(string fileName, byte[] content, string contentType) =>
+        jsRuntime.InvokeVoidAsync(
+            "nerdShared.downloadBytes",
+            fileName,
+            Convert.ToBase64String(content),
+            contentType);
 }

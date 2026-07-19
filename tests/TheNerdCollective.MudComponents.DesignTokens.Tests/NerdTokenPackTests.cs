@@ -5,6 +5,7 @@ namespace TheNerdCollective.MudComponents.DesignTokens.Tests;
 
 public sealed class NerdTokenPackTests
 {
+    public NerdTokenPackTests() => NerdBrandPackTestBootstrap.EnsureRegistered();
     [Fact]
     public void RoundTripPreservesColorsAliasesAndRecipes()
     {
@@ -20,6 +21,49 @@ public sealed class NerdTokenPackTests
         Assert.Equal("#123456", restored.Colors["ocean"].Value);
         Assert.Equal("ocean", restored.Aliases["primary"]);
         Assert.Equal("ocean", restored.Recipes["cta"].Action);
+    }
+
+    [Fact]
+    public void RoundTrip_preserves_brand_identity_version()
+    {
+        var options = new NerdDesignTokenOptions
+        {
+            Prefix = "dnf",
+            ActiveBrandIdentityVersion = "2025.1"
+        }.Add("skov", new NerdColorToken { Value = "#1B4332", ContrastText = "#FFFFFF" });
+
+        var pack = NerdTokenPack.FromOptions(options, "dnf");
+        var restored = pack.ToOptions();
+        var jsonRoundTrip = NerdTokenPack.FromJson(pack.ToJson()).ToOptions();
+
+        Assert.Equal("2025.1", pack.BrandIdentityVersion);
+        Assert.Equal("2025.1", restored.ActiveBrandIdentityVersion);
+        Assert.Equal("2025.1", jsonRoundTrip.ActiveBrandIdentityVersion);
+    }
+
+    [Fact]
+    public void ApplyTo_restores_brand_identity_version()
+    {
+        var pack = NerdTokenPack.FromPreset("dnf", "dnf");
+        var options = new NerdDesignTokenOptions { Prefix = "demo" };
+
+        pack.ApplyTo(options);
+
+        Assert.Equal("1.0.0", options.ActiveBrandIdentityVersion);
+    }
+
+    [Fact]
+    public void Merge_preserves_brand_identity_version_from_base_when_overrides_omit_it()
+    {
+        var basePack = NerdTokenPack.FromPreset("dnf", "base");
+        var overrides = NerdTokenPack.FromOptions(
+            new NerdDesignTokenOptions { Prefix = "dnf" }
+                .Add("aurora", new NerdColorToken { Value = "#7C5CFF", ContrastText = "#FFFFFF" }),
+            "acme");
+
+        var merged = basePack.Merge(overrides);
+
+        Assert.Equal("1.0.0", merged.BrandIdentityVersion);
     }
 
     [Fact]

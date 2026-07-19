@@ -1,3 +1,7 @@
+@using TheNerdCollective.MudComponents.DesignTokens
+@using TheNerdCollective.MudComponents.Shared
+@inject NerdDesignTokenOptions TokenOptions
+
 <MudDrawer @bind-Open="Open"
            Anchor="Anchor.End"
            Elevation="2"
@@ -7,7 +11,7 @@
         <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Style="width:100%">
             <div>
                 <MudText Typo="Typo.h6">@Entry.DisplayName playground</MudText>
-                <MudText Typo="Typo.caption" Color="Color.Secondary">@Entry.Description</MudText>
+                <MudText Typo="Typo.caption" Class="@Ui(NerdDesignSystemUi.MutedContent)">@Entry.Description</MudText>
             </div>
             <MudButton Href="@Entry.ApiUrl(DocsBaseUrl)" Target="_blank" Variant="Variant.Text" Size="Size.Small"
                        StartIcon="@Icons.Material.Filled.OpenInNew">
@@ -28,7 +32,7 @@
             <MudPaper Outlined="true" Class="pa-3" data-theme="@ThemeMode">
                 <MudText Typo="Typo.subtitle2" Class="mb-2">Live preview · <code>.@TokenClass</code></MudText>
                 <div class="@TokenClass">
-                    <NerdPlayBookPreview ComponentId="@Entry.Id" Playground="State" />
+                    <NerdPlayBookPreview ComponentId="@Entry.Id" Playground="State" TokenClass="@TokenClass" />
                 </div>
             </MudPaper>
 
@@ -74,4 +78,6 @@
 
     private static string FormatSummaryValue(string value) =>
         string.IsNullOrWhiteSpace(value) ? "(empty)" : $"\"{value}\"";
+
+    private string Ui(string semanticAlias) => NerdDesignSystemUi.TokenClass(TokenOptions.Prefix, semanticAlias);
 }

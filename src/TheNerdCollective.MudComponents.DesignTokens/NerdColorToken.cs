@@ -14,4 +14,6 @@ public sealed class NerdColorToken
     public string? Active { get; init; }
     public string? Border { get; init; }
     public string? Disabled { get; init; }
+    public string? Description { get; init; }
+    public IReadOnlyList<string>? Roles { get; init; }
 }

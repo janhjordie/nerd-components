@@ -1,3 +1,4 @@
+using TheNerdCollective.Brand.Tnc;
 using TheNerdCollective.MudComponents.DesignTokens;
 
 namespace TheNerdCollective.MudComponents.DesignTokens.Tests;
@@ -45,7 +46,7 @@ public class MudBlazorDesignTokenCssGeneratorTests
     }
 
     [Fact]
-    public void Generate_uses_content_color_for_outlined_and_text_variants()
+    public void Generate_uses_accent_color_for_outlined_and_text_button_variants()
     {
         var options = new NerdDesignTokenOptions { Prefix = "dnf", UseImportantOverrides = false }
             .Add("graes", new NerdColorToken { Value = "#A6E54C", ContrastText = "#002D26" })
@@ -54,10 +55,26 @@ public class MudBlazorDesignTokenCssGeneratorTests
         var css = MudBlazorDesignTokenCssGenerator.Generate(options);
 
         Assert.Contains(".dnf-graes[class*=\"mud-button-outlined\"]", css);
-        Assert.Contains("color: var(--dnf-color-graes-content); border-color: var(--dnf-color-graes-border);", css);
+        Assert.Contains("color: var(--dnf-color-graes); border-color: var(--dnf-color-graes-border);", css);
         Assert.Contains(".dnf-graes[class*=\"mud-button-text\"]", css);
+        Assert.Contains("color: var(--dnf-color-graes);", css);
+        Assert.Contains(".dnf-graes[class*=\"mud-typography\"]", css);
+        Assert.Contains("color: var(--dnf-color-graes-content);", css);
         Assert.Contains("--dnf-color-graes-content: #002D26;", css);
         Assert.Contains("--dnf-color-skov-content: #002D26;", css);
+    }
+
+    [Fact]
+    public void Generate_uses_coral_accent_for_tnc_primary_action_outlined_buttons()
+    {
+        var options = new NerdDesignTokenOptions { Prefix = "tnc", UseImportantOverrides = false };
+        NerdTncDesignTokenPresets.Apply(options);
+
+        var css = MudBlazorDesignTokenCssGenerator.Generate(options);
+
+        Assert.Contains(".tnc-primary-action[class*=\"mud-button-outlined\"]", css);
+        Assert.Contains("color: var(--tnc-color-primary-action);", css);
+        Assert.DoesNotContain(".tnc-primary-action[class*=\"mud-button-outlined\"] {  color: var(--tnc-color-primary-action-content);", css);
     }
 
     [Fact]
@@ -130,6 +147,8 @@ public class MudBlazorDesignTokenCssGeneratorTests
         Assert.Contains("[class*=\"mud-table\"]", css);
         Assert.Contains("[class*=\"mud-data-grid\"]", css);
         Assert.Contains("[class*=\"mud-nav-link\"]", css);
+        Assert.Contains("[class*=\"mud-icon\"]", css);
+        Assert.Contains("[class*=\"mud-popover\"] [class*=\"mud-list-item\"]", css);
         Assert.Contains("[class*=\"mud-rating\"]", css);
         Assert.Contains(".dnf-forest .mud-checkbox .mud-icon-button", css);
     }
@@ -169,6 +188,24 @@ public class MudBlazorDesignTokenCssGeneratorTests
     }
 
     [Fact]
+    public void Generate_surface_aliases_emit_surface_styles_without_mudblazor_descendant_rules()
+    {
+        var options = new NerdDesignTokenOptions { Prefix = "dnf" }
+            .Add("kridt-lys", new NerdColorToken { Value = "#FDFAF3", ContrastText = "#002D26" })
+            .Alias("page-surface", "kridt-lys")
+            .Alias("brand-chrome", "kridt-lys");
+
+        var css = MudBlazorDesignTokenCssGenerator.Generate(options);
+
+        Assert.Contains(".dnf-page-surface {", css);
+        Assert.Contains("background-color: var(--dnf-color-page-surface-surface)", css);
+        Assert.Contains(".dnf-page-surface.mud-popover-open .mud-selected-item", css);
+        Assert.Contains("color: var(--dnf-color-page-surface-content)", css);
+        Assert.DoesNotContain(".dnf-page-surface[class*=\"mud-button-filled\"]", css);
+        Assert.DoesNotContain(".dnf-brand-chrome[class*=\"mud-button-filled\"]", css);
+    }
+
+    [Fact]
     public void Generate_isolates_css_and_emits_design_system_helpers()
     {
         var options = new NerdDesignTokenOptions { Prefix = "dnf", UseCssLayer = true }
@@ -181,8 +218,23 @@ public class MudBlazorDesignTokenCssGeneratorTests
 
         Assert.Contains("@layer nerd-design-tokens", css);
         Assert.Contains(".dnf-primary-action", css);
+        Assert.Contains(".dnf-primary-action[class*=\"mud-button-filled\"]", css);
         Assert.Contains(".dnf-radius-card", css);
         Assert.Contains(".dnf-shadow-elevated", css);
+    }
+
+    [Fact]
+    public void Generate_emits_opacity_overlay_classes()
+    {
+        var options = new NerdDesignTokenOptions { Prefix = "dnf", UseImportantOverrides = false }
+            .Add("skov", new NerdColorToken { Value = "#002D26", ContrastText = "#FDFAF3" })
+            .AddOpacity("watermark", new NerdOpacityToken("skov", 0.12));
+
+        var css = MudBlazorDesignTokenCssGenerator.Generate(options);
+
+        Assert.Contains(".dnf-opacity-watermark", css);
+        Assert.Contains("color-mix(in srgb, var(--dnf-color-skov)", css);
+        Assert.Contains("var(--dnf-color-skov-content)", css);
     }
 
     [Fact]
@@ -223,6 +275,57 @@ public class MudBlazorDesignTokenCssGeneratorTests
         Assert.Contains("# Design tokens", design);
         Assert.Contains("forest", design);
         Assert.Contains("#365C3A", design);
+    }
+
+    [Fact]
+    public void Stitch_export_includes_typography_roles_when_provided()
+    {
+        var options = new NerdDesignTokenOptions { Prefix = "dnf" }
+            .Add("forest", new NerdColorToken { Value = "#365C3A" });
+        var typography = new Dictionary<string, string>
+        {
+            ["H1"] = "clamp(1.75rem, 3vw, 2.5rem)"
+        };
+
+        var design = NerdDesignTokenTools.ExportStitchDesignMd(options, typography);
+
+        Assert.Contains("## Typography", design);
+        Assert.Contains("H1", design);
+        Assert.Contains("clamp(1.75rem, 3vw, 2.5rem)", design);
+    }
+
+    [Fact]
+    public void Generate_emits_pairing_surface_and_recipe_outlined_rules()
+    {
+        var options = new NerdDesignTokenOptions { Prefix = "tnc", UseImportantOverrides = false };
+        NerdTncDesignTokenPresets.Apply(options);
+
+        var css = MudBlazorDesignTokenCssGenerator.Generate(options);
+
+        Assert.Contains(".nerd-pairing-surface .mud-button-outlined", css);
+        Assert.Contains("--nerd-pairing-surface-color", css);
+        Assert.Contains(".nerd-pairing-surface--swatch", css);
+        Assert.Contains(".tnc-recipe-hero .mud-button-outlined", css);
+        Assert.Contains("border-color: currentColor", css);
+    }
+
+    [Fact]
+    public void Generate_emits_dark_mode_recipe_variants()
+    {
+        var options = new NerdDesignTokenOptions { Prefix = "dnf" }
+            .Add("kridt", new NerdColorToken { Value = "#E8E0D3", ContrastText = "#002D26" })
+            .Add("skov", new NerdColorToken
+            {
+                Value = "#002D26",
+                Dark = "#001A16",
+                ContrastText = "#FDFAF3"
+            });
+
+        options.AddRecipe("hero", new NerdDesignTokenRecipe("kridt", "skov", "skov"));
+
+        var css = MudBlazorDesignTokenCssGenerator.Generate(options);
+
+        Assert.Contains("[data-theme=\"dark\"] .dnf-recipe-hero", css);
     }
 
     [Fact]

@@ -1,0 +1,257 @@
+@if (!IsAvailable)
+{
+    <MudContainer MaxWidth="MaxWidth.Medium" Class="my-8">
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Filled">
+            Brand workbook is disabled or only available in Development.
+        </MudAlert>
+    </MudContainer>
+}
+else
+{
+    @if (!Entitlements.CanUseWorkbook())
+    {
+        <MudContainer MaxWidth="MaxWidth.Medium" Class="my-8">
+            <NerdCatalogUpgradePromptSection
+                Show="true"
+                Title="Brand workbook is not enabled"
+                Description="Configure catalog entitlements in your host application to use the workbook workflow." />
+            <MudButton Href="@HubOptions.HubRoute" Variant="Variant.Text" Class="mt-3">Back to design system</MudButton>
+        </MudContainer>
+    }
+    else
+    {
+    <NerdDesignSystemScripts />
+    <NerdCatalogThemeProvider IsDarkMode="false">
+        <NerdDesignTokenStyles />
+        <MudContainer MaxWidth="MaxWidth.Large" Class="my-6 pa-4" Style="@NerdDesignSystemUi.PageSurfaceStyle(Options.Prefix)">
+            <MudStack Spacing="3">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-3">
+                    <div>
+                        <MudText Typo="Typo.h4">Brand workbook</MudText>
+                        <MudText Typo="Typo.body2" Class="@Ui(NerdDesignSystemUi.MutedContent)">
+                            JSON-first onboarding: import, edit palette/aliases/recipes/pairings, export for your client.
+                        </MudText>
+                    </div>
+                    <MudButton Href="@HubOptions.HubRoute" Variant="Variant.Text" Class="@Ui(NerdDesignSystemUi.MutedContent)">Design system</MudButton>
+                </MudStack>
+
+                <MudStepper @bind-ActiveIndex="_activeStep" Class="mb-2">
+                    <MudStep Title="Import" />
+                    <MudStep Title="Palette" />
+                    <MudStep Title="Aliases" />
+                    <MudStep Title="Recipes" />
+                    <MudStep Title="Pairings" />
+                    <MudStep Title="Export" />
+                </MudStepper>
+
+                @switch (_activeStep)
+                {
+                    case 0:
+                        <NerdBrandPackImporter Options="Options" OnImported="ApplyImportedPackAsync" />
+                        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true">
+                            Reference packs live in <code>reference/brands/*.token-pack.json</code>.
+                        </MudAlert>
+                        break;
+                    case 1:
+                        <MudPaper Outlined="true" Class="pa-4">
+                            <MudText Typo="Typo.h6">Palette (@Options.Colors.Count tokens)</MudText>
+                            <MudStack Row="true" Spacing="2" Class="flex-wrap mt-2 mb-3">
+                                <MudTextField @bind-Value="_newTokenName" Label="New token" Immediate="true" />
+                                <MudTextField @bind-Value="_newTokenValue" Label="Hex value" Immediate="true" />
+                                <MudButton Variant="Variant.Filled" Class="@Ui(NerdDesignSystemUi.BrandChrome)" OnClick="AddColorAsync">Add color</MudButton>
+                            </MudStack>
+                            <MudSimpleTable Dense="true" Bordered="true" Hover="true">
+                                <thead><tr><th>Token</th><th>Value</th><th>Locked</th><th></th></tr></thead>
+                                <tbody>
+                                    @foreach (var pair in Options.Colors.OrderBy(p => p.Key, StringComparer.Ordinal))
+                                    {
+                                        var tokenName = pair.Key;
+                                        var locked = Options.IsTokenLocked(tokenName);
+                                        <tr>
+                                            <td><code>@tokenName</code></td>
+                                            <td>
+                                                <MudTextField Value="@pair.Value.Value"
+                                                              ValueChanged="@((string value) => UpdateColorAsync(tokenName, value))"
+                                                              Immediate="true"
+                                                              Disabled="@locked" />
+                                            </td>
+                                            <td>@(locked ? "yes" : "—")</td>
+                                            <td>
+                                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                               Disabled="@locked"
+                                                               OnClick="@(() => RemoveColorAsync(tokenName))" />
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </MudSimpleTable>
+                        </MudPaper>
+                        break;
+                    case 2:
+                        <MudPaper Outlined="true" Class="pa-4">
+                            <MudText Typo="Typo.h6">Semantic aliases</MudText>
+                            <MudStack Row="true" Spacing="2" Class="flex-wrap mt-2 mb-3">
+                                <MudTextField @bind-Value="_newAliasName" Label="Alias" Immediate="true" />
+                                <MudSelect T="string" @bind-Value="_newAliasTarget" Label="Target token">
+                                    @foreach (var tokenName in TokenNames)
+                                    {
+                                        <MudSelectItem Value="@tokenName">@tokenName</MudSelectItem>
+                                    }
+                                </MudSelect>
+                                <MudButton Variant="Variant.Filled" Class="@Ui(NerdDesignSystemUi.BrandChrome)" OnClick="AddAliasAsync">Add alias</MudButton>
+                            </MudStack>
+                            <MudSimpleTable Dense="true" Bordered="true" Hover="true">
+                                <thead><tr><th>Alias</th><th>Token</th><th></th></tr></thead>
+                                <tbody>
+                                    @foreach (var pair in Options.Aliases.OrderBy(p => p.Key, StringComparer.Ordinal))
+                                    {
+                                        var aliasName = pair.Key;
+                                        <tr>
+                                            <td><code>@aliasName</code></td>
+                                            <td>
+                                                <MudSelect T="string"
+                                                           Value="@pair.Value"
+                                                           ValueChanged="@((string value) => UpdateAliasAsync(aliasName, value))"
+                                                           Dense="true">
+                                                    @foreach (var tokenName in TokenNames)
+                                                    {
+                                                        <MudSelectItem Value="@tokenName">@tokenName</MudSelectItem>
+                                                    }
+                                                </MudSelect>
+                                            </td>
+                                            <td>
+                                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                               OnClick="@(() => RemoveAliasAsync(aliasName))" />
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </MudSimpleTable>
+                        </MudPaper>
+                        break;
+                    case 3:
+                        <MudPaper Outlined="true" Class="pa-4">
+                            <MudText Typo="Typo.h6">Recipes</MudText>
+                            <MudGrid Spacing="2" Class="mt-2 mb-3">
+                                <MudItem xs="12" md="2"><MudTextField @bind-Value="_newRecipeName" Label="Name" Immediate="true" /></MudItem>
+                                <MudItem xs="12" md="2">
+                                    <MudSelect T="string" @bind-Value="_newRecipeSurface" Label="Surface">
+                                        @foreach (var tokenName in TokenNames) { <MudSelectItem Value="@tokenName">@tokenName</MudSelectItem> }
+                                    </MudSelect>
+                                </MudItem>
+                                <MudItem xs="12" md="2">
+                                    <MudSelect T="string" @bind-Value="_newRecipeContent" Label="Content">
+                                        @foreach (var tokenName in TokenNames) { <MudSelectItem Value="@tokenName">@tokenName</MudSelectItem> }
+                                    </MudSelect>
+                                </MudItem>
+                                <MudItem xs="12" md="2">
+                                    <MudSelect T="string" @bind-Value="_newRecipeAction" Label="Action" Clearable="true">
+                                        @foreach (var tokenName in TokenNames) { <MudSelectItem Value="@tokenName">@tokenName</MudSelectItem> }
+                                    </MudSelect>
+                                </MudItem>
+                                <MudItem xs="12" md="2"><MudTextField @bind-Value="_newRecipeLabel" Label="Label" Immediate="true" /></MudItem>
+                                <MudItem xs="12" md="2"><MudTextField @bind-Value="_newRecipeUsage" Label="Usage" Immediate="true" /></MudItem>
+                                <MudItem xs="12">
+                                    <MudButton Variant="Variant.Filled" Class="@Ui(NerdDesignSystemUi.BrandChrome)" OnClick="AddRecipeAsync">Add recipe</MudButton>
+                                </MudItem>
+                            </MudGrid>
+                            @foreach (var pair in Options.Recipes.OrderBy(p => p.Key, StringComparer.Ordinal))
+                            {
+                                var recipeName = pair.Key;
+                                var recipe = pair.Value;
+                                <MudPaper Outlined="true" Class="pa-3 mb-2">
+                                    <MudStack Spacing="2">
+                                        <MudText Typo="Typo.subtitle1"><code>@recipeName</code> @(string.IsNullOrWhiteSpace(recipe.Label) ? "" : $"— {recipe.Label}")</MudText>
+                                        @if (!string.IsNullOrWhiteSpace(recipe.Usage))
+                                        {
+                                            <MudText Typo="Typo.body2" Class="@Ui(NerdDesignSystemUi.MutedContent)">@recipe.Usage</MudText>
+                                        }
+                                        <MudStack Row="true" Spacing="2" Class="flex-wrap">
+                                            <MudSelect T="string" Label="Surface" Value="@recipe.Surface" ValueChanged="@((string v) => UpdateRecipeAsync(recipeName, v, recipe.Content, recipe.Action, recipe.Label, recipe.Usage))">
+                                                @foreach (var tokenName in TokenNames) { <MudSelectItem Value="@tokenName">@tokenName</MudSelectItem> }
+                                            </MudSelect>
+                                            <MudSelect T="string" Label="Content" Value="@recipe.Content" ValueChanged="@((string v) => UpdateRecipeAsync(recipeName, recipe.Surface, v, recipe.Action, recipe.Label, recipe.Usage))">
+                                                @foreach (var tokenName in TokenNames) { <MudSelectItem Value="@tokenName">@tokenName</MudSelectItem> }
+                                            </MudSelect>
+                                            <MudSelect T="string" Label="Action" Value="@recipe.Action" ValueChanged="@((string? v) => UpdateRecipeAsync(recipeName, recipe.Surface, recipe.Content, v, recipe.Label, recipe.Usage))" Clearable="true">
+                                                @foreach (var tokenName in TokenNames) { <MudSelectItem Value="@tokenName">@tokenName</MudSelectItem> }
+                                            </MudSelect>
+                                            <MudTextField Label="Label" Value="@recipe.Label" ValueChanged="@((string? v) => UpdateRecipeAsync(recipeName, recipe.Surface, recipe.Content, recipe.Action, v, recipe.Usage))" Immediate="true" />
+                                            <MudTextField Label="Usage" Value="@recipe.Usage" ValueChanged="@((string? v) => UpdateRecipeAsync(recipeName, recipe.Surface, recipe.Content, recipe.Action, recipe.Label, v))" Immediate="true" />
+                                            <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="@(() => RemoveRecipeAsync(recipeName))" />
+                                        </MudStack>
+                                    </MudStack>
+                                </MudPaper>
+                            }
+                            @if (PreviewRecipe is not null && PreviewValidation is not null)
+                            {
+                                <MudDivider Class="my-3" />
+                                <MudText Typo="Typo.h6">Layout templates</MudText>
+                                <NerdBrandPreviewTemplates Recipe="PreviewRecipe"
+                                                           Validation="PreviewValidation"
+                                                           Prefix="Options.Prefix"
+                                                           RecipeName="@PreviewRecipeName" />
+                            }
+                        </MudPaper>
+                        break;
+                    case 4:
+                        <MudPaper Outlined="true" Class="pa-4">
+                            <MudText Typo="Typo.h6">Approved pairings</MudText>
+                            <MudTextField Value="_pairingGuideName" ValueChanged="@((string value) => OnPairingGuideNameChanged(value))" Label="Pairing guide name" Class="mt-2 mb-3" Immediate="true" />
+                            <MudStack Row="true" Spacing="2" Class="flex-wrap mb-3">
+                                <MudSelect T="string" @bind-Value="_newPairingContent" Label="Content">
+                                    @foreach (var tokenName in TokenNames) { <MudSelectItem Value="@tokenName">@tokenName</MudSelectItem> }
+                                </MudSelect>
+                                <MudSelect T="string" @bind-Value="_newPairingSurface" Label="Surface">
+                                    @foreach (var tokenName in TokenNames) { <MudSelectItem Value="@tokenName">@tokenName</MudSelectItem> }
+                                </MudSelect>
+                                <MudButton Variant="Variant.Filled" Class="@Ui(NerdDesignSystemUi.BrandChrome)" OnClick="AddPairingAsync">Add pairing</MudButton>
+                            </MudStack>
+                            <MudSimpleTable Dense="true" Bordered="true" Hover="true">
+                                <thead><tr><th>Content</th><th>Surface</th><th>WCAG</th><th></th></tr></thead>
+                                <tbody>
+                                    @foreach (var pairing in _approvedPairings.OrderBy(p => p.Surface).ThenBy(p => p.Content, StringComparer.Ordinal))
+                                    {
+                                        var validation = NerdTokenPairingTools.ValidatePairing(pairing.Content, pairing.Surface, Options);
+                                        <tr>
+                                            <td><code>@pairing.Content</code></td>
+                                            <td><code>@pairing.Surface</code></td>
+                                            <td>@(validation.MeetsAa ? "AA" : "Fail")</td>
+                                            <td>
+                                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                               OnClick="@(() => RemovePairingAsync(pairing))" />
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </MudSimpleTable>
+                        </MudPaper>
+                        break;
+                    case 5:
+                        <MudPaper Outlined="true" Class="pa-4">
+                            <MudStack Spacing="2">
+                                <MudText Typo="Typo.h6">Export client pack</MudText>
+                                <MudButton Variant="Variant.Filled" Class="@Ui(NerdDesignSystemUi.BrandChrome)" OnClick="DownloadPackJsonAsync">
+                                    Download token-pack.json
+                                </MudButton>
+                                <MudButton Href="@Options.CatalogRoute" Variant="Variant.Outlined">Open colors catalog</MudButton>
+                                <MudButton Href="@Options.RecipesCatalogRoute" Variant="Variant.Outlined">Open recipes catalog</MudButton>
+                            </MudStack>
+                        </MudPaper>
+                        break;
+                }
+
+                <MudStack Row="true" Spacing="2">
+                    <MudButton Variant="Variant.Outlined" Disabled="@(_activeStep == 0)" OnClick="@(() => _activeStep--)">Back</MudButton>
+                    <MudButton Variant="Variant.Filled" Class="@Ui(NerdDesignSystemUi.BrandChrome)" Disabled="@(_activeStep >= ExportStepIndex)" OnClick="@(() => _activeStep++)">Next</MudButton>
+                </MudStack>
+
+                @if (_status is not null)
+                {
+                    <MudAlert Severity="_statusSeverity" Variant="Variant.Outlined" Dense="true">@_status</MudAlert>
+                }
+            </MudStack>
+        </MudContainer>
+    </NerdCatalogThemeProvider>
+    }
+}

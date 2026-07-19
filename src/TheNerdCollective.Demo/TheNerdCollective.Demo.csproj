@@ -8,10 +8,17 @@
 
 
   <ItemGroup>
-    <PackageReference Include="MudBlazor" Version="9.6.0" />
+    <PackageReference Include="MudBlazor" Version="9.7.0" />
     <ProjectReference Include="..\TheNerdCollective.Components\TheNerdCollective.Components.csproj" />
+    <ProjectReference Include="..\TheNerdCollective.MudComponents.MudQuillEditor\TheNerdCollective.MudComponents.MudQuillEditor.csproj" />
+    <ProjectReference Include="..\TheNerdCollective.Brand.Acme\TheNerdCollective.Brand.Acme.csproj" />
+    <ProjectReference Include="..\TheNerdCollective.Brand.Demo\TheNerdCollective.Brand.Demo.csproj" />
+    <ProjectReference Include="..\TheNerdCollective.Brand.Dnf\TheNerdCollective.Brand.Dnf.csproj" />
+    <ProjectReference Include="..\TheNerdCollective.Brand.Tnc\TheNerdCollective.Brand.Tnc.csproj" />
     <ProjectReference Include="..\TheNerdCollective.MudComponents.DesignTokens\TheNerdCollective.MudComponents.DesignTokens.csproj" />
+    <ProjectReference Include="..\TheNerdCollective.MudComponents.DesignTokens.Catalog\TheNerdCollective.MudComponents.DesignTokens.Catalog.csproj" />
     <ProjectReference Include="..\TheNerdCollective.MudComponents.ResponsiveTypography\TheNerdCollective.MudComponents.ResponsiveTypography.csproj" />
+    <ProjectReference Include="..\TheNerdCollective.MudComponents.ResponsiveTypography.Catalog\TheNerdCollective.MudComponents.ResponsiveTypography.Catalog.csproj" />
     <ProjectReference Include="..\TheNerdCollective.MudComponents.PlayBook\TheNerdCollective.MudComponents.PlayBook.csproj" />
     <ProjectReference Include="..\TheNerdCollective.MudComponents.MudSwiper\TheNerdCollective.MudComponents.MudSwiper.csproj" />
     <ProjectReference Include="..\TheNerdCollective.Services.BlazorServer\TheNerdCollective.Services.BlazorServer.csproj" />

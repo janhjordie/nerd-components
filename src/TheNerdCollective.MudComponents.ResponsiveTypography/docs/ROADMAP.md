@@ -6,11 +6,12 @@ pr. klient.
 ## Fase 0 — Stabilisering (nu)
 
 - [x] `clamp()` via MudTheme
-- [x] Catalog med viewport slider
+- [x] Catalog med viewport slider — motor + `ResponsiveTypography.Catalog` (HR-078)
 - [x] WCAG accessibility tools
-- [x] Marketing / Dense presets
+- [x] Marketing / Dense / Editorial / Dashboard presets
 - [x] Responsive breakpoint-eksempler i katalog + docs
-- [ ] Snapshot-tests for computed sizes ved 320 / 768 / 1280 / 1920
+- [x] Snapshot-tests for computed sizes ved 320 / 768 / 1280 / 1920 — HR-040
+- [x] DNF typography in `Brand.Dnf` — `AddNerdDnfTypography()` (HR-079)
 
 ## Fase 1 — Bedre catalog UX
 

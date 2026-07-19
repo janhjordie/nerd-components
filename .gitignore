@@ -29,3 +29,16 @@ Thumbs.db
 # Local development
 local.settings.json
 appsettings.local.json
+
+# Cursor / local tooling (machine-specific paths)
+.cursor/
+
+# Local repo index
+.nerd-repo-index/
+
+# Generated reports
+artifacts/
+
+# Playwright
+tests/e2e/node_modules/
+tests/e2e/test-results/

@@ -1,16 +1,64 @@
 @implements IDisposable
 @inject IMudThemeStateService ThemeState
+@inject IJSRuntime JsRuntime
 
-<MudThemeProvider Theme="@ThemeState.CurrentTheme" IsDarkMode="@ThemeState.IsDarkMode" />
-<MudThemeKitInitializer />
+@if (_ready)
+{
+    <MudThemeProvider Theme="@ThemeState.CurrentTheme" IsDarkMode="@ThemeState.IsDarkMode" />
+    @ChildContent
+}
 
 @code {
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    private bool _ready;
+    private bool _scriptLoaded;
+
     protected override void OnInitialized()
     {
         ThemeState.Changed += OnThemeStateChanged;
+        _ready = ThemeState.IsInitialized;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_ready)
+        {
+            return;
+        }
+
+        if (!ThemeState.IsInitialized)
+        {
+            await ThemeState.InitializeAsync();
+        }
+
+        await EnsureScriptLoadedAsync();
+        _ready = true;
+        await InvokeAsync(StateHasChanged);
     }
 
     private void OnThemeStateChanged() => InvokeAsync(StateHasChanged);
+
+    private async Task EnsureScriptLoadedAsync()
+    {
+        if (_scriptLoaded)
+        {
+            return;
+        }
+
+        try
+        {
+            await JsRuntime.InvokeVoidAsync(
+                "eval",
+                "if(!window.themeKit){const s=document.createElement('script');s.src='_content/TheNerdCollective.MudComponents.ThemeKit/theme-kit.js';document.head.appendChild(s);}");
+            _scriptLoaded = true;
+        }
+        catch (JSException)
+        {
+            // Script load is best-effort.
+        }
+    }
 
     public void Dispose() => ThemeState.Changed -= OnThemeStateChanged;
 }

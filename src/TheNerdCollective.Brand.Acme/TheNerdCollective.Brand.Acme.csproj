@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <PackageId>TheNerdCollective.Brand.Acme</PackageId>
+    <Authors>The Nerd Collective</Authors>
+    <Description>Acme sample design token brand pack for MudBlazor.</Description>
+    <PackageTags>mudblazor;blazor;design-tokens;acme;branding</PackageTags>
+    <LicenseExpression>Apache-2.0</LicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\TheNerdCollective.MudComponents.DesignTokens\TheNerdCollective.MudComponents.DesignTokens.csproj" />
+    <ProjectReference Include="..\TheNerdCollective.MudComponents.ResponsiveTypography\TheNerdCollective.MudComponents.ResponsiveTypography.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="CHANGELOG.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+</Project>

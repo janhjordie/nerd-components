@@ -8,7 +8,26 @@ MudBlazor fork is required.
 See [docs/DESIGN-TOKENS.md](../../docs/DESIGN-TOKENS.md) for architecture,
 design principles, and the brand-token model.
 
-## Setup
+## Brand packs (recommended)
+
+Predefined brands ship as separate NuGet packages. **Production apps install one brand only.**
+
+| Package | DI | Prefix |
+|---------|-----|--------|
+| `TheNerdCollective.Brand.Dnf` | `AddNerdDnfBrand()` | `dnf` |
+| `TheNerdCollective.Brand.Tnc` | `AddNerdTncBrand()` | `tnc` |
+| `TheNerdCollective.Brand.Acme` | `AddNerdAcmeBrand()` | `acme` |
+| `TheNerdCollective.Brand.Demo` | `AddNerdDemoBrand()` | `demo` |
+
+```csharp
+using TheNerdCollective.Brand.Dnf;
+
+builder.Services.AddNerdDnfBrand();
+```
+
+See [docs/BRAND-PACKAGES.md](../../docs/BRAND-PACKAGES.md) for dependency diagram and multi-brand demo setup.
+
+## Setup (manual tokens)
 
 ```csharp
 builder.Services.AddNerdDesignTokens(options =>
@@ -136,8 +155,11 @@ MudBlazor CSS, keeping the customer's design source portable across tools.
 
 ## Visual catalog
 
-Register the catalog page assembly and browse all tokens at
-`/nerd-design-tokens`:
+Install the optional catalog package and register routes for `/nerd-design-tokens`:
+
+```xml
+<PackageReference Include="TheNerdCollective.MudComponents.DesignTokens.Catalog" />
+```
 
 ```csharp
 builder.Services.AddNerdDesignTokens(options =>
@@ -146,6 +168,7 @@ builder.Services.AddNerdDesignTokens(options =>
     options.EnableCatalogPage = true; // default
     options.CatalogRoute = "/nerd-design-tokens";
 });
+builder.Services.AddNerdDesignTokenCatalog();
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode()

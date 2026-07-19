@@ -49,7 +49,7 @@ public sealed class MudThemeStateService : IMudThemeStateService
 
     public string CurrentThemeId => _currentThemeId;
 
-    public bool IsDarkMode { get; private set; } = true;
+    public bool IsDarkMode { get; private set; }
 
     public bool HasUnsavedChanges => GetModifiedTokens().Count > 0;
 

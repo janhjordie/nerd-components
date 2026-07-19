@@ -1,5 +1,20 @@
-<MudPaper Outlined="true" Class="pa-3">
+@using TheNerdCollective.MudComponents.DesignTokens
+@using TheNerdCollective.MudComponents.Shared
+@inject NerdDesignTokenOptions TokenOptions
+
+<MudPaper Outlined="true" Class="pa-3" data-nerd-token="@Ui(NerdDesignSystemUi.PageSurface)">
     <MudGrid Spacing="2">
+        @if (ShowBrandSwitcher)
+        {
+            <MudItem xs="12" md="3">
+                <MudSelect T="string" Label="Brand" Value="@SelectedBrand" ValueChanged="OnBrandChanged" Variant="Variant.Outlined" Margin="Margin.Dense">
+                    @foreach (var brandPack in BrandPacks)
+                    {
+                        <MudSelectItem Value="@brandPack.Id">@NerdBrandPackLabels.Format(brandPack)</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+        }
         <MudItem xs="12" md="3">
             <MudSelect T="string" Label="Design token" @bind-Value="SelectedTokenFilter" Variant="Variant.Outlined" Margin="Margin.Dense">
                 <MudSelectItem Value="@("all")">All tokens</MudSelectItem>
@@ -12,22 +27,13 @@
         <MudItem xs="12" md="3">
             @if (ShowTypographyPreset)
             {
-                <MudSelect T="string" Label="Typography preset" Value="TypographyPreset" ValueChanged="OnTypographyPresetChanged" Variant="Variant.Outlined" Margin="Margin.Dense">
+                <MudSelect T="string" Label="Typography preset" Value="@TypographyPreset" ValueChanged="OnTypographyPresetChanged" Variant="Variant.Outlined" Margin="Margin.Dense">
                     @foreach (var preset in NerdPlayBookTypography.Presets)
                     {
                         <MudSelectItem Value="@preset.Id">@preset.Label</MudSelectItem>
                     }
                 </MudSelect>
             }
-        </MudItem>
-        <MudItem xs="12" md="3">
-            <MudSelect T="string" Label="Category" @bind-Value="SelectedCategory" Variant="Variant.Outlined" Margin="Margin.Dense">
-                <MudSelectItem Value="@("all")">All categories</MudSelectItem>
-                @foreach (var category in MudBlazorPlayBookCatalog.Categories)
-                {
-                    <MudSelectItem Value="@category">@category</MudSelectItem>
-                }
-            </MudSelect>
         </MudItem>
         <MudItem xs="12" md="3">
             <MudTextField T="string" Label="Search components" @bind-Value="SearchQuery" Variant="Variant.Outlined" Margin="Margin.Dense"
@@ -37,7 +43,7 @@
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="flex-wrap">
                 @if (ShowDarkModeToggle)
                 {
-                    <MudSwitch @bind-Value="PreviewDark" Color="Color.Primary" Label="Dark mode preview" />
+                    <MudSwitch @bind-Value="PreviewDark" Class="@Ui(NerdDesignSystemUi.PrimaryAction)" Label="Dark mode preview" />
                 }
                 <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">
                     @MudBlazorPlayBookCatalog.All.Count components
@@ -53,6 +59,18 @@
 @code {
     [Parameter]
     public IReadOnlyList<string> TokenNames { get; set; } = [];
+
+    [Parameter]
+    public IEnumerable<INerdBrandPack> BrandPacks { get; set; } = [];
+
+    [Parameter]
+    public string SelectedBrand { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> SelectedBrandChanged { get; set; }
+
+    [Parameter]
+    public bool ShowBrandSwitcher { get; set; }
 
     [Parameter]
     public string SelectedTokenFilter { get; set; } = "all";
@@ -73,12 +91,6 @@
     public EventCallback<bool> PreviewDarkChanged { get; set; }
 
     [Parameter]
-    public string SelectedCategory { get; set; } = "all";
-
-    [Parameter]
-    public EventCallback<string> SelectedCategoryChanged { get; set; }
-
-    [Parameter]
     public string SearchQuery { get; set; } = string.Empty;
 
     [Parameter]
@@ -91,4 +103,8 @@
     public bool ShowDarkModeToggle { get; set; } = true;
 
     private Task OnTypographyPresetChanged(string value) => TypographyPresetChanged.InvokeAsync(value);
+
+    private Task OnBrandChanged(string value) => SelectedBrandChanged.InvokeAsync(value);
+
+    private string Ui(string semanticAlias) => NerdDesignSystemUi.TokenClass(TokenOptions.Prefix, semanticAlias);
 }

@@ -1,4 +1,8 @@
 using MudBlazor.Services;
+using TheNerdCollective.Brand.Acme;
+using TheNerdCollective.Brand.Demo;
+using TheNerdCollective.Brand.Dnf;
+using TheNerdCollective.Brand.Tnc;
 using TheNerdCollective.Demo.Components;
 using TheNerdCollective.MudComponents.DesignTokens;
 using TheNerdCollective.MudComponents.ResponsiveTypography;
@@ -10,22 +14,38 @@ using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddBlazorServerCircuitServices(builder.Configuration, builder.Environment);
+builder.Host.ConfigureBlazorServerCircuitShutdown();
+
 // Add MudBlazor services
 builder.Services.AddMudServices();
 
+builder.Services.AddNerdDesignTokenBrandPacks(
+    NerdDnfBrandPack.Instance,
+    NerdAcmeBrandPack.Instance,
+    NerdDemoBrandPack.Instance,
+    NerdTncBrandPack.Instance);
+builder.Services.AddNerdBrandTypographyPacks(
+    NerdDnfBrandTypographyPack.Instance,
+    NerdAcmeBrandTypographyPack.Instance,
+    NerdDemoBrandTypographyPack.Instance,
+    NerdTncBrandTypographyPack.Instance);
 builder.Services.AddNerdDesignTokens(options =>
 {
-    options.Prefix = "dnf";
     options.RestrictCatalogToDevelopment = false;
-    NerdDnfDesignTokenPresets.Apply(options);
+    NerdBrandPackRegistry.Instance.Configure("tnc", options);
 });
+builder.Services.AddNerdDesignSystem(hub =>
+{
+    hub.RestrictWcagGuideToDevelopment = false;
+});
+builder.Services.AddNerdDesignTokenCatalog();
 
 builder.Services.AddNerdResponsiveTypography(options =>
 {
     options.RestrictCatalogToDevelopment = false;
     options.WarnOnAccessibilityFailuresAtStartup = false;
-    NerdTypographyPresets.ApplyMarketing(options.Typography);
-    options.Typography.H3 = ResponsiveFontSize.Clamp("1.75rem", "3vw", "2.5rem");
+    NerdBrandTypographyRegistry.Instance.Configure("tnc", options);
 });
 
 builder.Services.AddNerdPlayBook(options =>

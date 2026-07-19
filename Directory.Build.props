@@ -1,0 +1,9 @@
+<Project>
+  <PropertyGroup>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <NerdBrandPackageVersion>2.0.0</NerdBrandPackageVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="$([System.String]::Copy('$(MSBuildProjectName)').StartsWith('TheNerdCollective.Brand.'))">
+    <Version>$(NerdBrandPackageVersion)</Version>
+  </PropertyGroup>
+</Project>

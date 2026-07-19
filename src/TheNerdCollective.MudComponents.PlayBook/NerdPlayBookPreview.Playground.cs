@@ -8,7 +8,12 @@ public partial class NerdPlayBookPreview
     [Parameter]
     public NerdPlayBookPlaygroundState? Playground { get; set; }
 
+    [Parameter]
+    public string? TokenClass { get; set; }
+
     private bool IsPlayground => Playground is not null;
+
+    private string? Tc => string.IsNullOrWhiteSpace(TokenClass) ? null : TokenClass;
 
     private string PText(string key, string fallback) =>
         IsPlayground ? Playground!.GetString(key, fallback) : fallback;

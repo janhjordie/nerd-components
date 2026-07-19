@@ -1,0 +1,101 @@
+@using Microsoft.AspNetCore.Components.Forms
+
+@if (BrandPackSource.IsConfigured)
+{
+    <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center" Class="flex-wrap">
+        <MudTextField @bind-Value="_clientId" Label="Bundle clientId" Immediate="true" Style="min-width: 160px;" />
+        <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="DownloadBundleJsonAsync">
+            Export brand bundle (JSON)
+        </MudButton>
+        <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="DownloadBundleZipAsync">
+            Export brand bundle (ZIP)
+        </MudButton>
+        <InputFile OnChange="ImportBundleAsync" accept=".json,.zip,application/json,application/zip" class="mud-button-root mud-button mud-button-outlined mud-button-outlined-size-small mud-ripple" style="width:auto;padding:.375rem .75rem;" />
+        @if (_status is not null)
+        {
+            <MudText Typo="Typo.caption" Color="Color.Success">@_status</MudText>
+        }
+    </MudStack>
+}
+
+@code {
+    [Inject]
+    private INerdBrandPackSource BrandPackSource { get; set; } = default!;
+
+    [Inject]
+    private NerdDownloadService DownloadService { get; set; } = default!;
+
+    [Inject]
+    private NerdDesignSystemOptions HubOptions { get; set; } = default!;
+
+    [Parameter]
+    public string? ClientId { get; set; }
+
+    private string _clientId = "client";
+    private string? _status;
+
+    protected override void OnParametersSet()
+    {
+        _clientId = ClientId ?? BrandPackSource.ClientId;
+    }
+
+    private string Ui(string semanticAlias) => NerdDesignSystemUi.TokenClass(HubOptions, semanticAlias);
+
+    private Task DownloadBundleJsonAsync()
+    {
+        var pack = NerdBrandPackTools.Create(
+            _clientId,
+            BrandPackSource.ExportDesignTokensJson(),
+            BrandPackSource.ExportTypographyJson());
+        return DownloadService.DownloadTextAsync($"{_clientId}-brand-pack.json", NerdBrandPackTools.ToJson(pack)).AsTask();
+    }
+
+    private Task DownloadBundleZipAsync()
+    {
+        var pack = NerdBrandPackTools.Create(
+            _clientId,
+            BrandPackSource.ExportDesignTokensJson(),
+            BrandPackSource.ExportTypographyJson());
+        var bytes = NerdBrandPackTools.ToZip(pack);
+        return DownloadService.DownloadBytesAsync($"{_clientId}-brand-pack.zip", bytes, "application/zip").AsTask();
+    }
+
+    private async Task ImportBundleAsync(InputFileChangeEventArgs args)
+    {
+        var file = args.File;
+        if (file is null)
+        {
+            return;
+        }
+
+        await using var stream = file.OpenReadStream(maxAllowedSize: 4_000_000);
+        if (file.Name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
+        {
+            using var memory = new MemoryStream();
+            await stream.CopyToAsync(memory);
+            memory.Position = 0;
+            ApplyBundle(NerdBrandPackTools.FromZip(memory));
+            return;
+        }
+
+        using var reader = new StreamReader(stream);
+        var json = await reader.ReadToEndAsync();
+        if (json.Contains("\"designTokens\"", StringComparison.OrdinalIgnoreCase))
+        {
+            ApplyBundle(NerdBrandPackTools.FromJson(json));
+            return;
+        }
+
+        BrandPackSource.ApplyDesignTokensJson(json);
+        _status = "Imported design token pack.";
+    }
+
+    private void ApplyBundle(NerdBrandPack pack)
+    {
+        var (tokensJson, typographyJson) = NerdBrandPackTools.Unbundle(pack);
+        BrandPackSource.ApplyDesignTokensJson(tokensJson);
+        BrandPackSource.ApplyTypographyJson(typographyJson);
+        _clientId = pack.ClientId;
+        _status = $"Imported brand bundle for {pack.ClientId}.";
+    }
+}

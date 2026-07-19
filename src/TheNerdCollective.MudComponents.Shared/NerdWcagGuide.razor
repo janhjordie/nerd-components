@@ -1,0 +1,128 @@
+@using Microsoft.AspNetCore.Hosting
+@using Microsoft.Extensions.Hosting
+@inject NerdDesignSystemOptions Options
+@inject IWebHostEnvironment HostEnvironment
+
+@if (!IsAvailable)
+{
+    <MudContainer MaxWidth="MaxWidth.Medium" Class="my-8">
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Filled">
+            WCAG-guiden er deaktiveret eller kun tilgængelig i Development.
+        </MudAlert>
+    </MudContainer>
+}
+else
+{
+    <MudContainer MaxWidth="MaxWidth.Medium" Class="my-8 pa-4">
+        <MudStack Spacing="4">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-2">
+                <div>
+                    <MudText Typo="Typo.h4">WCAG 2.1 — best practice</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        Praktisk reference for typografi, kontrast og hvad vores design system checker automatisk.
+                    </MudText>
+                </div>
+                <MudButton Href="@Options.HubRoute" Variant="Variant.Text">Design system</MudButton>
+            </MudStack>
+
+            <MudAlert Severity="Severity.Info" Variant="Variant.Filled" Dense="true">
+                WCAG kræver <strong>ikke</strong> 16px på Caption og Overline. Vores storyboard bruger rolle-specifikke gulve
+                (12px / 14px / 16px) som best practice — ikke som direkte AA-krav.
+            </MudAlert>
+
+            <MudText Typo="Typo.h6">Typografi</MudText>
+            <MudSimpleTable Dense="true" Hover="true" Bordered="true">
+                <thead>
+                    <tr>
+                        <th>Kriterium</th>
+                        <th>WCAG 2.1</th>
+                        <th>Vores storyboard</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Resize text</td>
+                        <td>1.4.4 — 200% zoom uden tab af funktion</td>
+                        <td><code>rem</code>, <code>clamp()</code>, <code>vw</code></td>
+                    </tr>
+                    <tr>
+                        <td>Text spacing</td>
+                        <td>1.4.12</td>
+                        <td>Line-height ≥ @WcagStandards.MinimumLineHeightRatio · letter-spacing ≥ @WcagStandards.MinimumLetterSpacingEm.ToString("0.##")em</td>
+                    </tr>
+                    <tr>
+                        <td>Kontrast</td>
+                        <td>1.4.3 AA</td>
+                        <td>@(WcagStandards.AaNormalTextRatio):1 normal · @(WcagStandards.AaLargeTextRatio):1 large (≥@(WcagStandards.LargeTextFontSizePixels.ToString("0"))px)</td>
+                    </tr>
+                </tbody>
+            </MudSimpleTable>
+
+            <MudText Typo="Typo.h6">Minimum fontstørrelse ved 320px (best practice)</MudText>
+            <MudSimpleTable Dense="true" Hover="true" Bordered="true">
+                <thead>
+                    <tr>
+                        <th>Tier</th>
+                        <th>Roller</th>
+                        <th>Min</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Primary</td>
+                        <td>Default, Body1, Subtitle1, H1–H6</td>
+                        <td>@WcagStandards.PrimaryTextMinimumPixels.ToString("0")px (1rem)</td>
+                    </tr>
+                    <tr>
+                        <td>Secondary</td>
+                        <td>Body2, Subtitle2, Button</td>
+                        <td>@WcagStandards.SecondaryTextMinimumPixels.ToString("0")px (0,875rem)</td>
+                    </tr>
+                    <tr>
+                        <td>Auxiliary</td>
+                        <td>Caption, Overline</td>
+                        <td>@WcagStandards.AuxiliaryTextMinimumPixels.ToString("0")px (0,75rem)</td>
+                    </tr>
+                </tbody>
+            </MudSimpleTable>
+
+            <MudText Typo="Typo.h6">Typiske fejl</MudText>
+            <MudList T="string" Dense="true">
+                <MudListItem T="string" Icon="@Icons.Material.Filled.WarningAmber">
+                    Caption sat til 16px+ — unødvendigt stort; 12–13px med god kontrast er normalt.
+                </MudListItem>
+                <MudListItem T="string" Icon="@Icons.Material.Filled.WarningAmber">
+                    <code>1rem</code> giver 20px hvis root font-size er 20px eller browser-zoom er 125%.
+                </MudListItem>
+                <MudListItem T="string" Icon="@Icons.Material.Filled.WarningAmber">
+                    "Min 16px" i typography-catalog = storyboard-gulv for rollen, ikke desktop-computed size.
+                </MudListItem>
+            </MudList>
+
+            <MudText Typo="Typo.h6">Værktøjer i design systemet</MudText>
+            <MudStack Row="true" Spacing="2" Class="flex-wrap">
+                <MudButton Href="@Options.TypographyRoute" Variant="Variant.Filled" Color="Color.Primary">
+                    Typography catalog
+                </MudButton>
+                <MudButton Href="@Options.DesignTokensRoute" Variant="Variant.Outlined" Color="Color.Primary">
+                    Color tokens
+                </MudButton>
+            </MudStack>
+
+            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                Officiel reference:
+                <MudLink Href="https://www.w3.org/WAI/WCAG21/Understanding/resize-text.html" Target="_blank">1.4.4 Resize text</MudLink>
+                ·
+                <MudLink Href="https://www.w3.org/WAI/WCAG21/Understanding/text-spacing.html" Target="_blank">1.4.12 Text spacing</MudLink>
+                ·
+                <MudLink Href="https://www.w3.org/WAI/WCAG21/Understanding/contrast-minimum.html" Target="_blank">1.4.3 Contrast</MudLink>
+            </MudText>
+        </MudStack>
+    </MudContainer>
+}
+
+@code {
+    private bool IsAvailable =>
+        Options.EnableWcagGuidePage &&
+        (!Options.RestrictWcagGuideToDevelopment || HostEnvironment.IsDevelopment());
+}

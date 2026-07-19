@@ -2,27 +2,32 @@
 @rendermode InteractiveServer
 @using TheNerdCollective.MudComponents.DesignTokens
 @using TheNerdCollective.MudComponents.ResponsiveTypography
+@using TheNerdCollective.MudComponents.Shared
+@inject NerdDesignTokenOptions TokenOptions
+@inject NerdResponsiveTypographyOptions TypographyOptions
 
 <PageTitle>Design System - The Nerd Collective</PageTitle>
 
-<div class="mb-6">
+<div class="@($"{Ui(NerdDesignSystemUi.PageSurface)} pa-4 mb-6")">
     <MudText Typo="Typo.h3" GutterBottom="true">Nerd design system</MudText>
-    <MudText Typo="Typo.subtitle1">
-        Customer design tokens and responsive typography for MudBlazor 9.6
+    <MudText Typo="Typo.subtitle1" Class="@Ui(NerdDesignSystemUi.MutedContent)">
+        Customer design tokens and responsive typography for MudBlazor @TokenOptions.MudBlazorVersion
     </MudText>
 </div>
 
 <MudGrid Class="mb-6">
     <MudItem xs="12" md="6">
-        <MudPaper Class="pa-4 dnf-skov" Outlined="true">
+        <MudPaper Class="@($"{TokenClass(PreviewTokenNames.FirstOrDefault() ?? "navy")} pa-4")" Outlined="true">
             <MudText Typo="Typo.h5">Token preview</MudText>
             <MudText Typo="Typo.body2" Class="mt-2">
-                Use semantic classes such as <code>dnf-skov</code> and <code>dnf-kridt</code> on any MudBlazor component.
+                Tokens from DI (<code>@TokenOptions.Prefix</code>) — @TokenOptions.Colors.Count configured.
             </MudText>
             <MudStack Row="true" Spacing="1" Class="mt-3 flex-wrap">
-                <MudButton Class="dnf-skov" Variant="Variant.Filled">Skov</MudButton>
-                <MudButton Class="dnf-kridt" Variant="Variant.Filled">Kridt</MudButton>
-                <MudChip T="string" Class="dnf-skov" Variant="Variant.Filled">Chip</MudChip>
+                @foreach (var tokenName in PreviewTokenNames)
+                {
+                    <MudButton Class="@TokenClass(tokenName)" Variant="Variant.Filled">@tokenName</MudButton>
+                }
+                <MudChip T="string" Class="@TokenClass(PreviewTokenNames.FirstOrDefault() ?? "navy")" Variant="Variant.Filled">Chip</MudChip>
             </MudStack>
         </MudPaper>
     </MudItem>
@@ -31,54 +36,61 @@
             <MudText Typo="Typo.h5">Responsive typography</MudText>
             <MudText Typo="Typo.h3" Class="mt-2">Clamp-driven heading</MudText>
             <MudText Typo="Typo.body1" Class="mt-2">
-                Typography is configured through <code>MudTheme.Typography</code> using CSS <code>clamp()</code>.
+                @TypographyOptions.Typography.ConfiguredRoles.Count roles configured through <code>MudTheme.Typography</code>.
             </MudText>
         </MudPaper>
     </MudItem>
 </MudGrid>
 
-<MudPaper Class="pa-4 mb-6 dnf-recipe-kridt-himmel" Outlined="true">
-    <MudText Typo="Typo.h5">Token combinations</MudText>
-    <MudText Typo="Typo.body2" Class="mt-2">
-        Combine tokens by assigning one class to the surface and another to its content.
-        Here, <code>dnf-recipe-kridt-himmel</code> provides the paper/card surface and <code>dnf-himmel</code>
-        provides the action and supporting text.
-    </MudText>
-    <MudGrid Class="mt-3" Spacing="2">
-        <MudItem xs="12" md="6">
-            <MudCard Class="dnf-recipe-kridt-himmel" Outlined="true">
-                <MudCardContent>
-                    <MudText Typo="Typo.h6">Kridt surface</MudText>
-                    <MudText Class="dnf-himmel" Typo="Typo.body1">
-                        Himmel is used for the action text and supporting content.
-                    </MudText>
-                    <MudButton Class="dnf-himmel mt-3" Variant="Variant.Filled">
-                        Himmel action
-                    </MudButton>
-                </MudCardContent>
-            </MudCard>
-        </MudItem>
-        <MudItem xs="12" md="6">
-            <MudPaper Class="pa-4 dnf-recipe-kridt-himmel" Elevation="1">
-                <MudText Class="dnf-himmel" Typo="Typo.h6">Secondary panel</MudText>
-                <MudText Class="dnf-himmel mt-2" Typo="Typo.body2">
-                    This demonstrates the same combination with MudPaper.
-                </MudText>
-                <MudStack Row="true" Spacing="1" Class="mt-3">
-                    <MudButton Class="dnf-himmel" Variant="Variant.Outlined">Outlined</MudButton>
-                    <MudButton Class="dnf-himmel" Variant="Variant.Text">Text</MudButton>
-                </MudStack>
-            </MudPaper>
-        </MudItem>
+@if (TokenOptions.Recipes.Count > 0)
+{
+    <MudText Typo="Typo.h5" Class="mb-3">Token combinations</MudText>
+    <MudGrid Class="mb-6" Spacing="2">
+        @foreach (var recipe in TokenOptions.Recipes.OrderBy(pair => pair.Key, StringComparer.Ordinal))
+        {
+            var recipeClass = RecipeClass(recipe.Key);
+            var actionToken = recipe.Value.Action ?? recipe.Value.Content;
+            <MudItem xs="12" md="6">
+                <MudCard Class="@recipeClass" Outlined="true">
+                    <MudCardContent>
+                        <MudText Typo="Typo.h6">@recipe.Key</MudText>
+                        <MudText Class="@TokenClass(recipe.Value.Content)" Typo="Typo.body1">
+                            Surface <code>@recipe.Value.Surface</code> · content <code>@recipe.Value.Content</code>
+                            @if (recipe.Value.Action is not null)
+                            {
+                                <text> · action <code>@recipe.Value.Action</code></text>
+                            }
+                        </MudText>
+                        <MudButton Class="@($"{TokenClass(actionToken)} mt-3")" Variant="Variant.Filled">
+                            @actionToken action
+                        </MudButton>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+        }
     </MudGrid>
-</MudPaper>
+}
 
 <MudPaper Class="pa-4" Outlined="true">
     <MudText Typo="Typo.h6" Class="mb-3">Live catalogs</MudText>
     <MudStack Row="true" Spacing="2" Class="flex-wrap">
-        <MudButton Href="/nerd-design-system" Variant="Variant.Filled" Color="Color.Primary">Design system hub</MudButton>
-        <MudButton Href="/nerd-design-tokens" Variant="Variant.Outlined" Color="Color.Primary">Design tokens</MudButton>
-        <MudButton Href="/nerd-typography" Variant="Variant.Outlined" Color="Color.Primary">Responsive typography</MudButton>
-        <MudButton Href="/nerd-playbook" Variant="Variant.Filled" Color="Color.Secondary">MudBlazor PlayBook</MudButton>
+        <MudButton Href="/nerd-design-system" Variant="Variant.Filled" Class="@Ui(NerdDesignSystemUi.PrimaryAction)">Design system hub</MudButton>
+        <MudButton Href="/nerd-design-tokens" Variant="Variant.Outlined" Class="@Ui(NerdDesignSystemUi.PrimaryAction)">Token colors</MudButton>
+        <MudButton Href="/nerd-design-token-recipes" Variant="Variant.Outlined" Class="@Ui(NerdDesignSystemUi.PrimaryAction)">Token recipes</MudButton>
+        <MudButton Href="/nerd-typography" Variant="Variant.Outlined" Class="@Ui(NerdDesignSystemUi.PrimaryAction)">Responsive typography</MudButton>
+        <MudButton Href="/nerd-playbook" Variant="Variant.Filled" Class="@Ui(NerdDesignSystemUi.MutedContent)">MudBlazor PlayBook</MudButton>
     </MudStack>
 </MudPaper>
+
+<NerdBrandPackExporter />
+
+@code {
+    private IEnumerable<string> PreviewTokenNames =>
+        TokenOptions.Colors.Keys.OrderBy(name => name, StringComparer.Ordinal).Take(4);
+
+    private string TokenClass(string tokenName) => $"{TokenOptions.Prefix}-{tokenName}";
+
+    private string RecipeClass(string recipeName) => $"{TokenOptions.Prefix}-recipe-{recipeName}";
+
+    private string Ui(string semanticAlias) => NerdDesignSystemUi.TokenClass(TokenOptions.Prefix, semanticAlias);
+}

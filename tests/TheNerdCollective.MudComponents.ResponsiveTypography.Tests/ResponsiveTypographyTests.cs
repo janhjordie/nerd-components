@@ -68,7 +68,7 @@ public class ResponsiveTypographyTests
     }
 
     [Fact]
-    public void UseResponsiveTypography_leaves_omitted_roles_unchanged_and_returns_theme()
+    public void UseResponsiveTypography_leaves_omitted_roles_unchanged_when_default_is_not_set()
     {
         var theme = new MudTheme();
         theme.Typography.H2.FontSize = "original";
@@ -123,10 +123,10 @@ public class ResponsiveTypographyTests
         NerdTypographyPresets.ApplyMarketing(options);
 
         Assert.Contains("H1", options.ConfiguredRoles);
-        Assert.Equal("1.15", options.Roles.H1.LineHeight);
-        Assert.Equal("1.6", options.Roles.Body1.LineHeight);
         Assert.Equal("1.5", options.LineHeight);
-        Assert.Equal("0.01em", options.LetterSpacing);
+        Assert.Equal("0.12em", options.LetterSpacing);
+        Assert.Equal("0.875rem", options.Button);
+        Assert.Equal("clamp(0.75rem, 0.7vw, 0.8125rem)", options.Caption);
     }
 
     [Fact]
@@ -147,14 +147,13 @@ public class ResponsiveTypographyTests
     }
 
     [Theory]
-    [InlineData("clamp(2.5rem, 5vw, 4.5rem)", 320, 40)]
-    [InlineData("clamp(2.5rem, 5vw, 4.5rem)", 768, 40)]
-    [InlineData("clamp(2.5rem, 5vw, 4.5rem)", 1280, 64)]
-    [InlineData("clamp(2.5rem, 5vw, 4.5rem)", 1920, 72)]
-    [InlineData("clamp(1rem, 2.2vw, 1.25rem)", 320, 16)]
-    [InlineData("clamp(1rem, 2.2vw, 1.25rem)", 768, 16.9)]
-    [InlineData("clamp(1rem, 2.2vw, 1.25rem)", 1280, 20)]
-    [InlineData("clamp(1rem, 2.2vw, 1.25rem)", 1920, 20)]
+    [InlineData("clamp(1.75rem, 3.5vw, 2.5rem)", 320, 28)]
+    [InlineData("clamp(1.75rem, 3.5vw, 2.5rem)", 768, 28)]
+    [InlineData("clamp(1.75rem, 3.5vw, 2.5rem)", 1280, 40)]
+    [InlineData("clamp(1.75rem, 3.5vw, 2.5rem)", 1920, 40)]
+    [InlineData("clamp(0.75rem, 0.7vw, 0.8125rem)", 320, 12)]
+    [InlineData("clamp(0.75rem, 0.7vw, 0.8125rem)", 1280, 12)]
+    [InlineData("clamp(0.75rem, 0.7vw, 0.8125rem)", 1920, 13)]
     public void Marketing_preset_has_stable_sizes_at_supported_viewports(
         string fontSize, double viewport, double expected)
     {
@@ -225,17 +224,20 @@ public class ResponsiveTypographyTests
     [Fact]
     public void Editorial_and_dashboard_presets_configure_distinct_scales()
     {
-        var editorial = new ResponsiveTypographyOptions();
-        var dashboard = new ResponsiveTypographyOptions();
+        var editorial = new NerdResponsiveTypographyOptions();
+        var dashboard = new NerdResponsiveTypographyOptions();
 
-        NerdTypographyPresets.ApplyEditorial(editorial);
-        NerdTypographyPresets.ApplyDashboard(dashboard);
+        NerdTypographyPresets.ApplyEditorial(editorial.Typography);
+        NerdTypographyPresets.ApplyDashboard(dashboard.Typography);
 
-        Assert.StartsWith("clamp(", editorial.H1);
-        Assert.StartsWith("clamp(", dashboard.H1);
-        Assert.NotEqual(editorial.H1, dashboard.H1);
-        Assert.Equal("1rem", dashboard.Body1);
-        Assert.Equal("1.7", editorial.Roles.Body1.LineHeight);
+        Assert.StartsWith("clamp(", editorial.Typography.H1);
+        Assert.StartsWith("clamp(", dashboard.Typography.H1);
+        Assert.NotEqual(editorial.Typography.H1, dashboard.Typography.H1);
+        Assert.Equal("1rem", dashboard.Typography.Body1);
+        Assert.Equal("0.875rem", dashboard.Typography.Button);
+        Assert.Equal("1.7", editorial.Typography.Roles.Body1.LineHeight);
+        Assert.Empty(NerdTypographyAccessibilityTools.GetAccessibilityWarnings(editorial));
+        Assert.Empty(NerdTypographyAccessibilityTools.GetAccessibilityWarnings(dashboard));
     }
 
     [Fact]
@@ -249,5 +251,23 @@ public class ResponsiveTypographyTests
         Assert.Contains(results, result => result.Role == "H1");
         Assert.Contains(results, result => result.Role == "Body1");
         Assert.All(results, result => Assert.False(string.IsNullOrWhiteSpace(result.WcagVersion)));
+    }
+
+    [Fact]
+    public void Tokens_studio_export_and_import_round_trip_font_sizes()
+    {
+        var source = new NerdResponsiveTypographyOptions();
+        source.Typography.H1 = "clamp(2rem, 4vw, 4rem)";
+        source.Typography.Body1 = "1rem";
+        source.Typography.LineHeight = "1.5";
+
+        var json = NerdTypographyTools.ExportTokensStudioJson(source);
+        var restored = new NerdResponsiveTypographyOptions();
+        NerdTypographyTools.ImportTokensStudioJson(restored, json);
+
+        Assert.Equal("clamp(2rem, 4vw, 4rem)", restored.Typography.H1);
+        Assert.Equal("1rem", restored.Typography.Body1);
+        Assert.Equal("1.5", restored.Typography.LineHeight);
+        Assert.Contains("\"fontSizes\"", json);
     }
 }

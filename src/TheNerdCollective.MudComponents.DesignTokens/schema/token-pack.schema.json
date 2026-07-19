@@ -5,8 +5,12 @@
   "required": ["clientId", "prefix", "version", "colors"],
   "properties": {
     "clientId": { "type": "string", "minLength": 1 },
+    "brandId": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+    "displayName": { "type": "string", "minLength": 1 },
     "prefix": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
-    "version": { "type": "integer", "minimum": 1 },
+    "version": { "type": "integer", "minimum": 2 },
+    "brandIdentityVersion": { "type": "string" },
+    "pairingGuideName": { "type": "string" },
     "updatedAt": { "type": "string", "format": "date-time" },
     "colors": {
       "type": "object",
@@ -18,7 +22,12 @@
           "light": { "type": "string" },
           "dark": { "type": "string" },
           "contrastText": { "type": "string" },
-          "darkContrastText": { "type": "string" }
+          "darkContrastText": { "type": "string" },
+          "description": { "type": "string" },
+          "roles": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
         },
         "additionalProperties": true
       }
@@ -26,7 +35,39 @@
     "aliases": { "type": "object", "additionalProperties": { "type": "string" } },
     "radii": { "type": "object", "additionalProperties": { "type": "string" } },
     "shadows": { "type": "object", "additionalProperties": { "type": "string" } },
-    "recipes": { "type": "object", "additionalProperties": { "type": "object" } }
+    "recipes": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["surface", "content"],
+        "properties": {
+          "surface": { "type": "string" },
+          "content": { "type": "string" },
+          "action": { "type": "string" },
+          "border": { "type": "string" },
+          "label": { "type": "string" },
+          "usage": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "approvedPairings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["content", "surface"],
+        "properties": {
+          "content": { "type": "string" },
+          "surface": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "lockedTokens": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "opacities": { "type": "object" }
   },
   "additionalProperties": false
 }

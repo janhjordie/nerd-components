@@ -1,0 +1,12 @@
+{
+  "name": "thenerdcollective-e2e",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "test:catalog": "playwright test design-tokens-catalog.spec.ts",
+    "test:portal": "playwright test portal-pickers.spec.ts"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.52.0"
+  }
+}

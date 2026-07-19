@@ -19,3 +19,7 @@ body[data-dark-mode="true"] .mud-appbar img {
 .mud-appbar .mud-link:hover {
     opacity: 0.8;
 }
+
+#blazor-error-ui {
+    display: none;
+}

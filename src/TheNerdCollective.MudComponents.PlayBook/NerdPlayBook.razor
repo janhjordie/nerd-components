@@ -9,121 +9,144 @@
 else
 {
     <NerdDesignSystemScripts />
-    @if (Options.EnableThemeKit)
-    {
-        <MudThemeProviderSync />
-    }
     <NerdDesignTokenStyles />
-    @if (Options.EnableThemeKit)
-    {
-        @MainContent
-    }
-    else
-    {
-        <NerdCatalogThemeProvider Theme="_previewTheme" IsDarkMode="_previewDark">
-            @MainContent
-        </NerdCatalogThemeProvider>
-    }
+    <NerdResponsiveTypographyStyles />
+    <NerdCatalogThemeProvider Theme="_previewTheme" IsDarkMode="_previewDark">
+        @PlayBookBody
+    </NerdCatalogThemeProvider>
 }
 
 @code {
-    private RenderFragment MainContent => __builder =>
+    private RenderFragment PlayBookBody => __builder =>
     {
-        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-6">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-6 pa-4" Style="@NerdDesignSystemUi.PageSurfaceStyle(TokenOptions.Prefix)">
             <MudStack Spacing="3">
                 <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-3">
                     <div>
                         <MudText Typo="Typo.h4">MudBlazor PlayBook</MudText>
-                        <MudText Typo="Typo.body2" Color="Color.Secondary">
-                            @MudBlazorPlayBookCatalog.All.Count components · MudBlazor @TokenOptions.MudBlazorVersion
-                            @if (Options.EnableThemeKit)
-                            {
-                                <span> · ThemeKit JSON themes</span>
-                            }
+                        <MudText Typo="Typo.body2" Class="@Ui(NerdDesignSystemUi.MutedContent)">
+                            @MudBlazorPlayBookCatalog.All.Count components · Prefix <code>@TokenOptions.Prefix</code> · MudBlazor @TokenOptions.MudBlazorVersion
                         </MudText>
                     </div>
-                    <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="flex-wrap">
-                        @if (Options.EnableThemeKit)
-                        {
-                            <MudThemeToolbar AlwaysShowThemeSwitcher="true" />
-                        }
+                    <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="flex-wrap" data-nerd-token="@Ui(NerdDesignSystemUi.PageSurface)">
                         <MudButton Href="@HubOptions.HubRoute" Variant="Variant.Text">Design system</MudButton>
                         <MudButton Href="@HubOptions.DesignTokensRoute" Variant="Variant.Text">Tokens</MudButton>
                         <MudButton Href="@HubOptions.TypographyRoute" Variant="Variant.Text">Typography</MudButton>
-                        <MudChip T="string" Color="Color.Info" Variant="Variant.Outlined">@Options.PlayBookRoute</MudChip>
+                        <MudChip T="string" Class="@Ui(NerdDesignSystemUi.Info)" Variant="Variant.Outlined">@Options.PlayBookRoute</MudChip>
                     </MudStack>
                 </MudStack>
 
                 <NerdPlayBookToolbar
-                    TokenNames="_tokenNames"
+                    TokenNames="@_tokenNames"
+                    BrandPacks="@InstalledBrandPacks"
+                    SelectedBrand="@_selectedBrand"
+                    SelectedBrandChanged="@SwitchBrandAsync"
+                    ShowBrandSwitcher="@ShowBrandSwitcher"
                     @bind-SelectedTokenFilter="_selectedTokenFilter"
-                    TypographyPreset="_typographyPreset"
-                    TypographyPresetChanged="OnTypographyPresetChanged"
+                    TypographyPreset="@_typographyPreset"
+                    TypographyPresetChanged="@OnTypographyPresetChanged"
                     @bind-PreviewDark="_previewDark"
-                    @bind-SelectedCategory="_selectedCategory"
-                    @bind-SearchQuery="_searchQuery"
-                    ShowTypographyPreset="!Options.EnableThemeKit"
-                    ShowDarkModeToggle="!Options.EnableThemeKit" />
+                    @bind-SearchQuery="_searchQuery" />
 
-                @if (TokenOptions.Recipes.Count > 0)
-                {
-                    <MudPaper Outlined="true" Class="pa-4">
-                        <MudText Typo="Typo.h6">Token combinations</MudText>
-                        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
-                            Reusable surface, content and action recipes from the design-token system.
-                        </MudText>
-                        <MudGrid Spacing="2">
-                            @foreach (var recipe in TokenOptions.Recipes.OrderBy(pair => pair.Key, StringComparer.Ordinal))
+                <MudTabs @bind-ActivePanelIndex="_activeSectionTabIndex" Elevation="1" Rounded="true" ApplyEffectsToContainer="true">
+                    <MudTabPanel Text="Mud components" Icon="@Icons.Material.Filled.Widgets">
+                        <MudStack Spacing="3" Class="mt-4">
+                            <MudTabs @bind-ActivePanelIndex="_activeCategoryTabIndex" Elevation="0" Rounded="true" Centered="true" Class="flex-wrap">
+                                <MudTabPanel Text="@($"All ({CountInCategory(null)})")" />
+                                @foreach (var category in MudBlazorPlayBookCatalog.Categories)
+                                {
+                                    <MudTabPanel Text="@($"{category} ({CountInCategory(category)})")" />
+                                }
+                            </MudTabs>
+
+                            <MudText Typo="Typo.body2" Class="@Ui(NerdDesignSystemUi.MutedContent)">
+                                Showing @FilteredEntries.Count component@(FilteredEntries.Count == 1 ? "" : "s")
+                                @if (IsSearching)
+                                {
+                                    <span> matching <strong>@_searchQuery</strong> across all categories</span>
+                                }
+                                else if (ActiveCategory is not null)
+                                {
+                                    <span> in <strong>@ActiveCategory</strong></span>
+                                }
+                                across @VisibleTokens.Count design token@(VisibleTokens.Count == 1 ? "" : "s").
+                                @if (Options.EnableComponentPlaygrounds)
+                                {
+                                    <span> Open <strong>Playground</strong> on any card to edit props live.</span>
+                                }
+                            </MudText>
+
+                            @if (_tokenNames.Count == 0)
                             {
-                                var recipeClass = $"{TokenOptions.Prefix}-recipe-{recipe.Key}";
-                                <MudItem xs="12" md="6">
-                                    <MudCard Class="@recipeClass" Outlined="true">
-                                        <MudCardContent>
-                                            <MudText Typo="Typo.subtitle1">@recipe.Key</MudText>
-                                            <MudText Typo="Typo.body2" Class="mt-1">
-                                                Surface: <code>@recipe.Value.Surface</code> ·
-                                                Content: <code>@recipe.Value.Content</code> ·
-                                                Action: <code>@(recipe.Value.Action ?? recipe.Value.Surface)</code>
-                                            </MudText>
-                                            <MudStack Row="true" Spacing="1" Class="mt-3">
-                                                <MudButton Variant="Variant.Filled">Action</MudButton>
-                                                <MudButton Variant="Variant.Outlined">Outlined</MudButton>
-                                                <MudText Typo="Typo.body2">Supporting text</MudText>
-                                            </MudStack>
-                                        </MudCardContent>
-                                    </MudCard>
-                                </MudItem>
+                                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
+                                    No design tokens configured. Register colors with <code>AddNerdDesignTokens</code> to enable the token matrix.
+                                </MudAlert>
                             }
-                        </MudGrid>
-                    </MudPaper>
-                }
+                            else if (FilteredEntries.Count == 0)
+                            {
+                                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
+                                    No components match the current filter. Try another category or clear the search.
+                                </MudAlert>
+                            }
 
-                <MudText Typo="Typo.body2" Color="Color.Secondary">
-                    Showing @FilteredEntries.Count component@(FilteredEntries.Count == 1 ? "" : "s")
-                    across @VisibleTokens.Count design token@(VisibleTokens.Count == 1 ? "" : "s").
-                    @if (Options.EnableComponentPlaygrounds)
-                    {
-                        <span> Open <strong>Playground</strong> on any card to edit props live.</span>
-                    }
-                </MudText>
+                            @foreach (var entry in FilteredEntries)
+                            {
+                                <NerdPlayBookComponentCard
+                                    Entry="@entry"
+                                    Tokens="@VisibleTokens"
+                                    DocsBaseUrl="@Options.MudBlazorDocsBaseUrl"
+                                    ThemeMode="@ThemeMode"
+                                    EnablePlayground="@Options.EnableComponentPlaygrounds"
+                                    PlaygroundTokenClass="@PlaygroundTokenClass" />
+                            }
+                        </MudStack>
+                    </MudTabPanel>
 
-                @if (_tokenNames.Count == 0)
-                {
-                    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
-                        No design tokens configured. Register colors with <code>AddNerdDesignTokens</code> to enable the token matrix.
-                    </MudAlert>
-                }
+                    <MudTabPanel Text="Typography" Icon="@Icons.Material.Filled.TextFields">
+                        <div class="mt-4">
+                            <NerdPlayBookTypographyPanel PreviewTheme="@_previewTheme" @bind-ViewportWidth="_typographyViewport" />
+                        </div>
+                    </MudTabPanel>
 
-                @foreach (var entry in FilteredEntries)
-                {
-                    <NerdPlayBookComponentCard
-                        Entry="entry"
-                        Tokens="VisibleTokens"
-                        DocsBaseUrl="@Options.MudBlazorDocsBaseUrl"
-                        ThemeMode="@ThemeMode"
-                        EnablePlayground="Options.EnableComponentPlaygrounds"
-                        PlaygroundTokenClass="@PlaygroundTokenClass" />
-                }
+                    <MudTabPanel Text="Layout &amp; recipes" Icon="@Icons.Material.Filled.ViewQuilt">
+                        <MudStack Spacing="3" Class="mt-4">
+                            <NerdPlayBookLayoutKits TokenOptions="@TokenOptions" />
+
+                            @if (TokenOptions.Recipes.Count > 0)
+                            {
+                                <MudPaper Outlined="true" Class="pa-4">
+                                    <MudText Typo="Typo.h6">Token combinations</MudText>
+                                    <MudText Typo="Typo.body2" Class="@($"{Ui(NerdDesignSystemUi.MutedContent)} mb-3")">
+                                        Reusable surface, content and action recipes from the design-token system.
+                                    </MudText>
+                                    <MudGrid Spacing="2">
+                                        @foreach (var recipe in TokenOptions.Recipes.OrderBy(pair => pair.Key, StringComparer.Ordinal))
+                                        {
+                                            var recipeClass = $"{TokenOptions.Prefix}-recipe-{recipe.Key}";
+                                            <MudItem xs="12" md="6">
+                                                <MudCard Class="@recipeClass" Outlined="true">
+                                                    <MudCardContent>
+                                                        <MudText Typo="Typo.subtitle1">@recipe.Key</MudText>
+                                                        <MudText Typo="Typo.body2" Class="mt-1">
+                                                            Surface: <code>@recipe.Value.Surface</code> ·
+                                                            Content: <code>@recipe.Value.Content</code> ·
+                                                            Action: <code>@(recipe.Value.Action ?? recipe.Value.Surface)</code>
+                                                        </MudText>
+                                                        <MudStack Row="true" Spacing="1" Class="mt-3">
+                                                            <MudButton Variant="Variant.Filled">Action</MudButton>
+                                                            <MudButton Variant="Variant.Outlined">Outlined</MudButton>
+                                                            <MudText Typo="Typo.body2">Supporting text</MudText>
+                                                        </MudStack>
+                                                    </MudCardContent>
+                                                </MudCard>
+                                            </MudItem>
+                                        }
+                                    </MudGrid>
+                                </MudPaper>
+                            }
+                        </MudStack>
+                    </MudTabPanel>
+                </MudTabs>
             </MudStack>
         </MudContainer>
     };

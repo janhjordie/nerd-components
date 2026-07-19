@@ -1,16 +1,14 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using MudBlazor;
-using TheNerdCollective.Blazor.ThemeKit;
 using TheNerdCollective.MudComponents.DesignTokens;
 using TheNerdCollective.MudComponents.ResponsiveTypography;
 using TheNerdCollective.MudComponents.Shared;
 
 namespace TheNerdCollective.MudComponents.PlayBook;
 
-public partial class NerdPlayBook : IDisposable
+public partial class NerdPlayBook
 {
     [Inject]
     private NerdPlayBookOptions Options { get; set; } = default!;
@@ -28,28 +26,35 @@ public partial class NerdPlayBook : IDisposable
     private IWebHostEnvironment HostEnvironment { get; set; } = default!;
 
     [Inject]
-    private IServiceProvider Services { get; set; } = default!;
+    private NerdDesignTokenCss TokenCss { get; set; } = default!;
 
-    private IMudThemeStateService? _themeState;
+    [Inject]
+    private NerdResponsiveTypographyCss TypographyCss { get; set; } = default!;
 
+    [Inject]
+    private IEnumerable<INerdBrandPack> BrandPacks { get; set; } = [];
+
+    private int _activeSectionTabIndex;
+    private int _activeCategoryTabIndex;
     private bool _previewDark;
+    private string _selectedBrand = string.Empty;
     private string _typographyPreset = NerdPlayBookTypography.DefaultPreset;
     private string _selectedTokenFilter = "all";
-    private string _selectedCategory = "all";
     private string _searchQuery = string.Empty;
+    private double _typographyViewport = 1280;
     private MudTheme _previewTheme = new();
     private IReadOnlyList<string> _tokenNames = [];
 
+    private IEnumerable<INerdBrandPack> InstalledBrandPacks =>
+        BrandPacks.OrderBy(pack => pack.Id, StringComparer.OrdinalIgnoreCase);
+
+    private bool ShowBrandSwitcher => InstalledBrandPacks.Any();
+
     protected override void OnInitialized()
     {
-        _tokenNames = TokenOptions.Colors.Keys.OrderBy(name => name, StringComparer.Ordinal).ToList();
+        _selectedBrand = TokenOptions.ActiveBrandPackId ?? TokenOptions.Prefix;
+        RefreshTokenNames();
         ApplyTypographyPreset();
-
-        if (Options.EnableThemeKit)
-        {
-            _themeState = Services.GetRequiredService<IMudThemeStateService>();
-            _themeState.Changed += OnThemeStateChanged;
-        }
     }
 
     private bool IsAvailable =>
@@ -66,37 +71,74 @@ public partial class NerdPlayBook : IDisposable
             ? VisibleTokens.FirstOrDefault() ?? string.Empty
             : $"{TokenOptions.Prefix}-{_selectedTokenFilter}";
 
-    private string ThemeMode => Options.EnableThemeKit && _themeState is not null
-        ? _themeState.IsDarkMode ? "dark" : "light"
-        : _previewDark ? "dark" : "light";
+    private string Ui(string semanticAlias) => NerdDesignSystemUi.TokenClass(TokenOptions.Prefix, semanticAlias);
 
-    private IReadOnlyList<MudBlazorPlayBookEntry> FilteredEntries
+    private string ThemeMode => _previewDark ? "dark" : "light";
+
+    private string? ActiveCategory =>
+        _activeCategoryTabIndex <= 0
+            ? null
+            : MudBlazorPlayBookCatalog.Categories[_activeCategoryTabIndex - 1];
+
+    private bool IsSearching => !string.IsNullOrWhiteSpace(_searchQuery);
+
+    private int CountInCategory(string? category) =>
+        category is null
+            ? MudBlazorPlayBookCatalog.All.Count
+            : MudBlazorPlayBookCatalog.GetByCategory(category).Count();
+
+    private IReadOnlyList<MudBlazorPlayBookEntry> FilteredEntries => GetFilteredEntries(ActiveCategory);
+
+    private IReadOnlyList<MudBlazorPlayBookEntry> GetFilteredEntries(string? category)
     {
-        get
+        IEnumerable<MudBlazorPlayBookEntry> entries = MudBlazorPlayBookCatalog.All;
+
+        if (!IsSearching && category is not null)
         {
-            IEnumerable<MudBlazorPlayBookEntry> entries = MudBlazorPlayBookCatalog.All;
-
-            if (!string.Equals(_selectedCategory, "all", StringComparison.OrdinalIgnoreCase))
-            {
-                entries = entries.Where(entry =>
-                    string.Equals(entry.Category, _selectedCategory, StringComparison.Ordinal));
-            }
-
-            if (!string.IsNullOrWhiteSpace(_searchQuery))
-            {
-                entries = entries.Where(entry =>
-                    entry.DisplayName.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase) ||
-                    entry.Id.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase) ||
-                    (entry.Description?.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase) ?? false));
-            }
-
-            return entries.ToList();
+            entries = entries.Where(entry =>
+                string.Equals(entry.Category, category, StringComparison.Ordinal));
         }
+
+        if (IsSearching)
+        {
+            entries = entries.Where(entry =>
+                entry.DisplayName.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase) ||
+                entry.Id.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase) ||
+                entry.Category.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase) ||
+                (entry.Description?.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase) ?? false));
+        }
+
+        return entries.ToList();
     }
 
     private void ApplyTypographyPreset()
     {
         _previewTheme = NerdPlayBookTypography.CreateTheme(_typographyPreset, TypographyOptions);
+        TypographyCss.Update(TypographyOptions.Typography);
+    }
+
+    private void RefreshTokenNames()
+    {
+        _tokenNames = TokenOptions.Colors.Keys.OrderBy(name => name, StringComparer.Ordinal).ToList();
+
+        if (_selectedTokenFilter != "all" &&
+            !_tokenNames.Contains(_selectedTokenFilter, StringComparer.OrdinalIgnoreCase))
+        {
+            _selectedTokenFilter = "all";
+        }
+    }
+
+    private Task SwitchBrandAsync(string brand)
+    {
+        _selectedBrand = brand;
+        NerdBrandPackRegistry.Instance.Configure(brand, TokenOptions);
+        TokenCss.Update(TokenOptions);
+        HubOptions.ActiveTokenPackId = brand;
+        HubOptions.ActiveBrandIdentityVersion = TokenOptions.ActiveBrandIdentityVersion;
+        NerdBrandTypographySwitcher.TrySwitchBrand(brand, TypographyOptions, HubOptions, _previewTheme);
+        RefreshTokenNames();
+        ApplyTypographyPreset();
+        return Task.CompletedTask;
     }
 
     private Task OnTypographyPresetChanged(string value)
@@ -104,15 +146,5 @@ public partial class NerdPlayBook : IDisposable
         _typographyPreset = value;
         ApplyTypographyPreset();
         return Task.CompletedTask;
-    }
-
-    private void OnThemeStateChanged() => InvokeAsync(StateHasChanged);
-
-    public void Dispose()
-    {
-        if (Options.EnableThemeKit && _themeState is not null)
-        {
-            _themeState.Changed -= OnThemeStateChanged;
-        }
     }
 }

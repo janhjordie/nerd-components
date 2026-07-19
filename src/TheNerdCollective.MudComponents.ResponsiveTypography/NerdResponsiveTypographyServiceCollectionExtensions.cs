@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using MudBlazor;
 using TheNerdCollective.MudComponents.Shared;
 
@@ -26,14 +27,24 @@ public static class NerdResponsiveTypographyServiceCollectionExtensions
         var options = new NerdResponsiveTypographyOptions();
         configure(options);
 
-        services.AddNerdDesignSystem(hub => hub.TypographyRoute = options.CatalogRoute);
+        services.AddNerdDesignSystem(hub =>
+        {
+            hub.TypographyRoute = options.CatalogRoute;
+            hub.TypographyRoleCount = options.Typography.ConfiguredRoles.Count;
+        });
         services.AddSingleton(options);
+        services.AddSingleton(sp => new NerdResponsiveTypographyCss(
+            MudBlazorResponsiveTypographyCssGenerator.Generate(options.Typography)));
         services.AddSingleton<MudTheme>(options.CreatePreviewTheme());
+        services.TryAddSingleton<INerdTypographyPackStore>(
+            _ => new FileNerdTypographyPackStore("App_Data/typography-packs"));
 
         if (options.Typography.ConfiguredRoles.Count > 0 && options.WarnOnAccessibilityFailuresAtStartup)
         {
             services.AddHostedService<NerdTypographyAccessibilityStartupValidator>();
         }
+
+        services.AddNerdBrandPackIntegration();
 
         return services;
     }

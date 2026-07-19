@@ -1,31 +1,41 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
+@implements IDisposable
 @using TheNerdCollective.MudComponents.DesignTokens
 @using TheNerdCollective.MudComponents.ResponsiveTypography
+@using TheNerdCollective.MudComponents.Shared
 @inject IJSRuntime JS
+@inject NerdDesignTokenOptions TokenOptions
+@inject NerdDesignTokenCss TokenCss
+@inject NerdDesignSystemOptions HubOptions
+@inject NerdResponsiveTypographyOptions TypographyOptions
+@inject NerdResponsiveTypographyCss TypographyCss
+@inject NavigationManager Navigation
 
-<MudThemeProvider Theme="@_theme" IsDarkMode="_isDarkMode" />
 <NerdDesignTokenStyles />
+<NerdDesignSystemScripts />
+<MudThemeProvider Theme="@_theme" IsDarkMode="_isDarkMode" />
+<NerdResponsiveTypographyStyles />
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
 <MudLayout>
-    <MudAppBar Elevation="1" Color="Color.Primary">
+    <MudAppBar Elevation="1" Color="Color.Transparent" Class="@RecipeClass("header")">
         <MudHidden Breakpoint="Breakpoint.SmAndUp">
-            <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Secondary" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
+            <MudIconButton Icon="@Icons.Material.Filled.Menu" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
         </MudHidden>
         
         <div class="d-flex align-center ml-3">
-            <img src="@(_isDarkMode ? "images/logo-light.svg" : "images/logo-dark.svg")" alt="The Nerd Collective" style="height: 32px; margin-right: 12px;" />
+            <img src="@HeaderLogoSrc" alt="The Nerd Collective" style="height: 32px; margin-right: 12px;" />
             <MudText Typo="Typo.h5">Components</MudText>
         </div>
         
         <MudSpacer />
-        <MudIconButton Icon="@(DarkLightModeButtonIcon)" Color="Color.Secondary" OnClick="@DarkModeToggle" />
+        <MudIconButton Icon="@(DarkLightModeButtonIcon)" OnClick="@DarkModeToggle" />
     </MudAppBar>
     <MudDrawer id="nav-drawer" @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
         <NavMenu />
     </MudDrawer>
-     <MudMainContent>
+     <MudMainContent Style="@NerdDesignSystemUi.PageSurfaceStyle(LayoutSurfacePrefix)">
        <MudContainer MaxWidth="MaxWidth.Large" Class="my-6 pt-6">
         @Body
         </MudContainer>
@@ -47,15 +57,27 @@
     protected override void OnInitialized()
     {
         base.OnInitialized();
-
-        _nerdTheme.UseResponsiveTypography(options =>
-        {
-            NerdTypographyPresets.ApplyMarketing(options);
-            options.H3 = ResponsiveFontSize.Clamp("1.75rem", "3vw", "2.5rem");
-        });
-
-        _theme = _nerdTheme;
+        Navigation.LocationChanged += OnLocationChanged;
+        NerdBrandRuntime.RestoreDefaultBrand(
+            TokenOptions,
+            HubOptions,
+            TypographyOptions,
+            TokenCss,
+            TypographyCss,
+            _nerdTheme);
+        ApplyTypography();
     }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e) => ApplyTypography();
+
+    private void ApplyTypography()
+    {
+        _nerdTheme.UseResponsiveTypography(target => TypographyOptions.Typography.CopyTo(target));
+        _theme = _nerdTheme;
+        TypographyCss.Update(TypographyOptions.Typography);
+    }
+
+    public void Dispose() => Navigation.LocationChanged -= OnLocationChanged;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -96,6 +118,17 @@
         true => Icons.Material.Rounded.AutoMode,
         false => Icons.Material.Outlined.DarkMode,
     };
+
+    private string HeaderLogoSrc => _isDarkMode
+        ? "images/logo-dark.svg"
+        : "images/logo-light.svg";
+
+    private string Ui(string semanticAlias) => NerdDesignSystemUi.TokenClass(TokenOptions.Prefix, semanticAlias);
+
+    private string RecipeClass(string recipeName) => $"{LayoutSurfacePrefix}-recipe-{recipeName}";
+
+    private string LayoutSurfacePrefix =>
+        TokenOptions.DefaultBrandPackId ?? TokenOptions.Prefix;
 
     private readonly MudTheme _nerdTheme = new()
     {
@@ -143,35 +176,35 @@
         },
         PaletteLight = new PaletteLight
         {
-            Black = "#000",
-            White = "#fff",
-            Primary = "#113A5D",
-            Secondary = "#ff7a8a",
-            Tertiary = "#ff7a8a",
-            AppbarBackground = "#113A5D",
-            AppbarText = "#fff",
-            Background = "#fafafa",
-            BackgroundGray = "#eeeeee",
-            DrawerBackground = "#fff",
-            DrawerText = "rgba(0,0,0, 0.7)",
-            DrawerIcon = "rgba(0,0,0, 0.5)",
-            TextPrimary = "#000000",
+            Black = NerdTncDesignTokenPresets.Ink,
+            White = NerdTncDesignTokenPresets.Snow,
+            Primary = NerdTncDesignTokenPresets.Navy,
+            Secondary = NerdTncDesignTokenPresets.Coral,
+            Tertiary = NerdTncDesignTokenPresets.Coral,
+            AppbarBackground = NerdTncDesignTokenPresets.Snow,
+            AppbarText = NerdTncDesignTokenPresets.Ink,
+            Background = NerdTncDesignTokenPresets.Snow,
+            BackgroundGray = "#F5F5F5",
+            DrawerBackground = NerdTncDesignTokenPresets.Snow,
+            DrawerText = "rgba(17, 24, 39, 0.87)",
+            DrawerIcon = "rgba(17, 24, 39, 0.54)",
+            TextPrimary = NerdTncDesignTokenPresets.Ink,
             TextSecondary = "#424242",
-            TextDisabled = "rgba(0,0,0, 0.4)",
-            ActionDefault = "#1976d2",
-            ActionDisabled = "rgba(0,0,0, 0.26)",
-            ActionDisabledBackground = "rgba(0, 0, 0, 0.12)",
-            Surface = "#ffffff",
-            Info = "#1976d2",
-            Success = "#06d79c",
-            Warning = "#ffb545",
-            Error = "#ff6b6b",
-            LinesDefault = "#e0e0e0",
-            TableLines = "#e0e0e0",
-            Divider = "#e0e0e0",
-            OverlayLight = "rgba(0, 0, 0, 0.3)",
-            GrayLight = "#e8e8e8",
-            GrayLighter = "#f5f5f5"
+            TextDisabled = "rgba(17, 24, 39, 0.38)",
+            ActionDefault = NerdTncDesignTokenPresets.Coral,
+            ActionDisabled = "rgba(17, 24, 39, 0.26)",
+            ActionDisabledBackground = "rgba(17, 24, 39, 0.12)",
+            Surface = NerdTncDesignTokenPresets.Snow,
+            Info = NerdTncDesignTokenPresets.Navy,
+            Success = NerdTncDesignTokenPresets.Navy,
+            Warning = NerdTncDesignTokenPresets.Coral,
+            Error = NerdTncDesignTokenPresets.Coral,
+            LinesDefault = "#E0E0E0",
+            TableLines = "#E0E0E0",
+            Divider = "#E0E0E0",
+            OverlayLight = "rgba(18, 46, 67, 0.3)",
+            GrayLight = "#E8E8E8",
+            GrayLighter = "#F5F5F5"
         }
     };
 }

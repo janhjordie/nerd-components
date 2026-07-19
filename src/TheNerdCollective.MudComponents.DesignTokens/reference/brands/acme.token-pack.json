@@ -1,0 +1,115 @@
+{
+  "clientId": "acme",
+  "brandId": "acme",
+  "displayName": "Acme",
+  "prefix": "acme",
+  "version": 2,
+  "brandIdentityVersion": "1.0.0",
+  "pairingGuideName": "Acme",
+  "updatedAt": "2026-07-18T20:16:01.526642+00:00",
+  "colors": {
+    "forest": {
+      "value": "#1F6B3A",
+      "light": null,
+      "dark": null,
+      "contrastText": "#FFFFFF",
+      "darkContrastText": null,
+      "surface": null,
+      "content": null,
+      "interactive": null,
+      "hover": "#1C6034",
+      "active": null,
+      "border": null,
+      "disabled": null,
+      "description": null,
+      "roles": null
+    },
+    "sunrise": {
+      "value": "#F4A236",
+      "light": null,
+      "dark": null,
+      "contrastText": "#1F2937",
+      "darkContrastText": null,
+      "surface": null,
+      "content": null,
+      "interactive": null,
+      "hover": "#DC9231",
+      "active": null,
+      "border": null,
+      "disabled": null,
+      "description": null,
+      "roles": null
+    },
+    "cloud": {
+      "value": "#F5F7FA",
+      "light": null,
+      "dark": null,
+      "contrastText": "#1F2937",
+      "darkContrastText": null,
+      "surface": null,
+      "content": null,
+      "interactive": null,
+      "hover": "#E9EBEE",
+      "active": null,
+      "border": null,
+      "disabled": null,
+      "description": null,
+      "roles": null
+    },
+    "ink": {
+      "value": "#111827",
+      "light": null,
+      "dark": null,
+      "contrastText": "#FFFFFF",
+      "darkContrastText": null,
+      "surface": null,
+      "content": null,
+      "interactive": null,
+      "hover": "#101624",
+      "active": null,
+      "border": null,
+      "disabled": null,
+      "description": null,
+      "roles": null
+    }
+  },
+  "aliases": {
+    "primary-action": "forest",
+    "page-surface": "cloud",
+    "brand-chrome": "ink",
+    "on-brand-chrome": "cloud",
+    "muted-content": "ink",
+    "info": "forest",
+    "highlight": "sunrise",
+    "danger": "sunrise",
+    "success": "forest"
+  },
+  "radii": {},
+  "shadows": {},
+  "recipes": {
+    "hero": {
+      "surface": "cloud",
+      "content": "ink",
+      "action": "forest",
+      "border": null,
+      "label": "Marketing hero",
+      "usage": "Cloud surface with ink headline"
+    }
+  },
+  "opacities": {},
+  "approvedPairings": [
+    {
+      "content": "ink",
+      "surface": "cloud"
+    },
+    {
+      "content": "cloud",
+      "surface": "ink"
+    },
+    {
+      "content": "cloud",
+      "surface": "forest"
+    }
+  ],
+  "lockedTokens": []
+}

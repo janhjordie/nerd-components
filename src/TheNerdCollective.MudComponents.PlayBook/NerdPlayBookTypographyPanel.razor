@@ -1,0 +1,90 @@
+@using System.Globalization
+@using MudBlazor
+@using TheNerdCollective.MudComponents.DesignTokens
+@using TheNerdCollective.MudComponents.ResponsiveTypography
+@using TheNerdCollective.MudComponents.Shared
+@inject NerdDesignTokenOptions TokenOptions
+
+<MudPaper Outlined="true" Class="pa-4">
+    <MudStack Spacing="2">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-2">
+            <div>
+                <MudText Typo="Typo.h6">Typography scale</MudText>
+                <MudText Typo="Typo.caption" Class="@Ui(NerdDesignSystemUi.MutedContent)">
+                    Active roles at @ViewportWidth.ToString("0")px viewport
+                </MudText>
+            </div>
+            <MudSlider @bind-Value="ViewportWidth" Min="320" Max="1920" Step="10" Style="max-width: 280px;" />
+        </MudStack>
+
+        <MudPaper Outlined="true" Class="pa-4" Style="@($"width:min(100%, {ViewportWidth:0}px); box-sizing:border-box;")">
+            <MudText Typo="Typo.caption" Class="@($"{Ui(NerdDesignSystemUi.MutedContent)} mb-3")">
+                Preview at @ViewportWidth.ToString("0")px viewport width (computed sizes from slider)
+            </MudText>
+            @foreach (var role in Roles)
+            {
+                <p class="my-1" style="@GetPreviewStyle(role)">
+                    @role.Role — The quick brown fox
+                </p>
+            }
+        </MudPaper>
+
+        <MudSimpleTable Dense="true" Bordered="true" Hover="true">
+            <thead>
+                <tr>
+                    <th>Role</th>
+                    <th>Clamp</th>
+                    <th>Computed</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var role in Roles)
+                {
+                    <tr>
+                        <td><strong>@role.Role</strong></td>
+                        <td><code>@role.FontSize</code></td>
+                        <td>@FormatPixels(NerdClampEvaluator.EvaluateAtViewport(role.FontSize, ViewportWidth))</td>
+                    </tr>
+                }
+            </tbody>
+        </MudSimpleTable>
+    </MudStack>
+</MudPaper>
+
+@code {
+    [Parameter] public MudTheme PreviewTheme { get; set; } = new();
+    [Parameter] public double ViewportWidth { get; set; } = 1280;
+    [Parameter] public EventCallback<double> ViewportWidthChanged { get; set; }
+
+    private IReadOnlyList<NerdTypographyRole> Roles =>
+        NerdTypographyAccessibilityTools.GetConfiguredRoles(PreviewTheme);
+
+    private static string FormatPixels(double? pixels) =>
+        pixels is null ? "-" : $"{pixels.Value.ToString("0.#")}px";
+
+    private string GetPreviewStyle(NerdTypographyRole role)
+    {
+        var fontSize = NerdClampEvaluator.EvaluateAtViewport(role.FontSize, ViewportWidth);
+        if (fontSize is null)
+        {
+            return "margin:0.25rem 0";
+        }
+
+        var size = fontSize.Value.ToString("0.##", CultureInfo.InvariantCulture);
+        var style = $"font-size:{size}px;margin:0.25rem 0";
+
+        if (!string.IsNullOrWhiteSpace(role.LineHeight))
+        {
+            style += $";line-height:{role.LineHeight}";
+        }
+
+        if (!string.IsNullOrWhiteSpace(role.LetterSpacing))
+        {
+            style += $";letter-spacing:{role.LetterSpacing}";
+        }
+
+        return style;
+    }
+
+    private string Ui(string semanticAlias) => NerdDesignSystemUi.TokenClass(TokenOptions.Prefix, semanticAlias);
+}

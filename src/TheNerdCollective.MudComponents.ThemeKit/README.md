@@ -6,7 +6,7 @@ MudBlazor components for theme switching, light/dark mode, and a simple token ed
 
 | Component | Purpose |
 | --- | --- |
-| `MudThemeProviderSync` | Binds `MudThemeProvider` to `IMudThemeStateService` |
+| `MudThemeProviderSync` | Binds `MudThemeProvider` to `IMudThemeStateService` (self-closing; place before page content) |
 | `MudThemeToolbar` | Switcher + mode toggle + editor drawer (respects `IThemeEditorGate`) |
 | `MudThemeTokenEditor` | Edit v1 design tokens (MudColorPicker + text fields) and copy C# export |
 

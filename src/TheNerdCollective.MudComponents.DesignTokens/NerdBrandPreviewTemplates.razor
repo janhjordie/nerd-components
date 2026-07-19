@@ -1,0 +1,74 @@
+@namespace TheNerdCollective.MudComponents.DesignTokens
+
+@if (Recipe is not null && Validation is not null)
+{
+    <MudGrid Spacing="2">
+        <MudItem xs="12" md="4">
+            <NerdPairingSurface Validation="Validation" Variant="NerdPairingSurfaceVariant.Studio" Class="pa-4">
+                <MudText Typo="Typo.overline">Hero</MudText>
+                <MudText Typo="Typo.h5">@Headline</MudText>
+                <MudText Typo="Typo.body2" Class="mt-2">@Body</MudText>
+                @if (ActionClassName is not null)
+                {
+                    <MudButton Class="@($"{ActionClassName} mt-3")" Variant="Variant.Filled">@Recipe.Action action</MudButton>
+                }
+            </NerdPairingSurface>
+        </MudItem>
+        <MudItem xs="12" md="4">
+            <NerdPairingSurface Validation="Validation" Variant="NerdPairingSurfaceVariant.Studio" Class="pa-4">
+                <MudText Typo="Typo.subtitle1">@RecipeLabel</MudText>
+                <MudText Typo="Typo.body2" Class="mt-2">@Body</MudText>
+                <MudStack Row="true" Spacing="1" Class="mt-3 flex-wrap">
+                    @if (ActionClassName is not null)
+                    {
+                        <MudButton Class="@ActionClassName" Variant="Variant.Filled" Size="Size.Small">Action</MudButton>
+                    }
+                    <MudButton Variant="Variant.Outlined" Size="Size.Small">Outlined</MudButton>
+                </MudStack>
+            </NerdPairingSurface>
+        </MudItem>
+        <MudItem xs="12" md="4">
+            <NerdPairingSurface Validation="Validation" Variant="NerdPairingSurfaceVariant.Studio" Class="pa-4">
+                <MudText Typo="Typo.subtitle2">Form strip</MudText>
+                <MudTextField T="string" Label="Email" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mt-2" />
+                <MudStack Row="true" Spacing="1" Class="mt-3">
+                    @if (ActionClassName is not null)
+                    {
+                        <MudButton Class="@ActionClassName" Variant="Variant.Filled" Size="Size.Small">Submit</MudButton>
+                    }
+                    <MudButton Variant="Variant.Outlined" Size="Size.Small">Cancel</MudButton>
+                </MudStack>
+            </NerdPairingSurface>
+        </MudItem>
+    </MudGrid>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public NerdDesignTokenRecipe? Recipe { get; set; }
+
+    [Parameter, EditorRequired]
+    public NerdTokenPairingValidation? Validation { get; set; }
+
+    [Parameter]
+    public string? RecipeName { get; set; }
+
+    [Parameter]
+    public string? Prefix { get; set; }
+
+    [Parameter]
+    public string Headline { get; set; } = "Brand headline";
+
+    [Parameter]
+    public string Body { get; set; } = "Supporting copy on the recipe surface with real MudBlazor controls.";
+
+    private string RecipeLabel =>
+        !string.IsNullOrWhiteSpace(Recipe?.Label)
+            ? Recipe!.Label!
+            : RecipeName ?? "Recipe card";
+
+    private string? ActionClassName =>
+        Recipe?.Action is null || string.IsNullOrWhiteSpace(Prefix)
+            ? null
+            : $"{Prefix}-{Recipe.Action}";
+}

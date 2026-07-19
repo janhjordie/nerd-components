@@ -1,0 +1,120 @@
+{
+  "clientId": "demo",
+  "brandId": "demo",
+  "displayName": "Demo",
+  "prefix": "demo",
+  "version": 2,
+  "brandIdentityVersion": "1.0.0",
+  "pairingGuideName": "Demo",
+  "updatedAt": "2026-07-18T20:16:01.527057+00:00",
+  "colors": {
+    "violet": {
+      "value": "#6D28D9",
+      "light": null,
+      "dark": null,
+      "contrastText": "#FFFFFF",
+      "darkContrastText": null,
+      "surface": null,
+      "content": null,
+      "interactive": null,
+      "hover": "#6224C3",
+      "active": null,
+      "border": null,
+      "disabled": null,
+      "description": null,
+      "roles": null
+    },
+    "sky": {
+      "value": "#38BDF8",
+      "light": null,
+      "dark": null,
+      "contrastText": "#0F172A",
+      "darkContrastText": null,
+      "surface": null,
+      "content": null,
+      "interactive": null,
+      "hover": "#32AADF",
+      "active": null,
+      "border": null,
+      "disabled": null,
+      "description": null,
+      "roles": null
+    },
+    "paper": {
+      "value": "#F8FAFC",
+      "light": null,
+      "dark": null,
+      "contrastText": "#0F172A",
+      "darkContrastText": null,
+      "surface": null,
+      "content": null,
+      "interactive": null,
+      "hover": "#ECEEEF",
+      "active": null,
+      "border": null,
+      "disabled": null,
+      "description": null,
+      "roles": null
+    },
+    "slate": {
+      "value": "#334155",
+      "light": null,
+      "dark": null,
+      "contrastText": "#FFFFFF",
+      "darkContrastText": null,
+      "surface": null,
+      "content": null,
+      "interactive": null,
+      "hover": "#2F3C4E",
+      "active": null,
+      "border": null,
+      "disabled": null,
+      "description": null,
+      "roles": null
+    }
+  },
+  "aliases": {
+    "primary-action": "violet",
+    "page-surface": "paper",
+    "brand-chrome": "slate",
+    "on-brand-chrome": "paper",
+    "muted-content": "slate",
+    "info": "sky",
+    "highlight": "sky",
+    "accent": "sky",
+    "danger": "violet",
+    "success": "sky"
+  },
+  "radii": {},
+  "shadows": {},
+  "recipes": {
+    "cta-strip": {
+      "surface": "slate",
+      "content": "paper",
+      "action": "sky",
+      "border": null,
+      "label": "CTA strip",
+      "usage": "Slate strip with paper text and sky action"
+    }
+  },
+  "opacities": {},
+  "approvedPairings": [
+    {
+      "content": "paper",
+      "surface": "slate"
+    },
+    {
+      "content": "paper",
+      "surface": "violet"
+    },
+    {
+      "content": "slate",
+      "surface": "paper"
+    },
+    {
+      "content": "sky",
+      "surface": "slate"
+    }
+  ],
+  "lockedTokens": []
+}

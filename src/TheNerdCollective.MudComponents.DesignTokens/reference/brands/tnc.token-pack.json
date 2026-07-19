@@ -1,0 +1,162 @@
+{
+  "clientId": "tnc",
+  "brandId": "tnc",
+  "displayName": "TNC",
+  "prefix": "tnc",
+  "version": 2,
+  "brandIdentityVersion": "1.0.0",
+  "pairingGuideName": "TNC",
+  "updatedAt": "2026-07-18T20:16:01.519446+00:00",
+  "colors": {
+    "navy": {
+      "value": "#122E43",
+      "light": null,
+      "dark": null,
+      "contrastText": "#FFFFFF",
+      "darkContrastText": null,
+      "surface": "#122E43",
+      "content": "#FFFFFF",
+      "interactive": null,
+      "hover": "#112A3E",
+      "active": null,
+      "border": null,
+      "disabled": null,
+      "description": null,
+      "roles": null
+    },
+    "coral": {
+      "value": "#F27271",
+      "light": null,
+      "dark": null,
+      "contrastText": "#FFFFFF",
+      "darkContrastText": null,
+      "surface": "#F27271",
+      "content": "#FFFFFF",
+      "interactive": null,
+      "hover": "#DA6766",
+      "active": null,
+      "border": null,
+      "disabled": null,
+      "description": null,
+      "roles": null
+    },
+    "snow": {
+      "value": "#FFFFFF",
+      "light": null,
+      "dark": null,
+      "contrastText": "#111827",
+      "darkContrastText": null,
+      "surface": "#FFFFFF",
+      "content": "#111827",
+      "interactive": null,
+      "hover": "#F5F5F5",
+      "active": null,
+      "border": null,
+      "disabled": null,
+      "description": null,
+      "roles": null
+    },
+    "ink": {
+      "value": "#111827",
+      "light": null,
+      "dark": null,
+      "contrastText": "#FFFFFF",
+      "darkContrastText": null,
+      "surface": null,
+      "content": "#111827",
+      "interactive": null,
+      "hover": "#101624",
+      "active": null,
+      "border": null,
+      "disabled": null,
+      "description": null,
+      "roles": null
+    },
+    "chalk": {
+      "value": "#FFFFFF",
+      "light": null,
+      "dark": null,
+      "contrastText": "#111827",
+      "darkContrastText": null,
+      "surface": "#FFFFFF",
+      "content": "#111827",
+      "interactive": null,
+      "hover": null,
+      "active": null,
+      "border": null,
+      "disabled": null,
+      "description": null,
+      "roles": null
+    }
+  },
+  "aliases": {
+    "primary-action": "coral",
+    "page-surface": "snow",
+    "brand-chrome": "navy",
+    "on-brand-chrome": "chalk",
+    "muted-content": "ink",
+    "info": "navy",
+    "highlight": "coral",
+    "danger": "coral",
+    "success": "navy"
+  },
+  "radii": {},
+  "shadows": {},
+  "recipes": {
+    "hero": {
+      "surface": "navy",
+      "content": "chalk",
+      "action": "coral",
+      "border": null,
+      "label": "Hero banner",
+      "usage": "Full-width hero with chalk headline on navy"
+    },
+    "header": {
+      "surface": "snow",
+      "content": "ink",
+      "action": "coral",
+      "border": null,
+      "label": "Site header",
+      "usage": "Light header bar with ink links"
+    },
+    "tagline": {
+      "surface": "navy",
+      "content": "coral",
+      "action": "chalk",
+      "border": null,
+      "label": "Tagline strip",
+      "usage": "Navy strip with coral accent copy"
+    },
+    "cta": {
+      "surface": "coral",
+      "content": "chalk",
+      "action": "navy",
+      "border": null,
+      "label": "Primary CTA",
+      "usage": "Coral button on chalk body copy"
+    }
+  },
+  "opacities": {},
+  "approvedPairings": [
+    {
+      "content": "chalk",
+      "surface": "navy"
+    },
+    {
+      "content": "ink",
+      "surface": "snow"
+    },
+    {
+      "content": "coral",
+      "surface": "navy"
+    },
+    {
+      "content": "chalk",
+      "surface": "coral"
+    }
+  ],
+  "lockedTokens": [
+    "navy",
+    "coral"
+  ]
+}

@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace TheNerdCollective.MudComponents.ResponsiveTypography;
 
 public static class NerdModularScaleGenerator
@@ -23,9 +25,12 @@ public static class NerdModularScaleGenerator
         {
             var exponent = Roles.Length - index - 3;
             var rem = baseRem * Math.Pow(ratio, exponent);
+            var minimum = (rem * 0.8).ToString("0.###", CultureInfo.InvariantCulture);
+            var preferred = (rem * 5).ToString("0.###", CultureInfo.InvariantCulture);
+            var maximum = (rem * 1.2).ToString("0.###", CultureInfo.InvariantCulture);
             values[Roles[index]] = wrapInClamp
-                ? ResponsiveFontSize.Clamp($"{rem * 0.8:0.###}rem", $"{rem * 5:0.###}vw", $"{rem * 1.2:0.###}rem")
-                : $"{rem:0.###}rem";
+                ? ResponsiveFontSize.Clamp($"{minimum}rem", $"{preferred}vw", $"{maximum}rem")
+                : $"{rem.ToString("0.###", CultureInfo.InvariantCulture)}rem";
         }
 
         return values;

@@ -9,9 +9,9 @@ Design System, PlayBook og eksport → gem som klient-pack.
 - [x] Generisk `MudBlazorComponentRuleBuilder`
 - [x] Content vs ContrastText (lys/mørk tokens)
 - [x] Recipes (`NerdDesignTokenRecipe`)
-- [x] DNF-presets (12 farver)
-- [ ] Portal/popover token-scope (pickers, select, menu) — færdiggøres
-- [ ] Snapshot-tests for alle DNF tokens + recipes
+- [x] DNF-presets (12 farver) — flyttet til `Brand.Dnf`
+- [x] Portal/popover token-scope (pickers, select, menu) — HR-006
+- [x] Snapshot-tests for alle DNF tokens + recipes — HR-023
 
 ## Fase 1 — Token source of truth
 

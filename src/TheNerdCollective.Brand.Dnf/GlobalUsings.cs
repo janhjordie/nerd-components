@@ -1,0 +1,2 @@
+global using TheNerdCollective.MudComponents.DesignTokens;
+global using TheNerdCollective.MudComponents.ResponsiveTypography;

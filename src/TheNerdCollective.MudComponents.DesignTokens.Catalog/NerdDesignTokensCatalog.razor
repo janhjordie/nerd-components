@@ -1,0 +1,399 @@
+@if (!IsAvailable)
+{
+    <MudContainer MaxWidth="MaxWidth.Medium" Class="my-8">
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Filled">
+            Design token catalog is disabled or only available in Development.
+        </MudAlert>
+    </MudContainer>
+}
+else
+{
+    <NerdDesignSystemScripts />
+    <NerdCatalogThemeProvider IsDarkMode="_previewDark">
+        <NerdDesignTokenStyles />
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-6 pa-4" Style="@NerdDesignSystemUi.PageSurfaceStyle(Options.Prefix)">
+        <MudStack Spacing="3">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-3">
+                <div>
+                    <MudText Typo="Typo.h4">Design token colors</MudText>
+                    <MudText Typo="Typo.body2" Class="@Ui(NerdDesignSystemUi.MutedContent)">
+                        Brand palette swatches · Prefix <code>@Options.Prefix</code> · MudBlazor @Options.MudBlazorVersion
+                    </MudText>
+                </div>
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="flex-wrap" data-nerd-token="@Ui(NerdDesignSystemUi.PageSurface)">
+                    <MudSwitch @bind-Value="_previewDark" Label="Preview dark mode" />
+                    <MudSelect T="string" Value="_selectedBrand" ValueChanged="SwitchBrandAsync" Label="Brand" Style="min-width: 140px;">
+                        @foreach (var brandPack in InstalledBrandPacks)
+                        {
+                            <MudSelectItem Value="@brandPack.Id">@NerdBrandPackLabels.Format(brandPack)</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudButton Href="@HubOptions.HubRoute" Variant="Variant.Text" Class="@Ui(NerdDesignSystemUi.MutedContent)">Design system</MudButton>
+                </MudStack>
+            </MudStack>
+
+            <NerdDesignTokenCatalogNav Options="Options" HubOptions="HubOptions" Current="colors" />
+
+            <MudStack Row="true" Spacing="1" Class="flex-wrap">
+                <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="DownloadCssAsync">Export CSS</MudButton>
+                <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="DownloadJsonAsync">Export pack JSON</MudButton>
+                <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="DownloadTokensStudioAsync">Export Tokens Studio</MudButton>
+                <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="DownloadStitchAsync">Export Stitch DESIGN.md</MudButton>
+            </MudStack>
+
+            <NerdBrandPackExporter ClientId="@_clientId" />
+
+            <MudPaper Outlined="true" Class="pa-4">
+                <MudStack Spacing="2">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-2">
+                        <MudText Typo="Typo.h6">Pack diff &amp; changelog</MudText>
+                        <MudSelect T="string" Value="_diffBaseline" ValueChanged="OnDiffBaselineChanged" Label="Baseline preset" Style="min-width: 160px;">
+                            @foreach (var brandPack in InstalledBrandPacks)
+                            {
+                                <MudSelectItem Value="@brandPack.Id">@NerdBrandPackLabels.Format(brandPack)</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudStack>
+                    @if (_packDiff.Count == 0)
+                    {
+                        <MudAlert Class="@Ui(NerdDesignSystemUi.Success)" Variant="Variant.Outlined" Dense="true">
+                            No changes compared to @_diffBaseline preset.
+                        </MudAlert>
+                    }
+                    else
+                    {
+                        <MudSimpleTable Dense="true" Bordered="true" Hover="true">
+                            <thead>
+                                <tr><th></th><th>Section</th><th>Name</th><th>Before</th><th>After</th></tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var entry in _packDiff)
+                                {
+                                    <tr>
+                                        <td><code>@DiffSymbol(entry.Kind)</code></td>
+                                        <td>@entry.Section</td>
+                                        <td>@entry.Name</td>
+                                        <td><code>@(entry.Before ?? "—")</code></td>
+                                        <td><code>@(entry.After ?? "—")</code></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </MudSimpleTable>
+                    }
+                </MudStack>
+            </MudPaper>
+
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="flex-wrap">
+                <MudTextField @bind-Value="_clientId" Label="ClientId" Immediate="true" />
+                <MudButton Variant="Variant.Filled"
+                           Class="@Ui(NerdDesignSystemUi.BrandChrome)"
+                           OnClick="SaveClientPackAsync"
+                           Disabled="@(!Entitlements.CanSaveAnotherPack(_packIds.Count))">
+                    Gem som klient
+                </MudButton>
+                @if (_packIds.Count > 0)
+                {
+                    <MudSelect T="string" Label="Saved packs" @bind-Value="_selectedPackId" Style="min-width: 180px;">
+                        @foreach (var packId in _packIds)
+                        {
+                            <MudSelectItem Value="@packId">@packId</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudButton Variant="Variant.Outlined" OnClick="LoadClientPackAsync">
+                        Indlæs
+                    </MudButton>
+                }
+                @if (_saveStatus is not null)
+                {
+                    <MudChip T="string" Color="Color.Success" Variant="Variant.Outlined">@_saveStatus</MudChip>
+                }
+                <InputFile OnChange="ImportTokenPackAsync" accept=".json,application/json" class="mud-button-root mud-button mud-button-outlined mud-ripple" style="width:auto;padding:.375rem .75rem;" />
+            </MudStack>
+
+            <NerdCatalogUpgradePromptSection
+                Show="@(!Entitlements.CanSaveClientPacks())"
+                Title="Client pack save is not enabled"
+                Description="Configure catalog entitlements in your host application to persist client packs to disk." />
+
+            @if (_warnings.Count > 0)
+            {
+                <MudAlert Class="@Ui(NerdDesignSystemUi.Danger)" Variant="Variant.Filled">
+                    <MudText Typo="Typo.subtitle2" Class="mb-2">
+                        @_warnings.Count WCAG @Options.WcagVersion accessibility warning@(_warnings.Count == 1 ? "" : "s")
+                    </MudText>
+                    <MudStack Spacing="1">
+                        @foreach (var warning in _warnings)
+                        {
+                            <MudText Typo="Typo.body2">
+                                <strong>@warning.TokenName</strong> (@warning.Mode):
+                                contrast @FormatRatio(warning.ContrastRatio), requires @FormatRatio(warning.RequiredRatio) for WCAG @warning.WcagVersion @warning.Level.
+                                Recommended foreground: <code>@warning.RecommendedForeground</code>
+                            </MudText>
+                        }
+                    </MudStack>
+                </MudAlert>
+            }
+            else if (_accessibility.Count > 0)
+            {
+                <MudAlert Class="@Ui(NerdDesignSystemUi.Success)" Variant="Variant.Outlined">
+                    All tokens pass WCAG @Options.WcagVersion AA for both light and dark modes.
+                </MudAlert>
+            }
+
+            <MudTabs @bind-ActivePanelIndex="_activeTabIndex" Elevation="1" Rounded="true">
+                <MudTabPanel Text="Swatches">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mt-4 mb-3 flex-wrap gap-2">
+                        <MudText Typo="Typo.h6">Color tokens (@FilteredColorTokens.Count()/@Options.Colors.Count)</MudText>
+                        <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="flex-wrap">
+                            <MudTextField @bind-Value="_tokenSearch" Label="Search tokens" Immediate="true" Style="min-width: 200px;" />
+                            <MudSwitch @bind-Value="_showFavoritesOnly" Label="Favorites only" />
+                            <MudSwitch @bind-Value="_dualPreview" Label="Dual light | dark preview" />
+                        </MudStack>
+                    </MudStack>
+                    <MudGrid Spacing="2">
+                        @foreach (var pair in FilteredColorTokens)
+                        {
+                            var token = pair.Value;
+                            var accessibility = GetAccessibility(pair.Key);
+                            var previewTheme = _previewDark ? "dark" : "light";
+                            var previewColor = ResolveColor(token, _previewDark);
+                            var previewContrast = ResolveContrastText(token, accessibility, _previewDark);
+                            var className = GetClassName(pair.Key);
+                            <MudItem xs="12" sm="6" md="4" lg="3">
+                                <MudPaper Outlined="true"
+                                          Class="pa-3"
+                                          data-nerd-token="@className">
+                                    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                                        <MudText Typo="Typo.subtitle1"
+                                                 Style="cursor:pointer;"
+                                                 @onclick="@(() => OpenTokenTab(pair.Key))">@pair.Key</MudText>
+                                        <MudIconButton Icon="@(IsFavorite(pair.Key) ? Icons.Material.Filled.Star : Icons.Material.Outlined.StarBorder)"
+                                                       Size="Size.Small"
+                                                       Ripple="false"
+                                                       Class="@Ui(IsFavorite(pair.Key) ? NerdDesignSystemUi.Highlight : NerdDesignSystemUi.MutedContent)"
+                                                       OnClick="@(() => ToggleFavorite(pair.Key))"
+                                                       aria-label="Toggle favorite"
+                                                       aria-pressed="@IsFavorite(pair.Key)" />
+                                    </MudStack>
+                                    @if (_dualPreview)
+                                    {
+                                        <MudGrid Spacing="1" Class="mt-2">
+                                            <MudItem xs="6">
+                                                <div data-theme="light"
+                                                     class="@className"
+                                                     style="@($"border-radius: 8px; min-height: 100px; display:flex; flex-direction:column; justify-content:flex-end; gap:.35rem; padding:.75rem; background:var(--{Options.Prefix}-color-{pair.Key}); color:var(--{Options.Prefix}-color-{pair.Key}-text);")">
+                                                    <span style="color:inherit; font-size:.75rem;">Light</span>
+                                                    <code style="color:inherit; font-size:.7rem;">@ResolveContrastText(token, accessibility, false)</code>
+                                                </div>
+                                            </MudItem>
+                                            <MudItem xs="6">
+                                                <div data-theme="dark"
+                                                     class="@className"
+                                                     style="@($"border-radius: 8px; min-height: 100px; display:flex; flex-direction:column; justify-content:flex-end; gap:.35rem; padding:.75rem; background:var(--{Options.Prefix}-color-{pair.Key}-dark); color:var(--{Options.Prefix}-color-{pair.Key}-dark-text);")">
+                                                    <span style="color:inherit; font-size:.75rem;">Dark</span>
+                                                    <code style="color:inherit; font-size:.7rem;">@ResolveContrastText(token, accessibility, true)</code>
+                                                </div>
+                                            </MudItem>
+                                        </MudGrid>
+                                    }
+                                    else
+                                    {
+                                        var previewTheme = _previewDark ? "dark" : "light";
+                                        var previewContrast = ResolveContrastText(token, accessibility, _previewDark);
+                                        <div data-theme="@previewTheme"
+                                             class="@($"{className} mt-2")"
+                                             style="@($"border-radius: 8px; min-height: 120px; display:flex; flex-direction:column; justify-content:flex-end; gap:.35rem; padding:1rem; background:var(--{Options.Prefix}-color-{pair.Key}); color:var(--{Options.Prefix}-color-{pair.Key}-text);")">
+                                            <span style="color:inherit; font-weight:500;">Sample text</span>
+                                            <code style="color:inherit;">@previewContrast</code>
+                                        </div>
+                                    }
+                                    <MudStack Row="true" Spacing="1" Class="mt-2 flex-wrap">
+                                        @ColorValue(previewColor)
+                                        @ColorValue(previewContrast)
+                                    </MudStack>
+                                    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mt-2">
+                                        <code>.@className</code>
+                                        <NerdClipboardButton Text="@($".{className}")" Label="Copy" />
+                                        <NerdClipboardButton Text="@BuildRazorSnippet(pair.Key)" Label="Copy Razor" />
+                                        <NerdClipboardButton Text="@BuildCssSnippet(pair.Key)" Label="Copy CSS" />
+                                    </MudStack>
+                                    @if (EnableCollaborativeComments)
+                                    {
+                                        <MudTextField T="string"
+                                                      Value="@GetComment(pair.Key)"
+                                                      ValueChanged="@(value => SetComment(pair.Key, value))"
+                                                      OnBlur="@PersistCommentsAsync"
+                                                      Label="Design comment"
+                                                      Placeholder="CTA only, not for body text…"
+                                                      Variant="Variant.Outlined"
+                                                      Lines="2"
+                                                      Class="mt-2" />
+                                    }
+                                </MudPaper>
+                            </MudItem>
+                        }
+                    </MudGrid>
+                </MudTabPanel>
+
+                @foreach (var pair in Options.Colors.OrderBy(pair => pair.Key, StringComparer.Ordinal))
+                {
+                    var token = pair.Value;
+                    var className = GetClassName(pair.Key);
+                    var accessibility = GetAccessibility(pair.Key);
+                    var previewTheme = _previewDark ? "dark" : "light";
+                    var previewContrast = ResolveContrastText(token, accessibility, _previewDark);
+                    <MudTabPanel Text="@pair.Key">
+                        <MudStack Spacing="3" Class="@($"pa-4 {className}")" data-nerd-token="@className">
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-2">
+                                <MudText Typo="Typo.h5">@pair.Key components</MudText>
+                                <NerdClipboardButton Text="@($".{className}")" Label="Copy class" />
+                                <NerdClipboardButton Text="@BuildRazorSnippet(pair.Key)" Label="Copy Razor" />
+                                <NerdClipboardButton Text="@BuildCssSnippet(pair.Key)" Label="Copy CSS" />
+                            </MudStack>
+                            @if (EnableCollaborativeComments)
+                            {
+                                <MudTextField T="string"
+                                              Value="@GetComment(pair.Key)"
+                                              ValueChanged="@(value => SetComment(pair.Key, value))"
+                                              OnBlur="@PersistCommentsAsync"
+                                              Label="Collaborative comment"
+                                              Variant="Variant.Outlined"
+                                              Lines="2" />
+                            }
+                            <MudPaper Class="pa-3" Outlined="true" data-theme="@previewTheme">
+                                <MudText Typo="Typo.caption" Class="@Ui(NerdDesignSystemUi.MutedContent)">Buttons and actions</MudText>
+                                <MudStack Row="true" Spacing="1" Class="flex-wrap gap-1 mt-2">
+                                    <MudButton Class="@className" Variant="Variant.Filled">Filled</MudButton>
+                                    <MudButton Class="@className" Variant="Variant.Outlined">Outlined</MudButton>
+                                    <MudButton Class="@className" Variant="Variant.Text">Text</MudButton>
+                                    <MudButton Class="@className" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Favorite">Favorite</MudButton>
+                                    <MudButton Class="@className" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add">Add</MudButton>
+                                    <MudChip T="string" Class="@className" Variant="Variant.Filled">Chip</MudChip>
+                                    <MudBadge Class="@className" Content="3" Overlap="true">
+                                        <MudIcon Icon="@Icons.Material.Filled.Notifications" />
+                                    </MudBadge>
+                                    <MudLink Class="@className" Href="#">Link</MudLink>
+                                </MudStack>
+                            </MudPaper>
+                            <MudPaper Class="pa-3" Outlined="true" data-theme="@previewTheme">
+                                <MudText Typo="Typo.caption" Class="@Ui(NerdDesignSystemUi.MutedContent)">State storyboard</MudText>
+                                <MudStack Row="true" Spacing="1" Class="flex-wrap gap-1 mt-2">
+                                    <MudButton Class="@className" Variant="Variant.Filled">Default</MudButton>
+                                    <MudButton Class="@className" Variant="Variant.Filled" Style="filter: brightness(1.1);">Hover</MudButton>
+                                    <MudButton Class="@className" Variant="Variant.Outlined">Focus</MudButton>
+                                    <MudButton Class="@className" Variant="Variant.Filled" Disabled="true">Disabled</MudButton>
+                                    <MudChip T="string" Class="@className" Variant="Variant.Filled">Chip</MudChip>
+                                    <MudChip T="string" Class="@className" Variant="Variant.Filled" Style="filter: brightness(1.1);">Chip hover</MudChip>
+                                </MudStack>
+                            </MudPaper>
+                            <MudPaper Class="pa-3" Outlined="true" data-theme="@previewTheme">
+                                <MudText Typo="Typo.caption" Class="@Ui(NerdDesignSystemUi.MutedContent)">Inputs and selection</MudText>
+                                <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="flex-wrap gap-2 mt-2">
+                                    <MudSwitch Class="@className" Value="true" Label="Switch" Ripple="false" />
+                                    <MudCheckBox Class="@className" Value="true" Label="Checkbox" Ripple="false" />
+                                    <MudRadioGroup T="string" Value="@("radio")">
+                                        <MudRadio Class="@className" Value="@("radio")" Ripple="false">Radio</MudRadio>
+                                    </MudRadioGroup>
+                                    <MudRating Class="@className" SelectedValue="3" MaxValue="5" />
+                                    <MudTextField T="string" Class="@className" Label="Text field" Variant="Variant.Outlined" />
+                                    <div data-testid="@($"picker-{pair.Key}")">
+                                        <MudDatePicker Class="@className" Label="Date picker" />
+                                    </div>
+                                </MudStack>
+                            </MudPaper>
+                            <MudPaper Class="pa-3" Outlined="true" data-theme="@previewTheme">
+                                <MudText Typo="Typo.caption" Class="@Ui(NerdDesignSystemUi.MutedContent)">Feedback and structure</MudText>
+                                <MudProgressLinear Class="@($"{className} mt-3")" Value="60" />
+                                <MudAlert Class="@($"{className} mt-3")" Variant="Variant.Filled" Dense="true">Alert preview</MudAlert>
+                                <MudText Class="@($"{className} mt-3")" Typo="Typo.h6">Heading</MudText>
+                                <MudSimpleTable Dense="true" Hover="true" Bordered="true" Class="@className">
+                                    <tbody><tr><td>Value</td><td>@ColorValue(token.Value)</td></tr><tr><td>Contrast</td><td>@ColorValue(previewContrast)</td></tr></tbody>
+                                </MudSimpleTable>
+                            </MudPaper>
+                        </MudStack>
+                    </MudTabPanel>
+                }
+            </MudTabs>
+
+            @if (Options.Aliases.Count > 0)
+            {
+                <MudPaper Outlined="true" Class="pa-4">
+                    <MudText Typo="Typo.h6">Semantic alias browser</MudText>
+                    <MudText Typo="Typo.caption" Class="@($"{Ui(NerdDesignSystemUi.MutedContent)} mb-2")">
+                        Alias → target token with where each alias is used.
+                    </MudText>
+                    <MudSimpleTable Dense="true" Hover="true" Bordered="true">
+                        <thead>
+                            <tr><th>Alias</th><th>Target</th><th>Class</th><th>Where used?</th></tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var alias in Options.Aliases.OrderBy(pair => pair.Key, StringComparer.Ordinal))
+                            {
+                                <tr>
+                                    <td><code>@alias.Key</code></td>
+                                    <td><code>@alias.Value</code></td>
+                                    <td><code>.@GetClassName(alias.Key)</code></td>
+                                    <td>
+                                        @foreach (var usage in GetAliasUsages(alias.Key, alias.Value))
+                                        {
+                                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Class="ma-1">@usage</MudChip>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </MudSimpleTable>
+                </MudPaper>
+            }
+
+            @if (Options.Radii.Count > 0 || Options.Shadows.Count > 0)
+            {
+                <MudText Typo="Typo.h6">Radius and shadows</MudText>
+                <MudGrid Spacing="2">
+                    @foreach (var radius in Options.Radii.OrderBy(pair => pair.Key, StringComparer.Ordinal))
+                    {
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudPaper Class="@($"{Options.Prefix}-radius-{radius.Key} pa-4")" Outlined="true">
+                                <MudText Typo="Typo.subtitle2">@radius.Key</MudText>
+                                <MudText Typo="Typo.caption"><code>@radius.Value</code></MudText>
+                            </MudPaper>
+                        </MudItem>
+                    }
+                    @foreach (var shadow in Options.Shadows.OrderBy(pair => pair.Key, StringComparer.Ordinal))
+                    {
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudPaper Class="@($"{Options.Prefix}-shadow-{shadow.Key} pa-4")" Outlined="true">
+                                <MudText Typo="Typo.subtitle2">@shadow.Key</MudText>
+                                <MudText Typo="Typo.caption"><code>@shadow.Value</code></MudText>
+                            </MudPaper>
+                        </MudItem>
+                    }
+                </MudGrid>
+            }
+
+            @if (Options.Opacities.Count > 0)
+            {
+                <MudText Typo="Typo.h6">Watermark / opacity overlays</MudText>
+                <MudGrid Spacing="2">
+                    @foreach (var opacity in Options.Opacities.OrderBy(pair => pair.Key, StringComparer.Ordinal))
+                    {
+                        var overlayClass = GetOpacityClassName(opacity.Key);
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudPaper Outlined="true" Class="pa-3">
+                                <MudText Typo="Typo.subtitle2">@opacity.Key</MudText>
+                                <MudText Typo="Typo.caption" Class="@Ui(NerdDesignSystemUi.MutedContent)">
+                                    @opacity.Value.BaseToken · @opacity.Value.Opacity.ToString("0.##") opacity
+                                </MudText>
+                                <div class="@($"{overlayClass} pa-4 mt-2")" style="min-height: 88px; border-radius: 8px;">
+                                    <MudText Typo="Typo.body2" Class="@overlayClass">Watermark preview</MudText>
+                                </div>
+                                <code class="mt-2 d-block">.@overlayClass</code>
+                            </MudPaper>
+                        </MudItem>
+                    }
+                </MudGrid>
+            }
+        </MudStack>
+    </MudContainer>
+    </NerdCatalogThemeProvider>
+}

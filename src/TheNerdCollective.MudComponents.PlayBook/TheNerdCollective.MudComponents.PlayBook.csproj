@@ -12,7 +12,6 @@
     <RepositoryUrl>https://github.com/janhjordie/nerd-components</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,19 +19,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="MudBlazor" Version="9.6.0" />
+    <PackageReference Include="MudBlazor" Version="9.7.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\TheNerdCollective.MudComponents.Shared\TheNerdCollective.MudComponents.Shared.csproj" />
     <ProjectReference Include="..\TheNerdCollective.MudComponents.DesignTokens\TheNerdCollective.MudComponents.DesignTokens.csproj" />
     <ProjectReference Include="..\TheNerdCollective.MudComponents.ResponsiveTypography\TheNerdCollective.MudComponents.ResponsiveTypography.csproj" />
-    <ProjectReference Include="..\TheNerdCollective.Blazor.ThemeKit\TheNerdCollective.Blazor.ThemeKit.csproj" />
-    <ProjectReference Include="..\TheNerdCollective.MudComponents.ThemeKit\TheNerdCollective.MudComponents.ThemeKit.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Update="Themes\**\*" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,0 +1,84 @@
+@using TheNerdCollective.MudComponents.DesignTokens
+@using TheNerdCollective.MudComponents.Shared
+
+@if (TokenOptions.Recipes.Count > 0)
+{
+    <MudPaper Outlined="true" Class="pa-4">
+        <MudText Typo="Typo.h6">Layout kits</MudText>
+        <MudText Typo="Typo.body2" Class="@($"{Ui(NerdDesignSystemUi.MutedContent)} mb-3")">
+            Hero, CTA strip, link card and footer compositions using recipe classes from DI.
+        </MudText>
+
+        @if (TryGetRecipe("hero", out var hero))
+        {
+            var heroClass = RecipeClass("hero");
+            <MudPaper Class="@($"{heroClass} pa-6 mb-4")" Outlined="true">
+                <MudText Typo="Typo.overline">Hero</MudText>
+                <MudText Typo="Typo.h3" Class="mt-2">Protect nature together</MudText>
+                <MudText Typo="Typo.body1" Class="mt-2">
+                    Recipe <code>@heroClass</code> — surface @hero.Surface, content @hero.Content.
+                </MudText>
+                <MudButton Class="@($"{TokenClass(hero.Action ?? hero.Surface)} mt-3")" Variant="Variant.Filled">
+                    Get involved
+                </MudButton>
+            </MudPaper>
+        }
+
+        @if (TryGetRecipe("cta-strip", out var cta))
+        {
+            var ctaClass = RecipeClass("cta-strip");
+            <MudPaper Class="@($"{ctaClass} pa-4 mb-4")" Outlined="true">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-2">
+                    <MudText Typo="Typo.h6">CTA strip</MudText>
+                    <MudButton Class="@TokenClass(cta.Action ?? cta.Content)" Variant="Variant.Filled">Donate now</MudButton>
+                </MudStack>
+            </MudPaper>
+        }
+
+        <MudGrid Spacing="2" Class="mb-4">
+            @if (TryGetRecipe("link-card", out var linkCard))
+            {
+                var linkClass = RecipeClass("link-card");
+                <MudItem xs="12" md="6">
+                    <MudCard Class="@linkClass" Outlined="true">
+                        <MudCardContent>
+                            <MudText Typo="Typo.subtitle1">Link card</MudText>
+                            <MudText Typo="Typo.body2" Class="mt-1">
+                                Surface @linkCard.Surface with @linkCard.Content content.
+                            </MudText>
+                            <MudLink Class="@TokenClass(linkCard.Action ?? linkCard.Content)" Href="#">Read more</MudLink>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+            }
+            @if (TryGetRecipe("footer", out var footer))
+            {
+                var footerClass = RecipeClass("footer");
+                <MudItem xs="12" md="6">
+                    <MudPaper Class="@($"{footerClass} pa-4")" Outlined="true">
+                        <MudText Typo="Typo.subtitle2">Footer</MudText>
+                        <MudStack Row="true" Spacing="2" Class="mt-2 flex-wrap">
+                            <MudLink Href="#">Privacy</MudLink>
+                            <MudLink Href="#">Contact</MudLink>
+                            <MudLink Href="#">Membership</MudLink>
+                        </MudStack>
+                    </MudPaper>
+                </MudItem>
+            }
+        </MudGrid>
+    </MudPaper>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public NerdDesignTokenOptions TokenOptions { get; set; } = default!;
+
+    private string TokenClass(string tokenName) => $"{TokenOptions.Prefix}-{tokenName}";
+
+    private string RecipeClass(string recipeName) => $"{TokenOptions.Prefix}-recipe-{recipeName}";
+
+    private bool TryGetRecipe(string name, out NerdDesignTokenRecipe recipe) =>
+        TokenOptions.Recipes.TryGetValue(name, out recipe!);
+
+    private string Ui(string semanticAlias) => NerdDesignSystemUi.TokenClass(TokenOptions.Prefix, semanticAlias);
+}

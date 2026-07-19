@@ -7,4 +7,6 @@ public sealed record NerdDesignTokenRecipe(
     string Surface,
     string Content,
     string? Action = null,
-    string? Border = null);
+    string? Border = null,
+    string? Label = null,
+    string? Usage = null);

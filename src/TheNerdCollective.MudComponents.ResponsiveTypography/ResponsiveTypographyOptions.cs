@@ -57,4 +57,28 @@ public sealed class ResponsiveTypographyOptions
             _configuredRoles.Remove(role);
         }
     }
+
+    /// <summary>Clears all role sizes and style overrides so a brand preset can be applied cleanly.</summary>
+    public void Reset()
+    {
+        LineHeight = null;
+        LetterSpacing = null;
+        FontWeight = null;
+        Default = null;
+        H1 = null;
+        H2 = null;
+        H3 = null;
+        H4 = null;
+        H5 = null;
+        H6 = null;
+        Subtitle1 = null;
+        Subtitle2 = null;
+        Body1 = null;
+        Body2 = null;
+        Button = null;
+        Caption = null;
+        Overline = null;
+        Roles.Clear();
+        _configuredRoles.Clear();
+    }
 }

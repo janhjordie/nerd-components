@@ -26,12 +26,28 @@ public static class NerdDesignTokenServiceCollectionExtensions
         var options = new NerdDesignTokenOptions();
         configure(options);
 
-        services.AddNerdDesignSystem(hub => hub.DesignTokensRoute = options.CatalogRoute);
+        if (string.IsNullOrWhiteSpace(options.DefaultBrandPackId) &&
+            !string.IsNullOrWhiteSpace(options.ActiveBrandPackId))
+        {
+            options.DefaultBrandPackId = options.ActiveBrandPackId;
+        }
+
+        services.AddNerdDesignSystem(hub =>
+        {
+            hub.DesignTokensRoute = options.CatalogRoute;
+            hub.DesignTokenRecipesRoute = options.RecipesCatalogRoute;
+            hub.DesignTokenCount = options.Colors.Count;
+            hub.DesignTokenRecipeCount = options.Recipes.Count;
+            hub.TokenPrefix = options.Prefix;
+            hub.ActiveTokenPackId = options.ActiveBrandPackId;
+            hub.ActiveBrandIdentityVersion = options.ActiveBrandIdentityVersion;
+        });
         services.AddSingleton(options);
         services.TryAddSingleton<INerdTokenPackStore>(
             _ => new FileNerdTokenPackStore("App_Data/token-packs"));
         services.AddSingleton(sp => new NerdDesignTokenCss(
             MudBlazorDesignTokenCssGenerator.Generate(sp.GetRequiredService<NerdDesignTokenOptions>())));
+        services.TryAddSingleton<INerdBrandPackImportSink, NerdBrandPackImportSink>();
 
         if (options.Colors.Count > 0 && options.WarnOnAccessibilityFailuresAtStartup)
         {

@@ -5,50 +5,54 @@ public static class NerdTypographyPresets
     public static void ApplyMarketing(ResponsiveTypographyOptions options)
     {
         ArgumentNullException.ThrowIfNull(options);
-        options.H1 = ResponsiveFontSize.Clamp("2.5rem", "5vw", "4.5rem");
-        options.H2 = ResponsiveFontSize.Clamp("2rem", "4vw", "3.5rem");
-        options.Body1 = ResponsiveFontSize.Clamp("1rem", "2.2vw", "1.25rem");
-        options.Roles.H1.LineHeight = "1.15";
-        options.Roles.H2.LineHeight = "1.2";
-        options.Roles.Body1.LineHeight = "1.6";
-        options.LineHeight = "1.5";
-        options.LetterSpacing = "0.01em";
+        options.Default = NerdWcagTypography.ToRem(1);
+        options.H1 = NerdWcagTypography.Clamp(nameof(options.H1), 1.75, 3.5, 2.5);
+        options.H2 = NerdWcagTypography.Clamp(nameof(options.H2), 1.5, 2.8, 2);
+        options.H3 = NerdWcagTypography.Clamp(nameof(options.H3), 1.25, 2.2, 1.625);
+        options.Body1 = NerdWcagTypography.ToRem(1);
+        options.Body2 = NerdWcagTypography.ToRem(0.875);
+        options.Button = NerdWcagTypography.ToRem(0.875);
+        options.Caption = NerdWcagTypography.Clamp(nameof(options.Caption), 0.75, 0.7, 0.8125);
         options.FontWeight = "500";
+        NerdWcagTypography.EnsureCompliance(options);
     }
 
     public static void ApplyDenseApp(ResponsiveTypographyOptions options)
     {
         ArgumentNullException.ThrowIfNull(options);
-        options.Body1 = ResponsiveFontSize.Clamp("0.875rem", "1.6vw", "1rem");
-        options.Body2 = ResponsiveFontSize.Clamp("0.8125rem", "1.4vw", "0.9375rem");
-        options.Caption = ResponsiveFontSize.Clamp("0.75rem", "1.2vw", "0.875rem");
-        options.LineHeight = "1.35";
-        options.LetterSpacing = "0.02em";
+        options.Default = NerdWcagTypography.ToRem(1);
+        options.Body1 = NerdWcagTypography.ToRem(1);
+        options.Body2 = NerdWcagTypography.ToRem(0.875);
+        options.Caption = NerdWcagTypography.Clamp(nameof(options.Caption), 0.75, 0.6, 0.8125);
+        options.Button = NerdWcagTypography.ToRem(0.875);
         options.FontWeight = "400";
+        NerdWcagTypography.EnsureCompliance(options);
     }
 
     public static void ApplyEditorial(ResponsiveTypographyOptions options)
     {
         ArgumentNullException.ThrowIfNull(options);
-        options.H1 = ResponsiveFontSize.Clamp("2.25rem", "4.5vw", "4rem");
-        options.H2 = ResponsiveFontSize.Clamp("1.875rem", "3.5vw", "3rem");
-        options.Body1 = ResponsiveFontSize.Clamp("1.0625rem", "1.8vw", "1.375rem");
-        options.Roles.H1.LineHeight = "1.1";
-        options.Roles.H2.LineHeight = "1.2";
+        options.Default = NerdWcagTypography.ToRem(1);
+        options.H1 = NerdWcagTypography.Clamp(nameof(options.H1), 1.75, 3.5, 2.75);
+        options.H2 = NerdWcagTypography.Clamp(nameof(options.H2), 1.5, 2.8, 2.125);
+        options.H3 = NerdWcagTypography.Clamp(nameof(options.H3), 1.25, 2.2, 1.75);
+        options.Body1 = NerdWcagTypography.Clamp(nameof(options.Body1), 1, 1.4, 1.125);
         options.Roles.Body1.LineHeight = "1.7";
-        options.LineHeight = "1.6";
         options.FontWeight = "450";
+        NerdWcagTypography.EnsureCompliance(options);
     }
 
     public static void ApplyDashboard(ResponsiveTypographyOptions options)
     {
         ArgumentNullException.ThrowIfNull(options);
-        options.H1 = ResponsiveFontSize.Clamp("1.75rem", "3vw", "2.75rem");
-        options.H2 = ResponsiveFontSize.Clamp("1.5rem", "2.5vw", "2.25rem");
-        options.Body1 = "1rem";
-        options.Body2 = "0.875rem";
-        options.Caption = "0.75rem";
-        options.LineHeight = "1.4";
+        options.Default = NerdWcagTypography.ToRem(1);
+        options.H1 = NerdWcagTypography.Clamp(nameof(options.H1), 1.5, 2.5, 2);
+        options.H2 = NerdWcagTypography.Clamp(nameof(options.H2), 1.25, 2, 1.625);
+        options.Body1 = NerdWcagTypography.ToRem(1);
+        options.Body2 = NerdWcagTypography.ToRem(0.875);
+        options.Caption = NerdWcagTypography.Clamp(nameof(options.Caption), 0.75, 0.6, 0.8125);
+        options.Button = NerdWcagTypography.ToRem(0.875);
         options.FontWeight = "400";
+        NerdWcagTypography.EnsureCompliance(options);
     }
 }
