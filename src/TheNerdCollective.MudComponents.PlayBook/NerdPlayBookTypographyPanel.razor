@@ -17,7 +17,10 @@
             <MudSlider @bind-Value="ViewportWidth" Min="320" Max="1920" Step="10" Style="max-width: 280px;" />
         </MudStack>
 
-        <MudPaper Outlined="true" Class="pa-4" Style="@($"width:min(100%, {ViewportWidth:0}px); box-sizing:border-box;")">
+        <MudPaper Outlined="true"
+                  Class="@($"{Ui(NerdDesignSystemUi.PageSurface)} pa-4")"
+                  data-testid="playbook-typography-preview"
+                  Style="@($"width:min(100%, {ViewportWidth:0}px); box-sizing:border-box;")">
             <MudText Typo="Typo.caption" Class="@($"{Ui(NerdDesignSystemUi.MutedContent)} mb-3")">
                 Preview at @ViewportWidth.ToString("0")px viewport width (computed sizes from slider)
             </MudText>
@@ -29,7 +32,8 @@
             }
         </MudPaper>
 
-        <MudSimpleTable Dense="true" Bordered="true" Hover="true">
+        <div class="@Ui(NerdDesignSystemUi.PageSurface)">
+            <MudSimpleTable Dense="true" Bordered="true" Hover="true">
             <thead>
                 <tr>
                     <th>Role</th>
@@ -48,6 +52,7 @@
                 }
             </tbody>
         </MudSimpleTable>
+        </div>
     </MudStack>
 </MudPaper>
 
