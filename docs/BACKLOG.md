@@ -222,7 +222,7 @@ Spec: nerd-rules `00-ai-system/13-master-backlog-spec.md` · Prompts: `backlog-s
 
 ## Commercial backlog (private repo only)
 
-Licence gate, pricing, hosted Studio, multi-framework adapters (**HR-111–HR-118**) trackes i [TheNerdCollective.TokenStudio](https://github.com/janhjordie/token-studio) — se `docs/MUD-TOKEN-STUDIO-COMMERCIAL.md`.
+Licence gate, pricing, hosted Studio, multi-framework adapters (**HR-111–HR-118**) trackes i [Nerd Token Studio](https://github.com/janhjordie/nerd-token-studio) — se `docs/MUD-TOKEN-STUDIO-COMMERCIAL.md` i det private repo.
 
 ---
 

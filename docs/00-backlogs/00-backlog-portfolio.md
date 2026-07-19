@@ -90,7 +90,7 @@ HR-084–092 JSON-first brand UX ✓
 | 18-07-2026 | PORT-008 | HR-015/018/020/039 shipped: opacity overlays, brand health, dev comments, typography Tokens Studio |
 | 18-07-2026 | PORT-014 | HR-093–097: workbook editor, hub import, schema validation, pairings step, E2E hardening |
 | 18-07-2026 | PORT-015 | **Mud Token Studio** retning: fuld token-taxonomi + Tokens Studio-inspireret UX; **tokens + recipes** er kernen — direkte Figma-integration er ikke mål (HR-098–110) |
-| 18-07-2026 | PORT-016 | Commercial MVP flyttet til privat [token-studio](https://github.com/janhjordie/token-studio) — Free/Pro/Agency, licence gate, multi-framework adapters (HR-111–118) |
+| 18-07-2026 | PORT-016 | Commercial MVP flyttet til privat [nerd-token-studio](https://github.com/janhjordie/nerd-token-studio) — Free/Pro/Agency, licence gate, multi-framework adapters (HR-111–118) |
 
 ---
 
@@ -119,6 +119,6 @@ HR-084–092 JSON-first brand UX ✓
 
 - **HR-102, HR-107–108**
 
-### Commercial (private [token-studio](https://github.com/janhjordie/token-studio))
+### Commercial (private [nerd-token-studio](https://github.com/janhjordie/nerd-token-studio))
 
 HR-111–HR-118 (licence, Docker, adapters) — se `docs/MUD-TOKEN-STUDIO-COMMERCIAL.md` i privat repo.
