@@ -268,6 +268,24 @@ public class MudBlazorDesignTokenCssGeneratorTests
     }
 
     [Fact]
+    public void Generate_brand_chrome_surface_uses_on_brand_chrome_for_outlined_and_text_buttons()
+    {
+        var options = new NerdDesignTokenOptions { Prefix = "tnc", UseImportantOverrides = false };
+        NerdTncDesignTokenPresets.Apply(options);
+
+        var css = MudBlazorDesignTokenCssGenerator.Generate(options);
+
+        Assert.Contains(":root .tnc-brand-chrome.mud-button-outlined", css);
+        Assert.Contains(":root .tnc-brand-chrome.mud-button-text", css);
+        var brandChromeOutlined = css.Substring(
+            css.IndexOf(":root .tnc-brand-chrome.mud-button-outlined", StringComparison.Ordinal),
+            200);
+        Assert.Contains("color: var(--tnc-color-on-brand-chrome)", brandChromeOutlined);
+        Assert.Contains(":root .tnc-page-surface.mud-button-outlined", css);
+        Assert.Contains("color: var(--tnc-color-secondary-action)", css);
+    }
+
+    [Fact]
     public void Generate_isolates_css_and_emits_design_system_helpers()
     {
         var options = new NerdDesignTokenOptions { Prefix = "dnf", UseCssLayer = true }

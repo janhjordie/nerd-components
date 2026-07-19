@@ -644,11 +644,7 @@ public static class MudBlazorDesignTokenCssGenerator
         var prefix = options.Prefix;
         var important = options.UseImportantOverrides ? " !important" : string.Empty;
         var root = $":root .{prefix}-{surfaceAlias}";
-        var buttonDefaults = options.FrameworkDefaults?.MudBlazor?.Button;
-
-        var filledIntent = ResolveFrameworkButtonIntent(buttonDefaults?.Filled, NerdDesignSystemUi.PrimaryAction);
-        var outlinedIntent = ResolveFrameworkButtonIntent(buttonDefaults?.Outlined, NerdDesignSystemUi.SecondaryAction);
-        var textIntent = ResolveFrameworkButtonIntent(buttonDefaults?.Text, NerdDesignSystemUi.MutedContent);
+        var (filledIntent, outlinedIntent, textIntent) = ResolveSurfaceButtonIntents(options, surfaceAlias);
 
         AppendSurfaceScopedVariantRules(css, root, prefix, filledIntent, [
             "mud-button-filled", "mud-chip-filled", "mud-fab"
@@ -683,6 +679,25 @@ public static class MudBlazorDesignTokenCssGenerator
         css.AppendLine($"{root}[class*=\"mud-button-outlined\"] .mud-button-label {{");
         css.AppendLine($"  color: inherit{important};");
         css.AppendLine("}");
+    }
+
+    private static (string Filled, string Outlined, string Text) ResolveSurfaceButtonIntents(
+        NerdDesignTokenOptions options,
+        string surfaceAlias)
+    {
+        var buttonDefaults = options.FrameworkDefaults?.MudBlazor?.Button;
+        var filled = ResolveFrameworkButtonIntent(buttonDefaults?.Filled, NerdDesignSystemUi.PrimaryAction);
+        var outlined = ResolveFrameworkButtonIntent(buttonDefaults?.Outlined, NerdDesignSystemUi.SecondaryAction);
+        var text = ResolveFrameworkButtonIntent(buttonDefaults?.Text, NerdDesignSystemUi.MutedContent);
+
+        if (string.Equals(surfaceAlias, NerdDesignSystemUi.BrandChrome, StringComparison.OrdinalIgnoreCase) &&
+            options.Aliases.ContainsKey(NerdDesignSystemUi.OnBrandChrome))
+        {
+            outlined = NerdDesignSystemUi.OnBrandChrome;
+            text = NerdDesignSystemUi.OnBrandChrome;
+        }
+
+        return (filled, outlined, text);
     }
 
     private static string ResolveFrameworkButtonIntent(string? configuredIntent, string fallback) =>
