@@ -1,0 +1,22 @@
+component: dropzone
+scss: _dropzone.scss
+classification: P2
+family: input
+parts:
+  - id: zone
+    selectors: [.mud-drop-zone]
+    intent: [surface, border, channel]
+  - id: item
+    selectors: [.mud-drop-item]
+    intent: [content, surface]
+states:
+  - name: can-drop
+    selectors: [.mud-drop-zone-can-drop]
+verification:
+  - MudDropZone visible under token scope in catalog dogfood
+generator_required:
+  - '[class*="mud-drop-zone"]'
+adapter:
+  do:
+    - StructurePatterns mud-drop-zone surface/border tokens
+  source: MudBlazor v9.7.0 _dropzone.scss

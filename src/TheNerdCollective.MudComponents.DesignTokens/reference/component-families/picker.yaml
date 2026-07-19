@@ -1,0 +1,44 @@
+family: picker
+description: Composite input + portal popup (date, time, color, select, autocomplete)
+intent:
+  surface: Popup/calendar/list background
+  content: Default text and icons on popup
+  channel: Selected value, active day, focus ring, primary actions
+  border: Input outline and popup dividers
+  disabled: Muted text and non-interactive cells
+parts:
+  - id: input
+    intentAlias: input-surface
+    mudSelectors: [.mud-input-control, .mud-input-slot, .mud-input-label]
+    intent: [content, channel, border]
+  - id: adornment
+    intentAlias: muted-content
+    mudSelectors: [.mud-input-adornment]
+    intent: [content]
+  - id: popup
+    intentAlias: page-surface
+    mudSelectors: [.mud-popover, .mud-picker-popover]
+    intent: [surface, content, border]
+  - id: day-selected
+    intentAlias: primary-action
+    mudSelectors: [.mud-picker-calendar .mud-day.mud-selected]
+    states: [selected]
+    intent: [channel, surface]
+  - id: day-cell
+    intentAlias: muted-content
+    mudSelectors: [.mud-picker-calendar-day, .mud-day]
+    states: [default, selected, today, disabled, range]
+    intent: [content, channel, surface]
+  - id: list-selected
+    intentAlias: primary-action
+    mudSelectors: [.mud-list-item.mud-selected, [role="option"][aria-selected="true"]]
+    states: [selected]
+    intent: [channel, surface]
+  - id: header
+    intentAlias: muted-content
+    mudSelectors: [.mud-picker-calendar-header]
+    intent: [content, channel]
+crossFramework:
+  fluent: DatePicker / CalendarDatePicker
+  blazorise: DateEdit / DatePicker
+  mapping: Map intents to framework tokens — do not copy Mud class names

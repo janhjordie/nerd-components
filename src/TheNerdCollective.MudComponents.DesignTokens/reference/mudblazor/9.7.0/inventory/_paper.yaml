@@ -1,0 +1,19 @@
+component: paper
+scss: _paper.scss
+classification: P0
+family: structure
+parts:
+  - id: surface
+    selectors: [.mud-paper]
+    intent: [surface, content, border]
+states:
+  - name: default
+    selectors: [.mud-paper]
+verification:
+  - MudPaper surface visible under token scope in catalog dogfood
+generator_required:
+  - '[class*="mud-paper"]'
+adapter:
+  do:
+    - StructurePatterns mud-paper surface/content/border
+  source: MudBlazor v9.7.0 _paper.scss

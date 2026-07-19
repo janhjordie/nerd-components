@@ -1,0 +1,23 @@
+component: expansionpanel
+scss: _expansionpanel.scss
+classification: P2
+family: structure
+parts:
+  - id: panel
+    selectors: [.mud-expansion-panels, .mud-expansion-panel]
+    intent: [surface, content, border]
+  - id: header
+    selectors: [.mud-expand-panel-header]
+    intent: [content, channel]
+states:
+  - name: expanded
+    selectors: [.mud-expand-panel.mud-panel-expanded]
+verification:
+  - MudExpansionPanel header and content visible under token scope in catalog dogfood
+generator_required:
+  - '[class*="mud-expansion-panels"]'
+  - '[class*="mud-expand-panel"]'
+adapter:
+  do:
+    - StructurePatterns surface/content/border tokens
+  source: MudBlazor v9.7.0 _expansionpanel.scss

@@ -1,0 +1,29 @@
+component: alert
+scss: _alert.scss
+classification: P1
+family: feedback
+parts:
+  - id: filled
+    selectors: [.mud-alert-filled]
+    intent: [channel, on-channel]
+  - id: outlined
+    selectors: [.mud-alert-outlined]
+    intent: [channel, border]
+  - id: text
+    selectors: [.mud-alert-text]
+    intent: [content]
+states:
+  - name: filled
+    selectors: [.mud-alert-filled]
+  - name: outlined
+    selectors: [.mud-alert-outlined]
+verification:
+  - Token-scoped MudAlert filled variant uses channel background in catalog dogfood
+generator_required:
+  - '[class*="mud-alert-filled"]'
+  - '[class*="mud-alert-outlined"]'
+  - '[class*="mud-alert-text"]'
+adapter:
+  do:
+    - FilledPatterns + OutlinedPatterns + ContentTextPatterns via token class
+  source: MudBlazor v9.7.0 _alert.scss

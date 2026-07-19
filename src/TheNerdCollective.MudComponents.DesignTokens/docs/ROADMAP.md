@@ -77,8 +77,11 @@ Versionering:
 ## Fase 5 — Recipes & layout-kits
 
 - Recipe catalog (hero, CTA card, nav, footer, alert strip)
-- DNF layout-kit baseret på brand-PDF
-- PlayBook “Compositions” kategori
+- DNF layout-kit baseret på brand-PDF — **udvidet 2026-07:** hero-photo, hero-organic,
+  hero-light, sidebar, footer-minimal, feature-panel, partner-row, formular (HR-123)
+- PlayBook “Compositions” kategori + DNF manual showcase (TS-020)
+- Component intents (`nav-item`, `input-surface`, …) på tværs af adapters (HR-119)
+- `shell` + `frameworkDefaults` i pack (HR-122)
 
 ## Fase 6 — Portal & edge cases
 

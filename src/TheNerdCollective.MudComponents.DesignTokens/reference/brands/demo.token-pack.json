@@ -6,11 +6,11 @@
   "version": 2,
   "brandIdentityVersion": "1.0.0",
   "pairingGuideName": "Demo",
-  "updatedAt": "2026-07-18T20:16:01.527057+00:00",
+  "updatedAt": "2026-07-19T18:58:11.12154+00:00",
   "colors": {
     "violet": {
       "value": "#6D28D9",
-      "light": null,
+      "light": "#6D28D9",
       "dark": null,
       "contrastText": "#FFFFFF",
       "darkContrastText": null,
@@ -26,7 +26,7 @@
     },
     "sky": {
       "value": "#38BDF8",
-      "light": null,
+      "light": "#38BDF8",
       "dark": null,
       "contrastText": "#0F172A",
       "darkContrastText": null,
@@ -42,7 +42,7 @@
     },
     "paper": {
       "value": "#F8FAFC",
-      "light": null,
+      "light": "#F8FAFC",
       "dark": null,
       "contrastText": "#0F172A",
       "darkContrastText": null,
@@ -58,7 +58,7 @@
     },
     "slate": {
       "value": "#334155",
-      "light": null,
+      "light": "#334155",
       "dark": null,
       "contrastText": "#FFFFFF",
       "darkContrastText": null,
@@ -75,9 +75,17 @@
   },
   "aliases": {
     "primary-action": "violet",
+    "secondary-action": "violet",
+    "on-primary-action": "paper",
     "page-surface": "paper",
     "brand-chrome": "slate",
     "on-brand-chrome": "paper",
+    "nav-surface": "paper",
+    "nav-item": "slate",
+    "nav-item-active": "violet",
+    "input-surface": "paper",
+    "input-border": "slate",
+    "focus-ring": "sky",
     "muted-content": "slate",
     "info": "sky",
     "highlight": "sky",
@@ -87,6 +95,12 @@
   },
   "radii": {},
   "shadows": {},
+  "spacing": {},
+  "breakpoints": {},
+  "motionDurations": {},
+  "motionEasings": {},
+  "zIndex": {},
+  "transforms": {},
   "recipes": {
     "cta-strip": {
       "surface": "slate",
@@ -95,9 +109,61 @@
       "border": null,
       "label": "CTA strip",
       "usage": "Slate strip with paper text and sky action"
+    },
+    "sidebar": {
+      "surface": "paper",
+      "content": "slate",
+      "action": "violet",
+      "border": null,
+      "label": "App sidebar",
+      "usage": "Drawer navigation with violet active accent"
     }
   },
   "opacities": {},
+  "themeSets": {
+    "light": {
+      "id": "light",
+      "displayName": "Light",
+      "colors": {
+        "violet": {
+          "value": "#6D28D9",
+          "light": null,
+          "dark": null,
+          "contrastText": "#FFFFFF",
+          "darkContrastText": null,
+          "surface": null,
+          "content": null
+        },
+        "sky": {
+          "value": "#38BDF8",
+          "light": null,
+          "dark": null,
+          "contrastText": "#0F172A",
+          "darkContrastText": null,
+          "surface": null,
+          "content": null
+        },
+        "paper": {
+          "value": "#F8FAFC",
+          "light": null,
+          "dark": null,
+          "contrastText": "#0F172A",
+          "darkContrastText": null,
+          "surface": null,
+          "content": null
+        },
+        "slate": {
+          "value": "#334155",
+          "light": null,
+          "dark": null,
+          "contrastText": "#FFFFFF",
+          "darkContrastText": null,
+          "surface": null,
+          "content": null
+        }
+      }
+    }
+  },
   "approvedPairings": [
     {
       "content": "paper",
@@ -116,5 +182,68 @@
       "surface": "slate"
     }
   ],
-  "lockedTokens": []
+  "lockedTokens": [],
+  "shell": {
+    "appBar": {
+      "alias": "brand-chrome",
+      "recipe": null
+    },
+    "drawer": {
+      "alias": "nav-surface",
+      "recipe": null
+    },
+    "navMenu": {
+      "alias": null,
+      "recipe": "sidebar"
+    },
+    "main": {
+      "alias": "page-surface",
+      "recipe": null
+    }
+  },
+  "frameworkDefaults": {
+    "mudBlazor": {
+      "palette": {
+        "primary": "primary-action",
+        "secondary": "secondary-action",
+        "tertiary": "highlight",
+        "info": "info",
+        "success": "success",
+        "warning": "highlight",
+        "error": "danger",
+        "dark": "muted-content",
+        "surface": "page-surface",
+        "background": "page-surface",
+        "textPrimary": "page-surface",
+        "textSecondary": "muted-content",
+        "textDisabled": "muted-content",
+        "actionDefault": "primary-action",
+        "actionDisabled": null,
+        "appbarBackground": "brand-chrome",
+        "appbarText": "on-brand-chrome",
+        "drawerBackground": "nav-surface",
+        "drawerText": "nav-item",
+        "drawerIcon": "nav-item",
+        "linesDefault": "input-border",
+        "linesInputs": "input-border"
+      },
+      "button": {
+        "filled": "primary-action",
+        "outlined": "secondary-action",
+        "text": "muted-content"
+      },
+      "textField": {
+        "intent": "input-surface",
+        "popover": null
+      },
+      "datePicker": {
+        "intent": null,
+        "popover": "page-surface"
+      },
+      "navLink": {
+        "default": "nav-item",
+        "active": "nav-item-active"
+      }
+    }
+  }
 }

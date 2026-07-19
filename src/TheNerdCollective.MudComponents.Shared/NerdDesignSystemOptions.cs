@@ -26,6 +26,15 @@ public sealed class NerdDesignSystemOptions
     /// <summary>Route for the guided brand workbook wizard.</summary>
     public string BrandWorkbookRoute { get; set; } = "/nerd-brand-workbook";
 
+    /// <summary>Route for the live brand design guide.</summary>
+    public string DesignGuideRoute { get; set; } = "/nerd-design-guide";
+
+    /// <summary>Enables the design guide page.</summary>
+    public bool EnableDesignGuidePage { get; set; } = true;
+
+    /// <summary>Restricts the design guide page to development environments.</summary>
+    public bool RestrictDesignGuideToDevelopment { get; set; } = true;
+
     /// <summary>Route for the WCAG 2.1 best-practice guide.</summary>
     public string WcagGuideRoute { get; set; } = "/nerd-wcag";
 
@@ -37,6 +46,15 @@ public sealed class NerdDesignSystemOptions
 
     /// <summary>Restricts the hub page to development environments.</summary>
     public bool RestrictHubToDevelopment { get; set; } = true;
+
+    /// <summary>Highlights low-contrast text in Development when true.</summary>
+    public bool EnableStyleGuardOverlay { get; set; }
+
+    /// <summary>Minimum contrast ratio for the development style-guard overlay.</summary>
+    public double StyleGuardMinContrastRatio { get; set; } = 4.5;
+
+    /// <summary>Warning threshold for brand accent controls (tabs) on page-surface.</summary>
+    public double StyleGuardWarningContrastRatio { get; set; } = 3.0;
 
     /// <summary>Number of configured color tokens (set by AddNerdDesignTokens).</summary>
     public int DesignTokenCount { get; set; }

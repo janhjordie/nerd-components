@@ -1,0 +1,20 @@
+component: tooltip
+scss: _tooltip.scss
+classification: P2
+family: overlay
+portal: true
+parts:
+  - id: tooltip
+    selectors: [.mud-tooltip, .mud-tooltip-root]
+    intent: [surface, content]
+states:
+  - name: open
+    selectors: [.mud-tooltip, .mud-popover-open]
+verification:
+  - StructurePatterns + portal bridge when tooltip trigger carries token class
+generator_required:
+  - '[class*="mud-tooltip"]'
+adapter:
+  do:
+    - StructurePatterns surface/content tokens on tooltip root
+  source: MudBlazor v9.7.0 _tooltip.scss

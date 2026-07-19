@@ -1,0 +1,31 @@
+component: select
+scss: _select.scss
+classification: P3
+family: picker
+portal: true
+composite_of: [input, inputcontrol, popover, select]
+family_ref: picker
+parts:
+  - id: input
+    selectors: [.mud-select, .mud-input-control]
+    intent: [content, border, channel]
+  - id: popup
+    selectors: [.mud-popover, .mud-select-popover]
+    intent: [surface, content]
+  - id: option-selected
+    selectors: [.mud-selected-item, .mud-list-item.mud-selected]
+    intent: [channel, surface]
+states:
+  - name: open
+    selectors: [.mud-popover-open]
+  - name: selected
+    selectors: [.mud-selected-item]
+verification:
+  - Playwright open MudSelect popover inherits token class; selected item uses channel color
+generator_required:
+  - .mud-selected-item
+  - '[class*="mud-popover"]'
+adapter:
+  do:
+    - InputPatterns + popover surface rules + portal token bridge
+  source: MudBlazor v9.7.0 _select.scss

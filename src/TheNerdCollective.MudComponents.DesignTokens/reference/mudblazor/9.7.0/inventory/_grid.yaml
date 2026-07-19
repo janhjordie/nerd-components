@@ -1,0 +1,19 @@
+component: grid
+scss: _grid.scss
+classification: P4
+family: layout
+parts:
+  - id: grid
+    selectors: [.mud-grid, .mud-grid-item]
+    intent: [layout]
+states:
+  - name: default
+    selectors: [.mud-grid]
+verification:
+  - Grid layout utility documented for harvest completeness
+generator_required:
+  - '[class*="mud-grid"]'
+adapter:
+  do:
+    - StructurePatterns mud-grid layout shell tokens
+  source: MudBlazor v9.7.0 _grid.scss

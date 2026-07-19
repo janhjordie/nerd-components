@@ -1,0 +1,19 @@
+component: badge
+scss: _badge.scss
+classification: P1
+family: feedback
+parts:
+  - id: badge
+    selectors: [.mud-badge, .mud-badge-root]
+    intent: [channel, on-channel]
+states:
+  - name: default
+    selectors: [.mud-badge]
+verification:
+  - Token-scoped MudBadge content uses channel background in catalog dogfood
+generator_required:
+  - '[class*="mud-badge"]'
+adapter:
+  do:
+    - FilledPatterns badge channel paint
+  source: MudBlazor v9.7.0 _badge.scss

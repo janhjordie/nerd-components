@@ -1,0 +1,49 @@
+@using TheNerdCollective.MudComponents.Shared
+
+@if (_documentation is not null)
+{
+    <MudPaper Outlined="true" Class="pa-4 mb-3" data-testid="token-documentation-panel">
+        <MudText Typo="Typo.h6">Token documentation</MudText>
+        <MudText Typo="Typo.subtitle2" Class="mt-2"><code>@_documentation.Title</code></MudText>
+        @if (!string.IsNullOrWhiteSpace(_documentation.Summary))
+        {
+            <MudText Typo="Typo.body2" Class="mt-2">@_documentation.Summary</MudText>
+        }
+        @if (_documentation.Roles.Count > 0)
+        {
+            <MudStack Row="true" Spacing="1" Class="flex-wrap mt-2">
+                @foreach (var role in _documentation.Roles)
+                {
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@role</MudChip>
+                }
+            </MudStack>
+        }
+        @if (!string.IsNullOrWhiteSpace(_documentation.Usage))
+        {
+            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mt-3">
+                <strong>Usage:</strong> @_documentation.Usage
+            </MudAlert>
+        }
+        @if (!string.IsNullOrWhiteSpace(_documentation.DoNot))
+        {
+            <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="mt-2">
+                <strong>Don't:</strong> @_documentation.DoNot
+            </MudAlert>
+        }
+    </MudPaper>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public NerdDesignTokenOptions Options { get; set; } = default!;
+
+    [Parameter]
+    public NerdTokenTreeNavigation? Selection { get; set; }
+
+    private NerdTokenDocumentation? _documentation;
+
+    protected override void OnParametersSet()
+    {
+        _documentation = Selection is null ? null : NerdTokenDocumentationTools.Resolve(Options, Selection);
+    }
+}

@@ -43,7 +43,9 @@
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="flex-wrap">
                 @if (ShowDarkModeToggle)
                 {
-                    <MudSwitch @bind-Value="PreviewDark" Class="@Ui(NerdDesignSystemUi.PrimaryAction)" Label="Dark mode preview" />
+                    <span class="@Ui(NerdDesignSystemUi.PrimaryAction)">
+                        <MudSwitch @bind-Value="PreviewDark" Label="Dark mode preview" />
+                    </span>
                 }
                 <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">
                     @MudBlazorPlayBookCatalog.All.Count components

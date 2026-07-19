@@ -1,0 +1,47 @@
+component: pickerdate
+scss: _pickerdate.scss
+classification: P3
+family: picker
+portal: true
+composite_of: [input, inputcontrol, popover, picker, pickerdate]
+family_ref: picker
+parts:
+  - id: input
+    selectors: [.mud-input-control, .mud-picker]
+    intent: [content, border, channel]
+  - id: calendar-surface
+    selectors: [.mud-picker-calendar, .mud-picker-popover]
+    intent: [surface, content]
+  - id: day-default
+    selectors: [.mud-picker-calendar .mud-day:not(.mud-selected)]
+    intent: [content]
+  - id: day-selected
+    selectors: [.mud-picker-calendar .mud-day.mud-selected]
+    intent: [channel, on-channel]
+  - id: day-today
+    selectors: [.mud-picker-calendar .mud-day.mud-current:not(.mud-selected)]
+    intent: [channel]
+  - id: header
+    selectors: [.mud-picker-calendar-header-switch, .mud-day-label]
+    intent: [content]
+states:
+  - name: selected
+    part: day-selected
+    selectors: [.mud-day.mud-selected]
+  - name: today
+    part: day-today
+    selectors: [.mud-day.mud-current]
+  - name: disabled
+    selectors: [.mud-day.mud-disabled]
+  - name: hover
+    selectors: [.mud-day:hover]
+verification:
+  - Playwright open MudDatePicker selected day uses brand channel color
+  - Playwright popover inherits token class (portal bridge)
+generator_required:
+  - .mud-picker-calendar .mud-day.mud-selected
+  - '[class*="mud-popover"]'
+adapter:
+  do:
+    - AppendPickerPortalStateRules for day selected/current/hover
+  source: MudBlazor v9.7.0 _pickerdate.scss lines 281-318

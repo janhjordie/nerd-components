@@ -19,7 +19,7 @@ public partial class NerdResponsiveTypographyCatalog
         ("Desktop", 1440),
     ];
 
-    private static readonly double[] BreakpointColumns = [320, 375, 768, 1024, 1280, 1440, 1920];
+    private double[] BreakpointColumns => NerdBreakpointTools.GetComparisonColumns(TokenOptions);
 
     [Inject]
     private NerdResponsiveTypographyOptions Options { get; set; } = default!;
@@ -40,16 +40,16 @@ public partial class NerdResponsiveTypographyCatalog
     private NerdDownloadService DownloadService { get; set; } = default!;
 
     [Inject]
-    private NerdResponsiveTypographyCss TypographyCss { get; set; } = default!;
-
-    [Inject]
     private NavigationManager Navigation { get; set; } = default!;
 
     [Inject]
     private INerdCatalogEntitlements Entitlements { get; set; } = default!;
 
+    private const string PreviewScopeSelector = ".nerd-typography-catalog-preview";
+
     private int _activeTabIndex;
     private MudTheme _previewTheme = new();
+    private string _previewTypographyCss = string.Empty;
     private IReadOnlyList<NerdTypographyRole> _roles = [];
     private IReadOnlyList<NerdTypographyAccessibilityResult> _accessibility = [];
     private IReadOnlyList<NerdTypographyAccessibilityWarning> _warnings = [];
@@ -169,7 +169,9 @@ public partial class NerdResponsiveTypographyCatalog
     private void RefreshPreviewTheme()
     {
         _previewTheme = Options.CreatePreviewTheme();
-        TypographyCss.Update(Options.Typography);
+        _previewTypographyCss = MudBlazorResponsiveTypographyCssGenerator.Generate(
+            _previewTheme.Typography,
+            scopeSelector: PreviewScopeSelector);
         _roles = FilterRoles(NerdTypographyAccessibilityTools.GetConfiguredRoles(_previewTheme)).ToArray();
         _accessibility = NerdTypographyAccessibilityTools.CheckAccessibility(Options);
         _warnings = NerdTypographyAccessibilityTools.GetAccessibilityWarnings(Options);

@@ -1,0 +1,31 @@
+component: button
+scss: _button.scss
+classification: P1
+family: action
+parts:
+  - id: filled
+    selectors: [.mud-button-filled]
+    intent: [channel, on-channel]
+  - id: outlined
+    selectors: [.mud-button-outlined]
+    intent: [channel, border]
+  - id: text
+    selectors: [.mud-button-text]
+    intent: [channel]
+states:
+  - name: filled
+    selectors: [.mud-button-filled]
+  - name: outlined
+    selectors: [.mud-button-outlined]
+  - name: hover
+    selectors: [.mud-button-filled:hover, .mud-button-outlined:hover]
+verification:
+  - Token-scoped MudButton filled/outlined variants use channel paint in catalog dogfood
+generator_required:
+  - '[class*="mud-button-filled"]'
+  - '[class*="mud-button-outlined"]'
+  - '[class*="mud-button-text"]'
+adapter:
+  do:
+    - FilledPatterns + OutlinedPatterns + AccentTextPatterns via token class
+  source: MudBlazor v9.7.0 _button.scss

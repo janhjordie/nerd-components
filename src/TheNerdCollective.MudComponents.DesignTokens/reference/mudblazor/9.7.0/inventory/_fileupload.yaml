@@ -1,0 +1,22 @@
+component: fileupload
+scss: _fileupload.scss
+classification: P2
+family: input
+parts:
+  - id: upload
+    selectors: [.mud-file-upload]
+    intent: [surface, border]
+  - id: dragarea
+    selectors: [.mud-file-upload-dragarea]
+    intent: [surface, border, channel]
+states:
+  - name: hover
+    selectors: [.mud-file-upload-dragarea-clickable:hover]
+verification:
+  - MudFileUpload trigger button uses channel paint under token scope in catalog dogfood
+generator_required:
+  - '[class*="mud-file-upload"]'
+adapter:
+  do:
+    - StructurePatterns + button rules for upload trigger
+  source: MudBlazor v9.7.0 _fileupload.scss

@@ -8,7 +8,7 @@
 }
 else
 {
-    <MudContainer MaxWidth="MaxWidth.Medium" Class="@($"my-8 {Ui(NerdDesignSystemUi.PageSurface)} pa-4")">
+    <NerdCatalogPage MaxWidth="MaxWidth.Medium">
         <MudStack Spacing="3">
             <MudText Typo="Typo.h4">Nerd design system</MudText>
             <MudText Typo="Typo.body2" Class="@Ui(NerdDesignSystemUi.MutedContent)">
@@ -38,6 +38,9 @@ else
             <MudButton Href="@Options.BrandWorkbookRoute" Variant="Variant.Outlined" Class="@Ui(NerdDesignSystemUi.PrimaryAction)">
                 Brand workbook
             </MudButton>
+            <MudButton Href="@Options.DesignGuideRoute" Variant="Variant.Outlined" Class="@Ui(NerdDesignSystemUi.PrimaryAction)">
+                Design guide
+            </MudButton>
             <MudButton Href="@Options.WcagGuideRoute" Variant="Variant.Outlined" Class="@Ui(NerdDesignSystemUi.PrimaryAction)">
                 WCAG guide
             </MudButton>
@@ -66,5 +69,5 @@ else
             </MudButton>
             <NerdBrandPackExporter />
         </MudStack>
-    </MudContainer>
+    </NerdCatalogPage>
 }

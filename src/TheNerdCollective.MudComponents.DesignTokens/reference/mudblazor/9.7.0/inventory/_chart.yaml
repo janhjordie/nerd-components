@@ -1,0 +1,19 @@
+component: chart
+scss: _charts.scss
+classification: P4
+family: chart
+parts:
+  - id: chart
+    selectors: [.mud-chart]
+    intent: [surface, channel]
+states:
+  - name: default
+    selectors: [.mud-chart]
+verification:
+  - MudChart renders under token scope in catalog dogfood
+generator_required:
+  - '[class*="mud-chart"]'
+adapter:
+  do:
+    - StructurePatterns mud-chart palette via token class
+  source: MudBlazor v9.7.0 _charts.scss

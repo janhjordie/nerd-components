@@ -66,9 +66,17 @@ public static class NerdDnfDesignTokenPresets
                 Action: "himmel"));
 
         options.Alias("primary-action", "himmel");
+        options.Alias("secondary-action", "hav");
+        options.Alias("on-primary-action", "skov");
         options.Alias("page-surface", "kridt-lys");
         options.Alias("brand-chrome", "skov");
         options.Alias("on-brand-chrome", "kridt-lys");
+        options.Alias("nav-surface", "kridt-lys");
+        options.Alias("nav-item", "skov");
+        options.Alias("nav-item-active", "graes");
+        options.Alias("input-surface", "kridt-lys");
+        options.Alias("input-border", "hav");
+        options.Alias("focus-ring", "himmel");
         options.Alias("muted-content", "hav");
         options.Alias("info", "flod");
         options.Alias("highlight", "sol");
@@ -77,6 +85,92 @@ public static class NerdDnfDesignTokenPresets
 
         options.AddOpacity("watermark", new NerdOpacityToken("skov", 0.12));
         options.AddOpacity("hero-overlay", new NerdOpacityToken("jord", 0.35));
+
+        options.AddRecipe(
+            NerdDesignSystemUi.SidebarRecipe,
+            new NerdDesignTokenRecipe(
+                Surface: "kridt-lys",
+                Content: "skov",
+                Action: "graes",
+                Label: "App sidebar",
+                Usage: "Drawer navigation with græs active accent"));
+
+        options.AddRecipe(
+            "hero-photo",
+            new NerdDesignTokenRecipe(
+                Surface: "jord",
+                Content: "kridt",
+                Action: "graes",
+                Label: "Photo hero",
+                Usage: "Full-bleed photo hero with kridt headline and græs CTA"));
+
+        options.AddRecipe(
+            "hero-organic",
+            new NerdDesignTokenRecipe(
+                Surface: "skov",
+                Content: "kridt",
+                Action: "graes",
+                Label: "Organic hero",
+                Usage: "Dark skov hero with organic watermark and græs CTA"));
+
+        options.AddRecipe(
+            "hero-light",
+            new NerdDesignTokenRecipe(
+                Surface: "himmel",
+                Content: "skov",
+                Action: "graes",
+                Label: "Light hero",
+                Usage: "Light himmel hero with skov headline"));
+
+        options.AddRecipe(
+            "footer-minimal",
+            new NerdDesignTokenRecipe(
+                Surface: "skov",
+                Content: "kridt",
+                Label: "Minimal footer",
+                Usage: "Single-line legal footer bar"));
+
+        options.AddRecipe(
+            "feature-panel",
+            new NerdDesignTokenRecipe(
+                Surface: "skov",
+                Content: "kridt",
+                Action: "graes",
+                Label: "Feature panel",
+                Usage: "Skov panel with topic rows on hero"));
+
+        options.AddRecipe(
+            "partner-row",
+            new NerdDesignTokenRecipe(
+                Surface: "jord",
+                Content: "kridt",
+                Label: "Partner row",
+                Usage: "I samarbejde med logo strip"));
+
+        options.AddRecipe(
+            "formular",
+            new NerdDesignTokenRecipe(
+                Surface: "kridt-lys",
+                Content: "skov",
+                Action: "himmel",
+                Label: "Form strip",
+                Usage: "Light form surface with skov labels"));
+
+        NerdSpacingScaleTools.ApplyDefaultScale(options);
+        NerdFoundationTaxonomyTools.ApplyDefaults(options);
+
+        options.Shell = NerdTokenPackShellTools.DefaultShell;
+        options.FrameworkDefaults = new NerdFrameworkDefaults
+        {
+            MudBlazor = new NerdMudBlazorFrameworkDefaults
+            {
+                Palette = NerdMudBrandPaletteMap.CreateConventionBindings(),
+                Button = NerdTokenPackShellTools.DefaultMudBlazorDefaults.Button,
+                TextField = NerdTokenPackShellTools.DefaultMudBlazorDefaults.TextField,
+                DatePicker = NerdTokenPackShellTools.DefaultMudBlazorDefaults.DatePicker,
+                NavLink = NerdTokenPackShellTools.DefaultMudBlazorDefaults.NavLink
+            }
+        };
     }
 
     private static void AddDark(NerdDesignTokenOptions options, string name, string value) =>

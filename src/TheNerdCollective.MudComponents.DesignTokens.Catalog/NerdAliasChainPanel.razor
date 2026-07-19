@@ -1,0 +1,52 @@
+@using TheNerdCollective.MudComponents.Shared
+
+@if (_chain.Count > 0)
+{
+    <MudPaper Outlined="true" Class="pa-4 mb-3" data-testid="token-alias-chain-panel">
+        <MudText Typo="Typo.h6">Alias chain</MudText>
+        <MudText Typo="Typo.body2" Class="@Ui(NerdDesignSystemUi.MutedContent)">
+            Semantic alias resolution for <code>@AliasName</code>.
+        </MudText>
+        <MudStack Row="true" Spacing="1" Class="flex-wrap mt-3" AlignItems="AlignItems.Center">
+            @for (var index = 0; index < _chain.Count; index++)
+            {
+                var step = _chain[index];
+                <MudChip T="string" Variant="Variant.Outlined" Size="Size.Small" data-testid="@($"alias-chain-{step.Name}")">
+                    @if (step.Kind == NerdAliasChainStepKind.Color)
+                    {
+                        <span>@step.Name</span>
+                        <code class="ms-1">@step.Value</code>
+                    }
+                    else
+                    {
+                        <span>@step.Name</span>
+                    }
+                </MudChip>
+                @if (index < _chain.Count - 1)
+                {
+                    <MudText Typo="Typo.caption">→</MudText>
+                }
+            }
+        </MudStack>
+    </MudPaper>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public NerdDesignTokenOptions Options { get; set; } = default!;
+
+    [Parameter]
+    public string? AliasName { get; set; }
+
+    private IReadOnlyList<NerdAliasChainStep> _chain = [];
+
+    protected override void OnParametersSet()
+    {
+        _chain = !string.IsNullOrWhiteSpace(AliasName) && Options.IsAlias(AliasName)
+            ? NerdAliasChainTools.Build(Options, AliasName)
+            : [];
+    }
+
+    private string Ui(string semanticAlias) =>
+        NerdDesignSystemUi.TokenClass(Options.Prefix, semanticAlias);
+}

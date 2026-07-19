@@ -1,0 +1,18 @@
+component: checkbox
+scss: _checkbox.scss
+classification: P1
+family: toggle
+family_ref: toggle
+states:
+  - name: unchecked
+    selectors: [.mud-checkbox:not(.mud-checked)]
+  - name: checked
+    selectors: [.mud-checkbox.mud-checked, .mud-checkbox .mud-checked]
+  - name: disabled
+    selectors: [.mud-checkbox.mud-disabled]
+generator_required:
+  - .mud-checkbox .mud-icon-button
+adapter:
+  do:
+    - Style .mud-checkbox .mud-icon-button with channel color
+  source: MudBlazor v9.7.0 _checkbox.scss

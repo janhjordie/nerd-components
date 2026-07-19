@@ -1,0 +1,19 @@
+component: appbar
+scss: _appbar.scss
+classification: P2
+family: layout
+parts:
+  - id: appbar
+    selectors: [.mud-appbar]
+    intent: [surface, content, channel]
+states:
+  - name: default
+    selectors: [.mud-appbar]
+verification:
+  - MudAppBar visible under token scope in catalog dogfood
+generator_required:
+  - '[class*="mud-appbar"]'
+adapter:
+  do:
+    - StructurePatterns mud-appbar surface/content rules
+  source: MudBlazor v9.7.0 _appbar.scss

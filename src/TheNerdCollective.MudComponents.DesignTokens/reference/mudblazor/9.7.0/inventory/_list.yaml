@@ -1,0 +1,23 @@
+component: list
+scss: _list.scss
+classification: P2
+family: data
+parts:
+  - id: item
+    selectors: [.mud-list-item, .mud-list-item-text]
+    intent: [content, channel]
+  - id: selected
+    selectors: [.mud-list-item.mud-selected, .mud-selected-item]
+    intent: [channel, surface]
+states:
+  - name: selected
+    selectors: [.mud-list-item.mud-selected]
+verification:
+  - StructurePatterns + picker portal selected item rules apply under token scope
+generator_required:
+  - '[class*="mud-list"]'
+  - .mud-list-item.mud-selected
+adapter:
+  do:
+    - StructurePatterns + shared selected list-item rules from picker portal bridge
+  source: MudBlazor v9.7.0 _list.scss

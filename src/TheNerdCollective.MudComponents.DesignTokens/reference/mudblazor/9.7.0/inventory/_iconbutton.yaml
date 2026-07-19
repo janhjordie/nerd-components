@@ -1,0 +1,19 @@
+component: iconbutton
+scss: _iconbutton.scss
+classification: P1
+family: action
+parts:
+  - id: button
+    selectors: [.mud-icon-button]
+    intent: [channel]
+states:
+  - name: default
+    selectors: [.mud-icon-button]
+verification:
+  - AccentTextPatterns paint icon buttons under token scope in catalog dogfood
+generator_required:
+  - '[class*="mud-icon-button"]'
+adapter:
+  do:
+    - AccentTextPatterns for icon-button channel color
+  source: MudBlazor v9.7.0 _iconbutton.scss

@@ -44,6 +44,7 @@ public partial class NerdPlayBook
     private double _typographyViewport = 1280;
     private MudTheme _previewTheme = new();
     private IReadOnlyList<string> _tokenNames = [];
+    private string? _inspectedTokenClass;
 
     private IEnumerable<INerdBrandPack> InstalledBrandPacks =>
         BrandPacks.OrderBy(pack => pack.Id, StringComparer.OrdinalIgnoreCase);
@@ -138,6 +139,7 @@ public partial class NerdPlayBook
         NerdBrandTypographySwitcher.TrySwitchBrand(brand, TypographyOptions, HubOptions, _previewTheme);
         RefreshTokenNames();
         ApplyTypographyPreset();
+        StateHasChanged();
         return Task.CompletedTask;
     }
 
@@ -147,4 +149,6 @@ public partial class NerdPlayBook
         ApplyTypographyPreset();
         return Task.CompletedTask;
     }
+
+    private void InspectToken(string tokenClass) => _inspectedTokenClass = tokenClass;
 }

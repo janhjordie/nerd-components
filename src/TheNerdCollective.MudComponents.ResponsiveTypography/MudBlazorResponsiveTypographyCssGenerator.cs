@@ -6,20 +6,27 @@ namespace TheNerdCollective.MudComponents.ResponsiveTypography;
 /// <summary>Generates MudBlazor typography CSS variable overrides from responsive typography options.</summary>
 public static class MudBlazorResponsiveTypographyCssGenerator
 {
-    public static string Generate(ResponsiveTypographyOptions options, bool useImportant = true)
+    public static string Generate(ResponsiveTypographyOptions options, bool useImportant = true, string? scopeSelector = null)
     {
         ArgumentNullException.ThrowIfNull(options);
         var theme = new MudTheme();
         theme.UseResponsiveTypography(options);
-        return Generate(theme.Typography, useImportant);
+        return Generate(theme.Typography, useImportant, scopeSelector);
     }
 
-    public static string Generate(Typography typography, bool useImportant = true)
+    public static string Generate(Typography typography, bool useImportant = true, string? scopeSelector = null)
     {
         ArgumentNullException.ThrowIfNull(typography);
+        if (scopeSelector is not null &&
+            (scopeSelector.Contains('{') || scopeSelector.Contains('}')))
+        {
+            throw new ArgumentException("Scope selector cannot contain CSS declarations.", nameof(scopeSelector));
+        }
+
         var important = useImportant ? " !important" : string.Empty;
+        var variableRoot = string.IsNullOrWhiteSpace(scopeSelector) ? ":root" : scopeSelector;
         var css = new StringBuilder();
-        css.AppendLine(":root {");
+        css.AppendLine($"{variableRoot} {{");
 
         foreach (var (_, slug, selector) in MudBlazorTypographyRoleMap.Roles)
         {
@@ -40,7 +47,10 @@ public static class MudBlazorResponsiveTypographyCssGenerator
                 continue;
             }
 
-            css.AppendLine($".mud-typography-{slug} {{");
+            var roleSelector = string.IsNullOrWhiteSpace(scopeSelector)
+                ? $".mud-typography-{slug}"
+                : $"{scopeSelector} .mud-typography-{slug}";
+            css.AppendLine($"{roleSelector} {{");
             css.AppendLine($"  font-size: {roleTypography.FontSize}{important};");
 
             if (!string.IsNullOrWhiteSpace(roleTypography.LineHeight))

@@ -305,28 +305,28 @@ Slet overflødig CSS/generator-kode når theme-laget overtager (ingen deprecatio
 |----|---|--------|------|------------------|----------|--------|
 | HR-157 | P0 | done | `NerdMudThemeFactory` fuld palette | `PaletteLight` + `PaletteDark` fra pack `themeSets` via `MudColor` (rgb/hover/darken/lighten); parity med `MudBlazorPaletteManifest` | `NerdMudThemeFactory.cs`, `NerdMudBrandPaletteTests` | theme strategy fase 1 |
 | HR-158 | P0 | done | Fjern CSS global palette-duplikat | `MudBlazorBrandPaletteGenerator.AppendBrandRootPalette` emitter ikke længere `--mud-palette-*` på `.mud-theme-provider`; `.tnc-mud-brand` er layout-klasse only | `MudBlazorBrandPaletteGenerator.cs` | theme strategy fase 1 |
-| HR-159 | P0 | open | Slet ComponentRuleBuilder bulk for intents | Fjern `AccentTextPatterns`/`InputPatterns`/`FilledPatterns` for semantic aliases; behold kun raw color token rules + inventory bridges | `MudBlazorComponentRuleBuilder.cs` | theme strategy fase 1 |
-| HR-160 | P1 | open | Slet alias palette-flattening | `MudBlazorPaletteMapper.AppendPaletteVariables` kaldes ikke for aliases; semantic intents bruger ikke per-alias `--mud-palette-*` flattening | `MudBlazorDesignTokenCssGenerator.cs`, `MudBlazorPaletteMapper.cs` | theme strategy fase 1 |
-| HR-161 | P1 | open | Minimal Mud bridges CSS | Switch thumb + inventory `generator_required` hardcoded hex i dedikeret bridge (ikke ComponentRuleBuilder bulk) | `reference/mudblazor/9.7.0/inventory/_switch.yaml` | theme strategy fase 1 |
+| HR-159 | P0 | done | Slet ComponentRuleBuilder bulk for intents | Fjern `AccentTextPatterns`/`InputPatterns`/`FilledPatterns` for semantic aliases; behold kun raw color token rules + inventory bridges | `MudBlazorComponentRuleBuilder.cs` | theme strategy fase 1 |
+| HR-160 | P1 | done | Slet alias palette-flattening | `MudBlazorPaletteMapper.AppendPaletteVariables` kaldes ikke for aliases; semantic intents bruger ikke per-alias `--mud-palette-*` flattening | `MudBlazorDesignTokenCssGenerator.cs`, `MudBlazorPaletteMapper.cs` | theme strategy fase 1 |
+| HR-161 | P1 | done | Minimal Mud bridges CSS | Switch thumb + inventory `generator_required` hardcoded hex i dedikeret bridge (ikke ComponentRuleBuilder bulk) | `reference/mudblazor/9.7.0/inventory/_switch.yaml` | theme strategy fase 1 |
 | HR-162 | P1 | done | Theme/CSS parity tests | Unit: factory palette keys = manifest; CSS indeholder ikke duplikat global palette block; `NerdMudPaletteParityTools` fejler ved regression | `NerdMudPaletteParityTools.cs`, tests | theme strategy fase 1 |
-| HR-163 | P2 | open | Opdatér fidelity docs fase 1 | `02-mudblazor-100-percent-fidelity.md` §4: global brand = `MudThemeProvider` only; CSS = intents + bridges | `docs/02-mudblazor-100-percent-fidelity.md` (Token Studio) | theme strategy fase 1 |
+| HR-163 | P2 | done | Opdatér fidelity docs fase 1 | `02-mudblazor-100-percent-fidelity.md` §4: global brand = `MudThemeProvider` only; CSS = intents + bridges | `docs/02-mudblazor-100-percent-fidelity.md` (Token Studio) | theme strategy fase 1 |
 
 ### Fase 2 — PseudoCss intents + recipes
 
 | ID | P | Status | Task | DoD (verifiable) | Evidence | Source |
 |----|---|--------|------|------------------|----------|--------|
-| HR-164 | P0 | open | `NerdMudIntentThemeFactory` | Bygger `MudTheme` pr. semantic intent fra pack aliases + `frameworkDefaults.mudblazor.palette` slot mapping | `NerdMudIntentThemeFactory.cs` | theme strategy fase 2 |
-| HR-165 | P1 | open | Intent → palette slot map | Dokumenteret + testet mapping: `primary-action` → Primary + action-default; `page-surface` → surface/background/text; `nav-surface` → drawer-*; osv. (~15 intents) | `NerdMudIntentPaletteMap.cs`, unit tests | theme strategy fase 2 |
+| HR-164 | P0 | done | `NerdMudIntentThemeFactory` | Bygger `MudTheme` pr. semantic intent fra pack aliases + `frameworkDefaults.mudblazor.palette` slot mapping | `NerdMudIntentThemeFactory.cs` | theme strategy fase 2 |
+| HR-165 | P1 | done | Intent → palette slot map | Dokumenteret + testet mapping: `primary-action` → Primary + action-default; `page-surface` → surface/background/text; `nav-surface` → drawer-*; osv. (~15 intents) | `NerdMudIntentPaletteMap.cs`, unit tests | theme strategy fase 2 |
 | HR-166 | P0 | parked | `NerdMudThemeStack` (multi-provider) | **Parked** — flere `MudThemeProvider` risikerer popover-duplikater; brug HR-170 single `GenerateTheme` i stedet | — | theme strategy fase 2 |
-| HR-167 | P0 | open | Slet intent palette CSS | Fjern `AppendIntentPaletteOverrides` m.m. **efter** HR-170 spike beviser PseudoCss scopes | `MudBlazorBrandPaletteGenerator.cs` | theme strategy fase 2 |
-| HR-168 | P1 | open | Recipe PseudoCss themes | `NerdMudRecipeThemeFactory`: shell recipes (`sidebar`, `hero-photo`, …) får `MudTheme` + scope `":root .{prefix}-recipe-{name}"` | `NerdMudRecipeThemeFactory.cs` | theme strategy fase 2 |
-| HR-169 | P1 | open | PseudoCss unit tests | Assert scope strings + emitted palette slots pr. intent/recipe; ingen manuel `--mud-palette-*` i intent CSS for covered aliases | `NerdMudIntentThemeFactoryTests.cs` | theme strategy fase 2 |
+| HR-167 | P0 | done | Slet intent palette CSS | Fjern `AppendIntentPaletteOverrides` m.m. når `UseIntentPseudoCssThemes` er true (HR-170 spike) | `MudBlazorBrandPaletteGenerator.cs` | theme strategy fase 2 |
+| HR-168 | P1 | done | Recipe PseudoCss themes | `NerdMudRecipeThemeFactory`: shell recipes (`sidebar`, `hero-photo`, …) får `MudTheme` + scope `":root .{prefix}-recipe-{name}"` | `NerdMudRecipeThemeFactory.cs` | theme strategy fase 2 |
+| HR-169 | P1 | done | PseudoCss unit tests | Assert scope strings + emitted palette slots pr. intent/recipe; ingen manuel `--mud-palette-*` i intent CSS for covered aliases | `NerdMudIntentThemeFactoryTests.cs` | theme strategy fase 2 |
 
 ### Fase 3 — NerdMudThemeProvider + polish
 
 | ID | P | Status | Task | DoD (verifiable) | Evidence | Source |
 |----|---|--------|------|------------------|----------|--------|
-| HR-170 | P0 | open | `NerdMudThemeProvider` (fase 2 spike) | Arver `MudThemeProvider`; `GenerateTheme` emitter `:root` brand + intent/recipe scopes (`:root .{prefix}-{intent}`) i **ét** `<style>` — erstat HR-166 | `NerdMudThemeProvider.cs` | theme strategy fase 2 |
+| HR-170 | P0 | done | `NerdMudThemeProvider` (fase 2 spike) | Arver `MudThemeProvider`; `GenerateTheme` emitter `:root` brand + intent/recipe scopes (`:root .{prefix}-{intent}`) i **ét** `<style>` — erstat HR-166 | `NerdMudThemeProvider.cs` | theme strategy fase 2 |
 | HR-171 | P1 | open | Host migration til `NerdMudThemeProvider` | `MainLayout`/`NerdAppShell` bruger én provider; fjern løs `MudThemeProvider` + redundant theme CSS | `NerdAppShell.razor` | theme strategy fase 3 |
 | HR-172 | P1 | open | `CurrentPalette` brand switch API | `INerdMudThemeController` opdaterer aktiv palette fra pack; catalogs trigger refresh uden CSS regen | `INerdMudThemeController.cs` | theme strategy fase 3 |
 | HR-173 | P2 | open | Typography i `MudTheme` | `NerdMudThemeFactory` mapper `NerdResponsiveTypographyOptions` → `MudTheme.Typography` | `NerdMudThemeFactory.cs` | theme strategy fase 3 |

@@ -1,0 +1,19 @@
+component: navmenu
+scss: _navmenu.scss
+classification: P2
+family: navigation
+generator_required:
+  - '[class*="mud-nav-link"]'
+verification:
+  - MudNavMenu links visible under token scope in catalog dogfood
+states:
+  - name: default
+    selectors: [.mud-nav-link]
+  - name: active
+    selectors: [.mud-nav-link.active]
+  - name: hover
+    selectors: [.mud-nav-link:hover]
+adapter:
+  do:
+    - Dedicated nav-link hover/active child text rules in ComponentRuleBuilder
+  source: MudBlazor v9.7.0 _navmenu.scss

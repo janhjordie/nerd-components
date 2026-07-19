@@ -1,0 +1,19 @@
+component: progresslinear
+scss: _progresslinear.scss
+classification: P1
+family: feedback
+parts:
+  - id: bar
+    selectors: [.mud-progress-linear, .mud-progress-linear-bar]
+    intent: [channel]
+states:
+  - name: determinate
+    selectors: [.mud-progress-linear-bar]
+verification:
+  - Token-scoped MudProgressLinear bar uses channel color in catalog dogfood
+generator_required:
+  - '[class*="mud-progress-linear"]'
+adapter:
+  do:
+    - FilledPatterns progress-linear channel paint
+  source: MudBlazor v9.7.0 _progresslinear.scss

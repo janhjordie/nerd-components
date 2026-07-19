@@ -1,0 +1,24 @@
+component: popover
+scss: _popover.scss
+classification: P3
+family: overlay
+portal: true
+composite_of: [popover, overlay]
+family_ref: picker
+parts:
+  - id: surface
+    selectors: [.mud-popover, .mud-picker-popover]
+    intent: [surface, content, border]
+  - id: list-item
+    selectors: [.mud-list-item, .mud-menu-item]
+    intent: [content]
+states:
+  - name: open
+    selectors: [.mud-popover-open, .mud-popover.mud-popover-open]
+generator_required:
+  - '[class*="mud-popover"]'
+adapter:
+  do:
+    - Popover surface uses content/surface token variables
+    - Portal scope via EnablePortalTokenScope + nerd-shared.js (HR-006)
+  source: MudBlazor v9.7.0 _popover.scss

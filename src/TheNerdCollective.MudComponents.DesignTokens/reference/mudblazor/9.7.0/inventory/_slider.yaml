@@ -1,0 +1,17 @@
+component: slider
+scss: _slider.scss
+classification: P1
+family: input
+states:
+  - name: track
+    selectors: [.mud-slider-track]
+  - name: thumb
+    selectors: [.mud-slider-thumb]
+  - name: disabled
+    selectors: [.mud-slider.mud-disabled]
+adapter:
+  do:
+    - Map track/thumb via InputPatterns (mud-slider)
+generator_required:
+  - '[class*="mud-slider"]'
+  source: MudBlazor v9.7.0 _slider.scss

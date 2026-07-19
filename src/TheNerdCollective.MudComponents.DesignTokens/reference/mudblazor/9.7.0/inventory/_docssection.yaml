@@ -1,0 +1,17 @@
+component: docssection
+scss: _docssection.scss
+classification: P4
+family: internal
+parts:
+  - id: section
+    selectors: [.docs-page-section, .docs-section-content, .docs-section-source, .docs-content-api]
+    intent: [layout, surface]
+states:
+  - name: default
+    selectors: [.docs-page-section]
+verification:
+  - MudBlazor docs section chrome documented for harvest completeness
+adapter:
+  do:
+    - Docs-only styles — excluded from token generator
+  source: MudBlazor.Docs v9.7.0 _docssection.scss

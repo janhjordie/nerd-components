@@ -1,0 +1,19 @@
+component: inputcontrol
+scss: _inputcontrol.scss
+classification: P2
+family: input
+parts:
+  - id: control
+    selectors: [.mud-input-control, .mud-input-control-input-container]
+    intent: [surface, content, border]
+states:
+  - name: default
+    selectors: [.mud-input-control]
+verification:
+  - MudTextField control chrome visible under token scope in catalog dogfood
+generator_required:
+  - '[class*="mud-input-control"]'
+adapter:
+  do:
+    - InputPatterns mud-input-control border/content tokens
+  source: MudBlazor v9.7.0 _inputcontrol.scss

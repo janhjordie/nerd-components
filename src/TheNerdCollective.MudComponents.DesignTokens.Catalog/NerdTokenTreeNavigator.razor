@@ -1,0 +1,63 @@
+@using TheNerdCollective.MudComponents.Shared
+
+<MudPaper Outlined="true" Class="pa-3 nerd-token-tree-navigator" data-testid="token-tree-navigator">
+    <MudText Typo="Typo.subtitle2">Token tree</MudText>
+    <MudTextField @bind-Value="_search"
+                  Label="Search tokens"
+                  Immediate="true"
+                  Class="mt-2"
+                  data-testid="token-tree-search" />
+
+    @if (FilteredNodes.Count == 0)
+    {
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mt-2">
+            No tokens match <strong>@_search</strong>.
+        </MudAlert>
+    }
+    else
+    {
+        <MudExpansionPanels MultiExpansion="true" Class="mt-2">
+            @foreach (var group in FilteredNodes)
+            {
+                <MudExpansionPanel Text="@($"{group.Label} ({CountLeaves(group)})")" Expanded="true">
+                    <NerdTokenTreeNodeList Nodes="group.Children"
+                                           Options="Options"
+                                           SelectedTargetId="SelectedTargetId"
+                                           OnNodeSelected="NavigateAsync" />
+                </MudExpansionPanel>
+            }
+        </MudExpansionPanels>
+    }
+</MudPaper>
+
+@code {
+    [Parameter, EditorRequired]
+    public NerdDesignTokenOptions Options { get; set; } = default!;
+
+    [Parameter]
+    public IReadOnlyDictionary<string, NerdThemeSet>? ThemeSets { get; set; }
+
+    [Parameter]
+    public EventCallback<NerdTokenTreeNavigation> OnNavigate { get; set; }
+
+    [Parameter]
+    public string? SelectedTargetId { get; set; }
+
+    private string _search = string.Empty;
+
+    private IReadOnlyList<NerdTokenTreeNode> FilteredNodes =>
+        NerdTokenTreeTools.Filter(NerdTokenTreeTools.Build(Options, ThemeSets), _search);
+
+    private async Task NavigateAsync(NerdTokenTreeNode node)
+    {
+        if (node.Kind == NerdTokenTreeTargetKind.Group || string.IsNullOrWhiteSpace(node.TargetId))
+        {
+            return;
+        }
+
+        await OnNavigate.InvokeAsync(NerdTokenTreeTools.CreateNavigation(node));
+    }
+
+    private static int CountLeaves(NerdTokenTreeNode node) =>
+        node.Children.Count == 0 ? 1 : node.Children.Sum(CountLeaves);
+}

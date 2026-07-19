@@ -1,0 +1,17 @@
+component: pagecontentnavigation
+scss: _pagecontentnavigation.scss
+classification: P4
+family: internal
+parts:
+  - id: nav
+    selectors: [.page-content-navigation, .page-content-navigation-navlink]
+    intent: [navigation]
+states:
+  - name: default
+    selectors: [.page-content-navigation]
+verification:
+  - MudBlazor docs in-page navigation documented for harvest completeness
+adapter:
+  do:
+    - Docs-only styles — excluded from token generator
+  source: MudBlazor v9.7.0 _pagecontentnavigation.scss

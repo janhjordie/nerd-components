@@ -1,0 +1,25 @@
+component: picker
+scss: _picker.scss
+classification: P3
+family: picker
+portal: true
+family_ref: picker
+parts:
+  - id: surface
+    selectors: [.mud-picker, .mud-picker-popover, .mud-picker-container]
+    intent: [surface, content, border]
+  - id: toolbar
+    selectors: [.mud-picker-toolbar]
+    intent: [content, channel]
+states:
+  - name: open
+    selectors: [.mud-popover-open]
+verification:
+  - Shared picker chrome visible in date/time/color portal dogfood
+generator_required:
+  - '[class*="mud-picker"]'
+  - '[class*="mud-popover"]'
+adapter:
+  do:
+    - InputPatterns mud-picker + AppendPickerPortalStateRules
+  source: MudBlazor v9.7.0 _picker.scss

@@ -1,0 +1,19 @@
+component: input
+scss: _input.scss
+classification: P2
+family: input
+parts:
+  - id: input
+    selectors: [.mud-input, .mud-input-text]
+    intent: [content, border, channel]
+states:
+  - name: default
+    selectors: [.mud-input-slot]
+verification:
+  - MudTextField input slot visible under token scope in catalog dogfood
+generator_required:
+  - '[class*="mud-input"]'
+adapter:
+  do:
+    - InputPatterns mud-input content/border/caret tokens
+  source: MudBlazor v9.7.0 _input.scss

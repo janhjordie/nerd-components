@@ -1,0 +1,49 @@
+@using TheNerdCollective.MudComponents.Shared
+
+<MudPaper Outlined="true" Class="pa-4 mb-3" data-testid="token-structure-linter-panel">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-2">
+        <MudText Typo="Typo.h6">Structure linter</MudText>
+        <MudChip T="string" Variant="Variant.Outlined" Color="@IssueColor">
+            @_issues.Count issue@(_issues.Count == 1 ? "" : "s")
+        </MudChip>
+    </MudStack>
+    @if (_issues.Count == 0)
+    {
+        <MudAlert Severity="Severity.Success" Variant="Variant.Outlined" Dense="true" Class="mt-2">
+            No naming, reference, or coverage issues detected.
+        </MudAlert>
+    }
+    else
+    {
+        <MudSimpleTable Dense="true" Bordered="true" Hover="true" Class="mt-2">
+            <thead><tr><th>Severity</th><th>Code</th><th>Token</th><th>Message</th></tr></thead>
+            <tbody>
+                @foreach (var issue in _issues)
+                {
+                    <tr data-testid="@($"lint-{issue.Code}-{issue.TokenName ?? "pack"}")">
+                        <td>@issue.Severity</td>
+                        <td><code>@issue.Code</code></td>
+                        <td>@(issue.TokenName is null ? "—" : issue.TokenName)</td>
+                        <td>@issue.Message</td>
+                    </tr>
+                }
+            </tbody>
+        </MudSimpleTable>
+    }
+</MudPaper>
+
+@code {
+    [Parameter, EditorRequired]
+    public NerdDesignTokenOptions Options { get; set; } = default!;
+
+    private IReadOnlyList<NerdTokenLintIssue> _issues = [];
+
+    private Color IssueColor =>
+        _issues.Any(issue => issue.Severity == NerdTokenLintSeverity.Error) ? Color.Error :
+        _issues.Count > 0 ? Color.Warning : Color.Success;
+
+    protected override void OnParametersSet()
+    {
+        _issues = NerdTokenStructureLinterTools.Analyze(Options);
+    }
+}

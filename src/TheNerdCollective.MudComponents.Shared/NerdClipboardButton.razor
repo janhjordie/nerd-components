@@ -1,6 +1,11 @@
 @inject NerdClipboardService Clipboard
+@inject NerdDesignSystemOptions HubOptions
 
-<MudButton Size="Size.Small" Variant="Variant.Outlined" OnClick="CopyAsync" ClickPropagation="false">
+<MudButton Size="Size.Small"
+           Variant="Variant.Outlined"
+           Class="@IntentClass"
+           OnClick="CopyAsync"
+           ClickPropagation="false">
     @Label
 </MudButton>
 
@@ -10,6 +15,12 @@
 
     [Parameter]
     public string Label { get; set; } = "Copy";
+
+    [Parameter]
+    public string Intent { get; set; } = NerdDesignSystemUi.PrimaryAction;
+
+    private string IntentClass =>
+        NerdDesignSystemUi.TokenClass(HubOptions, Intent);
 
     private async Task CopyAsync() => await Clipboard.CopyAsync(Text);
 }

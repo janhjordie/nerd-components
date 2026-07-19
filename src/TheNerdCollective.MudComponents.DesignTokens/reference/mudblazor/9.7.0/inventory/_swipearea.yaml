@@ -1,0 +1,17 @@
+component: swipearea
+scss: _swipearea.scss
+classification: P4
+family: gesture
+parts:
+  - id: swipe
+    selectors: [.mud-swipe-area]
+    intent: [gesture]
+states:
+  - name: default
+    selectors: [.mud-swipe-area]
+verification:
+  - Swipe area gesture utility documented for harvest completeness
+adapter:
+  do:
+    - Gesture utility — no token paint rules yet
+  source: MudBlazor v9.7.0 _swipearea.scss

@@ -1,0 +1,19 @@
+component: timeline
+scss: _timeline.scss
+classification: P2
+family: data
+parts:
+  - id: item
+    selectors: [.mud-timeline-item, .mud-timeline-item-content]
+    intent: [content, channel]
+states:
+  - name: default
+    selectors: [.mud-timeline-item-content]
+verification:
+  - StructurePatterns paint timeline items under token scope
+generator_required:
+  - '[class*="mud-timeline"]'
+adapter:
+  do:
+    - StructurePatterns + AccentTextPatterns timeline-item-content
+  source: MudBlazor v9.7.0 _timeline.scss

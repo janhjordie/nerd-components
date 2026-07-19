@@ -1,0 +1,19 @@
+component: icons
+scss: _icons.scss
+classification: P0
+family: content
+parts:
+  - id: icon
+    selectors: [.mud-icon-root, .mud-icon]
+    intent: [content, channel]
+states:
+  - name: default
+    selectors: [.mud-icon-root]
+verification:
+  - MudIcon visible under token scope in catalog dogfood
+generator_required:
+  - '[class*="mud-icon"]'
+adapter:
+  do:
+    - AccentTextPatterns mud-icon-root channel paint
+  source: MudBlazor v9.7.0 _icons.scss

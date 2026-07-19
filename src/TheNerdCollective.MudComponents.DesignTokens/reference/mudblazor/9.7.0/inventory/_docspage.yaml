@@ -1,0 +1,17 @@
+component: docspage
+scss: _docspage.scss
+classification: P4
+family: internal
+parts:
+  - id: page
+    selectors: [.docs-page-content, .docs-page-content-navigation-drawer, .docs-code, .docs-frame]
+    intent: [layout, surface]
+states:
+  - name: default
+    selectors: [.docs-page-content]
+verification:
+  - MudBlazor docs page shell documented for harvest completeness
+adapter:
+  do:
+    - Docs-only styles — excluded from token generator
+  source: MudBlazor.Docs v9.7.0 _docspage.scss

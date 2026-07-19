@@ -1,0 +1,23 @@
+component: stepper
+scss: _stepper.scss
+classification: P2
+family: navigation
+parts:
+  - id: step
+    selectors: [.mud-stepper, .mud-step]
+    intent: [content, channel]
+  - id: active
+    selectors: [.mud-stepper-step-primary]
+    intent: [channel]
+states:
+  - name: active
+    selectors: [.mud-stepper-step-primary]
+verification:
+  - StructurePatterns + FilledPatterns step-primary paint under token scope
+generator_required:
+  - '[class*="mud-stepper"]'
+  - '[class*="mud-stepper-step-primary"]'
+adapter:
+  do:
+    - StructurePatterns + FilledPatterns mud-stepper-step-primary
+  source: MudBlazor v9.7.0 _stepper.scss

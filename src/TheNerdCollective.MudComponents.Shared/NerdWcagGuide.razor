@@ -13,12 +13,12 @@
 }
 else
 {
-    <MudContainer MaxWidth="MaxWidth.Medium" Class="my-8 pa-4">
+    <NerdCatalogPage MaxWidth="MaxWidth.Medium">
         <MudStack Spacing="4">
             <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-2">
                 <div>
                     <MudText Typo="Typo.h4">WCAG 2.1 — best practice</MudText>
-                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    <MudText Typo="Typo.body2" Class="@Ui(NerdDesignSystemUi.MutedContent)">
                         Praktisk reference for typografi, kontrast og hvad vores design system checker automatisk.
                     </MudText>
                 </div>
@@ -101,15 +101,15 @@ else
 
             <MudText Typo="Typo.h6">Værktøjer i design systemet</MudText>
             <MudStack Row="true" Spacing="2" Class="flex-wrap">
-                <MudButton Href="@Options.TypographyRoute" Variant="Variant.Filled" Color="Color.Primary">
+                <MudButton Href="@Options.TypographyRoute" Variant="Variant.Filled" Class="@Ui(NerdDesignSystemUi.PrimaryAction)">
                     Typography catalog
                 </MudButton>
-                <MudButton Href="@Options.DesignTokensRoute" Variant="Variant.Outlined" Color="Color.Primary">
+                <MudButton Href="@Options.DesignTokensRoute" Variant="Variant.Outlined" Class="@Ui(NerdDesignSystemUi.PrimaryAction)">
                     Color tokens
                 </MudButton>
             </MudStack>
 
-            <MudText Typo="Typo.caption" Color="Color.Secondary">
+            <MudText Typo="Typo.caption" Class="@Ui(NerdDesignSystemUi.MutedContent)">
                 Officiel reference:
                 <MudLink Href="https://www.w3.org/WAI/WCAG21/Understanding/resize-text.html" Target="_blank">1.4.4 Resize text</MudLink>
                 ·
@@ -118,11 +118,14 @@ else
                 <MudLink Href="https://www.w3.org/WAI/WCAG21/Understanding/contrast-minimum.html" Target="_blank">1.4.3 Contrast</MudLink>
             </MudText>
         </MudStack>
-    </MudContainer>
+    </NerdCatalogPage>
 }
 
 @code {
     private bool IsAvailable =>
         Options.EnableWcagGuidePage &&
         (!Options.RestrictWcagGuideToDevelopment || HostEnvironment.IsDevelopment());
+
+    private string Ui(string semanticAlias) =>
+        NerdDesignSystemUi.TokenClass(Options.TokenPrefix, semanticAlias);
 }

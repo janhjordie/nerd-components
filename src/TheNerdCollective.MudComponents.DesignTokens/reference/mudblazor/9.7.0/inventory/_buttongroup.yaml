@@ -1,0 +1,22 @@
+component: buttongroup
+scss: _buttongroup.scss
+classification: P1
+family: action
+parts:
+  - id: group
+    selectors: [.mud-button-group]
+    intent: [channel, border]
+  - id: button
+    selectors: [.mud-button-group .mud-button-filled]
+    intent: [channel, on-channel]
+states:
+  - name: filled
+    selectors: [.mud-button-group-filled]
+verification:
+  - Grouped MudButton filled variants use channel paint under token scope in catalog dogfood
+generator_required:
+  - '[class*="mud-button-group"]'
+adapter:
+  do:
+    - FilledPatterns + OutlinedPatterns for grouped buttons
+  source: MudBlazor v9.7.0 _buttongroup.scss

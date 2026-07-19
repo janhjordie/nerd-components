@@ -1,0 +1,29 @@
+@* Catalog controls sit on page-surface. Accent intent scopes interactive chrome only. *@
+<div class="@($"{NerdDesignSystemUi.CatalogChromeClass} {PageSurfaceClass} {Class}")"
+     data-nerd-token="@PageSurfaceClass"
+     data-nerd-style-guard="@NerdDesignSystemUi.CatalogChromePlacement">
+    <div class="@AccentClass"
+         data-nerd-accent="@AccentClass">
+        @ChildContent
+    </div>
+</div>
+
+@code {
+    [Inject]
+    private NerdDesignSystemOptions HubOptions { get; set; } = default!;
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public string? Class { get; set; }
+
+    [Parameter]
+    public string AccentIntent { get; set; } = NerdDesignSystemUi.PrimaryAction;
+
+    private string PageSurfaceClass =>
+        NerdDesignSystemUi.TokenClass(HubOptions.TokenPrefix, NerdDesignSystemUi.PageSurface);
+
+    private string AccentClass =>
+        NerdDesignSystemUi.TokenClass(HubOptions.TokenPrefix, AccentIntent);
+}

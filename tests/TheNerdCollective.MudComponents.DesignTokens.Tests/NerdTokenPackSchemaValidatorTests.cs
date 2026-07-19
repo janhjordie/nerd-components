@@ -59,5 +59,7 @@ public sealed class NerdTokenPackSchemaValidatorTests
         var schema = NerdTokenPackSchemaValidator.GetEmbeddedSchemaText();
         Assert.Contains("\"version\"", schema);
         Assert.Contains("\"approvedPairings\"", schema);
+        Assert.Contains("\"shell\"", schema);
+        Assert.Contains("\"frameworkDefaults\"", schema);
     }
 }

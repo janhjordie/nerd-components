@@ -1,0 +1,19 @@
+component: collapse
+scss: _collapse.scss
+classification: P2
+family: structure
+parts:
+  - id: container
+    selectors: [.mud-collapse-container, .mud-collapse-wrapper]
+    intent: [surface, content]
+states:
+  - name: expanded
+    selectors: [.mud-collapse-entered]
+verification:
+  - MudCollapse expanded content visible under token scope in catalog dogfood
+generator_required:
+  - '[class*="mud-collapse"]'
+adapter:
+  do:
+    - StructurePatterns mud-collapse surface/content tokens
+  source: MudBlazor v9.7.0 _collapse.scss

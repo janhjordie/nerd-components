@@ -218,9 +218,16 @@ export async function exerciseRecipesPageControls(page: Page, brand: DesignSyste
 }
 
 export async function exerciseTypographyPageControls(page: Page) {
-  await expect(page.getByRole('switch', { name: /show all roles/i })).toBeVisible({
+  const showAllRoles = page.getByRole('switch', { name: /show all roles/i });
+  await expect(showAllRoles).toBeVisible({
     timeout: INTERACTIVE_TIMEOUT,
   });
+  await assertReadableContrast(page.getByText('Show all roles', { exact: true }));
+
+  for (const name of ['Previews', 'Breakpoints', 'Editor', 'Packs']) {
+    await assertReadableContrast(page.getByRole('tab', { name }), { minRatio: 2.5 });
+  }
+
   await expect(page.getByLabel(/^clientid$/i)).toBeVisible();
   await expect(page.getByRole('button', { name: /preview scale/i })).toBeVisible();
   await expect(page.getByRole('button', { name: /export tokens studio/i })).toBeVisible();

@@ -1,0 +1,312 @@
+{
+  "clientId": "tnc",
+  "brandId": "tnc",
+  "displayName": "TNC",
+  "prefix": "tnc",
+  "version": 2,
+  "brandIdentityVersion": "1.0.0",
+  "pairingGuideName": "TNC",
+  "updatedAt": "2026-07-19T15:12:37.031435+00:00",
+  "colors": {
+    "navy": {
+      "value": "#122E43",
+      "light": "#122E43",
+      "dark": null,
+      "contrastText": "#FFFFFF",
+      "darkContrastText": null,
+      "surface": "#122E43",
+      "content": "#FFFFFF",
+      "interactive": null,
+      "hover": "#112A3E",
+      "active": null,
+      "border": null,
+      "disabled": null,
+      "description": null,
+      "roles": null
+    },
+    "coral": {
+      "value": "#F27271",
+      "light": "#F27271",
+      "dark": null,
+      "contrastText": "#FFFFFF",
+      "darkContrastText": null,
+      "surface": "#F27271",
+      "content": "#FFFFFF",
+      "interactive": null,
+      "hover": "#DA6766",
+      "active": null,
+      "border": null,
+      "disabled": null,
+      "description": null,
+      "roles": null
+    },
+    "snow": {
+      "value": "#FFFFFF",
+      "light": "#FFFFFF",
+      "dark": null,
+      "contrastText": "#111827",
+      "darkContrastText": null,
+      "surface": "#FFFFFF",
+      "content": "#111827",
+      "interactive": null,
+      "hover": "#F5F5F5",
+      "active": null,
+      "border": null,
+      "disabled": null,
+      "description": null,
+      "roles": null
+    },
+    "ink": {
+      "value": "#111827",
+      "light": "#111827",
+      "dark": null,
+      "contrastText": "#FFFFFF",
+      "darkContrastText": null,
+      "surface": null,
+      "content": "#111827",
+      "interactive": null,
+      "hover": "#101624",
+      "active": null,
+      "border": null,
+      "disabled": null,
+      "description": null,
+      "roles": null
+    },
+    "chalk": {
+      "value": "#FFFFFF",
+      "light": "#FFFFFF",
+      "dark": null,
+      "contrastText": "#111827",
+      "darkContrastText": null,
+      "surface": "#FFFFFF",
+      "content": "#FFFFFF",
+      "interactive": null,
+      "hover": null,
+      "active": null,
+      "border": null,
+      "disabled": null,
+      "description": null,
+      "roles": null
+    }
+  },
+  "aliases": {
+    "primary-action": "coral",
+    "secondary-action": "navy",
+    "on-primary-action": "chalk",
+    "page-surface": "snow",
+    "brand-chrome": "navy",
+    "on-brand-chrome": "chalk",
+    "nav-surface": "snow",
+    "nav-item": "ink",
+    "nav-item-active": "coral",
+    "input-surface": "snow",
+    "input-border": "ink",
+    "focus-ring": "coral",
+    "muted-content": "ink",
+    "info": "navy",
+    "highlight": "coral",
+    "danger": "coral",
+    "success": "navy"
+  },
+  "radii": {},
+  "shadows": {},
+  "spacing": {
+    "0": "0px",
+    "1": "4px",
+    "2": "8px",
+    "3": "12px",
+    "4": "16px",
+    "5": "20px",
+    "6": "24px",
+    "8": "32px",
+    "10": "40px",
+    "12": "48px",
+    "16": "64px"
+  },
+  "breakpoints": {},
+  "motionDurations": {},
+  "motionEasings": {},
+  "zIndex": {},
+  "transforms": {},
+  "recipes": {
+    "hero": {
+      "surface": "navy",
+      "content": "chalk",
+      "action": "coral",
+      "border": null,
+      "label": "Hero banner",
+      "usage": "Full-width hero with chalk headline on navy"
+    },
+    "header": {
+      "surface": "snow",
+      "content": "ink",
+      "action": "coral",
+      "border": null,
+      "label": "Site header",
+      "usage": "Light header bar with ink links"
+    },
+    "tagline": {
+      "surface": "navy",
+      "content": "coral",
+      "action": "chalk",
+      "border": null,
+      "label": "Tagline strip",
+      "usage": "Navy strip with coral accent copy"
+    },
+    "cta": {
+      "surface": "coral",
+      "content": "chalk",
+      "action": "navy",
+      "border": null,
+      "label": "Primary CTA",
+      "usage": "Coral button on chalk body copy"
+    },
+    "sidebar": {
+      "surface": "snow",
+      "content": "ink",
+      "action": "coral",
+      "border": null,
+      "label": "App sidebar",
+      "usage": "Drawer navigation with coral active accent"
+    }
+  },
+  "opacities": {},
+  "themeSets": {
+    "light": {
+      "id": "light",
+      "displayName": "Light",
+      "colors": {
+        "navy": {
+          "value": "#122E43",
+          "light": null,
+          "dark": null,
+          "contrastText": "#FFFFFF",
+          "darkContrastText": null,
+          "surface": "#122E43",
+          "content": "#FFFFFF"
+        },
+        "coral": {
+          "value": "#F27271",
+          "light": null,
+          "dark": null,
+          "contrastText": "#FFFFFF",
+          "darkContrastText": null,
+          "surface": "#F27271",
+          "content": "#FFFFFF"
+        },
+        "snow": {
+          "value": "#FFFFFF",
+          "light": null,
+          "dark": null,
+          "contrastText": "#111827",
+          "darkContrastText": null,
+          "surface": "#FFFFFF",
+          "content": "#111827"
+        },
+        "ink": {
+          "value": "#111827",
+          "light": null,
+          "dark": null,
+          "contrastText": "#FFFFFF",
+          "darkContrastText": null,
+          "surface": null,
+          "content": "#111827"
+        },
+        "chalk": {
+          "value": "#FFFFFF",
+          "light": null,
+          "dark": null,
+          "contrastText": "#111827",
+          "darkContrastText": null,
+          "surface": "#FFFFFF",
+          "content": "#FFFFFF"
+        }
+      }
+    }
+  },
+  "approvedPairings": [
+    {
+      "content": "chalk",
+      "surface": "navy"
+    },
+    {
+      "content": "ink",
+      "surface": "snow"
+    },
+    {
+      "content": "coral",
+      "surface": "navy"
+    },
+    {
+      "content": "chalk",
+      "surface": "coral"
+    }
+  ],
+  "lockedTokens": [
+    "navy",
+    "coral"
+  ],
+  "shell": {
+    "appBar": {
+      "alias": "brand-chrome",
+      "recipe": null
+    },
+    "drawer": {
+      "alias": "nav-surface",
+      "recipe": null
+    },
+    "navMenu": {
+      "alias": null,
+      "recipe": "sidebar"
+    },
+    "main": {
+      "alias": "page-surface",
+      "recipe": null
+    }
+  },
+  "frameworkDefaults": {
+    "mudBlazor": {
+      "palette": {
+        "primary": "primary-action",
+        "secondary": "secondary-action",
+        "tertiary": "highlight",
+        "info": "info",
+        "success": "success",
+        "warning": "highlight",
+        "error": "danger",
+        "dark": "muted-content",
+        "surface": "page-surface",
+        "background": "page-surface",
+        "textPrimary": "page-surface",
+        "textSecondary": "muted-content",
+        "textDisabled": "muted-content",
+        "actionDefault": "primary-action",
+        "actionDisabled": null,
+        "appbarBackground": "brand-chrome",
+        "appbarText": "on-brand-chrome",
+        "drawerBackground": "nav-surface",
+        "drawerText": "nav-item",
+        "drawerIcon": "nav-item",
+        "linesDefault": "input-border",
+        "linesInputs": "input-border"
+      },
+      "button": {
+        "filled": "primary-action",
+        "outlined": "secondary-action",
+        "text": "muted-content"
+      },
+      "textField": {
+        "intent": "input-surface",
+        "popover": null
+      },
+      "datePicker": {
+        "intent": null,
+        "popover": "page-surface"
+      },
+      "navLink": {
+        "default": "nav-item",
+        "active": "nav-item-active"
+      }
+    }
+  }
+}

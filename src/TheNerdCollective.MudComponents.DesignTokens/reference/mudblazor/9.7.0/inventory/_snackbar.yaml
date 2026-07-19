@@ -1,0 +1,20 @@
+component: snackbar
+scss: _snackbar.scss
+classification: P2
+family: feedback
+portal: true
+parts:
+  - id: surface
+    selectors: [.mud-snackbar, .mud-snackbar-content-message]
+    intent: [surface, content, channel]
+states:
+  - name: open
+    selectors: [.mud-snackbar]
+verification:
+  - FilledPatterns paint snackbar surface when token class scopes provider content
+generator_required:
+  - '[class*="mud-snackbar"]'
+adapter:
+  do:
+    - FilledPatterns snackbar channel paint via token class
+  source: MudBlazor v9.7.0 _snackbar.scss

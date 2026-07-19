@@ -1,0 +1,60 @@
+@using TheNerdCollective.MudComponents.Shared
+
+<MudPaper Outlined="true" Class="pa-4" data-testid="design-token-intent-panel">
+    <MudText Typo="Typo.h6">Intent snippets</MudText>
+    <MudText Typo="Typo.body2" Class="@Ui(NerdDesignSystemUi.MutedContent)">
+        Copy semantic alias usage for MudBlazor, Fluent UI, and future Radzen bridge.
+    </MudText>
+
+    <MudSimpleTable Dense="true" Hover="true" Bordered="true" Class="mt-3">
+        <thead>
+            <tr>
+                <th>Alias</th>
+                <th>Mud class</th>
+                <th>Fluent token</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var alias in IntentAliases)
+            {
+                <tr data-testid="@($"intent-panel-{alias}")">
+                    <td><code>@alias</code></td>
+                    <td><code>.@Ui(alias)</code></td>
+                    <td><code>@GetFluentToken(alias)</code></td>
+                </tr>
+            }
+        </tbody>
+    </MudSimpleTable>
+</MudPaper>
+
+@code {
+    [Parameter, EditorRequired]
+    public NerdDesignTokenOptions Options { get; set; } = default!;
+
+    [Parameter]
+    public NerdDesignSystemOptions HubOptions { get; set; } = default!;
+
+    private static IReadOnlyList<string> IntentAliases { get; } =
+    [
+        NerdDesignSystemUi.PrimaryAction,
+        NerdDesignSystemUi.OnPrimaryAction,
+        NerdDesignSystemUi.PageSurface,
+        NerdDesignSystemUi.MutedContent,
+        NerdDesignSystemUi.FocusRing,
+        NerdDesignSystemUi.NavItem,
+        NerdDesignSystemUi.NavItemActive
+    ];
+
+    private string Ui(string semanticAlias) =>
+        NerdDesignSystemUi.TokenClass(Options.Prefix, semanticAlias);
+
+    private static string GetFluentToken(string alias) => alias switch
+    {
+        NerdDesignSystemUi.PrimaryAction => "--colorBrandBackground",
+        NerdDesignSystemUi.OnPrimaryAction => "--colorBrandForeground1",
+        NerdDesignSystemUi.PageSurface => "--colorNeutralBackground1",
+        NerdDesignSystemUi.MutedContent => "--colorNeutralForeground2",
+        NerdDesignSystemUi.FocusRing => "--colorStrokeFocus1",
+        _ => "--nerd-intent-*"
+    };
+}

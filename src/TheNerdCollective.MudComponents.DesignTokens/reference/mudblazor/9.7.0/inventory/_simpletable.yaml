@@ -1,0 +1,19 @@
+component: simpletable
+scss: _simpletable.scss
+classification: P2
+family: data
+parts:
+  - id: table
+    selectors: [.mud-table-simple, .mud-simple-table]
+    intent: [surface, content, border]
+states:
+  - name: default
+    selectors: [.mud-simple-table]
+verification:
+  - MudSimpleTable visible under token scope in catalog dogfood
+generator_required:
+  - '[class*="mud-simple-table"]'
+adapter:
+  do:
+    - StructurePatterns mud-table surface/content/border
+  source: MudBlazor v9.7.0 _simpletable.scss

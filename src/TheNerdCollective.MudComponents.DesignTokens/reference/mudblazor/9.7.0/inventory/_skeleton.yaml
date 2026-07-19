@@ -1,0 +1,19 @@
+component: skeleton
+scss: _skeleton.scss
+classification: P0
+family: feedback
+parts:
+  - id: skeleton
+    selectors: [.mud-skeleton]
+    intent: [surface, content]
+states:
+  - name: default
+    selectors: [.mud-skeleton]
+verification:
+  - MudSkeleton placeholder visible under token scope in catalog dogfood
+generator_required:
+  - '[class*="mud-skeleton"]'
+adapter:
+  do:
+    - StructurePatterns mud-skeleton surface tokens
+  source: MudBlazor v9.7.0 _skeleton.scss

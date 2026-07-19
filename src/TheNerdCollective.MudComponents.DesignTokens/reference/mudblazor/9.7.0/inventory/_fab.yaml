@@ -1,0 +1,19 @@
+component: fab
+scss: _fab.scss
+classification: P1
+family: action
+parts:
+  - id: fab
+    selectors: [.mud-fab]
+    intent: [channel, on-channel]
+states:
+  - name: default
+    selectors: [.mud-fab]
+verification:
+  - FilledPatterns paint MudFab under token scope in catalog dogfood
+generator_required:
+  - '[class*="mud-fab"]'
+adapter:
+  do:
+    - FilledPatterns + OutlinedPatterns for fab variants
+  source: MudBlazor v9.7.0 _fab.scss

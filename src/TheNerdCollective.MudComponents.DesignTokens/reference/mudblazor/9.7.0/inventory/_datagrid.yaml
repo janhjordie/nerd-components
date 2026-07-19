@@ -1,0 +1,22 @@
+component: datagrid
+scss: _datagrid.scss
+classification: P3
+family: data
+parts:
+  - id: grid
+    selectors: [.mud-data-grid]
+    intent: [surface, content, border]
+  - id: row
+    selectors: [.mud-table-row, .mud-table-cell]
+    intent: [content, border]
+states:
+  - name: default
+    selectors: [.mud-data-grid]
+verification:
+  - MudDataGrid renders rows under token scope in catalog dogfood
+generator_required:
+  - '[class*="mud-data-grid"]'
+adapter:
+  do:
+    - StructurePatterns mud-data-grid surface/content/border
+  source: MudBlazor v9.7.0 _datagrid.scss

@@ -1,0 +1,23 @@
+component: avatar
+scss: _avatar.scss
+classification: P1
+family: content
+parts:
+  - id: filled
+    selectors: [.mud-avatar-filled]
+    intent: [channel, on-channel]
+  - id: outlined
+    selectors: [.mud-avatar-outlined]
+    intent: [channel, border]
+states:
+  - name: filled
+    selectors: [.mud-avatar-filled]
+verification:
+  - Token-scoped MudAvatar filled variant uses channel background in catalog dogfood
+generator_required:
+  - '[class*="mud-avatar-filled"]'
+  - '[class*="mud-avatar-outlined"]'
+adapter:
+  do:
+    - FilledPatterns + OutlinedPatterns via token class
+  source: MudBlazor v9.7.0 _avatar.scss

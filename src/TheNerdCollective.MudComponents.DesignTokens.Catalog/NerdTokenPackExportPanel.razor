@@ -1,0 +1,63 @@
+@using TheNerdCollective.MudComponents.Shared
+
+<MudPaper Outlined="true" Class="pa-4 mb-3" data-testid="token-pack-export-panel">
+    <MudStack Spacing="2">
+        <MudText Typo="Typo.h6">Export pack</MudText>
+        <MudText Typo="Typo.body2" Class="@Ui(NerdDesignSystemUi.MutedContent)">
+            Download a ZIP with selected formats and token groups.
+        </MudText>
+
+        <MudGrid Spacing="2">
+            <MudItem xs="12" md="6">
+                <MudText Typo="Typo.subtitle2">Formats</MudText>
+                <MudCheckBox @bind-Value="_request.IncludeCss" Label="CSS" Dense="true" />
+                <MudCheckBox @bind-Value="_request.IncludePackJson" Label="token-pack.json" Dense="true" />
+                <MudCheckBox @bind-Value="_request.IncludeDtcg" Label="DTCG JSON" Dense="true" />
+                <MudCheckBox @bind-Value="_request.IncludeTokensStudio" Label="Tokens Studio JSON" Dense="true" />
+                <MudCheckBox @bind-Value="_request.IncludeStitch" Label="Stitch DESIGN.md" Dense="true" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudText Typo="Typo.subtitle2">Token groups (DTCG)</MudText>
+                <MudCheckBox @bind-Value="_request.IncludeColors" Label="Colors" Dense="true" />
+                <MudCheckBox @bind-Value="_request.IncludeSpacing" Label="Spacing" Dense="true" />
+                <MudCheckBox @bind-Value="_request.IncludeRadii" Label="Radii" Dense="true" />
+                <MudCheckBox @bind-Value="_request.IncludeShadows" Label="Shadows" Dense="true" />
+                <MudCheckBox @bind-Value="_request.IncludeMotion" Label="Motion" Dense="true" />
+                <MudCheckBox @bind-Value="_request.IncludeBreakpoints" Label="Breakpoints" Dense="true" />
+                <MudCheckBox @bind-Value="_request.IncludeZIndex" Label="Z-index" Dense="true" />
+            </MudItem>
+        </MudGrid>
+
+        <MudButton Variant="Variant.Filled"
+                   Class="@Ui(NerdDesignSystemUi.BrandChrome)"
+                   OnClick="DownloadZipAsync"
+                   data-testid="token-pack-export-download">
+            Download export ZIP
+        </MudButton>
+    </MudStack>
+</MudPaper>
+
+@code {
+    [Parameter, EditorRequired]
+    public NerdDesignTokenOptions Options { get; set; } = default!;
+
+    [Parameter]
+    public string ClientId { get; set; } = "export";
+
+    [Parameter]
+    public Func<IReadOnlyDictionary<string, string>?>? GetTypographyRoles { get; set; }
+
+    [Inject]
+    private NerdDownloadService DownloadService { get; set; } = default!;
+
+    private NerdTokenPackExportRequest _request = new();
+
+    private string Ui(string semanticAlias) =>
+        NerdDesignSystemUi.TokenClass(Options.Prefix, semanticAlias);
+
+    private Task DownloadZipAsync()
+    {
+        var zip = NerdTokenPackExportTools.BuildZip(Options, _request, GetTypographyRoles?.Invoke(), ClientId);
+        return DownloadService.DownloadBytesAsync($"{Options.Prefix}-token-export.zip", zip, "application/zip").AsTask();
+    }
+}

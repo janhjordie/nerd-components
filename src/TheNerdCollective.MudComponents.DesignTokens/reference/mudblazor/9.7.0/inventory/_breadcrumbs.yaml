@@ -1,0 +1,19 @@
+component: breadcrumbs
+scss: _breadcrumbs.scss
+classification: P2
+family: navigation
+parts:
+  - id: item
+    selectors: [.mud-breadcrumb-item, .mud-breadcrumbs]
+    intent: [content, channel]
+states:
+  - name: default
+    selectors: [.mud-breadcrumb-item]
+verification:
+  - AccentTextPatterns paint breadcrumb links under token scope
+generator_required:
+  - '[class*="mud-breadcrumb-item"]'
+adapter:
+  do:
+    - AccentTextPatterns for breadcrumb links via token class
+  source: MudBlazor v9.7.0 _breadcrumbs.scss

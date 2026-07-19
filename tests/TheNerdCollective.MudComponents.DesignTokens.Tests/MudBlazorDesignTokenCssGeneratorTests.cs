@@ -167,7 +167,7 @@ public class MudBlazorDesignTokenCssGeneratorTests
         var css = MudBlazorDesignTokenCssGenerator.Generate(options);
 
         Assert.Contains("[class*=\"mud-text-field\"]", css);
-        Assert.Contains(".dnf-forest .mud-switch .mud-switch-base", css);
+        Assert.Contains(".dnf-forest.mud-switch .mud-switch-base", css);
         Assert.Contains("[class*=\"mud-table\"]", css);
         Assert.Contains("[class*=\"mud-data-grid\"]", css);
         Assert.Contains("[class*=\"mud-nav-link\"]", css);

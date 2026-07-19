@@ -26,7 +26,19 @@ public partial class NerdBrandWorkbook
     [Inject]
     private INerdCatalogEntitlements Entitlements { get; set; } = default!;
 
-    private const int ExportStepIndex = 5;
+    private const int ExportStepIndex = 9;
+
+    private string _selectedIntent = NerdDesignSystemUi.PrimaryAction;
+    private string _intentTarget = string.Empty;
+
+    private string _newTransformName = "derived";
+    private string _newTransformSource = string.Empty;
+    private string _newTransformOperation = "lighten";
+    private double _newTransformAmount = 0.12;
+
+    private int _spacingBaseUnit = 4;
+    private double _spacingRatio = 1d;
+    private NerdSpacingScaleCurve _spacingCurve = NerdSpacingScaleCurve.Linear;
 
     private int _activeStep;
     private string? _status;
@@ -53,6 +65,11 @@ public partial class NerdBrandWorkbook
 
     private IEnumerable<string> TokenNames =>
         Options.Colors.Keys.OrderBy(name => name, StringComparer.Ordinal);
+
+    private IReadOnlyDictionary<string, NerdThemeSet> ThemeSets =>
+        Options.ThemeSets.Count > 0
+            ? Options.ThemeSets
+            : NerdThemeSetTools.CreateFromOptions(Options);
 
     private NerdDesignTokenRecipe? PreviewRecipe =>
         Options.Recipes.OrderBy(pair => pair.Key, StringComparer.Ordinal).Select(pair => pair.Value).FirstOrDefault();
@@ -86,6 +103,42 @@ public partial class NerdBrandWorkbook
         _newRecipeContent = TokenNames.Skip(1).FirstOrDefault() ?? _newRecipeSurface;
         _newPairingSurface = _newRecipeSurface;
         _newPairingContent = _newRecipeContent;
+        _newTransformSource = TokenNames.FirstOrDefault() ?? string.Empty;
+        SyncIntentTargetFromSelection();
+    }
+
+    private NerdIntentCatalogEntry? SelectedIntentEntry =>
+        NerdIntentCatalogTools.StandardIntents.FirstOrDefault(entry =>
+            string.Equals(entry.Name, _selectedIntent, StringComparison.OrdinalIgnoreCase));
+
+    private string IntentClass => NerdIntentCatalogTools.FormatClass(Options, _selectedIntent);
+
+    private string BrandRootClass => NerdBrandRootClasses.Combine(Options.Prefix);
+
+    private string RadzenRootClass =>
+        $"{NerdIntentCssManifest.BrandRootClass(Options.Prefix)} {NerdRadzenPaletteManifest.BrandRootClass(Options.Prefix)}";
+
+    private void SyncIntentTargetFromSelection()
+    {
+        _intentTarget = NerdIntentCatalogTools.ResolveAliasTarget(Options, _selectedIntent)
+            ?? TokenNames.FirstOrDefault()
+            ?? string.Empty;
+    }
+
+    private Task ApplyIntentAliasAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_selectedIntent) || string.IsNullOrWhiteSpace(_intentTarget))
+        {
+            _status = "Select an intent and target token.";
+            _statusSeverity = Severity.Warning;
+            return Task.CompletedTask;
+        }
+
+        Options.Alias(_selectedIntent, _intentTarget);
+        RefreshAfterEdit();
+        _status = $"Mapped intent '{_selectedIntent}' → '{_intentTarget}'.";
+        _statusSeverity = Severity.Success;
+        return Task.CompletedTask;
     }
 
     private void LoadPairingsFromOptions()
@@ -388,6 +441,71 @@ public partial class NerdBrandWorkbook
         return Task.CompletedTask;
     }
 
+    private Task RefreshThemeSetsAsync()
+    {
+        foreach (var (id, set) in NerdThemeSetTools.CreateFromOptions(Options))
+        {
+            Options.SetThemeSet(id, set);
+        }
+
+        NerdThemeSetTools.SyncColorTokensFromThemeSets(Options);
+        TokenCss.Update(Options);
+        _status = "Theme sets refreshed from palette.";
+        _statusSeverity = Severity.Success;
+        return Task.CompletedTask;
+    }
+
+    private IReadOnlyDictionary<string, string> PreviewSpacingScale =>
+        NerdSpacingScaleTools.GenerateScale(_spacingBaseUnit, _spacingRatio, _spacingCurve);
+
+    private Task ApplySpacingScaleAsync()
+    {
+        NerdSpacingScaleTools.ApplyGeneratedScale(Options, _spacingBaseUnit, _spacingRatio, _spacingCurve);
+        RefreshAfterEdit();
+        _status = $"Applied spacing scale ({_spacingCurve}, base {_spacingBaseUnit}px, ratio {_spacingRatio}).";
+        _statusSeverity = Severity.Success;
+        return Task.CompletedTask;
+    }
+
+    private Task ApplyDefaultSpacingScaleAsync()
+    {
+        NerdSpacingScaleTools.ApplyDefaultScale(Options);
+        RefreshAfterEdit();
+        _status = "Applied default 4px spacing scale.";
+        _statusSeverity = Severity.Success;
+        return Task.CompletedTask;
+    }
+
+    private Task AddTransformAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_newTransformName) || string.IsNullOrWhiteSpace(_newTransformSource))
+        {
+            _status = "Transform name and source are required.";
+            _statusSeverity = Severity.Warning;
+            return Task.CompletedTask;
+        }
+
+        var transform = new NerdTokenTransform(_newTransformSource, _newTransformOperation, _newTransformAmount);
+        Options.AddTransform(_newTransformName, transform);
+        NerdTokenTransformTools.ApplyTransforms(
+            Options,
+            new Dictionary<string, NerdTokenTransform> { [_newTransformName] = transform },
+            overwrite: true);
+        RefreshAfterEdit();
+        _status = $"Added transform '{_newTransformName}'.";
+        _statusSeverity = Severity.Success;
+        return Task.CompletedTask;
+    }
+
+    private Task RemoveTransformAsync(string name)
+    {
+        Options.RemoveTransform(name);
+        RefreshAfterEdit();
+        _status = $"Removed transform '{name}'.";
+        _statusSeverity = Severity.Success;
+        return Task.CompletedTask;
+    }
+
     private Task DownloadPackJsonAsync()
     {
         var pack = NerdTokenPackEnricher.WithPairingPolicy(
@@ -406,8 +524,14 @@ public partial class NerdBrandWorkbook
             Aliases = new(pack.Aliases, StringComparer.OrdinalIgnoreCase),
             Radii = new(pack.Radii, StringComparer.OrdinalIgnoreCase),
             Shadows = new(pack.Shadows, StringComparer.OrdinalIgnoreCase),
+            Spacing = new(pack.Spacing, StringComparer.OrdinalIgnoreCase),
+            Breakpoints = new(pack.Breakpoints, StringComparer.OrdinalIgnoreCase),
+            MotionDurations = new(pack.MotionDurations, StringComparer.OrdinalIgnoreCase),
+            MotionEasings = new(pack.MotionEasings, StringComparer.OrdinalIgnoreCase),
+            ZIndex = new(pack.ZIndex, StringComparer.OrdinalIgnoreCase),
             Recipes = new(pack.Recipes, StringComparer.OrdinalIgnoreCase),
             Opacities = new(pack.Opacities, StringComparer.OrdinalIgnoreCase),
+            ThemeSets = new(pack.ThemeSets, StringComparer.OrdinalIgnoreCase),
             ApprovedPairings = [.._approvedPairings],
             LockedTokens = [..pack.LockedTokens]
         };

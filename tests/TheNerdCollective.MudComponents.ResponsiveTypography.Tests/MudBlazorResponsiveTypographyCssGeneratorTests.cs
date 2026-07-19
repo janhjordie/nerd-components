@@ -21,6 +21,24 @@ public sealed class MudBlazorResponsiveTypographyCssGeneratorTests
     }
 
     [Fact]
+    public void Generate_with_scope_selector_limits_typography_rules_to_scope()
+    {
+        var options = new ResponsiveTypographyOptions();
+        NerdTncTypographyPresets.Apply(options);
+        var theme = new MudTheme();
+        theme.UseResponsiveTypography(options);
+
+        var css = MudBlazorResponsiveTypographyCssGenerator.Generate(
+            theme.Typography,
+            scopeSelector: ".nerd-typography-catalog-preview");
+
+        Assert.Contains(".nerd-typography-catalog-preview {", css, StringComparison.Ordinal);
+        Assert.Contains(".nerd-typography-catalog-preview .mud-typography-h1 {", css, StringComparison.Ordinal);
+        Assert.DoesNotContain(":root {", css, StringComparison.Ordinal);
+        Assert.DoesNotContain("\n.mud-typography-h1 {", css, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void UseResponsiveTypography_applies_default_fallback_to_unconfigured_roles()
     {
         var theme = new MudTheme();

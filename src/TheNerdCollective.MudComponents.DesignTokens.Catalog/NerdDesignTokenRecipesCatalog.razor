@@ -11,7 +11,7 @@ else
     <NerdDesignSystemScripts />
     <NerdCatalogThemeProvider IsDarkMode="_previewDark">
         <NerdDesignTokenStyles />
-        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-6 pa-4" Style="@NerdDesignSystemUi.PageSurfaceStyle(Options.Prefix)">
+        <NerdCatalogPage>
             <MudStack Spacing="3">
                 <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-3">
                     <div>
@@ -291,6 +291,34 @@ else
                     </MudStack>
                 </MudPaper>
 
+                @if (_manualCompliance is not null)
+                {
+                    <MudPaper Outlined="true" Class="pa-4">
+                        <MudStack Spacing="2">
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-2">
+                                <MudText Typo="Typo.h6">Manual compliance</MudText>
+                                <MudChip T="string" Class="@Ui(_manualCompliance.Score >= 80 ? NerdDesignSystemUi.Success : _manualCompliance.Score >= 50 ? NerdDesignSystemUi.Highlight : NerdDesignSystemUi.Danger)" Variant="Variant.Filled">
+                                    @_manualCompliance.Score / 100
+                                </MudChip>
+                            </MudStack>
+                            <MudGrid Spacing="2">
+                                @foreach (var metric in _manualCompliance.Metrics)
+                                {
+                                    <MudItem xs="12" sm="6" md="4">
+                                        <MudPaper Outlined="true" Class="pa-3">
+                                            <MudText Typo="Typo.subtitle2">@metric.Name</MudText>
+                                            <MudText Typo="Typo.h5" Class="@Ui(metric.Score >= 80 ? NerdDesignSystemUi.Success : metric.Score >= 50 ? NerdDesignSystemUi.Highlight : NerdDesignSystemUi.Danger)">
+                                                @metric.Score
+                                            </MudText>
+                                            <MudText Typo="Typo.caption" Class="@Ui(NerdDesignSystemUi.MutedContent)">@metric.Detail</MudText>
+                                        </MudPaper>
+                                    </MudItem>
+                                }
+                            </MudGrid>
+                        </MudStack>
+                    </MudPaper>
+                }
+
                 @if (_brandHealth is not null)
                 {
                     <MudPaper Outlined="true" Class="pa-4">
@@ -319,6 +347,6 @@ else
                     </MudPaper>
                 }
             </MudStack>
-        </MudContainer>
+        </NerdCatalogPage>
     </NerdCatalogThemeProvider>
 }

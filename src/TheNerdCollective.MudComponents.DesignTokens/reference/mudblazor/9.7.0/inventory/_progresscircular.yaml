@@ -1,0 +1,19 @@
+component: progresscircular
+scss: _progresscircular.scss
+classification: P1
+family: feedback
+parts:
+  - id: circle
+    selectors: [.mud-progress-circular, .mud-progress-circular-circle]
+    intent: [channel]
+states:
+  - name: determinate
+    selectors: [.mud-progress-circular-circle]
+verification:
+  - Token-scoped MudProgressCircular uses channel color in catalog dogfood
+generator_required:
+  - '[class*="mud-progress-circular"]'
+adapter:
+  do:
+    - FilledPatterns progress-circular channel paint
+  source: MudBlazor v9.7.0 _progresscircular.scss

@@ -1,0 +1,17 @@
+component: splitpanel
+scss: _splitpanel.scss
+classification: P4
+family: layout
+parts:
+  - id: panel
+    selectors: [.mud-splitter, .mud-split-panel]
+    intent: [surface, border]
+states:
+  - name: default
+    selectors: [.mud-splitter]
+verification:
+  - Split panel resize layout documented for harvest completeness
+adapter:
+  do:
+    - Palette-only until split panel token rules are added
+  source: MudBlazor v9.7.0 _splitpanel.scss

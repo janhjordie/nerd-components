@@ -53,16 +53,20 @@ public class NerdDnfDesignTokenPresetsTests
                 "kridt", "kridt-lys", "ler", "morgenrode", "skov", "sol"
             ],
             options.Colors.Keys.OrderBy(name => name, StringComparer.Ordinal));
-        Assert.Equal(5, options.Recipes.Count);
-        Assert.Equal(9, options.Aliases.Count);
+        Assert.Equal(13, options.Recipes.Count);
+        Assert.Equal(17, options.Aliases.Count);
         Assert.Equal(2, options.Opacities.Count);
         Assert.Contains("watermark", options.Opacities.Keys);
         Assert.Contains("hero-overlay", options.Opacities.Keys);
         Assert.Contains("kridt-himmel", options.Recipes.Keys);
         Assert.Contains("hero", options.Recipes.Keys);
+        Assert.Contains("sidebar", options.Recipes.Keys);
+        Assert.Contains("hero-photo", options.Recipes.Keys);
+        Assert.Contains("partner-row", options.Recipes.Keys);
         Assert.Contains("cta-strip", options.Recipes.Keys);
         Assert.Contains("link-card", options.Recipes.Keys);
         Assert.Contains("footer", options.Recipes.Keys);
+        Assert.Equal("graes", options.Aliases["nav-item-active"]);
         Assert.Equal("kridt", options.Recipes["kridt-himmel"].Surface);
         Assert.Equal("skov", options.Recipes["kridt-himmel"].Content);
         Assert.Equal("himmel", options.Recipes["kridt-himmel"].Action);
@@ -77,6 +81,7 @@ public class NerdDnfDesignTokenPresetsTests
         Assert.Contains(".dnf-recipe-kridt-himmel", css);
         Assert.Contains(".dnf-recipe-hero", css);
         Assert.Contains(".dnf-recipe-footer", css);
+        Assert.Contains(".dnf-recipe-sidebar .mud-nav-link:hover", css);
     }
 
     [Fact]

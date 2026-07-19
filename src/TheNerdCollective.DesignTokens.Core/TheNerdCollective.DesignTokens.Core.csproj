@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>TheNerdCollective.MudComponents.DesignTokens</RootNamespace>
+    <AssemblyName>TheNerdCollective.DesignTokens.Core</AssemblyName>
+    <PackageId>TheNerdCollective.DesignTokens.Core</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>The Nerd Collective</Authors>
+    <Description>Framework-agnostic design token pack model, validation, intent CSS, and CSS-variables generator.</Description>
+    <PackageTags>design-tokens;css;branding;wcag;recipes</PackageTags>
+    <LicenseExpression>Apache-2.0</LicenseExpression>
+    <RepositoryUrl>https://github.com/janhjordie/nerd-components</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TheNerdCollective.MudComponents.Shared\TheNerdCollective.MudComponents.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="schema\token-pack.schema.json" />
+    <EmbeddedResource Include="reference\brands\*.token-pack.json" />
+    <Content Include="reference\component-families\**\*.yaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+</Project>

@@ -5,7 +5,7 @@ namespace TheNerdCollective.MudComponents.DesignTokens;
 /// <summary>
 /// Resolves brand semantic aliases to MudBlazor palette slots for CSS + <see cref="MudBlazor.MudTheme"/>.
 /// </summary>
-public sealed class NerdMudBrandPaletteMap
+public sealed record NerdMudBrandPaletteMap
 {
     public string Primary { get; init; } = "#594AE2";
 
@@ -403,4 +403,28 @@ public sealed class NerdMudBrandPaletteMap
 
         return options.Colors.TryGetValue(current, out token!);
     }
+
+    public static NerdMudAliasColorBundle ResolveAliasBundle(
+        NerdDesignTokenOptions options,
+        string alias,
+        NerdMudPaletteMode mode)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        var useDark = mode == NerdMudPaletteMode.Dark;
+        if (!options.Aliases.TryGetValue(alias, out _))
+        {
+            return new NerdMudAliasColorBundle(string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty);
+        }
+
+        var color = ResolveColor(options, alias, "#594AE2", useDark);
+        var text = ResolveText(options, alias, "#FFFFFF", useDark);
+        var content = ResolveContent(options, alias, "rgba(0,0,0,0.87)", useDark);
+        var border = ResolveBorder(options, alias, useDark);
+        var hover = ResolveHover(options, alias, useDark);
+        var surface = ResolveSurface(options, alias, useDark);
+        return new NerdMudAliasColorBundle(color, text, content, border, hover, surface);
+    }
+
+    public static string ResolveNamedColor(NerdDesignTokenOptions options, string colorName, bool useDark) =>
+        ResolveColor(options, colorName, "#594AE2", useDark);
 }

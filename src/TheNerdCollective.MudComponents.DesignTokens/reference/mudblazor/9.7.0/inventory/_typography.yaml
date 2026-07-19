@@ -1,0 +1,19 @@
+component: typography
+scss: _typography.scss
+classification: P0
+family: content
+parts:
+  - id: text
+    selectors: [.mud-typography]
+    intent: [content]
+states:
+  - name: default
+    selectors: [.mud-typography]
+verification:
+  - MudText typography visible under token scope in catalog dogfood
+generator_required:
+  - '[class*="mud-typography"]'
+adapter:
+  do:
+    - ContentTextPatterns mud-typography content tokens
+  source: MudBlazor v9.7.0 _typography.scss

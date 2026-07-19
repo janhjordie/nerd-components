@@ -6,11 +6,11 @@
   "version": 2,
   "brandIdentityVersion": "1.0.0",
   "pairingGuideName": "DNF",
-  "updatedAt": "2026-07-18T20:16:01.526019+00:00",
+  "updatedAt": "2026-07-19T18:58:11.121033+00:00",
   "colors": {
     "jord": {
       "value": "#3B342E",
-      "light": null,
+      "light": "#3B342E",
       "dark": null,
       "contrastText": "#FDFAF3",
       "darkContrastText": null,
@@ -26,7 +26,7 @@
     },
     "ler": {
       "value": "#6D5346",
-      "light": null,
+      "light": "#6D5346",
       "dark": null,
       "contrastText": "#FDFAF3",
       "darkContrastText": null,
@@ -42,7 +42,7 @@
     },
     "kridt": {
       "value": "#E8E0D3",
-      "light": null,
+      "light": "#E8E0D3",
       "dark": null,
       "contrastText": "#002D26",
       "darkContrastText": null,
@@ -58,7 +58,7 @@
     },
     "kridt-lys": {
       "value": "#FDFAF3",
-      "light": null,
+      "light": "#FDFAF3",
       "dark": null,
       "contrastText": "#002D26",
       "darkContrastText": null,
@@ -74,7 +74,7 @@
     },
     "sol": {
       "value": "#FE993F",
-      "light": null,
+      "light": "#FE993F",
       "dark": null,
       "contrastText": "#002D26",
       "darkContrastText": null,
@@ -90,7 +90,7 @@
     },
     "morgenrode": {
       "value": "#FF5E63",
-      "light": null,
+      "light": "#FF5E63",
       "dark": null,
       "contrastText": "#002D26",
       "darkContrastText": null,
@@ -106,7 +106,7 @@
     },
     "hav": {
       "value": "#0C2E3A",
-      "light": null,
+      "light": "#0C2E3A",
       "dark": null,
       "contrastText": "#FDFAF3",
       "darkContrastText": null,
@@ -122,7 +122,7 @@
     },
     "himmel": {
       "value": "#81ABFF",
-      "light": null,
+      "light": "#81ABFF",
       "dark": null,
       "contrastText": "#002D26",
       "darkContrastText": null,
@@ -138,7 +138,7 @@
     },
     "flod": {
       "value": "#6BE6E4",
-      "light": null,
+      "light": "#6BE6E4",
       "dark": null,
       "contrastText": "#002D26",
       "darkContrastText": null,
@@ -154,7 +154,7 @@
     },
     "skov": {
       "value": "#002D26",
-      "light": null,
+      "light": "#002D26",
       "dark": null,
       "contrastText": "#FDFAF3",
       "darkContrastText": null,
@@ -170,7 +170,7 @@
     },
     "blad": {
       "value": "#0E4D3A",
-      "light": null,
+      "light": "#0E4D3A",
       "dark": null,
       "contrastText": "#FDFAF3",
       "darkContrastText": null,
@@ -186,7 +186,7 @@
     },
     "graes": {
       "value": "#A6E54C",
-      "light": null,
+      "light": "#A6E54C",
       "dark": null,
       "contrastText": "#002D26",
       "darkContrastText": null,
@@ -203,9 +203,17 @@
   },
   "aliases": {
     "primary-action": "himmel",
+    "secondary-action": "hav",
+    "on-primary-action": "skov",
     "page-surface": "kridt-lys",
     "brand-chrome": "skov",
     "on-brand-chrome": "kridt-lys",
+    "nav-surface": "kridt-lys",
+    "nav-item": "skov",
+    "nav-item-active": "graes",
+    "input-surface": "kridt-lys",
+    "input-border": "hav",
+    "focus-ring": "himmel",
     "muted-content": "hav",
     "info": "flod",
     "highlight": "sol",
@@ -214,6 +222,24 @@
   },
   "radii": {},
   "shadows": {},
+  "spacing": {
+    "0": "0px",
+    "1": "4px",
+    "2": "8px",
+    "3": "12px",
+    "4": "16px",
+    "5": "20px",
+    "6": "24px",
+    "8": "32px",
+    "10": "40px",
+    "12": "48px",
+    "16": "64px"
+  },
+  "breakpoints": {},
+  "motionDurations": {},
+  "motionEasings": {},
+  "zIndex": {},
+  "transforms": {},
   "recipes": {
     "kridt-himmel": {
       "surface": "kridt",
@@ -254,6 +280,70 @@
       "border": null,
       "label": "Footer",
       "usage": "Dark jord footer with kridt text"
+    },
+    "sidebar": {
+      "surface": "kridt-lys",
+      "content": "skov",
+      "action": "graes",
+      "border": null,
+      "label": "App sidebar",
+      "usage": "Drawer navigation with gr\u00E6s active accent"
+    },
+    "hero-photo": {
+      "surface": "jord",
+      "content": "kridt",
+      "action": "graes",
+      "border": null,
+      "label": "Photo hero",
+      "usage": "Full-bleed photo hero with kridt headline and gr\u00E6s CTA"
+    },
+    "hero-organic": {
+      "surface": "skov",
+      "content": "kridt",
+      "action": "graes",
+      "border": null,
+      "label": "Organic hero",
+      "usage": "Dark skov hero with organic watermark and gr\u00E6s CTA"
+    },
+    "hero-light": {
+      "surface": "himmel",
+      "content": "skov",
+      "action": "graes",
+      "border": null,
+      "label": "Light hero",
+      "usage": "Light himmel hero with skov headline"
+    },
+    "footer-minimal": {
+      "surface": "skov",
+      "content": "kridt",
+      "action": null,
+      "border": null,
+      "label": "Minimal footer",
+      "usage": "Single-line legal footer bar"
+    },
+    "feature-panel": {
+      "surface": "skov",
+      "content": "kridt",
+      "action": "graes",
+      "border": null,
+      "label": "Feature panel",
+      "usage": "Skov panel with topic rows on hero"
+    },
+    "partner-row": {
+      "surface": "jord",
+      "content": "kridt",
+      "action": null,
+      "border": null,
+      "label": "Partner row",
+      "usage": "I samarbejde med logo strip"
+    },
+    "formular": {
+      "surface": "kridt-lys",
+      "content": "skov",
+      "action": "himmel",
+      "border": null,
+      "label": "Form strip",
+      "usage": "Light form surface with skov labels"
     }
   },
   "opacities": {
@@ -264,6 +354,122 @@
     "hero-overlay": {
       "baseToken": "jord",
       "opacity": 0.35
+    }
+  },
+  "themeSets": {
+    "light": {
+      "id": "light",
+      "displayName": "Light",
+      "colors": {
+        "jord": {
+          "value": "#3B342E",
+          "light": null,
+          "dark": null,
+          "contrastText": "#FDFAF3",
+          "darkContrastText": null,
+          "surface": null,
+          "content": null
+        },
+        "ler": {
+          "value": "#6D5346",
+          "light": null,
+          "dark": null,
+          "contrastText": "#FDFAF3",
+          "darkContrastText": null,
+          "surface": null,
+          "content": null
+        },
+        "kridt": {
+          "value": "#E8E0D3",
+          "light": null,
+          "dark": null,
+          "contrastText": "#002D26",
+          "darkContrastText": null,
+          "surface": null,
+          "content": null
+        },
+        "kridt-lys": {
+          "value": "#FDFAF3",
+          "light": null,
+          "dark": null,
+          "contrastText": "#002D26",
+          "darkContrastText": null,
+          "surface": null,
+          "content": null
+        },
+        "sol": {
+          "value": "#FE993F",
+          "light": null,
+          "dark": null,
+          "contrastText": "#002D26",
+          "darkContrastText": null,
+          "surface": null,
+          "content": null
+        },
+        "morgenrode": {
+          "value": "#FF5E63",
+          "light": null,
+          "dark": null,
+          "contrastText": "#002D26",
+          "darkContrastText": null,
+          "surface": null,
+          "content": null
+        },
+        "hav": {
+          "value": "#0C2E3A",
+          "light": null,
+          "dark": null,
+          "contrastText": "#FDFAF3",
+          "darkContrastText": null,
+          "surface": null,
+          "content": null
+        },
+        "himmel": {
+          "value": "#81ABFF",
+          "light": null,
+          "dark": null,
+          "contrastText": "#002D26",
+          "darkContrastText": null,
+          "surface": null,
+          "content": null
+        },
+        "flod": {
+          "value": "#6BE6E4",
+          "light": null,
+          "dark": null,
+          "contrastText": "#002D26",
+          "darkContrastText": null,
+          "surface": null,
+          "content": null
+        },
+        "skov": {
+          "value": "#002D26",
+          "light": null,
+          "dark": null,
+          "contrastText": "#FDFAF3",
+          "darkContrastText": null,
+          "surface": null,
+          "content": null
+        },
+        "blad": {
+          "value": "#0E4D3A",
+          "light": null,
+          "dark": null,
+          "contrastText": "#FDFAF3",
+          "darkContrastText": null,
+          "surface": null,
+          "content": null
+        },
+        "graes": {
+          "value": "#A6E54C",
+          "light": null,
+          "dark": null,
+          "contrastText": "#002D26",
+          "darkContrastText": null,
+          "surface": null,
+          "content": null
+        }
+      }
     }
   },
   "approvedPairings": [
@@ -319,5 +525,68 @@
   "lockedTokens": [
     "skov",
     "kridt"
-  ]
+  ],
+  "shell": {
+    "appBar": {
+      "alias": "brand-chrome",
+      "recipe": null
+    },
+    "drawer": {
+      "alias": "nav-surface",
+      "recipe": null
+    },
+    "navMenu": {
+      "alias": null,
+      "recipe": "sidebar"
+    },
+    "main": {
+      "alias": "page-surface",
+      "recipe": null
+    }
+  },
+  "frameworkDefaults": {
+    "mudBlazor": {
+      "palette": {
+        "primary": "primary-action",
+        "secondary": "secondary-action",
+        "tertiary": "highlight",
+        "info": "info",
+        "success": "success",
+        "warning": "highlight",
+        "error": "danger",
+        "dark": "muted-content",
+        "surface": "page-surface",
+        "background": "page-surface",
+        "textPrimary": "page-surface",
+        "textSecondary": "muted-content",
+        "textDisabled": "muted-content",
+        "actionDefault": "primary-action",
+        "actionDisabled": null,
+        "appbarBackground": "brand-chrome",
+        "appbarText": "on-brand-chrome",
+        "drawerBackground": "nav-surface",
+        "drawerText": "nav-item",
+        "drawerIcon": "nav-item",
+        "linesDefault": "input-border",
+        "linesInputs": "input-border"
+      },
+      "button": {
+        "filled": "primary-action",
+        "outlined": "secondary-action",
+        "text": "muted-content"
+      },
+      "textField": {
+        "intent": "input-surface",
+        "popover": null
+      },
+      "datePicker": {
+        "intent": null,
+        "popover": "page-surface"
+      },
+      "navLink": {
+        "default": "nav-item",
+        "active": "nav-item-active"
+      }
+    }
+  }
 }

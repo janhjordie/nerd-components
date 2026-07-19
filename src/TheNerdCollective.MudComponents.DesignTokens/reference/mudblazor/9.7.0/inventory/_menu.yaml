@@ -1,0 +1,26 @@
+component: menu
+scss: _menu.scss
+classification: P2
+family: navigation
+portal: true
+parts:
+  - id: popover
+    selectors: [.mud-popover, .mud-menu]
+    intent: [surface, content]
+  - id: item
+    selectors: [.mud-list-item, .mud-menu-item]
+    intent: [content, channel]
+states:
+  - name: open
+    selectors: [.mud-popover-open]
+  - name: selected
+    selectors: [.mud-selected-item]
+verification:
+  - Popover inherits token class via portal bridge
+generator_required:
+  - '[class*="mud-popover"]'
+  - .mud-selected-item
+adapter:
+  do:
+    - Popover surface rules + selected item channel paint in picker portal rules
+  source: MudBlazor v9.7.0 _menu.scss

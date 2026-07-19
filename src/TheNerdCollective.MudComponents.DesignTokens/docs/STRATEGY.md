@@ -22,23 +22,37 @@ eksport og klient-presets.
 ## Målarkitektur
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│  Token Source of Truth                                       │
-│  JSON / C# presets / klient-lagring / import fra Figma/Stitch│
-└──────────────────────────┬──────────────────────────────────┘
-                           │
-                           ▼
-┌─────────────────────────────────────────────────────────────┐
-│  NerdDesignTokenOptions + MudBlazorDesignTokenCssGenerator   │
-│  → CSS-klasser, palette-map, recipes, accessibility          │
-└───────┬─────────────┬─────────────┬─────────────┬───────────┘
-        ▼             ▼             ▼             ▼
-   Catalog UI    PlayBook     Design Hub     Export/API
-   /nerd-…       recipes      hub links      CSS/JSON/MD
+┌──────────────────────────────────────────────────────────────────────────┐
+│  Token pack (JSON) — source of truth                                        │
+│  colors · aliases · recipes · shell · frameworkDefaults · pairings          │
+└───────────────────────────────┬──────────────────────────────────────────┘
+                                │
+                                ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│  DesignTokens.Core (framework-agnostic)                                     │
+│  NerdDesignTokenOptions · recipes · WCAG · component intents · shell model  │
+└───────┬──────────────┬──────────────┬──────────────┬─────────────────────┘
+        ▼              ▼              ▼              ▼
+   MudBlazor      Radzen        Blazorise      Fluent UI / Bootstrap Blazor
+   adapter        adapter       adapter        adapter
+   (CSS rules)    (CSS rules)   (CSS rules)    (CSS rules)
+        └──────────────┴──────────────┴──────────────┘
+                                │
+                                ▼
+              Catalog · PlayBook · Workbook · Token Studio Host
 ```
 
 **Princippet:** Registrér token → resten opdateres automatisk. Ingen manuel
 katalog-markup pr. farve.
+
+**Nyt (2026-07):** Adskil tre lag der kan bruges på tværs af alle Blazor UI-frameworks:
+
+| Lag | Eksempel | Hvem bruger det |
+|-----|----------|-----------------|
+| **Brand tokens** | `skov`, `graes`, `himmel` | Designere, workbook |
+| **Component intents** (semantic aliases) | `primary-action`, `nav-item-active` | Udviklere i markup — samme API i Mud/Radzen/Fluent |
+| **Shell recipes** | `sidebar`, `hero`, `footer` | Layout regions — surface + content + action |
+| **Framework defaults** | `frameworkDefaults.mudblazor.navMenu` | Adapter — mapper intents/recipes til framework-selectors |
 
 ## Fleksibilitetsmodeller (mulige veje)
 
@@ -147,7 +161,145 @@ Markup:
 
 Udvidelsespunkter: hero, footer, nav, alert-strip, link-card, watermark.
 
-### 7. Portal-aware tokens
+**Navngivning:** Brug rolle-navne (`sidebar`, `app-nav`), aldrig farvenavne (`coral-navmenu`,
+`dnf-graes-sidebar`). Farven lever i pack JSON som `action: "graes"`, ikke i CSS-klassen.
+
+### 7. Cross-framework component intents (ny)
+
+**Problem:** `tnc-coral` på en `MudButton` giver ikke automatisk samme look på Radzen
+`RadzenButton`, Blazorise `Button`, Fluent `FluentButton` eller Bootstrap Blazor.
+
+**Løsning:** Ét stabilt **intent-vocabulary** i Core — framework adapters oversætter til
+komponent-selectors.
+
+| Intent (alias) | Typisk brug | DNF-pack | TNC-pack |
+|----------------|-------------|----------|----------|
+| `primary-action` | Filled CTA, primær knap | `graes` / `himmel` | `coral` |
+| `secondary-action` | Outlined/secondary knap | `himmel` | `navy` |
+| `danger-action` | Destruktiv handling | `morgenrode` | `coral` |
+| `muted-content` | Sekundær tekst, labels | `hav` | `ink` |
+| `page-surface` | Main content baggrund | `kridt-lys` | `snow` |
+| `brand-chrome` | App bar, top chrome | `skov` | `navy` |
+| `on-brand-chrome` | Tekst/ikoner på chrome | `kridt-lys` | `chalk` |
+| `nav-surface` | Drawer / side-nav baggrund | `kridt-lys` | `snow` |
+| `nav-item` | Default nav-link | `skov` | `ink` |
+| `nav-item-active` | Aktiv/hover nav accent | `graes` / `sol` | `coral` |
+| `input-surface` | TextField, Select baggrund | `kridt-lys` | `snow` |
+| `input-border` | Input outline | `hav` | `ink` (subtle) |
+| `focus-ring` | Focus-visible | `himmel` | `coral` |
+
+Markup (identisk på tværs af frameworks):
+
+```razor
+@* MudBlazor *@
+<MudButton Class="@Ui(NerdDesignSystemUi.PrimaryAction)" Variant="Variant.Filled">Støt nu</MudButton>
+<MudTextField Class="@Ui(NerdDesignSystemUi.InputSurface)" />
+
+@* Radzen / Blazorise / Fluent — samme intent-klasse, anden adapter genererer CSS *@
+```
+
+**Regel:** Udviklere sætter **intent**, ikke `Color="Color.Primary"` og ikke `dnf-graes`
+i applikationskode (undtagen brand-showcase/catalog).
+
+### 8. Framework adapter control (MudBlazor best practice)
+
+Sådan “tæmmer” man et færdigt framework uden at genopfinde det:
+
+1. **Class-first override** — `MudBlazorComponentRuleBuilder` mapper intents til
+   `[class*="mud-button-filled"]`, `mud-nav-link`, `mud-input`, osv. med state-regler
+   (default, hover, focus, active, disabled).
+2. **Minimér MudTheme** — brug `MudThemeProvider` som fallback eller fjern i
+   fuldt dogfoodede apps; tokens ejer farver, ikke `Theme.Palette.Primary`.
+3. **Portal scope** — pickers, selects, menus, date/time popovers arver token via
+   `PopoverClass` + `nerd-shared.js` (HR-006).
+4. **Shell recipes** — store regions (drawer, hero, footer) får recipe-klasse;
+   primitives (knap, input) får intent-klasse.
+5. **Framework defaults i pack** — valgfri JSON der siger “i denne app er navMenu = sidebar
+   recipe, button.filled = primary-action” (se §9).
+6. **PlayBook som regressions-matrix** — hver intent × hver understøttet komponent med
+   state storyboard (HR-013).
+7. **WCAG gate** — pairings fra designmanual (DNF PDF) som `approvedPairings` + CI.
+
+**Inspiration fra industrien:**
+
+| System | Mønster | Læring for os |
+|--------|---------|---------------|
+| Material Design 3 | Komponent-tokens med states (`NavigationDrawerItemColors`) | Nav kræver hover/active/selected — ikke kun surface |
+| Atlassian | `elevation.surface.sunken` til side-nav | Navngiv efter kontekst, ikke hex |
+| Style Dictionary | Primitive → semantic → component | Core intents; adapters = “platforms” |
+| Tokens Studio Pro | Composition tokens | Vores recipes = runtime composition tokens |
+| Carbon | Layer tokens til nav vs. page | `nav-surface` kan adskilles fra `page-surface` |
+
+**Undgå:** Én recipe per MudBlazor-komponent (80+). Det er `frameworkDefaults` + intents.
+
+### 9. Shell recipes + DNF designmanual (reference)
+
+**Referencebrand:** Danmarks Naturfredningsforening (DNF) identity 2025 — PDF +
+layout-variationer dækker bredt UI-spektrum og er allerede delvist kodet i `Brand.Dnf`.
+
+DNF-manualen viser (ud over farvepar) disse **layout-mønstre** vi bør kunne udtrykke
+som shell recipes i JSON:
+
+| Recipe (forslag) | DNF-manual / skærmbillede | surface · content · action |
+|------------------|---------------------------|----------------------------|
+| `hero-photo` | Hero med foto + mørk overlay + stor headline | `jord`/`skov` · `kridt` · `graes` |
+| `hero-organic` | Mørk skov + organisk blad-watermark | `skov`/`blad` · `kridt` · `graes` |
+| `hero-light` | Lys himmelblå hero + skov tekst | `himmel` · `skov` · `graes` |
+| `header-chrome` | Transparent/mørk top-nav over hero | `skov` (transparent) · `kridt` · `graes` |
+| `sidebar` | App drawer / vertikal nav | `kridt-lys` · `skov` · `graes` |
+| `cta-strip` | Mørk band + lime/græs CTA (eksisterer) | `skov` · `kridt` · `sol`/`graes` |
+| `link-card` | Kridt kort med pil (eksisterer) | `kridt` · `skov` · `hav` |
+| `footer` | Flerkolonne footer + sociale ikoner (eksisterer) | `jord` · `kridt` · `himmel` |
+| `footer-minimal` | Enkelt legal-bar | `skov` · `kridt` · — |
+| `feature-panel` | Skov panel med 3 emner på hero | `skov` · `kridt` · — |
+| `partner-row` | “I samarbejde med” logo-række | `jord` · `kridt` · — |
+| `formular` | Formular på lys surface | `kridt-lys` · `skov` · `himmel` |
+
+Farvepar og watermark-opacity kommer fra PDF (WCAG AA dokumenteret) — allerede i
+`approvedPairings` og `NerdDnfPairingPolicy`.
+
+**Shell bindings** (fremtidig pack-felt):
+
+```json
+{
+  "shell": {
+    "appBar": { "alias": "brand-chrome" },
+    "drawer": { "alias": "nav-surface" },
+    "navMenu": { "recipe": "sidebar" },
+    "main": { "alias": "page-surface" }
+  },
+  "frameworkDefaults": {
+    "mudblazor": {
+      "button": { "filled": "primary-action", "outlined": "secondary-action", "text": "muted-content" },
+      "textField": { "intent": "input-surface" },
+      "datePicker": { "popover": "page-surface" },
+      "navLink": { "default": "nav-item", "active": "nav-item-active" }
+    }
+  }
+}
+```
+
+Valgfri wrapper `<NerdAppShell>` / `<NerdNavMenu>` læser `shell` + defaults — markup i
+host-apps forbliver minimal.
+
+### 10. Multi-framework adapters (Blazor-økosystemet)
+
+| Framework | Token-mekanisme | Adapter-ansvar |
+|-----------|-----------------|----------------|
+| **MudBlazor** | CSS-klasser + `--mud-palette-*` override | `MudBlazorComponentRuleBuilder` (eksisterer) |
+| **Radzen** | `rz-*` + theme CSS variables | `RadzenComponentRuleBuilder` (HR-115) |
+| **Blazorise** | Bootstrap 5 + `b-*` / utility classes | Map intents → Bootstrap custom properties |
+| **Fluent UI Blazor** | Fluent design tokens / CSS | Map intents → `--accent-fill-rest` etc. |
+| **Bootstrap Blazor** | Bootstrap-baseret (kinesisk økosystem) | Samme som Blazorise-linje — bootstrap bridge |
+
+**Fælles kontrakt i Core:**
+
+- `NerdDesignSystemUi` intent-konstanter
+- `NerdDesignTokenRecipe` for shell
+- `INerdFrameworkTokenAdapter` → `GenerateCss(options) : string`
+- PlayBook framework switcher (HR-118) viser samme pack side-by-side
+
+### 11. Portal-aware tokens
 
 MudBlazor popovers (pickers, selects, menus) renderes uden for DOM-scope.
 Fleksibilitet kræver:
@@ -157,13 +309,44 @@ Fleksibilitet kræver:
 
 Uden dette vil kataloget “lyve” om picker-farver.
 
-## Anbefalet retning (prioriteret)
+## Scope-grænser (undgå skråplan)
 
-1. **Config + preset merge** — JSON packs oven på C#-presets  
-2. **Client pack store** — gem/load pr. klient  
-3. **Auto-discovery UI** — catalog/PlayBook/Hub binder kun til options  
-4. **Recipe library** — standard DNF/MUI-lignende layouts  
-5. **Portal token propagation** — pickers/selects/menus  
-6. **Live editor** — UX kan tune tokens i Development og gemme som klient-pack  
+| Tilladt | Ikke nu |
+|---------|---------|
+| ~12 shell recipes (DNF manual + TNC) | Recipe per MudBlazor-komponent |
+| ~15 stabile component intents | Farvenavne i CSS-klasser (`tnc-coral-*`) |
+| `frameworkDefaults` pr. adapter | Fuld composition schema for alle props |
+| Adapter-specifikke CSS rule builders | Mud-logik i Core-pakken |
+| DNF som reference + TNC/Acme som varianter | Hård kodning af én kundes layout i generator |
+
+## Anbefalet retning (prioriteret, opdateret 2026-07)
+
+1. **Component intents udvidet** — `nav-surface`, `nav-item`, `nav-item-active`, `input-*` i
+   aliases + `NerdDesignSystemUi` (HR-119)
+2. **Sidebar shell recipe** — JSON + Mud nav-link state CSS i recipe scope (HR-120, HR-121)
+3. **Dogfood i Token Studio Host** — `brand-chrome` app bar, `recipe-sidebar` nav (TS-019)
+4. **DNF layout kit udvidelse** — hero-varianter, footer-minimal, feature-panel fra manual
+   (HR-123)
+5. **`frameworkDefaults` i pack schema** — mudblazor først, andre adapters senere (HR-122)
+6. **Config + preset merge** — JSON packs oven på C#-presets (fase 1 done)
+7. **DesignTokens.Core extract** — intents + recipes uden Mud-reference (HR-114 / TS-014) — *wave 1 shipped*
+8. **Radzen + framework switcher** — bevis samme intents (HR-115, HR-118) — *done*
+
+**Onboarding:** [RECIPE-INTENT-MODEL.md](RECIPE-INTENT-MODEL.md) — ~12 shell recipes + ~15 intents; ikke én recipe per Mud-komponent (HR-152).
+9. **Portal token propagation** — pickers/selects/menus (HR-006 done; udvid til flere)
+10. **Live editor + workbook** — shell bindings visuelt (HR-089 done; udvid step)
 
 Se [ROADMAP.md](ROADMAP.md) og [FEATURES.md](FEATURES.md).
+
+## Relaterede backlog-items
+
+| ID | Beskrivelse |
+|----|-------------|
+| HR-119 | Component intent vocabulary (core) |
+| HR-120 | Sidebar shell recipe |
+| HR-121 | Mud nav-link rules i recipe scope |
+| HR-122 | `frameworkDefaults` + `shell` i pack schema |
+| HR-123 | DNF manual layout kit (hero/footer varianter) |
+| HR-124 | `NerdAppShell` / shell binding consumer |
+| TS-019 | Token Studio Host dogfood shell |
+| TS-020 | DNF showcase route i PlayBook |

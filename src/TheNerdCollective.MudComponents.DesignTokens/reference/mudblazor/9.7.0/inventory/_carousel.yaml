@@ -1,0 +1,22 @@
+component: carousel
+scss: _carousel.scss
+classification: P3
+family: media
+parts:
+  - id: carousel
+    selectors: [.mud-carousel]
+    intent: [surface, channel]
+  - id: item
+    selectors: [.mud-carousel-item]
+    intent: [surface, content]
+states:
+  - name: active
+    selectors: [.mud-carousel-item.mud-carousel-item-active]
+verification:
+  - MudCarousel slide content visible under token scope in catalog dogfood
+generator_required:
+  - '[class*="mud-carousel"]'
+adapter:
+  do:
+    - StructurePatterns mud-carousel surface rules
+  source: MudBlazor v9.7.0 _carousel.scss

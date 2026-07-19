@@ -1,0 +1,22 @@
+component: fabmenu
+scss: _fabmenu.scss
+classification: P2
+family: action
+parts:
+  - id: menu
+    selectors: [.mud-fab-menu]
+    intent: [channel, surface]
+  - id: button
+    selectors: [.mud-fab-menu-button]
+    intent: [channel, on-channel]
+states:
+  - name: open
+    selectors: [.mud-fab-menu-button.open]
+verification:
+  - MudFabMenu trigger visible under token scope in catalog dogfood
+generator_required:
+  - '[class*="mud-fab-menu"]'
+adapter:
+  do:
+    - FilledPatterns + StructurePatterns for fab menu button
+  source: MudBlazor v9.7.0 _fabmenu.scss

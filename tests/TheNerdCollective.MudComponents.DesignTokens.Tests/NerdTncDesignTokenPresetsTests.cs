@@ -1,5 +1,6 @@
 using TheNerdCollective.Brand.Tnc;
 using TheNerdCollective.MudComponents.DesignTokens;
+using TheNerdCollective.MudComponents.Shared;
 
 namespace TheNerdCollective.MudComponents.DesignTokens.Tests;
 
@@ -20,10 +21,15 @@ public sealed class NerdTncDesignTokenPresetsTests
         Assert.Equal(NerdTncDesignTokenPresets.Snow, options.Colors["chalk"].Content);
         Assert.Equal("coral", options.Aliases["primary-action"]);
         Assert.Equal("navy", options.Aliases["brand-chrome"]);
+        Assert.Equal("snow", options.Aliases["nav-surface"]);
+        Assert.Equal("coral", options.Aliases["nav-item-active"]);
+        Assert.Contains(NerdDesignSystemUi.SidebarRecipe, options.Recipes.Keys);
         Assert.Equal("chalk", options.Recipes["hero"].Content);
         Assert.Equal("coral", options.Recipes["hero"].Action);
         Assert.Equal("snow", options.Recipes["header"].Surface);
         Assert.Equal("coral", options.Recipes["tagline"].Content);
+        Assert.Equal("16px", options.Spacing["4"]);
+        Assert.Equal(NerdSpacingScaleTools.DefaultScale.Count, options.Spacing.Count);
     }
 
     [Fact]
@@ -38,6 +44,20 @@ public sealed class NerdTncDesignTokenPresetsTests
         Assert.Contains("hero", pack.Recipes.Keys);
         Assert.Contains("tagline", pack.Recipes.Keys);
         pack.Validate();
+    }
+
+    [Fact]
+    public void Embedded_tnc_pack_generates_sidebar_nav_rules()
+    {
+        var options = new NerdDesignTokenOptions();
+        NerdTncBrandPack.Instance.Configure(options);
+
+        Assert.Contains(NerdDesignSystemUi.SidebarRecipe, options.Recipes.Keys);
+
+        var css = MudBlazorDesignTokenCssGenerator.Generate(options);
+
+        Assert.Contains(".tnc-recipe-sidebar .mud-nav-link:hover", css);
+        Assert.Contains("nav-surface", options.Aliases.Keys);
     }
 
     [Fact]
@@ -56,6 +76,11 @@ public sealed class NerdTncDesignTokenPresetsTests
             NerdTncDesignTokenPresets.Navy,
             css.AsSpan(heroStart, Math.Min(200, css.Length - heroStart)).ToString(),
             StringComparison.OrdinalIgnoreCase);
+        Assert.Contains(
+            NerdTncDesignTokenPresets.Snow,
+            css.AsSpan(heroStart, Math.Min(400, css.Length - heroStart)).ToString(),
+            StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("--mud-palette-text-primary:", css.AsSpan(heroStart, Math.Min(500, css.Length - heroStart)).ToString(), StringComparison.Ordinal);
         Assert.Contains(
             NerdTncDesignTokenPresets.Snow,
             css.AsSpan(headerStart, Math.Min(200, css.Length - headerStart)).ToString(),

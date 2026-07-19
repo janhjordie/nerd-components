@@ -1,0 +1,93 @@
+@using TheNerdCollective.MudComponents.DesignTokens
+@using TheNerdCollective.MudComponents.Shared
+
+@if (TokenOptions.Recipes.Count > 0)
+{
+    <MudPaper Outlined="true" Class="pa-4 mb-4">
+        <MudText Typo="Typo.h6">Layout scenes</MudText>
+        <MudText Typo="Typo.body2" Class="@($"{Ui(NerdDesignSystemUi.MutedContent)} mb-3")">
+            Storybook-style shell compositions from pack recipes — hero, navigation and footer in one viewport.
+        </MudText>
+
+        <MudPaper Outlined="true" Class="@($"{SceneClass} overflow-hidden")" data-testid="design-guide-layout-scene">
+            @if (TryGetRecipe("hero-photo", out _))
+            {
+                <MudPaper Class="@($"{RecipeClass("hero-photo")} pa-4")" Square="true" Elevation="0">
+                    <MudText Typo="Typo.h5">@SceneHeadline</MudText>
+                    <MudText Typo="Typo.body2" Class="mt-1">@SceneSubline</MudText>
+                    <MudButton Class="@($"{Ui(NerdDesignSystemUi.PrimaryAction)} mt-3")" Variant="Variant.Filled" Size="Size.Small">
+                        @SceneCta
+                    </MudButton>
+                </MudPaper>
+            }
+            else if (TryGetRecipe("hero", out _))
+            {
+                <MudPaper Class="@($"{RecipeClass("hero")} pa-4")" Square="true" Elevation="0">
+                    <MudText Typo="Typo.h5">@SceneHeadline</MudText>
+                    <MudText Typo="Typo.body2" Class="mt-1">@SceneSubline</MudText>
+                    <MudButton Class="@($"{Ui(NerdDesignSystemUi.PrimaryAction)} mt-3")" Variant="Variant.Filled" Size="Size.Small">
+                        @SceneCta
+                    </MudButton>
+                </MudPaper>
+            }
+
+            <MudGrid Class="ma-0">
+                @if (TryGetRecipe(NerdDesignSystemUi.SidebarRecipe, out var sidebar))
+                {
+                    <MudItem xs="12" md="3" Class="pa-0">
+                        <MudPaper Class="@($"{RecipeClass(NerdDesignSystemUi.SidebarRecipe)} pa-2")" Square="true" Elevation="0" Style="min-height: 180px;">
+                            <MudText Typo="Typo.overline" Class="pa-2">Navigation</MudText>
+                            <MudNavMenu>
+                                <MudNavLink Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
+                                <MudNavLink Icon="@Icons.Material.Filled.Campaign" Class="mud-nav-link-active">Campaign</MudNavLink>
+                                <MudNavLink Icon="@Icons.Material.Filled.Info">About</MudNavLink>
+                            </MudNavMenu>
+                        </MudPaper>
+                    </MudItem>
+                }
+                <MudItem xs="12" md="@(TryGetRecipe(NerdDesignSystemUi.SidebarRecipe, out _) ? 9 : 12)" Class="pa-4">
+                    <MudText Typo="Typo.h6">Main content</MudText>
+                    <MudText Typo="Typo.body2" Class="@Ui(NerdDesignSystemUi.MutedContent)">
+                        Page surface uses <code>@Ui(NerdDesignSystemUi.PageSurface)</code>.
+                    </MudText>
+                </MudItem>
+            </MudGrid>
+
+            @if (TryGetRecipe("footer", out _) || TryGetRecipe("footer-minimal", out _))
+            {
+                var footerName = TokenOptions.Recipes.ContainsKey("footer-minimal") ? "footer-minimal" : "footer";
+                <MudPaper Class="@($"{RecipeClass(footerName)} pa-3")" Square="true" Elevation="0">
+                    <MudText Typo="Typo.caption" Align="Align.Center">Footer scene · <code>@RecipeClass(footerName)</code></MudText>
+                </MudPaper>
+            }
+        </MudPaper>
+    </MudPaper>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public NerdDesignTokenOptions TokenOptions { get; set; } = default!;
+
+    private bool IsDnf =>
+        string.Equals(TokenOptions.Prefix, "dnf", StringComparison.OrdinalIgnoreCase);
+
+    private string SceneClass => Ui(NerdDesignSystemUi.PageSurface);
+
+    private string SceneHeadline =>
+        IsDnf ? "Stop bundtrawl i beskyttet hav!" : "Protect nature together";
+
+    private string SceneSubline =>
+        IsDnf ? "DNF design manual reference scene." : "TNC shell scene from pack recipes.";
+
+    private string SceneCta =>
+        IsDnf ? "Skriv under" : "Get involved";
+
+    private string Ui(string semanticAlias) =>
+        NerdDesignSystemUi.TokenClass(TokenOptions.Prefix, semanticAlias);
+
+    private string RecipeClass(string recipeName) =>
+        NerdDesignSystemUi.RecipeClass(TokenOptions.Prefix, recipeName);
+
+    private bool TryGetRecipe(string name, out NerdDesignTokenRecipe recipe) =>
+        TokenOptions.Recipes.TryGetValue(name, out recipe!);
+}

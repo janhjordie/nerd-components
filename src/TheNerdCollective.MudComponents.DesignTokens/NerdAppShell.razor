@@ -1,0 +1,68 @@
+@using TheNerdCollective.MudComponents.Shared
+@inject NerdDesignTokenOptions TokenOptions
+
+<MudLayout Class="@BrandRootClasses">
+    <MudAppBar Elevation="@AppBarElevation" Class="@AppBarClass">
+        @AppBar
+        <MudSpacer />
+        @AppBarActions
+    </MudAppBar>
+    <MudDrawer Open="@DrawerOpen"
+               OpenChanged="@DrawerOpenChanged"
+               ClipMode="@DrawerClipMode"
+               Elevation="@DrawerElevation"
+               Class="@DrawerClass"
+               Style="@DrawerStyle">
+        <MudNavMenu Class="@NavMenuClass">
+            @Navigation
+        </MudNavMenu>
+    </MudDrawer>
+    <MudMainContent Class="@MainClass" Style="@MainStyle">
+        @ChildContent
+    </MudMainContent>
+</MudLayout>
+
+@code {
+    [Parameter]
+    public RenderFragment? AppBar { get; set; }
+
+    [Parameter]
+    public RenderFragment? AppBarActions { get; set; }
+
+    [Parameter]
+    public RenderFragment? Navigation { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public bool DrawerOpen { get; set; } = true;
+
+    [Parameter]
+    public EventCallback<bool> DrawerOpenChanged { get; set; }
+
+    [Parameter]
+    public DrawerClipMode DrawerClipMode { get; set; } = DrawerClipMode.Always;
+
+    [Parameter]
+    public int AppBarElevation { get; set; } = 1;
+
+    [Parameter]
+    public int DrawerElevation { get; set; } = 2;
+
+    private NerdTokenPackShell Shell => NerdTokenPackShellTools.ResolveShell(TokenOptions);
+
+    private string AppBarClass => NerdTokenPackShellTools.ResolveClass(TokenOptions, Shell.AppBar);
+
+    private string DrawerClass => NerdTokenPackShellTools.ResolveClass(TokenOptions, Shell.Drawer);
+
+    private string? DrawerStyle => NerdTokenPackShellTools.ResolveSurfaceStyle(TokenOptions, Shell.Drawer);
+
+    private string NavMenuClass => NerdTokenPackShellTools.ResolveClass(TokenOptions, Shell.NavMenu);
+
+    private string MainClass => NerdTokenPackShellTools.ResolveClass(TokenOptions, Shell.Main);
+
+    private string? MainStyle => NerdTokenPackShellTools.ResolveSurfaceStyle(TokenOptions, Shell.Main);
+
+    private string BrandRootClasses => NerdBrandRootClasses.Combine(TokenOptions.Prefix);
+}

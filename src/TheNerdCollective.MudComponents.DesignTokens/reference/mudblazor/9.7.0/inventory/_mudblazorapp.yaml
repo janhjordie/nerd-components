@@ -1,0 +1,17 @@
+component: mudblazorapp
+scss: _mudblazorapp.scss
+classification: P4
+family: internal
+parts:
+  - id: landing
+    selectors: [.lp-calc-buttons]
+    intent: [surface]
+states:
+  - name: default
+    selectors: [.lp-calc-buttons]
+verification:
+  - MudBlazor docs landing-page styles documented for harvest completeness
+adapter:
+  do:
+    - Docs-only styles — excluded from token generator
+  source: MudBlazor.Docs v9.7.0 _mudblazorapp.scss

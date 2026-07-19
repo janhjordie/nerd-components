@@ -1,0 +1,23 @@
+component: togglegroup
+scss: _togglegroup.scss
+classification: P1
+family: toggle
+parts:
+  - id: group
+    selectors: [.mud-toggle-group]
+    intent: [channel, border]
+  - id: item
+    selectors: [.mud-toggle-item]
+    intent: [channel, content]
+states:
+  - name: selected
+    selectors: [.mud-toggle-item.mud-toggle-item-selected]
+verification:
+  - MudToggleGroup selected item uses channel paint under token scope in catalog dogfood
+generator_required:
+  - '[class*="mud-toggle-group"]'
+  - '[class*="mud-toggle-item"]'
+adapter:
+  do:
+    - FilledPatterns + OutlinedPatterns for toggle group items
+  source: MudBlazor v9.7.0 _togglegroup.scss

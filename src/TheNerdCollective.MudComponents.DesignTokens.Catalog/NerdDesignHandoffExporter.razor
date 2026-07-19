@@ -1,0 +1,90 @@
+@using TheNerdCollective.MudComponents.DesignTokens
+@using TheNerdCollective.MudComponents.Shared
+
+<MudPaper Outlined="true" Class="pa-4">
+    <MudText Typo="Typo.h6">Designer ↔ developer handoff</MudText>
+    <MudText Typo="Typo.body2" Class="@Ui(NerdDesignSystemUi.MutedContent)">
+        One ZIP with token pack, CSS, JSON, Stitch DESIGN.md, WCAG report and README with live guide URL.
+    </MudText>
+    <MudStack Row="true" Spacing="2" Class="mt-3 flex-wrap" AlignItems="AlignItems.Center">
+        <MudTextField @bind-Value="_clientId" Label="Client id" Immediate="true" Style="min-width: 160px;" />
+        <MudButton Variant="Variant.Filled" Class="@Ui(NerdDesignSystemUi.PrimaryAction)" OnClick="DownloadHandoffZipAsync">
+            Download handoff ZIP
+        </MudButton>
+        @if (_status is not null)
+        {
+            <MudText Typo="Typo.caption" Color="Color.Success">@_status</MudText>
+        }
+    </MudStack>
+</MudPaper>
+
+@code {
+    [Inject]
+    private NerdDesignTokenOptions Options { get; set; } = default!;
+
+    [Inject]
+    private NerdDownloadService DownloadService { get; set; } = default!;
+
+    [Inject]
+    private INerdBrandPackSource BrandPackSource { get; set; } = default!;
+
+    [Parameter]
+    public string? ClientId { get; set; }
+
+    [Parameter]
+    public string? DesignGuideUrl { get; set; }
+
+    private string _clientId = "client";
+    private string? _status;
+
+    protected override void OnParametersSet()
+    {
+        _clientId = ClientId ?? Options.ActiveBrandPackId ?? Options.Prefix;
+    }
+
+    private string Ui(string semanticAlias) =>
+        NerdDesignSystemUi.TokenClass(Options.Prefix, semanticAlias);
+
+    private Task DownloadHandoffZipAsync()
+    {
+        var includeExtended = string.Equals(Options.Prefix, "dnf", StringComparison.OrdinalIgnoreCase);
+        var request = new NerdDesignHandoffRequest
+        {
+            Options = Options,
+            ClientId = _clientId,
+            TypographyJson = BrandPackSource.IsConfigured ? BrandPackSource.ExportTypographyJson() : null,
+            TypographyRoles = GetTypographyRoles(),
+            DesignGuideUrl = DesignGuideUrl,
+            IncludeExtendedRecipes = includeExtended
+        };
+
+        var bytes = NerdDesignHandoffTools.CreateZip(request);
+        _status = $"Handoff ZIP ready for {_clientId}.";
+        return DownloadService.DownloadBytesAsync($"{_clientId}-handoff.zip", bytes, "application/zip").AsTask();
+    }
+
+    private IReadOnlyDictionary<string, string>? GetTypographyRoles()
+    {
+        if (!BrandPackSource.IsConfigured)
+        {
+            return null;
+        }
+
+        try
+        {
+            using var document = System.Text.Json.JsonDocument.Parse(BrandPackSource.ExportTypographyJson());
+            if (!document.RootElement.TryGetProperty("roles", out var rolesElement) ||
+                rolesElement.ValueKind != System.Text.Json.JsonValueKind.Object)
+            {
+                return null;
+            }
+
+            return rolesElement.EnumerateObject()
+                .ToDictionary(property => property.Name, property => property.Value.GetString() ?? string.Empty, StringComparer.OrdinalIgnoreCase);
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            return null;
+        }
+    }
+}

@@ -1,0 +1,17 @@
+component: focustrap
+scss: _focustrap.scss
+classification: P4
+family: a11y
+parts:
+  - id: trap
+    selectors: [.mud-focus-trap]
+    intent: [a11y]
+states:
+  - name: default
+    selectors: [.mud-focus-trap]
+verification:
+  - Focus trap utility documented for harvest completeness
+adapter:
+  do:
+    - Internal a11y utility — no token paint rules yet
+  source: MudBlazor v9.7.0 _focustrap.scss

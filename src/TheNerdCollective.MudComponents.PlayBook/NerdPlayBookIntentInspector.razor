@@ -1,0 +1,116 @@
+@using TheNerdCollective.MudComponents.DesignTokens
+@using TheNerdCollective.MudComponents.Shared
+
+<MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mb-3">
+  <MudText Typo="Typo.subtitle2">Intent inspector</MudText>
+  <MudText Typo="Typo.body2">
+    @if (string.IsNullOrWhiteSpace(SelectedTokenClass))
+    {
+      <span>Click a preview card to inspect which intent/token drives its styles.</span>
+    }
+    else
+    {
+      <span>
+        <code>@SelectedTokenClass</code>
+        @if (!string.IsNullOrWhiteSpace(ResolvedIntent))
+        {
+          <span> → intent <code>@ResolvedIntent</code></span>
+        }
+        @if (!string.IsNullOrWhiteSpace(ResolvedToken))
+        {
+          <span> → token <code>@ResolvedToken</code></span>
+        }
+        @if (!string.IsNullOrWhiteSpace(FrameworkHint))
+        {
+          <span> · @FrameworkHint</span>
+        }
+      </span>
+    }
+  </MudText>
+</MudAlert>
+
+@code {
+    [Parameter]
+    public NerdDesignTokenOptions TokenOptions { get; set; } = default!;
+
+    [Parameter]
+    public string? SelectedTokenClass { get; set; }
+
+    private string? ResolvedIntent =>
+        ResolveIntentAlias(SelectedTokenClass);
+
+    private string? ResolvedToken =>
+        ResolvedIntent is not null && TokenOptions.Aliases.TryGetValue(ResolvedIntent, out var token)
+            ? token
+            : ResolveRawToken(SelectedTokenClass);
+
+    private string? FrameworkHint
+    {
+        get
+        {
+            var defaults = NerdTokenPackShellTools.ResolveMudBlazorDefaults(TokenOptions);
+            if (ResolvedIntent is null)
+            {
+                return null;
+            }
+
+            if (string.Equals(ResolvedIntent, defaults.Button?.Filled, StringComparison.OrdinalIgnoreCase))
+            {
+                return "MudButton Filled default";
+            }
+
+            if (string.Equals(ResolvedIntent, defaults.Button?.Outlined, StringComparison.OrdinalIgnoreCase))
+            {
+                return "MudButton Outlined default";
+            }
+
+            if (string.Equals(ResolvedIntent, defaults.NavLink?.Active, StringComparison.OrdinalIgnoreCase))
+            {
+                return "MudNavLink active default";
+            }
+
+            return null;
+        }
+    }
+
+    private string? ResolveIntentAlias(string? tokenClass)
+    {
+        if (string.IsNullOrWhiteSpace(tokenClass))
+        {
+            return null;
+        }
+
+        var prefix = $"{TokenOptions.Prefix}-";
+        if (!tokenClass.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        var suffix = tokenClass[prefix.Length..];
+        if (TokenOptions.Aliases.ContainsKey(suffix))
+        {
+            return suffix;
+        }
+
+        return TokenOptions.Aliases
+            .FirstOrDefault(pair => string.Equals(pair.Value, suffix, StringComparison.OrdinalIgnoreCase))
+            .Key;
+    }
+
+    private string? ResolveRawToken(string? tokenClass)
+    {
+        if (string.IsNullOrWhiteSpace(tokenClass))
+        {
+            return null;
+        }
+
+        var prefix = $"{TokenOptions.Prefix}-";
+        if (!tokenClass.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        var suffix = tokenClass[prefix.Length..];
+        return TokenOptions.Colors.ContainsKey(suffix) ? suffix : null;
+    }
+}

@@ -1,0 +1,25 @@
+component: chip
+scss: _chip.scss
+classification: P1
+family: action
+parts:
+  - id: filled
+    selectors: [.mud-chip-filled]
+    intent: [channel, on-channel]
+  - id: outlined
+    selectors: [.mud-chip-outlined]
+    intent: [channel, border]
+states:
+  - name: filled
+    selectors: [.mud-chip-filled]
+  - name: outlined
+    selectors: [.mud-chip-outlined]
+verification:
+  - Token-scoped MudChip filled variant uses channel background in catalog dogfood
+generator_required:
+  - '[class*="mud-chip-filled"]'
+  - '[class*="mud-chip-outlined"]'
+adapter:
+  do:
+    - FilledPatterns + OutlinedPatterns via token class
+  source: MudBlazor v9.7.0 _chip.scss

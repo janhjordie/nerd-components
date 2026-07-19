@@ -1,0 +1,26 @@
+component: dialog
+scss: _dialog.scss
+classification: P2
+family: overlay
+portal: true
+parts:
+  - id: surface
+    selectors: [.mud-dialog, .mud-dialog-container]
+    intent: [surface, content]
+  - id: title
+    selectors: [.mud-dialog-title]
+    intent: [content]
+  - id: actions
+    selectors: [.mud-dialog-actions]
+    intent: [content, channel]
+states:
+  - name: open
+    selectors: [.mud-overlay-dialog]
+verification:
+  - StructurePatterns apply surface/content tokens when dialog uses token class
+generator_required:
+  - '[class*="mud-dialog"]'
+adapter:
+  do:
+    - StructurePatterns surface + content tokens
+  source: MudBlazor v9.7.0 _dialog.scss

@@ -1,0 +1,74 @@
+@using TheNerdCollective.MudComponents.Shared
+
+@if (Options.MotionDurations.Count > 0 || Options.MotionEasings.Count > 0)
+{
+    <MudPaper Outlined="true" Class="pa-4 mb-3" data-testid="token-motion-panel">
+        <MudText Typo="Typo.h6">Motion tokens</MudText>
+        <MudText Typo="Typo.body2" Class="@Ui(NerdDesignSystemUi.MutedContent)">
+            Live preview of duration and easing tokens on common Mud patterns.
+        </MudText>
+
+        <MudGrid Spacing="3" Class="mt-3">
+            <MudItem xs="12" md="4">
+                <MudText Typo="Typo.subtitle2">Collapse</MudText>
+                <MudExpansionPanels Class="@($"{Options.Prefix}-motion-normal {Options.Prefix}-ease-standard mt-2")">
+                    <MudExpansionPanel Text="Animated panel">
+                        Uses <code>motion-normal</code> + <code>ease-standard</code>.
+                    </MudExpansionPanel>
+                </MudExpansionPanels>
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudText Typo="Typo.subtitle2">Progress</MudText>
+                <MudProgressLinear Color="Color.Primary"
+                                   Class="@($"{Options.Prefix}-motion-slow {Options.Prefix}-ease-emphasized mt-2")"
+                                   Indeterminate="true" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudText Typo="Typo.subtitle2">Snackbar timing</MudText>
+                <MudButton Variant="Variant.Outlined"
+                           Class="@($"{Options.Prefix}-motion-fast mt-2")"
+                           OnClick="ShowSnackAsync"
+                           data-testid="motion-snackbar-trigger">
+                    Trigger snackbar
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+
+        <MudSimpleTable Dense="true" Bordered="true" Hover="true" Class="mt-3">
+            <thead><tr><th>Token</th><th>Value</th></tr></thead>
+            <tbody>
+                @foreach (var pair in Options.MotionDurations.OrderBy(entry => entry.Key, StringComparer.Ordinal))
+                {
+                    <tr data-testid="@($"motion-duration-{pair.Key}")">
+                        <td><code>duration-{pair.Key}</code></td>
+                        <td>@pair.Value</td>
+                    </tr>
+                }
+                @foreach (var pair in Options.MotionEasings.OrderBy(entry => entry.Key, StringComparer.Ordinal))
+                {
+                    <tr data-testid="@($"motion-ease-{pair.Key}")">
+                        <td><code>ease-{pair.Key}</code></td>
+                        <td>@pair.Value</td>
+                    </tr>
+                }
+            </tbody>
+        </MudSimpleTable>
+    </MudPaper>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public NerdDesignTokenOptions Options { get; set; } = default!;
+
+    [Inject]
+    private ISnackbar Snackbar { get; set; } = default!;
+
+    private string Ui(string semanticAlias) =>
+        NerdDesignSystemUi.TokenClass(Options.Prefix, semanticAlias);
+
+    private Task ShowSnackAsync()
+    {
+        Snackbar.Add("Motion preview snackbar", Severity.Info);
+        return Task.CompletedTask;
+    }
+}

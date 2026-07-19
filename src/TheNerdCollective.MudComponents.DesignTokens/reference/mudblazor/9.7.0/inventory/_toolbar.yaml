@@ -1,0 +1,19 @@
+component: toolbar
+scss: _toolbar.scss
+classification: P2
+family: layout
+parts:
+  - id: toolbar
+    selectors: [.mud-toolbar]
+    intent: [surface, content, border]
+states:
+  - name: default
+    selectors: [.mud-toolbar]
+verification:
+  - MudToolBar visible under token scope in catalog dogfood
+generator_required:
+  - '[class*="mud-toolbar"]'
+adapter:
+  do:
+    - StructurePatterns mud-toolbar surface/content/border
+  source: MudBlazor v9.7.0 _toolbar.scss

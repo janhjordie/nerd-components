@@ -1,0 +1,19 @@
+component: treeview
+scss: _treeview.scss
+classification: P2
+family: data
+parts:
+  - id: item
+    selectors: [.mud-treeview-item, .mud-treeview-item-content]
+    intent: [content, channel]
+states:
+  - name: default
+    selectors: [.mud-treeview-item-content]
+verification:
+  - AccentTextPatterns paint tree items under token scope
+generator_required:
+  - '[class*="mud-treeview"]'
+adapter:
+  do:
+    - StructurePatterns + AccentTextPatterns treeview-item-content
+  source: MudBlazor v9.7.0 _treeview.scss

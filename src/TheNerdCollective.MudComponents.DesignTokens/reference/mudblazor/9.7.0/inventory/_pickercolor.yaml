@@ -1,0 +1,26 @@
+component: pickercolor
+scss: _pickercolor.scss
+classification: P3
+family: picker
+portal: true
+composite_of: [input, inputcontrol, popover, picker, pickercolor]
+family_ref: picker
+parts:
+  - id: input
+    selectors: [.mud-input-control, .mud-picker]
+    intent: [content, border, channel]
+  - id: surface
+    selectors: [.mud-picker-color-content, .mud-picker-color-picker, .mud-picker-popover]
+    intent: [surface, content]
+states:
+  - name: open
+    selectors: [.mud-popover-open]
+verification:
+  - Popover inherits token class via portal bridge
+generator_required:
+  - '[class*="mud-popover"]'
+  - '[class*="mud-picker-color"]'
+adapter:
+  do:
+    - InputPatterns + popover surface rules + portal token bridge
+  source: MudBlazor v9.7.0 _pickercolor.scss

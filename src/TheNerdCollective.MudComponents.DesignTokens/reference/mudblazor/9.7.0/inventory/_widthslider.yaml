@@ -1,0 +1,17 @@
+component: widthslider
+scss: _widthslider.scss
+classification: P4
+family: internal
+parts:
+  - id: slider
+    selectors: [input.docs-width-slider]
+    intent: [layout]
+states:
+  - name: default
+    selectors: [input.docs-width-slider]
+verification:
+  - MudBlazor docs width-slider utility documented for harvest completeness
+adapter:
+  do:
+    - Docs-only styles — excluded from token generator
+  source: MudBlazor.Docs v9.7.0 _widthslider.scss

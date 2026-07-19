@@ -1,0 +1,9 @@
+{
+  "mudblazorVersion": "9.7.0",
+  "nugetPackage": "MudBlazor",
+  "githubTag": "v9.7.0",
+  "githubCommit": "pending-harvest",
+  "analysisDate": "2026-07-19",
+  "agentRunId": "hr-130-initial",
+  "notes": "Initial committed archive for HR-130. Full 66-file harvest tracked in HR-133."
+}

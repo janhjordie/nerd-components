@@ -1,0 +1,17 @@
+component: consent
+scss: _consent.scss
+classification: P4
+family: internal
+parts:
+  - id: banner
+    selectors: [.mud-cc-container, .mud-cc-content, .mud-cc-body, .mud-cc-actions]
+    intent: [surface, border]
+states:
+  - name: default
+    selectors: [.mud-cc-container]
+verification:
+  - MudBlazor docs cookie-consent styles documented for harvest completeness
+adapter:
+  do:
+    - Docs-only styles — excluded from token generator
+  source: MudBlazor.Docs v9.7.0 _consent.scss

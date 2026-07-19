@@ -49,6 +49,7 @@ public partial class NerdDesignTokenRecipesCatalog
     private IReadOnlyList<NerdContrastPairResult> _contrastMatrix = [];
     private Dictionary<(string Foreground, string Background), NerdContrastPairResult> _contrastMatrixByKey = [];
     private NerdBrandHealthResult? _brandHealth;
+    private NerdManualComplianceResult? _manualCompliance;
     private readonly Stack<NerdTokenPack> _undoStack = new();
     private readonly Stack<NerdTokenPack> _redoStack = new();
 
@@ -136,6 +137,7 @@ public partial class NerdDesignTokenRecipesCatalog
         _warnings = NerdDesignTokenTools.GetAccessibilityWarnings(Options);
         RebuildContrastMatrix();
         _brandHealth = NerdBrandHealthTools.Evaluate(Options);
+        _manualCompliance = NerdManualComplianceTools.Evaluate(Options);
         HubOptions.DesignTokenRecipeCount = Options.Recipes.Count;
         HubOptions.DesignTokenCount = Options.Colors.Count;
         HubOptions.ActiveBrandIdentityVersion = Options.ActiveBrandIdentityVersion;

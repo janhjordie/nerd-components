@@ -1,0 +1,15 @@
+@* Page surface comes from NerdAppShell shell.main (page-surface). Catalogs only provide width and padding. *@
+<MudContainer MaxWidth="@MaxWidth" Class="@($"my-6 pa-4 {Class}")">
+    @ChildContent
+</MudContainer>
+
+@code {
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public MaxWidth MaxWidth { get; set; } = MaxWidth.ExtraLarge;
+
+    [Parameter]
+    public string? Class { get; set; }
+}

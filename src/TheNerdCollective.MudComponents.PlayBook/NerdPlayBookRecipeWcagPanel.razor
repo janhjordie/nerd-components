@@ -1,0 +1,49 @@
+@using TheNerdCollective.MudComponents.DesignTokens
+@using TheNerdCollective.MudComponents.Shared
+
+@if (TokenOptions.Recipes.Count > 0)
+{
+    <MudPaper Outlined="true" Class="pa-4 mb-4">
+        <MudText Typo="Typo.h6">Recipe WCAG preview</MudText>
+        <MudText Typo="Typo.body2" Class="@($"{Ui(NerdDesignSystemUi.MutedContent)} mb-3")">
+            Content-on-surface contrast for each shell recipe — matches approved pairings from the brand guide.
+        </MudText>
+        <MudGrid Spacing="2">
+            @foreach (var recipe in TokenOptions.Recipes.OrderBy(pair => pair.Key, StringComparer.Ordinal))
+            {
+                var validation = ValidateRecipe(recipe.Value);
+                <MudItem xs="12" sm="6" md="4">
+                    <MudPaper Outlined="true" Class="@($"{RecipeClass(recipe.Key)} pa-3")">
+                        <MudText Typo="Typo.subtitle2">@recipe.Key</MudText>
+                        <MudText Typo="Typo.caption">
+                            @recipe.Value.Content on @recipe.Value.Surface
+                        </MudText>
+                        <MudChip T="string"
+                                 Size="Size.Small"
+                                 Class="mt-2"
+                                 Color="@(validation.MeetsAa ? Color.Success : Color.Error)"
+                                 Variant="Variant.Outlined">
+                            WCAG @FormatRatio(validation.ContrastRatio) @(validation.MeetsAa ? "AA" : "Fail")
+                        </MudChip>
+                    </MudPaper>
+                </MudItem>
+            }
+        </MudGrid>
+    </MudPaper>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public NerdDesignTokenOptions TokenOptions { get; set; } = default!;
+
+    private string Ui(string semanticAlias) =>
+        NerdDesignSystemUi.TokenClass(TokenOptions.Prefix, semanticAlias);
+
+    private string RecipeClass(string recipeName) =>
+        NerdDesignSystemUi.RecipeClass(TokenOptions.Prefix, recipeName);
+
+    private NerdTokenPairingValidation ValidateRecipe(NerdDesignTokenRecipe recipe) =>
+        NerdTokenPairingTools.ValidatePairing(recipe.Content, recipe.Surface, TokenOptions);
+
+    private static string FormatRatio(double ratio) => $"{ratio:0.0}:1";
+}

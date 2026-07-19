@@ -22,9 +22,9 @@
         <MudFab Class="@Tc" Icon="@Icons.Material.Filled.Add" Size="@PSize()" Disabled="@PBool("disabled")" />
         break;
     case "toggle-group":
-        <MudToggleGroup T="string" @bind-Value="_toggleValue" Size="Size.Small">
-            <MudToggleItem Value="@("a")">A</MudToggleItem>
-            <MudToggleItem Value="@("b")">B</MudToggleItem>
+        <MudToggleGroup T="string" @bind-Value="_toggleValue" Class="@Tc" Color="Color.Default" Variant="Variant.Outlined" Size="Size.Small">
+            <MudToggleItem Value="@("a")" Class="@Tc">A</MudToggleItem>
+            <MudToggleItem Value="@("b")" Class="@Tc">B</MudToggleItem>
         </MudToggleGroup>
         break;
     case "button-group":
@@ -34,50 +34,50 @@
         </MudButtonGroup>
         break;
     case "text-field":
-        <MudTextField T="string" @bind-Value="_textValue" Label="@PText("label", "Name")" Placeholder="@PText("placeholder", "Enter value")"
+        <MudTextField T="string" @bind-Value="_textValue" Class="@Tc" Label="@PText("label", "Name")" Placeholder="@PText("placeholder", "Enter value")"
                       Variant="@PVariant(Variant.Outlined)" ReadOnly="@PBool("readOnly")" Disabled="@PBool("disabled")" Margin="Margin.Dense" />
         break;
     case "numeric-field":
-        <MudNumericField T="int" @bind-Value="_numericValue" Label="@PText("label", "Amount")" Placeholder="@PText("placeholder", "0")"
+        <MudNumericField T="int" @bind-Value="_numericValue" Class="@Tc" Label="@PText("label", "Amount")" Placeholder="@PText("placeholder", "0")"
                          Variant="@PVariant(Variant.Outlined)" ReadOnly="@PBool("readOnly")" Disabled="@PBool("disabled")" Margin="Margin.Dense" />
         break;
     case "select":
-        <MudSelect T="string" @bind-Value="_selectValue" Label="@PText("label", "Option")" Variant="@PVariant(Variant.Outlined)"
+        <MudSelect T="string" @bind-Value="_selectValue" Class="@Tc" Label="@PText("label", "Option")" Variant="@PVariant(Variant.Outlined)"
                    Disabled="@PBool("disabled")" Margin="Margin.Dense">
             <MudSelectItem Value="@("alpha")">Alpha</MudSelectItem>
             <MudSelectItem Value="@("beta")">Beta</MudSelectItem>
         </MudSelect>
         break;
     case "autocomplete":
-        <MudAutocomplete T="string" @bind-Value="_autocompleteValue" Label="@PText("label", "City")" Variant="@PVariant(Variant.Outlined)"
+        <MudAutocomplete T="string" @bind-Value="_autocompleteValue" Class="@Tc" Label="@PText("label", "City")" Variant="@PVariant(Variant.Outlined)"
                          Disabled="@PBool("disabled")" ReadOnly="@PBool("readOnly")" SearchFunc="@SearchCities" Margin="Margin.Dense" />
         break;
     case "checkbox":
-        <MudCheckBox @bind-Value="_checkValue" Label="@PText("label", "Accept")" Disabled="@PBool("disabled")" />
+        <MudCheckBox @bind-Value="_checkValue" Class="@Tc" Label="@PText("label", "Accept")" Disabled="@PBool("disabled")" />
         break;
     case "radio":
         <MudRadioGroup T="string" @bind-Value="_radioValue">
-            <MudRadio Value="@("a")" Disabled="@PBool("disabled")">A</MudRadio>
-            <MudRadio Value="@("b")" Disabled="@PBool("disabled")">B</MudRadio>
+            <MudRadio Class="@Tc" Value="@("a")" Disabled="@PBool("disabled")">A</MudRadio>
+            <MudRadio Class="@Tc" Value="@("b")" Disabled="@PBool("disabled")">B</MudRadio>
         </MudRadioGroup>
         break;
     case "switch":
-        <MudSwitch @bind-Value="_switchValue" Label="@PText("label", "Enabled")" Disabled="@PBool("disabled")" />
+        <MudSwitch @bind-Value="_switchValue" Class="@Tc" Color="Color.Default" Label="@PText("label", "Enabled")" Disabled="@PBool("disabled")" />
         break;
     case "slider":
-        <MudSlider @bind-Value="_sliderValue" Min="@PInt("min", 0)" Max="@PInt("max", 100)" Disabled="@PBool("disabled")" />
+        <MudSlider @bind-Value="_sliderValue" Class="@Tc" Min="@PInt("min", 0)" Max="@PInt("max", 100)" Disabled="@PBool("disabled")" />
         break;
     case "rating":
-        <MudRating @bind-SelectedValue="_ratingValue" MaxValue="@PInt("max", 5)" ReadOnly="@PBool("readOnly")" />
+        <MudRating @bind-SelectedValue="_ratingValue" Class="@Tc" MaxValue="@PInt("max", 5)" ReadOnly="@PBool("readOnly")" />
         break;
     case "date-picker":
-        <MudDatePicker @bind-Date="_dateValue" Label="@PText("label", "Date")" Variant="@PVariant(Variant.Outlined)" Disabled="@PBool("disabled")" Margin="Margin.Dense" />
+        <MudDatePicker @bind-Date="_dateValue" Class="@Tc" Label="@PText("label", "Date")" Variant="@PVariant(Variant.Outlined)" Disabled="@PBool("disabled")" Margin="Margin.Dense" />
         break;
     case "time-picker":
-        <MudTimePicker @bind-Time="_timeValue" Label="@PText("label", "Time")" Variant="@PVariant(Variant.Outlined)" Disabled="@PBool("disabled")" Margin="Margin.Dense" />
+        <MudTimePicker @bind-Time="_timeValue" Class="@Tc" Label="@PText("label", "Time")" Variant="@PVariant(Variant.Outlined)" Disabled="@PBool("disabled")" Margin="Margin.Dense" />
         break;
     case "date-range-picker":
-        <MudDateRangePicker @bind-DateRange="_dateRangeValue" Label="@PText("label", "Range")" Variant="@PVariant(Variant.Outlined)" Disabled="@PBool("disabled")" Margin="Margin.Dense" />
+        <MudDateRangePicker @bind-DateRange="_dateRangeValue" Class="@Tc" Label="@PText("label", "Range")" Variant="@PVariant(Variant.Outlined)" Disabled="@PBool("disabled")" Margin="Margin.Dense" />
         break;
     case "file-upload":
         <MudButton Class="@Tc" Variant="Variant.Outlined" Size="Size.Small" StartIcon="@Icons.Material.Filled.Upload">

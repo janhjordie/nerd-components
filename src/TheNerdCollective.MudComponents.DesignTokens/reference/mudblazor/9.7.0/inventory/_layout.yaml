@@ -1,0 +1,19 @@
+component: layout
+scss: _layout.scss
+classification: P4
+family: layout
+parts:
+  - id: container
+    selectors: [.mud-container, .mud-layout]
+    intent: [layout, surface]
+states:
+  - name: default
+    selectors: [.mud-container]
+verification:
+  - Layout shell documented for harvest completeness
+generator_required:
+  - '[class*="mud-container"]'
+adapter:
+  do:
+    - StructurePatterns mud-container layout tokens
+  source: MudBlazor v9.7.0 _layout.scss

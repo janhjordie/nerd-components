@@ -20,10 +20,13 @@ else
     }
     else
     {
+    <HeadContent>
+        <link rel="stylesheet" href="_content/Radzen.Blazor/css/material-base.css" />
+    </HeadContent>
     <NerdDesignSystemScripts />
     <NerdCatalogThemeProvider IsDarkMode="false">
         <NerdDesignTokenStyles />
-        <MudContainer MaxWidth="MaxWidth.Large" Class="my-6 pa-4" Style="@NerdDesignSystemUi.PageSurfaceStyle(Options.Prefix)">
+        <NerdCatalogPage MaxWidth="MaxWidth.Large">
             <MudStack Spacing="3">
                 <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-3">
                     <div>
@@ -39,8 +42,12 @@ else
                     <MudStep Title="Import" />
                     <MudStep Title="Palette" />
                     <MudStep Title="Aliases" />
+                    <MudStep Title="Intents" />
                     <MudStep Title="Recipes" />
                     <MudStep Title="Pairings" />
+                    <MudStep Title="Theme sets" />
+                    <MudStep Title="Spacing" />
+                    <MudStep Title="Transforms" />
                     <MudStep Title="Export" />
                 </MudStepper>
 
@@ -130,6 +137,79 @@ else
                         </MudPaper>
                         break;
                     case 3:
+                        <MudPaper Outlined="true" Class="pa-4" data-testid="workbook-intents-panel">
+                            <MudText Typo="Typo.h6">Component intents</MudText>
+                            <MudText Typo="Typo.body2" Class="@Ui(NerdDesignSystemUi.MutedContent)">
+                                Map semantic intents to palette tokens — use these in markup instead of raw color names.
+                            </MudText>
+                            <MudGrid Spacing="2" Class="mt-3 mb-3">
+                                <MudItem xs="12" md="4">
+                                    <MudSelect T="string" @bind-Value="_selectedIntent" Label="Intent">
+                                        @foreach (var intent in NerdIntentCatalogTools.StandardIntents)
+                                        {
+                                            <MudSelectItem Value="@intent.Name">@intent.Name</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </MudItem>
+                                <MudItem xs="12" md="4">
+                                    <MudSelect T="string" @bind-Value="_intentTarget" Label="Maps to token">
+                                        @foreach (var tokenName in TokenNames)
+                                        {
+                                            <MudSelectItem Value="@tokenName">@tokenName</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </MudItem>
+                                <MudItem xs="12" md="4" Class="d-flex align-end">
+                                    <MudButton Variant="Variant.Filled" Class="@Ui(NerdDesignSystemUi.BrandChrome)" OnClick="ApplyIntentAliasAsync">Apply intent</MudButton>
+                                </MudItem>
+                            </MudGrid>
+                            @if (SelectedIntentEntry is not null)
+                            {
+                                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mb-3">
+                                    <strong>@SelectedIntentEntry.Name</strong> — @SelectedIntentEntry.Summary
+                                    <br />Usage: @SelectedIntentEntry.UsageHint
+                                    <br />Class: <code>@IntentClass</code>
+                                </MudAlert>
+                            }
+                            <MudGrid Spacing="2" Class="mt-2">
+                                <MudItem xs="12" md="6">
+                                    <MudText Typo="Typo.subtitle2">MudBlazor</MudText>
+                                    <MudStack Row="true" Spacing="2" Class="@($"{BrandRootClass} flex-wrap mt-2 pa-3")"
+                                              Style="border: 1px solid var(--mud-palette-lines-default); border-radius: 8px;"
+                                              data-testid="workbook-intent-mud-preview">
+                                        <MudButton Variant="Variant.Filled" Class="@IntentClass">Primary button</MudButton>
+                                        <MudButton Variant="Variant.Outlined" Class="@Ui(NerdDesignSystemUi.SecondaryAction)">Secondary</MudButton>
+                                        <MudTextField T="string" Class="@Ui(NerdDesignSystemUi.InputSurface)" Label="Input preview" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                                    </MudStack>
+                                </MudItem>
+                                <MudItem xs="12" md="6">
+                                    <MudText Typo="Typo.subtitle2">Radzen (live)</MudText>
+                                    <MudStack Spacing="2" Class="@($"{RadzenRootClass} mt-2 pa-3")"
+                                              Style="border: 1px solid var(--mud-palette-lines-default); border-radius: 8px;"
+                                              data-testid="workbook-intent-radzen-preview">
+                                        <RadzenButton Text="Primary" ButtonStyle="Radzen.ButtonStyle.Primary"
+                                                      data-testid="workbook-radzen-primary-button" />
+                                        <RadzenButton Text="Secondary" ButtonStyle="Radzen.ButtonStyle.Secondary"
+                                                      data-testid="workbook-radzen-secondary-button" />
+                                    </MudStack>
+                                </MudItem>
+                            </MudGrid>
+                            <MudSimpleTable Dense="true" Bordered="true" Hover="true">
+                                <thead><tr><th>Intent</th><th>Token</th></tr></thead>
+                                <tbody>
+                                    @foreach (var intent in NerdIntentCatalogTools.StandardIntents)
+                                    {
+                                        var target = NerdIntentCatalogTools.ResolveAliasTarget(Options, intent.Name) ?? "—";
+                                        <tr>
+                                            <td><code>@intent.Name</code></td>
+                                            <td><code>@target</code></td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </MudSimpleTable>
+                        </MudPaper>
+                        break;
+                    case 4:
                         <MudPaper Outlined="true" Class="pa-4">
                             <MudText Typo="Typo.h6">Recipes</MudText>
                             <MudGrid Spacing="2" Class="mt-2 mb-3">
@@ -194,7 +274,7 @@ else
                             }
                         </MudPaper>
                         break;
-                    case 4:
+                    case 5:
                         <MudPaper Outlined="true" Class="pa-4">
                             <MudText Typo="Typo.h6">Approved pairings</MudText>
                             <MudTextField Value="_pairingGuideName" ValueChanged="@((string value) => OnPairingGuideNameChanged(value))" Label="Pairing guide name" Class="mt-2 mb-3" Immediate="true" />
@@ -227,7 +307,113 @@ else
                             </MudSimpleTable>
                         </MudPaper>
                         break;
-                    case 5:
+                    case 6:
+                        <MudPaper Outlined="true" Class="pa-4" data-testid="workbook-theme-sets-panel">
+                            <MudText Typo="Typo.h6">Theme sets</MudText>
+                            <MudText Typo="Typo.body2" Class="@Ui(NerdDesignSystemUi.MutedContent)">
+                                Light/dark overrides are exported in <code>themeSets</code> and merged into CSS on pack load.
+                            </MudText>
+                            <MudButton Variant="Variant.Outlined" Size="Size.Small" Class="mt-2" OnClick="RefreshThemeSetsAsync">
+                                Refresh from palette
+                            </MudButton>
+                            @foreach (var set in ThemeSets.OrderBy(pair => pair.Key, StringComparer.Ordinal))
+                            {
+                                <MudText Typo="Typo.subtitle2" Class="mt-3">@(set.Value.DisplayName ?? set.Key) (@set.Value.Colors.Count overrides)</MudText>
+                                <MudSimpleTable Dense="true" Bordered="true" Hover="true" Class="mt-1">
+                                    <thead><tr><th>Token</th><th>Value</th></tr></thead>
+                                    <tbody>
+                                        @foreach (var color in set.Value.Colors.OrderBy(pair => pair.Key, StringComparer.Ordinal))
+                                        {
+                                            <tr data-testid="@($"workbook-theme-{set.Key}-{color.Key}")">
+                                                <td><code>@color.Key</code></td>
+                                                <td><code>@(color.Value.Value ?? color.Value.Dark ?? color.Value.Light)</code></td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </MudSimpleTable>
+                            }
+                        </MudPaper>
+                        break;
+                    case 7:
+                        <MudPaper Outlined="true" Class="pa-4" data-testid="workbook-spacing-panel">
+                            <MudText Typo="Typo.h6">Spacing scale</MudText>
+                            <MudText Typo="Typo.body2" Class="@Ui(NerdDesignSystemUi.MutedContent)">
+                                Generate <code>space-*</code>, <code>pa-*</code>, and <code>ma-*</code> utilities from a base unit and ratio.
+                            </MudText>
+                            <MudGrid Spacing="2" Class="mt-3">
+                                <MudItem xs="12" md="3">
+                                    <MudNumericField @bind-Value="_spacingBaseUnit" Label="Base unit (px)" Min="1" Max="32" />
+                                </MudItem>
+                                <MudItem xs="12" md="3">
+                                    <MudNumericField @bind-Value="_spacingRatio" Label="Ratio" Min="0.5" Max="3" Step="0.1" />
+                                </MudItem>
+                                <MudItem xs="12" md="3">
+                                    <MudSelect T="NerdSpacingScaleCurve" @bind-Value="_spacingCurve" Label="Curve">
+                                        <MudSelectItem Value="NerdSpacingScaleCurve.Linear">Linear</MudSelectItem>
+                                        <MudSelectItem Value="NerdSpacingScaleCurve.Geometric">Geometric</MudSelectItem>
+                                    </MudSelect>
+                                </MudItem>
+                                <MudItem xs="12" md="3" Class="d-flex align-end gap-2 flex-wrap">
+                                    <MudButton Variant="Variant.Filled" Class="@Ui(NerdDesignSystemUi.BrandChrome)" OnClick="ApplySpacingScaleAsync">Apply scale</MudButton>
+                                    <MudButton Variant="Variant.Outlined" OnClick="ApplyDefaultSpacingScaleAsync">Default 4px</MudButton>
+                                </MudItem>
+                            </MudGrid>
+                            <MudSimpleTable Dense="true" Bordered="true" Hover="true" Class="mt-3">
+                                <thead><tr><th>Step</th><th>Preview</th><th>Value</th></tr></thead>
+                                <tbody>
+                                    @foreach (var pair in PreviewSpacingScale.OrderBy(entry => entry.Key, StringComparer.Ordinal))
+                                    {
+                                        <tr data-testid="@($"workbook-spacing-{pair.Key}")">
+                                            <td><code>@pair.Key</code></td>
+                                            <td><span class="@($"{Options.Prefix}-pa-{pair.Key}")" style="display:inline-block;background:var(--mud-palette-lines-default);">@pair.Key</span></td>
+                                            <td>@pair.Value</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </MudSimpleTable>
+                        </MudPaper>
+                        break;
+                    case 8:
+                        <MudPaper Outlined="true" Class="pa-4" data-testid="workbook-transforms-panel">
+                            <MudText Typo="Typo.h6">Derived transforms</MudText>
+                            <MudGrid Spacing="2" Class="mt-2 mb-3">
+                                <MudItem xs="12" md="3"><MudTextField @bind-Value="_newTransformName" Label="Token name" Immediate="true" /></MudItem>
+                                <MudItem xs="12" md="3">
+                                    <MudSelect T="string" @bind-Value="_newTransformSource" Label="Source token">
+                                        @foreach (var tokenName in TokenNames) { <MudSelectItem Value="@tokenName">@tokenName</MudSelectItem> }
+                                    </MudSelect>
+                                </MudItem>
+                                <MudItem xs="12" md="2">
+                                    <MudSelect T="string" @bind-Value="_newTransformOperation" Label="Operation">
+                                        <MudSelectItem Value="@("lighten")">lighten</MudSelectItem>
+                                        <MudSelectItem Value="@("darken")">darken</MudSelectItem>
+                                        <MudSelectItem Value="@("alpha")">alpha</MudSelectItem>
+                                    </MudSelect>
+                                </MudItem>
+                                <MudItem xs="12" md="2"><MudNumericField @bind-Value="_newTransformAmount" Label="Amount" Min="0" Max="1" Step="0.05" /></MudItem>
+                                <MudItem xs="12" md="2" Class="d-flex align-end">
+                                    <MudButton Variant="Variant.Filled" Class="@Ui(NerdDesignSystemUi.BrandChrome)" OnClick="AddTransformAsync">Add transform</MudButton>
+                                </MudItem>
+                            </MudGrid>
+                            <MudSimpleTable Dense="true" Bordered="true" Hover="true">
+                                <thead><tr><th>Token</th><th>Source</th><th>Operation</th><th>Preview</th><th></th></tr></thead>
+                                <tbody>
+                                    @foreach (var pair in Options.Transforms.OrderBy(entry => entry.Key, StringComparer.Ordinal))
+                                    {
+                                        var preview = Options.Colors.TryGetValue(pair.Key, out var token) ? token.Value : "—";
+                                        <tr>
+                                            <td><code>@pair.Key</code></td>
+                                            <td><code>@pair.Value.Source</code></td>
+                                            <td>@pair.Value.Operation (@pair.Value.Amount)</td>
+                                            <td><code>@preview</code></td>
+                                            <td><MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="@(() => RemoveTransformAsync(pair.Key))" /></td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </MudSimpleTable>
+                        </MudPaper>
+                        break;
+                    case 9:
                         <MudPaper Outlined="true" Class="pa-4">
                             <MudStack Spacing="2">
                                 <MudText Typo="Typo.h6">Export client pack</MudText>
@@ -251,7 +437,7 @@ else
                     <MudAlert Severity="_statusSeverity" Variant="Variant.Outlined" Dense="true">@_status</MudAlert>
                 }
             </MudStack>
-        </MudContainer>
+        </NerdCatalogPage>
     </NerdCatalogThemeProvider>
     }
 }

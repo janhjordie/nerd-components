@@ -1,0 +1,74 @@
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Hosting
+@using Microsoft.Extensions.Hosting
+@using Microsoft.JSInterop
+@implements IAsyncDisposable
+@inject IWebHostEnvironment HostEnvironment
+@inject NerdDesignSystemOptions Options
+@inject IJSRuntime Js
+
+@if (IsEnabled)
+{
+    <div id="nerd-style-guard-badge"
+         role="status"
+         data-guard-status="pending"
+         style="position:fixed;bottom:12px;right:12px;z-index:100000;padding:6px 10px;border-radius:6px;font:12px/1.2 sans-serif;background:#111827;color:#fff;opacity:.95;cursor:pointer;user-select:none;pointer-events:auto;"
+         title="Development style guard — click to open scan results">
+        Style guard
+    </div>
+}
+
+@code {
+    private bool _guardInitialized;
+
+    private bool IsEnabled =>
+        HostEnvironment.IsDevelopment() && Options.EnableStyleGuardOverlay;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!IsEnabled || _guardInitialized)
+        {
+            return;
+        }
+
+        try
+        {
+            await Js.InvokeVoidAsync("nerdShared.enableStyleGuard", new
+            {
+                errorRatio = Options.StyleGuardMinContrastRatio,
+                warningRatio = Options.StyleGuardWarningContrastRatio,
+                scanSelector = "[data-nerd-style-guard]"
+            });
+            _guardInitialized = true;
+        }
+        catch (InvalidOperationException)
+        {
+            // Static/prerender pass — retry after the interactive circuit connects.
+        }
+        catch (JSDisconnectedException)
+        {
+            // Circuit not ready yet.
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (!IsEnabled || !_guardInitialized)
+        {
+            return;
+        }
+
+        try
+        {
+            await Js.InvokeVoidAsync("nerdShared.disableStyleGuard");
+        }
+        catch (InvalidOperationException)
+        {
+            // Static dispose during prerender teardown.
+        }
+        catch (JSDisconnectedException)
+        {
+            // Host disconnected during teardown.
+        }
+    }
+}

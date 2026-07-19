@@ -1,0 +1,54 @@
+@using TheNerdCollective.MudComponents.Shared
+
+<MudList T="string" Dense="true">
+    @foreach (var node in Nodes)
+    {
+        @RenderNode(node, 0)
+    }
+</MudList>
+
+@code {
+    [Parameter, EditorRequired]
+    public IReadOnlyList<NerdTokenTreeNode> Nodes { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public NerdDesignTokenOptions Options { get; set; } = default!;
+
+    [Parameter]
+    public string? SelectedTargetId { get; set; }
+
+    [Parameter]
+    public EventCallback<NerdTokenTreeNode> OnNodeSelected { get; set; }
+
+    private RenderFragment RenderNode(NerdTokenTreeNode node, int depth) => __builder =>
+    {
+        if (node.Children.Count > 0)
+        {
+            <MudListSubheader>@node.Label</MudListSubheader>
+            @foreach (var child in node.Children)
+            {
+                @RenderNode(child, depth + 1)
+            }
+            return;
+        }
+
+        var selected = string.Equals(SelectedTargetId, node.TargetId, StringComparison.OrdinalIgnoreCase);
+        <MudListItem T="string"
+                     Value="@node.Id"
+                     OnClick="@(() => OnNodeSelected.InvokeAsync(node))"
+                     data-testid="@($"token-tree-item-{node.Kind}-{node.TargetId}")"
+                     Class="@(selected ? "mud-primary-text" : null)"
+                     Style="@($"padding-left: {8 + depth * 12}px")">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="gap-2">
+                <MudText Typo="Typo.body2">@node.Label</MudText>
+                @if (!string.IsNullOrWhiteSpace(node.Detail))
+                {
+                    <MudText Typo="Typo.caption" Class="@Ui(NerdDesignSystemUi.MutedContent)">@node.Detail</MudText>
+                }
+            </MudStack>
+        </MudListItem>
+    };
+
+    private string Ui(string semanticAlias) =>
+        NerdDesignSystemUi.TokenClass(Options.Prefix, semanticAlias);
+}

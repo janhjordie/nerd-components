@@ -1,0 +1,22 @@
+component: table
+scss: _table.scss
+classification: P2
+family: data
+parts:
+  - id: surface
+    selectors: [.mud-table, .mud-table-root]
+    intent: [surface, content]
+  - id: row
+    selectors: [.mud-table-row, .mud-table-cell]
+    intent: [content, border]
+states:
+  - name: hover
+    selectors: [.mud-table-hover .mud-table-row:hover]
+verification:
+  - StructurePatterns paint MudSimpleTable under token scope in catalog dogfood
+generator_required:
+  - '[class*="mud-table"]'
+adapter:
+  do:
+    - StructurePatterns surface/content/border tokens
+  source: MudBlazor v9.7.0 _table.scss

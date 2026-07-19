@@ -1,0 +1,20 @@
+@namespace TheNerdCollective.MudComponents.DesignTokens
+@inherits MudThemeProvider
+
+@if (!DefaultScrollbar)
+{
+    @((MarkupString)BuildMudBlazorScrollbar())
+}
+
+<style>
+    .mud-chart-serie:hover {
+        filter: url(#lighten);
+    }
+
+    .mud-chart-serie-hovered
+    {
+        filter: url(#lighten);
+    }
+</style>
+
+@((MarkupString)BuildNerdScopedTheme())

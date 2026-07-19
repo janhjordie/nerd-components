@@ -5,6 +5,37 @@ namespace TheNerdCollective.MudComponents.DesignTokens;
 
 internal static class MudBlazorPaletteMapper
 {
+    public static void AppendNerdColorVariables(
+        StringBuilder css,
+        string prefix,
+        string name,
+        string variable,
+        string textVariable,
+        string hoverVariable,
+        string activeVariable,
+        string borderVariable,
+        string disabledVariable,
+        NerdColorToken token,
+        string light,
+        string dark,
+        string lightContrast,
+        string darkContrast)
+    {
+        var surface = token.Surface ?? Lighten(light, 0.42);
+        var content = token.Content ?? NerdColorParser.ContentText(light, lightContrast);
+        var interactive = token.Interactive ?? token.Hover ?? light;
+
+        css.AppendLine($"  {variable}: {light};");
+        css.AppendLine($"  {textVariable}: {lightContrast};");
+        css.AppendLine($"  {hoverVariable}: {token.Hover ?? interactive};");
+        css.AppendLine($"  {activeVariable}: {token.Active ?? token.Hover ?? interactive};");
+        css.AppendLine($"  {borderVariable}: {token.Border ?? light};");
+        css.AppendLine($"  {disabledVariable}: {token.Disabled ?? Lighten(light, 0.25)};");
+        css.AppendLine($"  --{prefix}-color-{name}-surface: {surface};");
+        css.AppendLine($"  --{prefix}-color-{name}-content: {content};");
+        css.AppendLine($"  --{prefix}-color-{name}-interactive: {interactive};");
+    }
+
     public static void AppendPaletteVariables(
         StringBuilder css,
         string prefix,

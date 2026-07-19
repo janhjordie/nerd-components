@@ -1,0 +1,22 @@
+component: overlay
+scss: _overlay.scss
+classification: P2
+family: overlay
+parts:
+  - id: scrim
+    selectors: [.mud-overlay-scrim]
+    intent: [surface, content]
+  - id: overlay
+    selectors: [.mud-overlay]
+    intent: [surface]
+states:
+  - name: visible
+    selectors: [.mud-overlay]
+verification:
+  - MudOverlay scrim visible under token scope in catalog dogfood
+generator_required:
+  - '[class*="mud-overlay"]'
+adapter:
+  do:
+    - StructurePatterns mud-overlay surface rules
+  source: MudBlazor v9.7.0 _overlay.scss

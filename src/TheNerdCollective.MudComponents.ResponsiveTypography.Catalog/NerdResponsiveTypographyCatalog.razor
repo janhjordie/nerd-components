@@ -9,13 +9,15 @@
 else
 {
     <NerdDesignSystemScripts />
-    <NerdResponsiveTypographyStyles />
+    <style data-nerd-responsive-typography-preview="true">
+@((MarkupString)_previewTypographyCss)
+    </style>
     <NerdCatalogThemeProvider Theme="_previewTheme" IsDarkMode="false">
         @if (TokenOptions is not null)
         {
             <NerdDesignTokenStyles />
         }
-        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="@($"my-6 {Ui(NerdDesignSystemUi.PageSurface)} pa-4")">
+        <NerdCatalogPage Class="nerd-typography-catalog-preview">
             <MudStack Spacing="4">
                 <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-3">
                     <div>
@@ -48,15 +50,44 @@ else
                     </MudAlert>
                 }
 
-                <MudPaper Outlined="true" Class="pa-3">
-                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3" Class="flex-wrap">
-                        <MudSwitch @bind-Value="_showAllRoles" Label="Show all roles" />
-                        <MudText Typo="Typo.caption">Viewport @_viewportWidth.ToString("0")px</MudText>
-                        <MudSlider @bind-Value="_viewportWidth" Min="320" Max="1920" Step="10" Style="max-width: 320px;" />
+                <MudPaper Outlined="true"
+                          Class="@($"{Ui(NerdDesignSystemUi.PageSurface)} pa-3")"
+                          data-nerd-style-guard="@NerdDesignSystemUi.CatalogToolbarPlacement">
+                    <MudStack Row="true"
+                              AlignItems="AlignItems.Center"
+                              Spacing="3"
+                              Class="flex-wrap">
+                        <span class="@Ui(NerdDesignSystemUi.PrimaryAction)">
+                            <MudSwitch @bind-Value="_showAllRoles"
+                                       Label="Show all roles" />
+                        </span>
+                        <MudText Typo="Typo.caption" Class="@Ui(NerdDesignSystemUi.MutedContent)">
+                            Viewport @_viewportWidth.ToString("0")px
+                        </MudText>
+                        <MudSlider @bind-Value="_viewportWidth" Min="320" Max="1920" Step="10" Style="max-width: 320px;" Color="Color.Primary" />
+                        @if (TokenOptions is not null)
+                        {
+                            <MudStack Row="true" Spacing="1" Class="flex-wrap">
+                                @foreach (var breakpoint in NerdBreakpointTools.GetNamedBreakpoints(TokenOptions))
+                                {
+                                    <MudChip T="string"
+                                             Size="Size.Small"
+                                             Variant="Variant.Outlined"
+                                             OnClick="@(() => _viewportWidth = breakpoint.WidthPx)"
+                                             data-testid="@($"typography-breakpoint-{breakpoint.Name}")">
+                                        @breakpoint.Name @breakpoint.RawValue
+                                    </MudChip>
+                                }
+                            </MudStack>
+                        }
                     </MudStack>
                 </MudPaper>
 
-                <MudTabs @bind-ActivePanelIndex="_activeTabIndex" Elevation="1" Rounded="true" ApplyEffectsToContainer="true">
+                <NerdCatalogChrome>
+                <MudTabs @bind-ActivePanelIndex="_activeTabIndex"
+                         Elevation="1"
+                         Rounded="true"
+                         ApplyEffectsToContainer="true">
                     <MudTabPanel Text="Previews" Icon="@Icons.Material.Filled.Preview">
                         <MudStack Spacing="3">
                             <div>
@@ -321,7 +352,8 @@ else
                         </MudStack>
                     </MudTabPanel>
                 </MudTabs>
+                </NerdCatalogChrome>
             </MudStack>
-        </MudContainer>
+        </NerdCatalogPage>
     </NerdCatalogThemeProvider>
 }

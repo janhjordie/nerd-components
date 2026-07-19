@@ -1,0 +1,27 @@
+family: toggle
+description: Boolean toggles (switch, checkbox, radio, toggle group)
+intent:
+  channel: Checked / active control accent
+  content: Labels and unchecked text
+  surface: Track and control backgrounds
+parts:
+  - id: switch-track
+    intentAlias: muted-content
+    mudSelectors: [.mud-switch-track]
+    states: [default, checked]
+  - id: switch-thumb
+    intentAlias: on-primary-action
+    mudSelectors: [.mud-switch-thumb-medium, .mud-switch-thumb-small, .mud-switch-thumb-large]
+  - id: switch-channel
+    intentAlias: primary-action
+    mudSelectors: [.mud-switch-base]
+  - id: checkbox-checked
+    intentAlias: primary-action
+    mudSelectors: [.mud-checkbox .mud-checked]
+  - id: radio-checked
+    intentAlias: primary-action
+    mudSelectors: [.mud-radio .mud-checked]
+crossFramework:
+  fluent: ToggleSwitch / Checkbox / RadioGroup
+  blazorise: Switch / Check / Radio
+  mapping: Map intentAlias to framework tokens — do not copy Mud class names

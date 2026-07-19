@@ -33,7 +33,11 @@
         @foreach (var token in Tokens)
         {
             <MudItem xs="12" sm="6" md="4" lg="3">
-                <MudPaper Outlined="true" Class="pa-2" data-theme="@ThemeMode">
+                <MudPaper Outlined="true"
+                          Class="@($"pa-2 {InspectClass(token)}")"
+                          Style="cursor: pointer;"
+                          data-theme="@ThemeMode"
+                          @onclick="() => InspectToken(token)">
                     <MudText Typo="Typo.caption" Class="@($"{Ui(NerdDesignSystemUi.MutedContent)} mb-2")">
                         <code>.@token</code>
                     </MudText>
@@ -76,6 +80,12 @@
     [Parameter]
     public string PlaygroundTokenClass { get; set; } = string.Empty;
 
+    [Parameter]
+    public string? SelectedTokenClass { get; set; }
+
+    [Parameter]
+    public EventCallback<string> OnInspectToken { get; set; }
+
     private bool _playgroundOpen;
     private NerdPlayBookPlaygroundState _playgroundState = NerdPlayBookPlaygroundRegistry.CreateState("button");
     private IReadOnlyList<NerdPlayBookPropDefinition> _playgroundDefinitions = [];
@@ -90,6 +100,13 @@
     }
 
     private void OpenPlayground() => _playgroundOpen = true;
+
+    private Task InspectToken(string tokenClass) => OnInspectToken.InvokeAsync(tokenClass);
+
+    private string InspectClass(string tokenClass) =>
+        string.Equals(SelectedTokenClass, tokenClass, StringComparison.OrdinalIgnoreCase)
+            ? "mud-border-primary"
+            : string.Empty;
 
     private string Ui(string semanticAlias) => NerdDesignSystemUi.TokenClass(TokenOptions.Prefix, semanticAlias);
 }

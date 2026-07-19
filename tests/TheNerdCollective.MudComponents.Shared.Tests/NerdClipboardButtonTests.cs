@@ -10,12 +10,14 @@ public class NerdClipboardButtonTests : MudComponentTestContext
     public void Clipboard_button_renders_label_and_invokes_js_copy()
     {
         Services.AddScoped<NerdClipboardService>();
+        Services.AddSingleton(new NerdDesignSystemOptions { TokenPrefix = "tnc" });
 
         var cut = Render<NerdClipboardButton>(parameters => parameters
             .Add(p => p.Text, ".demo-forest")
             .Add(p => p.Label, "Copy class"));
 
         Assert.Contains("Copy class", cut.Markup);
+        Assert.Contains("tnc-primary-action", cut.Markup);
 
         cut.Find("button").Click();
 

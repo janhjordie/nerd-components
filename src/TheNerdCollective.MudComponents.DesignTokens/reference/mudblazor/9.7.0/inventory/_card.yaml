@@ -1,0 +1,19 @@
+component: card
+scss: _card.scss
+classification: P2
+family: structure
+parts:
+  - id: surface
+    selectors: [.mud-card]
+    intent: [surface, content, border]
+states:
+  - name: default
+    selectors: [.mud-card]
+verification:
+  - MudCard surface visible under token scope in catalog dogfood
+generator_required:
+  - '[class*="mud-card"]'
+adapter:
+  do:
+    - StructurePatterns mud-card surface/content/border
+  source: MudBlazor v9.7.0 _card.scss

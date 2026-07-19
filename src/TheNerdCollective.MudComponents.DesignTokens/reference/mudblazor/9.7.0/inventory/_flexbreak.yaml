@@ -1,0 +1,17 @@
+component: flexbreak
+scss: _flexbreak.scss
+classification: P4
+family: layout
+parts:
+  - id: break
+    selectors: [.mud-flex-break]
+    intent: [layout]
+states:
+  - name: default
+    selectors: [.mud-flex-break]
+verification:
+  - Flex break utility documented for harvest completeness
+adapter:
+  do:
+    - Internal flex-wrap utility — no token paint rules yet
+  source: MudBlazor v9.7.0 _flexbreak.scss

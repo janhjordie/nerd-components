@@ -1,0 +1,19 @@
+component: drawer
+scss: _drawer.scss
+classification: P2
+family: structure
+parts:
+  - id: drawer
+    selectors: [.mud-drawer]
+    intent: [surface, content, border]
+states:
+  - name: open
+    selectors: [.mud-drawer-open]
+verification:
+  - MudDrawer panel visible under token scope in catalog dogfood
+generator_required:
+  - '[class*="mud-drawer"]'
+adapter:
+  do:
+    - StructurePatterns mud-drawer surface/content/border
+  source: MudBlazor v9.7.0 _drawer.scss

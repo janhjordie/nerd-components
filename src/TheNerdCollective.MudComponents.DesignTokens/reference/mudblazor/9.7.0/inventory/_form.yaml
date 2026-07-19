@@ -1,0 +1,19 @@
+component: form
+scss: _form.scss
+classification: P4
+family: structure
+parts:
+  - id: form
+    selectors: [.mud-form]
+    intent: [content]
+states:
+  - name: default
+    selectors: [.mud-form]
+verification:
+  - MudForm wraps input previews under token scope in catalog dogfood
+generator_required:
+  - '[class*="mud-form"]'
+adapter:
+  do:
+    - InputPatterns mud-form wrapper tokens
+  source: MudBlazor v9.7.0 _form.scss

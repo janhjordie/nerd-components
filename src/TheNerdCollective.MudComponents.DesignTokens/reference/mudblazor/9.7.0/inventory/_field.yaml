@@ -1,0 +1,19 @@
+component: field
+scss: _field.scss
+classification: P2
+family: input
+parts:
+  - id: root
+    selectors: [.mud-input-root, .mud-input-control]
+    intent: [surface, content, border]
+states:
+  - name: default
+    selectors: [.mud-input-root]
+verification:
+  - MudTextField root visible under token scope in catalog dogfood
+generator_required:
+  - '[class*="mud-input-root"]'
+adapter:
+  do:
+    - InputPatterns mud-input-root field wrapper tokens
+  source: MudBlazor v9.7.0 _field.scss

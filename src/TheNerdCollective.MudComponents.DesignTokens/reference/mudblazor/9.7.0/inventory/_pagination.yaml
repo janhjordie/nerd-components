@@ -1,0 +1,23 @@
+component: pagination
+scss: _pagination.scss
+classification: P2
+family: navigation
+parts:
+  - id: item
+    selectors: [.mud-pagination-item]
+    intent: [content, channel]
+  - id: selected
+    selectors: [.mud-pagination-item-selected]
+    intent: [channel, on-channel]
+states:
+  - name: selected
+    selectors: [.mud-pagination-item-selected]
+verification:
+  - Pagination selected page uses channel paint under token scope
+generator_required:
+  - '[class*="mud-pagination"]'
+  - '[class*="mud-pagination-item-selected"]'
+adapter:
+  do:
+    - StructurePatterns + FilledPatterns mud-pagination-item-selected
+  source: MudBlazor v9.7.0 _pagination.scss

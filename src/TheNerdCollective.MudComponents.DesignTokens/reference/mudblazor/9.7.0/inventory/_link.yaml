@@ -1,0 +1,19 @@
+component: link
+scss: _link.scss
+classification: P0
+family: content
+parts:
+  - id: link
+    selectors: [.mud-link]
+    intent: [content, channel]
+states:
+  - name: default
+    selectors: [.mud-link]
+verification:
+  - MudLink visible under token scope in catalog dogfood
+generator_required:
+  - '[class*="mud-link"]'
+adapter:
+  do:
+    - AccentTextPatterns mud-link channel paint
+  source: MudBlazor v9.7.0 _link.scss

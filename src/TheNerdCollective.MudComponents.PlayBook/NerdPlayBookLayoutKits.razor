@@ -6,31 +6,83 @@
     <MudPaper Outlined="true" Class="pa-4">
         <MudText Typo="Typo.h6">Layout kits</MudText>
         <MudText Typo="Typo.body2" Class="@($"{Ui(NerdDesignSystemUi.MutedContent)} mb-3")">
-            Hero, CTA strip, link card and footer compositions using recipe classes from DI.
+            Shell recipes from the active brand pack — hero, navigation, footer and form patterns.
+            @if (IsDnfBrand)
+            {
+                <span> DNF manual reference layouts are included when the <code>dnf</code> brand is active.</span>
+            }
         </MudText>
+
+        @if (IsDnfBrand)
+        {
+            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mb-4" Dense="true">
+                <strong>DNF design manual</strong> — layouts mirror Danmarks Naturfredningsforening identity 2025.
+                See <code>docs/DNF-DESIGN-GUIDE.md</code> in Nerd Token Studio.
+            </MudAlert>
+        }
 
         @if (TryGetRecipe("hero", out var hero))
         {
-            var heroClass = RecipeClass("hero");
-            <MudPaper Class="@($"{heroClass} pa-6 mb-4")" Outlined="true">
-                <MudText Typo="Typo.overline">Hero</MudText>
-                <MudText Typo="Typo.h3" Class="mt-2">Protect nature together</MudText>
-                <MudText Typo="Typo.body1" Class="mt-2">
-                    Recipe <code>@heroClass</code> — surface @hero.Surface, content @hero.Content.
+            @RenderHeroBlock("hero", hero, "Protect nature together", "Get involved")
+        }
+
+        @if (TryGetRecipe("hero-photo", out var heroPhoto))
+        {
+            @RenderHeroBlock("hero-photo", heroPhoto, "Stop bundtrawl i beskyttet hav!", "Skriv under nu")
+        }
+
+        @if (TryGetRecipe("hero-organic", out var heroOrganic))
+        {
+            @RenderHeroBlock("hero-organic", heroOrganic, "Vi kæmper for naturen", "Støt nu")
+        }
+
+        @if (TryGetRecipe("hero-light", out var heroLight))
+        {
+            @RenderHeroBlock("hero-light", heroLight, "Vi kæmper for", "Læs mere")
+        }
+
+        @if (TryGetRecipe("sidebar", out var sidebar))
+        {
+            var sidebarClass = RecipeClass(NerdDesignSystemUi.SidebarRecipe);
+            <MudPaper Class="@($"{sidebarClass} pa-2 mb-4")"
+                      Outlined="true"
+                      id="layout-kit-sidebar"
+                      data-testid="layout-kit-sidebar">
+                <MudText Typo="Typo.overline" Class="pa-2">Sidebar · <code>@sidebarClass</code></MudText>
+                <MudNavMenu>
+                    <MudNavLink Icon="@Icons.Material.Filled.Home" Href="#">Home</MudNavLink>
+                    <MudNavLink Icon="@Icons.Material.Filled.Hub" Href="#">Design system</MudNavLink>
+                    <MudNavLink Icon="@Icons.Material.Filled.Settings" Href="#">Settings</MudNavLink>
+                </MudNavMenu>
+                <MudText Typo="Typo.caption" Class="@($"{Ui(NerdDesignSystemUi.MutedContent)} pa-2")">
+                    surface @sidebar.Surface · content @sidebar.Content · action @(sidebar.Action ?? "—")
                 </MudText>
-                <MudButton Class="@($"{TokenClass(hero.Action ?? hero.Surface)} mt-3")" Variant="Variant.Filled">
-                    Get involved
-                </MudButton>
+            </MudPaper>
+        }
+
+        @if (TryGetRecipe("feature-panel", out _))
+        {
+            var panelClass = RecipeClass("feature-panel");
+            <MudPaper Class="@($"{panelClass} pa-4 mb-4")" Outlined="true" id="layout-kit-feature-panel" data-testid="layout-kit-feature-panel">
+                <MudText Typo="Typo.overline">Feature panel</MudText>
+                <MudDivider Class="my-2" />
+                <MudStack Spacing="1">
+                    <MudText Typo="Typo.subtitle2">Klima — Vi kæmper for et klima i balance</MudText>
+                    <MudDivider />
+                    <MudText Typo="Typo.subtitle2">Natur — Beskyt biodiversiteten</MudText>
+                    <MudDivider />
+                    <MudText Typo="Typo.subtitle2">Drikkevand — Rent vand til alle</MudText>
+                </MudStack>
             </MudPaper>
         }
 
         @if (TryGetRecipe("cta-strip", out var cta))
         {
             var ctaClass = RecipeClass("cta-strip");
-            <MudPaper Class="@($"{ctaClass} pa-4 mb-4")" Outlined="true">
+            <MudPaper Class="@($"{ctaClass} pa-4 mb-4")" Outlined="true" id="layout-kit-cta-strip" data-testid="layout-kit-cta-strip">
                 <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-2">
                     <MudText Typo="Typo.h6">CTA strip</MudText>
-                    <MudButton Class="@TokenClass(cta.Action ?? cta.Content)" Variant="Variant.Filled">Donate now</MudButton>
+                    <MudButton Class="@Ui(NerdDesignSystemUi.PrimaryAction)" Variant="Variant.Filled">Donate now</MudButton>
                 </MudStack>
             </MudPaper>
         }
@@ -46,12 +98,24 @@
                             <MudText Typo="Typo.body2" Class="mt-1">
                                 Surface @linkCard.Surface with @linkCard.Content content.
                             </MudText>
-                            <MudLink Class="@TokenClass(linkCard.Action ?? linkCard.Content)" Href="#">Read more</MudLink>
+                            <MudLink Class="@Ui(NerdDesignSystemUi.PrimaryAction)" Href="#">Read more</MudLink>
                         </MudCardContent>
                     </MudCard>
                 </MudItem>
             }
-            @if (TryGetRecipe("footer", out var footer))
+            @if (TryGetRecipe("formular", out _))
+            {
+                var formClass = RecipeClass("formular");
+                <MudItem xs="12" md="6">
+                    <MudPaper Class="@($"{formClass} pa-4")" Outlined="true" id="layout-kit-formular" data-testid="layout-kit-formular">
+                        <MudText Typo="Typo.subtitle2">Formular</MudText>
+                        <MudTextField T="string" Class="@Ui(NerdDesignSystemUi.InputSurface)" Label="Navn" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        <MudTextField T="string" Class="@($"{Ui(NerdDesignSystemUi.InputSurface)} mt-2")" Label="E-mail" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        <MudButton Class="@($"{Ui(NerdDesignSystemUi.PrimaryAction)} mt-3")" Variant="Variant.Filled">Send</MudButton>
+                    </MudPaper>
+                </MudItem>
+            }
+            @if (TryGetRecipe("footer", out _))
             {
                 var footerClass = RecipeClass("footer");
                 <MudItem xs="12" md="6">
@@ -65,7 +129,38 @@
                     </MudPaper>
                 </MudItem>
             }
+            @if (TryGetRecipe("footer-minimal", out _))
+            {
+                var minimalClass = RecipeClass("footer-minimal");
+                <MudItem xs="12" md="6">
+                    <MudPaper Class="@($"{minimalClass} pa-3")" Outlined="true" id="layout-kit-footer-minimal" data-testid="layout-kit-footer-minimal">
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-2">
+                            <MudText Typo="Typo.caption">Danmarks Naturfredningsforening</MudText>
+                            <MudStack Row="true" Spacing="2" Class="flex-wrap">
+                                <MudLink Href="#">Cookiepolitik</MudLink>
+                                <MudLink Href="#">Privatlivspolitik</MudLink>
+                            </MudStack>
+                        </MudStack>
+                    </MudPaper>
+                </MudItem>
+            }
         </MudGrid>
+
+        @if (TryGetRecipe("partner-row", out _))
+        {
+            var partnerClass = RecipeClass("partner-row");
+            <MudPaper Class="@($"{partnerClass} pa-4 mb-4")" Outlined="true" id="layout-kit-partner-row" data-testid="layout-kit-partner-row">
+                <MudText Typo="Typo.subtitle2" Align="Align.Center">I samarbejde med</MudText>
+                <MudStack Row="true" Justify="Justify.Center" Spacing="3" Class="mt-3 flex-wrap">
+                    @for (var i = 1; i <= 4; i++)
+                    {
+                        <MudPaper Outlined="true" Class="pa-4" Style="min-width: 120px; text-align: center;">
+                            <MudText Typo="Typo.caption">Partner @i</MudText>
+                        </MudPaper>
+                    }
+                </MudStack>
+            </MudPaper>
+        }
     </MudPaper>
 }
 
@@ -73,12 +168,53 @@
     [Parameter, EditorRequired]
     public NerdDesignTokenOptions TokenOptions { get; set; } = default!;
 
-    private string TokenClass(string tokenName) => $"{TokenOptions.Prefix}-{tokenName}";
+    private bool IsDnfBrand =>
+        string.Equals(TokenOptions.Prefix, "dnf", StringComparison.OrdinalIgnoreCase);
 
-    private string RecipeClass(string recipeName) => $"{TokenOptions.Prefix}-recipe-{recipeName}";
+    private string Ui(string semanticAlias) => NerdDesignSystemUi.TokenClass(TokenOptions.Prefix, semanticAlias);
+
+    private string RecipeClass(string recipeName) => NerdDesignSystemUi.RecipeClass(TokenOptions.Prefix, recipeName);
+
+    private string RecipeContentStyle(NerdDesignTokenRecipe recipe) =>
+        $"color: var(--{TokenOptions.Prefix}-color-{recipe.Content}-content) !important;";
 
     private bool TryGetRecipe(string name, out NerdDesignTokenRecipe recipe) =>
         TokenOptions.Recipes.TryGetValue(name, out recipe!);
 
-    private string Ui(string semanticAlias) => NerdDesignSystemUi.TokenClass(TokenOptions.Prefix, semanticAlias);
+    private RenderFragment RenderHeroBlock(
+        string recipeName,
+        NerdDesignTokenRecipe hero,
+        string headline,
+        string ctaLabel) => __builder =>
+    {
+        var heroClass = RecipeClass(recipeName);
+        var usesOverlay = UsesHeroOverlay(recipeName);
+        <MudPaper Class="@($"{heroClass} pa-6 mb-4")"
+                  Outlined="true"
+                  Style="@(usesOverlay ? "position:relative; overflow:hidden;" : null)"
+                  id="@NerdRecipePlayBookLinks.TryGetLayoutKitAnchor(recipeName)"
+                  data-testid="@NerdRecipePlayBookLinks.TryGetLayoutKitAnchor(recipeName)">
+            @if (usesOverlay)
+            {
+                <div class="@($"{TokenOptions.Prefix}-opacity-hero-overlay")"
+                     style="position:absolute; inset:0; pointer-events:none;"
+                     aria-hidden="true"></div>
+            }
+            <div style="@(usesOverlay ? "position:relative;" : null)">
+                <MudText Typo="Typo.overline">@recipeName</MudText>
+                <MudText Typo="Typo.h3" Class="mt-2" Style="@RecipeContentStyle(hero)">@headline</MudText>
+                <MudText Typo="Typo.body1" Class="mt-2" Style="@RecipeContentStyle(hero)">
+                    Recipe <code>@heroClass</code> — surface @hero.Surface, content @hero.Content.
+                </MudText>
+                <MudButton Class="@($"{Ui(NerdDesignSystemUi.PrimaryAction)} mt-3")" Variant="Variant.Filled">
+                    @ctaLabel
+                </MudButton>
+            </div>
+        </MudPaper>
+    };
+
+    private bool UsesHeroOverlay(string recipeName) =>
+        (string.Equals(recipeName, "hero-photo", StringComparison.OrdinalIgnoreCase) ||
+         string.Equals(recipeName, "hero-organic", StringComparison.OrdinalIgnoreCase)) &&
+        TokenOptions.Opacities.ContainsKey("hero-overlay");
 }

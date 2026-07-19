@@ -1,0 +1,19 @@
+component: image
+scss: _image.scss
+classification: P0
+family: content
+parts:
+  - id: image
+    selectors: [.mud-image]
+    intent: [surface, content]
+states:
+  - name: default
+    selectors: [.mud-image]
+verification:
+  - MudImage visible under token scope in catalog dogfood
+generator_required:
+  - '[class*="mud-image"]'
+adapter:
+  do:
+    - StructurePatterns mud-image surface tokens
+  source: MudBlazor v9.7.0 _image.scss

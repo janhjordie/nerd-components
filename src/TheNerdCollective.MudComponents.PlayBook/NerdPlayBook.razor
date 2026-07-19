@@ -8,6 +8,9 @@
 }
 else
 {
+    <HeadContent>
+        <link rel="stylesheet" href="_content/Radzen.Blazor/css/material-base.css" />
+    </HeadContent>
     <NerdDesignSystemScripts />
     <NerdDesignTokenStyles />
     <NerdResponsiveTypographyStyles />
@@ -19,7 +22,7 @@ else
 @code {
     private RenderFragment PlayBookBody => __builder =>
     {
-        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-6 pa-4" Style="@NerdDesignSystemUi.PageSurfaceStyle(TokenOptions.Prefix)">
+        <NerdCatalogPage>
             <MudStack Spacing="3">
                 <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-3">
                     <div>
@@ -48,6 +51,7 @@ else
                     @bind-PreviewDark="_previewDark"
                     @bind-SearchQuery="_searchQuery" />
 
+                <NerdCatalogChrome>
                 <MudTabs @bind-ActivePanelIndex="_activeSectionTabIndex" Elevation="1" Rounded="true" ApplyEffectsToContainer="true">
                     <MudTabPanel Text="Mud components" Icon="@Icons.Material.Filled.Widgets">
                         <MudStack Spacing="3" Class="mt-4">
@@ -76,6 +80,8 @@ else
                                 }
                             </MudText>
 
+                            <NerdPlayBookIntentInspector TokenOptions="@TokenOptions" SelectedTokenClass="@_inspectedTokenClass" />
+
                             @if (_tokenNames.Count == 0)
                             {
                                 <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
@@ -97,7 +103,9 @@ else
                                     DocsBaseUrl="@Options.MudBlazorDocsBaseUrl"
                                     ThemeMode="@ThemeMode"
                                     EnablePlayground="@Options.EnableComponentPlaygrounds"
-                                    PlaygroundTokenClass="@PlaygroundTokenClass" />
+                                    PlaygroundTokenClass="@PlaygroundTokenClass"
+                                    SelectedTokenClass="@_inspectedTokenClass"
+                                    OnInspectToken="@InspectToken" />
                             }
                         </MudStack>
                     </MudTabPanel>
@@ -108,9 +116,17 @@ else
                         </div>
                     </MudTabPanel>
 
+                    <MudTabPanel Text="Framework bridge" Icon="@Icons.Material.Filled.Hub">
+                        <div class="mt-4">
+                            <NerdPlayBookFrameworkBridge TokenOptions="@TokenOptions" @key="@TokenOptions.Prefix" />
+                        </div>
+                    </MudTabPanel>
+
                     <MudTabPanel Text="Layout &amp; recipes" Icon="@Icons.Material.Filled.ViewQuilt">
                         <MudStack Spacing="3" Class="mt-4">
+                            <NerdPlayBookIntentSnippets TokenOptions="@TokenOptions" />
                             <NerdPlayBookLayoutKits TokenOptions="@TokenOptions" />
+                            <NerdPlayBookRecipeWcagPanel TokenOptions="@TokenOptions" />
 
                             @if (TokenOptions.Recipes.Count > 0)
                             {
@@ -147,7 +163,8 @@ else
                         </MudStack>
                     </MudTabPanel>
                 </MudTabs>
+                </NerdCatalogChrome>
             </MudStack>
-        </MudContainer>
+        </NerdCatalogPage>
     };
 }

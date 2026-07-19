@@ -28,8 +28,10 @@ public sealed class ReferenceBrandPackTests
             Aliases = new(pack.Aliases, StringComparer.OrdinalIgnoreCase),
             Radii = new(pack.Radii, StringComparer.OrdinalIgnoreCase),
             Shadows = new(pack.Shadows, StringComparer.OrdinalIgnoreCase),
+            Spacing = new(pack.Spacing, StringComparer.OrdinalIgnoreCase),
             Recipes = new(pack.Recipes, StringComparer.OrdinalIgnoreCase),
             Opacities = new(pack.Opacities, StringComparer.OrdinalIgnoreCase),
+            ThemeSets = new(pack.ThemeSets, StringComparer.OrdinalIgnoreCase),
             ApprovedPairings = [..pack.ApprovedPairings],
             LockedTokens = [..pack.LockedTokens]
         };
@@ -60,10 +62,12 @@ public sealed class ReferenceBrandPackTests
         foreach (var brandId in new[] { "tnc", "dnf", "acme", "demo" })
         {
             var brandPack = NerdBrandPackRegistry.Instance.GetRequired(brandId);
+            var referenceOptions = NerdBrandPackTestBootstrap.CreateReferenceOptions(brandId);
+            var referencePack = NerdTokenPack.FromOptions(referenceOptions, brandId);
             var pack = NerdTokenPackEnricher.EnrichRecipeMetadata(
                 NerdTokenPackEnricher.EnrichPairingColors(
                     NerdTokenPackEnricher.FromBrandPack(brandPack),
-                    NerdBrandPackTestBootstrap.CreateReferenceOptions(brandId)),
+                    referenceOptions),
                 brandId);
             pack = new NerdTokenPack
             {
@@ -78,15 +82,23 @@ public sealed class ReferenceBrandPackTests
                 Aliases = new(pack.Aliases, StringComparer.OrdinalIgnoreCase),
                 Radii = new(pack.Radii, StringComparer.OrdinalIgnoreCase),
                 Shadows = new(pack.Shadows, StringComparer.OrdinalIgnoreCase),
+                Spacing = referencePack.Spacing.Count > 0
+                    ? new(referencePack.Spacing, StringComparer.OrdinalIgnoreCase)
+                    : new(pack.Spacing, StringComparer.OrdinalIgnoreCase),
                 Recipes = new(pack.Recipes, StringComparer.OrdinalIgnoreCase),
                 Opacities = new(pack.Opacities, StringComparer.OrdinalIgnoreCase),
+                ThemeSets = referencePack.ThemeSets.Count > 0
+                    ? new(referencePack.ThemeSets, StringComparer.OrdinalIgnoreCase)
+                    : new(pack.ThemeSets, StringComparer.OrdinalIgnoreCase),
                 ApprovedPairings = [..pack.ApprovedPairings],
                 LockedTokens = brandId switch
                 {
                     "tnc" => ["navy", "coral"],
                     "dnf" => ["skov", "kridt"],
                     _ => []
-                }
+                },
+                Shell = pack.Shell ?? referencePack.Shell,
+                FrameworkDefaults = pack.FrameworkDefaults ?? referencePack.FrameworkDefaults
             };
 
             var path = Path.Combine(outputDir, $"{brandId}.token-pack.json");

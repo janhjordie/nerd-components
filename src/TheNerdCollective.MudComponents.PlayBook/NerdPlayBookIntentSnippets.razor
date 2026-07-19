@@ -1,0 +1,48 @@
+@using TheNerdCollective.MudComponents.DesignTokens
+@using TheNerdCollective.MudComponents.Shared
+
+<MudPaper Outlined="true" Class="pa-4" data-testid="playbook-intent-snippets">
+    <MudText Typo="Typo.h6">Intent snippets</MudText>
+    <MudText Typo="Typo.body2" Class="@Ui(NerdDesignSystemUi.MutedContent)">
+        Semantic aliases map to <code>--nerd-intent-*</code> and Mud palette slots when palette-first mode is enabled.
+    </MudText>
+
+    <MudSimpleTable Dense="true" Hover="true" Bordered="true" Class="mt-3">
+        <thead>
+            <tr>
+                <th>Alias</th>
+                <th>CSS class</th>
+                <th>Intent variable</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var alias in IntentAliases)
+            {
+                <tr data-testid="@($"intent-snippet-{alias}")">
+                    <td><code>@alias</code></td>
+                    <td><code>.@Ui(alias)</code></td>
+                    <td><code>--nerd-intent-@alias-*</code></td>
+                </tr>
+            }
+        </tbody>
+    </MudSimpleTable>
+</MudPaper>
+
+@code {
+    [Parameter, EditorRequired]
+    public NerdDesignTokenOptions TokenOptions { get; set; } = default!;
+
+    private static IReadOnlyList<string> IntentAliases { get; } =
+    [
+        NerdDesignSystemUi.PrimaryAction,
+        NerdDesignSystemUi.OnPrimaryAction,
+        NerdDesignSystemUi.PageSurface,
+        NerdDesignSystemUi.MutedContent,
+        NerdDesignSystemUi.FocusRing,
+        NerdDesignSystemUi.NavItem,
+        NerdDesignSystemUi.NavItemActive
+    ];
+
+    private string Ui(string semanticAlias) =>
+        NerdDesignSystemUi.TokenClass(TokenOptions.Prefix, semanticAlias);
+}

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.JSInterop;
 using MudBlazor;
 using TheNerdCollective.MudComponents.ResponsiveTypography;
 using TheNerdCollective.MudComponents.Shared;
@@ -44,6 +45,12 @@ public partial class NerdDesignTokensCatalog
     [Inject]
     private INerdCatalogEntitlements Entitlements { get; set; } = default!;
 
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = default!;
+
+    [Inject]
+    private IJSRuntime Js { get; set; } = default!;
+
     private bool _previewDark;
     private bool _dualPreview = true;
     private string _clientId = "client";
@@ -59,11 +66,47 @@ public partial class NerdDesignTokensCatalog
     private string _diffBaseline = string.Empty;
     private IReadOnlyList<NerdTokenPackDiffEntry> _packDiff = [];
     private Dictionary<string, string> _comments = new(StringComparer.OrdinalIgnoreCase);
+    private string? _selectedTreeTarget;
+    private string? _selectedAliasName;
+    private NerdTokenTreeNavigation? _selectedNavigation;
+    private string _activeThemeSet = string.Empty;
+
+    private IReadOnlyDictionary<string, NerdThemeSet> ThemeSets =>
+        Options.ThemeSets.Count > 0
+            ? Options.ThemeSets
+            : NerdThemeSetTools.CreateFromOptions(Options);
 
     private IEnumerable<INerdBrandPack> InstalledBrandPacks =>
         BrandPacks.OrderBy(pack => pack.Id, StringComparer.OrdinalIgnoreCase);
 
     private readonly HashSet<string> _favoriteTokens = new(StringComparer.OrdinalIgnoreCase);
+
+    private sealed record NerdCatalogGridRow(string Name, int Quantity);
+
+    private readonly List<NerdCatalogGridRow> _previewGridRows =
+    [
+        new("Alpha", 1),
+        new("Beta", 2)
+    ];
+
+    private readonly List<string> _previewDropItems = ["Alpha"];
+
+    private readonly List<string> _previewAutocompleteOptions = ["Alpha", "Beta", "Gamma"];
+
+    private readonly List<ChartSeries<double>> _previewChartSeries =
+    [
+        new() { Name = "Series", Data = new ChartData<double>([2, 4, 3]) }
+    ];
+
+    private Task<IEnumerable<string>> SearchPreviewAutocompleteAsync(string value, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        IEnumerable<string> results = string.IsNullOrWhiteSpace(value)
+            ? _previewAutocompleteOptions
+            : _previewAutocompleteOptions.Where(option =>
+                option.Contains(value, StringComparison.OrdinalIgnoreCase));
+        return Task.FromResult(results);
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -172,7 +215,90 @@ public partial class NerdDesignTokensCatalog
         if (tokenIndex is not null)
         {
             _activeTabIndex = tokenIndex.index + 1;
+            _selectedTreeTarget = tokenName;
         }
+    }
+
+    private async Task OnTreeNavigateAsync(NerdTokenTreeNavigation navigation)
+    {
+        _selectedTreeTarget = navigation.TargetId;
+        _selectedNavigation = navigation;
+        switch (navigation.Kind)
+        {
+            case NerdTokenTreeTargetKind.Color:
+            case NerdTokenTreeTargetKind.ThemeSetColor:
+                _selectedAliasName = null;
+                _activeTabIndex = 0;
+                _tokenSearch = string.Empty;
+                OpenTokenTab(navigation.TargetId);
+                break;
+            case NerdTokenTreeTargetKind.Alias:
+                _selectedAliasName = navigation.TargetId;
+                if (Options.Aliases.TryGetValue(navigation.TargetId, out var target))
+                {
+                    OpenTokenTab(target);
+                }
+                break;
+            case NerdTokenTreeTargetKind.Spacing:
+            case NerdTokenTreeTargetKind.Radius:
+            case NerdTokenTreeTargetKind.Shadow:
+            case NerdTokenTreeTargetKind.Opacity:
+                _activeTabIndex = 0;
+                if (!string.IsNullOrWhiteSpace(navigation.AnchorId))
+                {
+                    await Js.InvokeVoidAsync("nerdShared.scrollToElement", navigation.AnchorId);
+                }
+                break;
+            case NerdTokenTreeTargetKind.Recipe:
+                if (NerdRecipePlayBookLinks.TryGetLayoutKitAnchor(navigation.TargetId) is not null)
+                {
+                    NavigationManager.NavigateTo(
+                        NerdRecipePlayBookLinks.BuildPlayBookUrl(HubOptions.PlayBookRoute, navigation.TargetId));
+                }
+                else
+                {
+                    NavigationManager.NavigateTo($"{Options.RecipesCatalogRoute}#{navigation.TargetId}");
+                }
+                break;
+            case NerdTokenTreeTargetKind.RecipeRole:
+                OpenTokenTab(navigation.TargetId);
+                break;
+            case NerdTokenTreeTargetKind.Breakpoint:
+            case NerdTokenTreeTargetKind.MotionDuration:
+            case NerdTokenTreeTargetKind.MotionEasing:
+            case NerdTokenTreeTargetKind.ZIndex:
+                _activeTabIndex = 0;
+                if (!string.IsNullOrWhiteSpace(navigation.AnchorId))
+                {
+                    await Js.InvokeVoidAsync("nerdShared.scrollToElement", navigation.AnchorId);
+                }
+                break;
+            case NerdTokenTreeTargetKind.ThemeSet:
+                await OnThemeSetChanged(navigation.TargetId);
+                break;
+        }
+
+        StateHasChanged();
+    }
+
+    private Task OnThemeSetChanged(string themeSetId)
+    {
+        _activeThemeSet = themeSetId ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(_activeThemeSet))
+        {
+            NerdBrandPackRegistry.Instance.Configure(_selectedBrand, Options);
+        }
+        else
+        {
+            NerdThemeSetTools.SyncColorTokensFromThemeSets(Options);
+        }
+
+        _previewDark = string.Equals(_activeThemeSet, "dark", StringComparison.OrdinalIgnoreCase);
+        _dualPreview = string.IsNullOrWhiteSpace(_activeThemeSet);
+        TokenCss.Update(Options);
+        RefreshCatalogState();
+        StateHasChanged();
+        return Task.CompletedTask;
     }
 
     private void RefreshPackDiff()
@@ -198,6 +324,13 @@ public partial class NerdDesignTokensCatalog
         _selectedBrand = brand;
         _diffBaseline = brand;
         NerdBrandPackRegistry.Instance.Configure(brand, Options);
+        foreach (var (id, set) in NerdThemeSetTools.CreateFromOptions(Options))
+        {
+            if (!Options.ThemeSets.ContainsKey(id))
+            {
+                Options.SetThemeSet(id, set);
+            }
+        }
         TokenCss.Update(Options);
         HubOptions.ActiveTokenPackId = brand;
         ApplyBrandTypography(brand);
@@ -244,10 +377,24 @@ public partial class NerdDesignTokensCatalog
 
     private bool IsFavorite(string tokenName) => _favoriteTokens.Contains(tokenName);
 
+    private Task RefreshAfterDtcgImportAsync()
+    {
+        NerdFoundationTaxonomyTools.ApplyDefaults(Options);
+        NerdTokenTransformTools.ApplyTransforms(Options, Options.Transforms, overwrite: true);
+        TokenCss.Update(Options);
+        RefreshCatalogState();
+        return Task.CompletedTask;
+    }
+
     private Task DownloadTokensStudioAsync() =>
         DownloadService.DownloadTextAsync(
             $"{Options.Prefix}-tokens-studio.json",
             NerdDesignTokenTools.ExportTokensStudioJson(Options)).AsTask();
+
+    private Task DownloadDtcgAsync() =>
+        DownloadService.DownloadTextAsync(
+            $"{Options.Prefix}-design-tokens.dtcg.json",
+            NerdDtcgTokenTools.Export(Options)).AsTask();
 
     private NerdAccessibilityResult? GetAccessibility(string tokenName) =>
         _accessibility.FirstOrDefault(result =>

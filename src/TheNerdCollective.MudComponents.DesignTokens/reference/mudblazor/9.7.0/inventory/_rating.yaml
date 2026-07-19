@@ -1,0 +1,22 @@
+component: rating
+scss: _rating.scss
+classification: P1
+family: input
+parts:
+  - id: root
+    selectors: [.mud-rating-root]
+    intent: [channel]
+  - id: item
+    selectors: [.mud-rating-item]
+    intent: [channel]
+states:
+  - name: selected
+    selectors: [.mud-rating-item.mud-rating-item-selected]
+verification:
+  - MudRating stars use channel color under token scope in catalog dogfood
+generator_required:
+  - '[class*="mud-rating"]'
+adapter:
+  do:
+    - InputPatterns mud-rating-root and mud-rating-item color rules
+  source: MudBlazor v9.7.0 _rating.scss

@@ -1,0 +1,19 @@
+component: divider
+scss: _divider.scss
+classification: P0
+family: structure
+parts:
+  - id: divider
+    selectors: [.mud-divider]
+    intent: [border, content]
+states:
+  - name: default
+    selectors: [.mud-divider]
+verification:
+  - MudDivider visible under token scope in catalog dogfood
+generator_required:
+  - '[class*="mud-divider"]'
+adapter:
+  do:
+    - StructurePatterns mud-divider border/content tokens
+  source: MudBlazor v9.7.0 _divider.scss

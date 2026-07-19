@@ -1,0 +1,18 @@
+component: radio
+scss: _radio.scss
+classification: P1
+family: toggle
+family_ref: toggle
+states:
+  - name: unchecked
+    selectors: [.mud-radio:not(.mud-checked)]
+  - name: checked
+    selectors: [.mud-radio.mud-checked, .mud-ripple-radio.mud-checked]
+  - name: disabled
+    selectors: [.mud-radio.mud-disabled]
+generator_required:
+  - .mud-radio .mud-icon-button
+adapter:
+  do:
+    - Style .mud-radio .mud-icon-button with channel color
+  source: MudBlazor v9.7.0 _radio.scss

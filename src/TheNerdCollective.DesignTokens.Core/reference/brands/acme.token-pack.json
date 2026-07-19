@@ -1,0 +1,244 @@
+{
+  "clientId": "acme",
+  "brandId": "acme",
+  "displayName": "Acme",
+  "prefix": "acme",
+  "version": 2,
+  "brandIdentityVersion": "1.0.0",
+  "pairingGuideName": "Acme",
+  "updatedAt": "2026-07-19T15:12:37.035351+00:00",
+  "colors": {
+    "forest": {
+      "value": "#1F6B3A",
+      "light": "#1F6B3A",
+      "dark": null,
+      "contrastText": "#FFFFFF",
+      "darkContrastText": null,
+      "surface": null,
+      "content": null,
+      "interactive": null,
+      "hover": "#1C6034",
+      "active": null,
+      "border": null,
+      "disabled": null,
+      "description": null,
+      "roles": null
+    },
+    "sunrise": {
+      "value": "#F4A236",
+      "light": "#F4A236",
+      "dark": null,
+      "contrastText": "#1F2937",
+      "darkContrastText": null,
+      "surface": null,
+      "content": null,
+      "interactive": null,
+      "hover": "#DC9231",
+      "active": null,
+      "border": null,
+      "disabled": null,
+      "description": null,
+      "roles": null
+    },
+    "cloud": {
+      "value": "#F5F7FA",
+      "light": "#F5F7FA",
+      "dark": null,
+      "contrastText": "#1F2937",
+      "darkContrastText": null,
+      "surface": null,
+      "content": null,
+      "interactive": null,
+      "hover": "#E9EBEE",
+      "active": null,
+      "border": null,
+      "disabled": null,
+      "description": null,
+      "roles": null
+    },
+    "ink": {
+      "value": "#111827",
+      "light": "#111827",
+      "dark": null,
+      "contrastText": "#FFFFFF",
+      "darkContrastText": null,
+      "surface": null,
+      "content": null,
+      "interactive": null,
+      "hover": "#101624",
+      "active": null,
+      "border": null,
+      "disabled": null,
+      "description": null,
+      "roles": null
+    }
+  },
+  "aliases": {
+    "primary-action": "forest",
+    "secondary-action": "forest",
+    "on-primary-action": "cloud",
+    "page-surface": "cloud",
+    "brand-chrome": "ink",
+    "on-brand-chrome": "cloud",
+    "nav-surface": "cloud",
+    "nav-item": "ink",
+    "nav-item-active": "forest",
+    "input-surface": "cloud",
+    "input-border": "ink",
+    "focus-ring": "forest",
+    "muted-content": "ink",
+    "info": "forest",
+    "highlight": "sunrise",
+    "danger": "sunrise",
+    "success": "forest"
+  },
+  "radii": {},
+  "shadows": {},
+  "spacing": {},
+  "breakpoints": {},
+  "motionDurations": {},
+  "motionEasings": {},
+  "zIndex": {},
+  "transforms": {},
+  "recipes": {
+    "hero": {
+      "surface": "cloud",
+      "content": "ink",
+      "action": "forest",
+      "border": null,
+      "label": "Marketing hero",
+      "usage": "Cloud surface with ink headline"
+    },
+    "sidebar": {
+      "surface": "cloud",
+      "content": "ink",
+      "action": "forest",
+      "border": null,
+      "label": "App sidebar",
+      "usage": "Drawer navigation with forest active accent"
+    }
+  },
+  "opacities": {},
+  "themeSets": {
+    "light": {
+      "id": "light",
+      "displayName": "Light",
+      "colors": {
+        "forest": {
+          "value": "#1F6B3A",
+          "light": null,
+          "dark": null,
+          "contrastText": "#FFFFFF",
+          "darkContrastText": null,
+          "surface": null,
+          "content": null
+        },
+        "sunrise": {
+          "value": "#F4A236",
+          "light": null,
+          "dark": null,
+          "contrastText": "#1F2937",
+          "darkContrastText": null,
+          "surface": null,
+          "content": null
+        },
+        "cloud": {
+          "value": "#F5F7FA",
+          "light": null,
+          "dark": null,
+          "contrastText": "#1F2937",
+          "darkContrastText": null,
+          "surface": null,
+          "content": null
+        },
+        "ink": {
+          "value": "#111827",
+          "light": null,
+          "dark": null,
+          "contrastText": "#FFFFFF",
+          "darkContrastText": null,
+          "surface": null,
+          "content": null
+        }
+      }
+    }
+  },
+  "approvedPairings": [
+    {
+      "content": "ink",
+      "surface": "cloud"
+    },
+    {
+      "content": "cloud",
+      "surface": "ink"
+    },
+    {
+      "content": "cloud",
+      "surface": "forest"
+    }
+  ],
+  "lockedTokens": [],
+  "shell": {
+    "appBar": {
+      "alias": "brand-chrome",
+      "recipe": null
+    },
+    "drawer": {
+      "alias": "nav-surface",
+      "recipe": null
+    },
+    "navMenu": {
+      "alias": null,
+      "recipe": "sidebar"
+    },
+    "main": {
+      "alias": "page-surface",
+      "recipe": null
+    }
+  },
+  "frameworkDefaults": {
+    "mudBlazor": {
+      "palette": {
+        "primary": "primary-action",
+        "secondary": "secondary-action",
+        "tertiary": "highlight",
+        "info": "info",
+        "success": "success",
+        "warning": "highlight",
+        "error": "danger",
+        "dark": "muted-content",
+        "surface": "page-surface",
+        "background": "page-surface",
+        "textPrimary": "page-surface",
+        "textSecondary": "muted-content",
+        "textDisabled": "muted-content",
+        "actionDefault": "primary-action",
+        "actionDisabled": null,
+        "appbarBackground": "brand-chrome",
+        "appbarText": "on-brand-chrome",
+        "drawerBackground": "nav-surface",
+        "drawerText": "nav-item",
+        "drawerIcon": "nav-item",
+        "linesDefault": "input-border",
+        "linesInputs": "input-border"
+      },
+      "button": {
+        "filled": "primary-action",
+        "outlined": "secondary-action",
+        "text": "muted-content"
+      },
+      "textField": {
+        "intent": "input-surface",
+        "popover": null
+      },
+      "datePicker": {
+        "intent": null,
+        "popover": "page-surface"
+      },
+      "navLink": {
+        "default": "nav-item",
+        "active": "nav-item-active"
+      }
+    }
+  }
+}

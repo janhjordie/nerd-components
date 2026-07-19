@@ -1,0 +1,19 @@
+component: inputlabel
+scss: _inputlabel.scss
+classification: P2
+family: input
+parts:
+  - id: label
+    selectors: [.mud-input-label, .mud-input-label-inputcontrol]
+    intent: [content]
+states:
+  - name: default
+    selectors: [.mud-input-label]
+verification:
+  - MudTextField label visible under token scope in catalog dogfood
+generator_required:
+  - '[class*="mud-input-label"]'
+adapter:
+  do:
+    - InputPatterns mud-input-label content tokens
+  source: MudBlazor v9.7.0 _inputlabel.scss

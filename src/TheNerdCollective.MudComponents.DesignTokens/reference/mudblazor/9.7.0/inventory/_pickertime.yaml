@@ -1,0 +1,30 @@
+component: pickertime
+scss: _pickertime.scss
+classification: P3
+family: picker
+portal: true
+composite_of: [input, inputcontrol, popover, picker, pickertime]
+family_ref: picker
+parts:
+  - id: toolbar
+    selectors: [.mud-picker-timepicker-toolbar, .mud-timepicker-button]
+    intent: [content, channel]
+  - id: clock
+    selectors: [.mud-picker-time-clock, .mud-clock-number]
+    intent: [content, channel]
+states:
+  - name: selected
+    selectors: [.mud-timepicker-button:not(.mud-timepicker-toolbar-text)]
+  - name: inactive
+    selectors: [.mud-timepicker-button.mud-timepicker-toolbar-text]
+  - name: open
+    selectors: [.mud-popover-open]
+verification:
+  - Popover inherits token class via portal bridge
+generator_required:
+  - .mud-timepicker-button:not(.mud-timepicker-toolbar-text)
+  - '[class*="mud-popover"]'
+adapter:
+  do:
+    - AppendPickerPortalStateRules for timepicker selected button
+  source: MudBlazor v9.7.0 _pickertime.scss

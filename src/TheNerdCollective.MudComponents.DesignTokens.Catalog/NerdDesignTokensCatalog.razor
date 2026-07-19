@@ -11,7 +11,7 @@ else
     <NerdDesignSystemScripts />
     <NerdCatalogThemeProvider IsDarkMode="_previewDark">
         <NerdDesignTokenStyles />
-        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-6 pa-4" Style="@NerdDesignSystemUi.PageSurfaceStyle(Options.Prefix)">
+        <NerdCatalogPage>
         <MudStack Spacing="3">
             <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-3">
                 <div>
@@ -22,6 +22,16 @@ else
                 </div>
                 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="flex-wrap" data-nerd-token="@Ui(NerdDesignSystemUi.PageSurface)">
                     <MudSwitch @bind-Value="_previewDark" Label="Preview dark mode" />
+                    @if (ThemeSets.Count > 0)
+                    {
+                        <MudSelect T="string" Value="_activeThemeSet" ValueChanged="OnThemeSetChanged" Label="Theme set" Style="min-width: 140px;">
+                            <MudSelectItem Value="@string.Empty">Base pack</MudSelectItem>
+                            @foreach (var set in ThemeSets.OrderBy(pair => pair.Key, StringComparer.Ordinal))
+                            {
+                                <MudSelectItem Value="@set.Key">@(set.Value.DisplayName ?? set.Key)</MudSelectItem>
+                            }
+                        </MudSelect>
+                    }
                     <MudSelect T="string" Value="_selectedBrand" ValueChanged="SwitchBrandAsync" Label="Brand" Style="min-width: 140px;">
                         @foreach (var brandPack in InstalledBrandPacks)
                         {
@@ -34,12 +44,9 @@ else
 
             <NerdDesignTokenCatalogNav Options="Options" HubOptions="HubOptions" Current="colors" />
 
-            <MudStack Row="true" Spacing="1" Class="flex-wrap">
-                <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="DownloadCssAsync">Export CSS</MudButton>
-                <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="DownloadJsonAsync">Export pack JSON</MudButton>
-                <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="DownloadTokensStudioAsync">Export Tokens Studio</MudButton>
-                <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="DownloadStitchAsync">Export Stitch DESIGN.md</MudButton>
-            </MudStack>
+            <NerdTokenPackExportPanel Options="Options" ClientId="@_clientId" GetTypographyRoles="GetTypographyRolesForExport" />
+            <NerdDtcgImporter Options="Options" OnImported="RefreshAfterDtcgImportAsync" />
+            <NerdTokenStructureLinterPanel Options="Options" />
 
             <NerdBrandPackExporter ClientId="@_clientId" />
 
@@ -140,6 +147,116 @@ else
                 </MudAlert>
             }
 
+            <NerdDesignTokenIntentPanel Options="Options" HubOptions="HubOptions" />
+
+            <NerdAliasChainPanel Options="Options" AliasName="_selectedAliasName" />
+            <NerdTokenDocumentationPanel Options="Options" Selection="_selectedNavigation" />
+
+            <MudGrid Spacing="3">
+                <MudItem xs="12" md="3">
+                    <NerdTokenTreeNavigator Options="Options"
+                                            ThemeSets="ThemeSets"
+                                            SelectedTargetId="_selectedTreeTarget"
+                                            OnNavigate="OnTreeNavigateAsync" />
+                </MudItem>
+                <MudItem xs="12" md="9">
+            @if (Options.Spacing.Count > 0)
+            {
+                <MudPaper Outlined="true" Class="pa-4 mb-3" id="token-spacing-section" data-testid="token-spacing-panel">
+                    <MudText Typo="Typo.h6">Spacing scale</MudText>
+                    <MudStack Row="true" Spacing="2" Class="flex-wrap mt-2">
+                        @foreach (var pair in Options.Spacing.OrderBy(entry => entry.Key, StringComparer.Ordinal))
+                        {
+                            <MudPaper Outlined="true"
+                                      id="@($"token-spacing-{pair.Key}")"
+                                      Class="@($"{Options.Prefix}-space-{pair.Key} pa-2")"
+                                      data-testid="@($"token-spacing-{pair.Key}")">
+                                <MudText Typo="Typo.caption"><code>@pair.Key</code> · @pair.Value</MudText>
+                            </MudPaper>
+                        }
+                    </MudStack>
+                </MudPaper>
+            }
+
+            @if (Options.Radii.Count > 0 || Options.Shadows.Count > 0)
+            {
+                <MudPaper Outlined="true" Class="pa-4 mb-3" id="token-shape-section" data-testid="token-shape-panel">
+                    <MudText Typo="Typo.h6">Radii &amp; shadows</MudText>
+                    <MudGrid Spacing="2" Class="mt-2">
+                        @foreach (var pair in Options.Radii.OrderBy(entry => entry.Key, StringComparer.Ordinal))
+                        {
+                            <MudItem xs="6" sm="4" md="3">
+                                <MudPaper Outlined="true"
+                                          id="@($"token-radius-{pair.Key}")"
+                                          Class="@($"{Options.Prefix}-radius-{pair.Key} pa-3")"
+                                          data-testid="@($"token-radius-{pair.Key}")">
+                                    <MudText Typo="Typo.caption">radius @pair.Key · @pair.Value</MudText>
+                                </MudPaper>
+                            </MudItem>
+                        }
+                        @foreach (var pair in Options.Shadows.OrderBy(entry => entry.Key, StringComparer.Ordinal))
+                        {
+                            <MudItem xs="6" sm="4" md="3">
+                                <MudPaper Outlined="true"
+                                          id="@($"token-shadow-{pair.Key}")"
+                                          Class="@($"{Options.Prefix}-shadow-{pair.Key} pa-3")"
+                                          data-testid="@($"token-shadow-{pair.Key}")">
+                                    <MudText Typo="Typo.caption">shadow @pair.Key</MudText>
+                                </MudPaper>
+                            </MudItem>
+                        }
+                    </MudGrid>
+                </MudPaper>
+            }
+
+            <NerdMotionPreviewPanel Options="Options" />
+
+            @if (Options.Breakpoints.Count > 0)
+            {
+                <MudPaper Outlined="true" Class="pa-4 mb-3" id="token-breakpoint-section" data-testid="token-breakpoint-panel">
+                    <MudText Typo="Typo.h6">Breakpoints</MudText>
+                    <MudText Typo="Typo.body2" Class="@Ui(NerdDesignSystemUi.MutedContent)">
+                        Shared with responsive typography catalog and MudBlazor <code>Breakpoint</code> names.
+                    </MudText>
+                    <MudStack Row="true" Spacing="2" Class="flex-wrap mt-2">
+                        @foreach (var breakpoint in NerdBreakpointTools.GetNamedBreakpoints(Options))
+                        {
+                            <MudChip T="string"
+                                     Variant="Variant.Outlined"
+                                     data-testid="@($"token-breakpoint-{breakpoint.Name}")">
+                                @breakpoint.Name · @breakpoint.RawValue
+                                @if (breakpoint.MudBreakpoint is not null)
+                                {
+                                    <span> · Mud @breakpoint.MudBreakpoint</span>
+                                }
+                            </MudChip>
+                        }
+                    </MudStack>
+                </MudPaper>
+            }
+
+            @if (Options.Transforms.Count > 0)
+            {
+                <MudPaper Outlined="true" Class="pa-4 mb-3" data-testid="token-transform-panel">
+                    <MudText Typo="Typo.h6">Derived transforms</MudText>
+                    <MudSimpleTable Dense="true" Bordered="true" Hover="true" Class="mt-2">
+                        <thead><tr><th>Token</th><th>Source</th><th>Operation</th><th>Result</th></tr></thead>
+                        <tbody>
+                            @foreach (var pair in Options.Transforms.OrderBy(entry => entry.Key, StringComparer.Ordinal))
+                            {
+                                var preview = Options.Colors.TryGetValue(pair.Key, out var token) ? token.Value : "—";
+                                <tr data-testid="@($"token-transform-{pair.Key}")">
+                                    <td><code>@pair.Key</code></td>
+                                    <td><code>@pair.Value.Source</code></td>
+                                    <td>@pair.Value.Operation (@pair.Value.Amount)</td>
+                                    <td><code>@preview</code></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </MudSimpleTable>
+                </MudPaper>
+            }
+
             <MudTabs @bind-ActivePanelIndex="_activeTabIndex" Elevation="1" Rounded="true">
                 <MudTabPanel Text="Swatches">
                     <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mt-4 mb-3 flex-wrap gap-2">
@@ -162,11 +279,23 @@ else
                             <MudItem xs="12" sm="6" md="4" lg="3">
                                 <MudPaper Outlined="true"
                                           Class="pa-3"
+                                          id="@($"token-color-{pair.Key}")"
                                           data-nerd-token="@className">
                                     <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
-                                        <MudText Typo="Typo.subtitle1"
-                                                 Style="cursor:pointer;"
-                                                 @onclick="@(() => OpenTokenTab(pair.Key))">@pair.Key</MudText>
+                                        @if (!string.IsNullOrWhiteSpace(token.Description))
+                                        {
+                                            <MudTooltip Text="@token.Description">
+                                                <MudText Typo="Typo.subtitle1"
+                                                         Style="cursor:pointer;"
+                                                         @onclick="@(() => OpenTokenTab(pair.Key))">@pair.Key</MudText>
+                                            </MudTooltip>
+                                        }
+                                        else
+                                        {
+                                            <MudText Typo="Typo.subtitle1"
+                                                     Style="cursor:pointer;"
+                                                     @onclick="@(() => OpenTokenTab(pair.Key))">@pair.Key</MudText>
+                                        }
                                         <MudIconButton Icon="@(IsFavorite(pair.Key) ? Icons.Material.Filled.Star : Icons.Material.Outlined.StarBorder)"
                                                        Size="Size.Small"
                                                        Ripple="false"
@@ -263,16 +392,48 @@ else
                             <MudPaper Class="pa-3" Outlined="true" data-theme="@previewTheme">
                                 <MudText Typo="Typo.caption" Class="@Ui(NerdDesignSystemUi.MutedContent)">Buttons and actions</MudText>
                                 <MudStack Row="true" Spacing="1" Class="flex-wrap gap-1 mt-2">
-                                    <MudButton Class="@className" Variant="Variant.Filled">Filled</MudButton>
+                                    <div data-testid="@($"button-filled-{pair.Key}")">
+                                        <MudButton Class="@className" Variant="Variant.Filled">Filled</MudButton>
+                                    </div>
                                     <MudButton Class="@className" Variant="Variant.Outlined">Outlined</MudButton>
                                     <MudButton Class="@className" Variant="Variant.Text">Text</MudButton>
                                     <MudButton Class="@className" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Favorite">Favorite</MudButton>
                                     <MudButton Class="@className" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add">Add</MudButton>
-                                    <MudChip T="string" Class="@className" Variant="Variant.Filled">Chip</MudChip>
-                                    <MudBadge Class="@className" Content="3" Overlap="true">
-                                        <MudIcon Icon="@Icons.Material.Filled.Notifications" />
-                                    </MudBadge>
-                                    <MudLink Class="@className" Href="#">Link</MudLink>
+                                    <div data-testid="@($"chip-filled-{pair.Key}")">
+                                        <MudChip T="string" Class="@className" Variant="Variant.Filled">Chip</MudChip>
+                                    </div>
+                                    <div data-testid="@($"avatar-{pair.Key}")">
+                                        <MudAvatar Class="@className">AB</MudAvatar>
+                                    </div>
+                                    <div data-testid="@($"icon-button-{pair.Key}")">
+                                        <MudIconButton Class="@className" Icon="@Icons.Material.Filled.Favorite" />
+                                    </div>
+                                    <div data-testid="@($"fab-{pair.Key}")">
+                                        <MudFab Class="@className" Icon="@Icons.Material.Filled.Add" />
+                                    </div>
+                                    <div data-testid="@($"button-group-{pair.Key}")">
+                                        <MudButtonGroup Variant="Variant.Filled">
+                                            <MudButton Class="@className" Variant="Variant.Filled">One</MudButton>
+                                            <MudButton Class="@className" Variant="Variant.Filled">Two</MudButton>
+                                        </MudButtonGroup>
+                                    </div>
+                                    <div data-testid="@($"fab-menu-{pair.Key}")">
+                                        <MudFabMenu Class="@className" Icon="@Icons.Material.Filled.Menu">
+                                            <MudFabMenuItem Text="One" />
+                                            <MudFabMenuItem Text="Two" />
+                                        </MudFabMenu>
+                                    </div>
+                                    <div data-testid="@($"badge-{pair.Key}")">
+                                        <MudBadge Class="@className" Content="3" Overlap="true">
+                                            <MudIcon Icon="@Icons.Material.Filled.Notifications" />
+                                        </MudBadge>
+                                    </div>
+                                    <div data-testid="@($"link-{pair.Key}")">
+                                        <MudLink Class="@className" Href="#">Link</MudLink>
+                                    </div>
+                                    <div data-testid="@($"icon-{pair.Key}")">
+                                        <MudIcon Class="@className" Icon="@Icons.Material.Filled.Star" />
+                                    </div>
                                 </MudStack>
                             </MudPaper>
                             <MudPaper Class="pa-3" Outlined="true" data-theme="@previewTheme">
@@ -288,27 +449,289 @@ else
                             </MudPaper>
                             <MudPaper Class="pa-3" Outlined="true" data-theme="@previewTheme">
                                 <MudText Typo="Typo.caption" Class="@Ui(NerdDesignSystemUi.MutedContent)">Inputs and selection</MudText>
+                                <div data-testid="@($"form-{pair.Key}")" class="mud-form">
+                                <MudForm Class="@className">
                                 <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="flex-wrap gap-2 mt-2">
-                                    <MudSwitch Class="@className" Value="true" Label="Switch" Ripple="false" />
+                                    <MudSwitch Class="@className" Color="Color.Default" Value="true" Label="Switch" Ripple="false" />
                                     <MudCheckBox Class="@className" Value="true" Label="Checkbox" Ripple="false" />
                                     <MudRadioGroup T="string" Value="@("radio")">
                                         <MudRadio Class="@className" Value="@("radio")" Ripple="false">Radio</MudRadio>
                                     </MudRadioGroup>
-                                    <MudRating Class="@className" SelectedValue="3" MaxValue="5" />
-                                    <MudTextField T="string" Class="@className" Label="Text field" Variant="Variant.Outlined" />
+                                    <div data-testid="@($"toggle-group-{pair.Key}")">
+                                        <MudToggleGroup T="string" Value="@("a")" Class="@className" Color="Color.Default" Variant="Variant.Outlined" Size="Size.Small">
+                                            <MudToggleItem Value="@("a")" Class="@className">A</MudToggleItem>
+                                            <MudToggleItem Value="@("b")" Class="@className">B</MudToggleItem>
+                                        </MudToggleGroup>
+                                    </div>
+                                    <div data-testid="@($"rating-{pair.Key}")">
+                                        <MudRating Class="@className" SelectedValue="3" MaxValue="5" />
+                                    </div>
+                                    <div data-testid="@($"slider-{pair.Key}")" style="width:200px">
+                                        <MudSlider Class="@className" Value="60" Min="0" Max="100" />
+                                    </div>
+                                    <div data-testid="@($"textfield-{pair.Key}")">
+                                        <MudTextField T="string" Class="@className" Label="Text field" Variant="Variant.Outlined" Value="@("Preview")" />
+                                    </div>
+                                    <div data-testid="@($"autocomplete-{pair.Key}")">
+                                        <MudAutocomplete T="string"
+                                                         Class="@className"
+                                                         Label="Autocomplete"
+                                                         Variant="Variant.Outlined"
+                                                         Value="@("Alpha")"
+                                                         SearchFunc="SearchPreviewAutocompleteAsync"
+                                                         AnchorOrigin="Origin.BottomCenter" />
+                                    </div>
                                     <div data-testid="@($"picker-{pair.Key}")">
-                                        <MudDatePicker Class="@className" Label="Date picker" />
+                                        <MudDatePicker Class="@className" Label="Date picker" Variant="Variant.Outlined" />
+                                    </div>
+                                    <div data-testid="@($"time-picker-{pair.Key}")">
+                                        <MudTimePicker Class="@className" Label="Time picker" Variant="Variant.Outlined" />
+                                    </div>
+                                    <div data-testid="@($"color-picker-{pair.Key}")">
+                                        <MudColorPicker Class="@className"
+                                                        Label="Color picker"
+                                                        Text="@(token.Value ?? "#000000")"
+                                                        ColorPickerMode="ColorPickerMode.HEX"
+                                                        Variant="Variant.Outlined" />
+                                    </div>
+                                    <div data-testid="@($"select-{pair.Key}")">
+                                        <MudSelect T="string" Class="@className" Label="Select preview" Value="@("alpha")" AnchorOrigin="Origin.BottomCenter">
+                                            <MudSelectItem Value="@("alpha")">Alpha</MudSelectItem>
+                                            <MudSelectItem Value="@("beta")">Beta</MudSelectItem>
+                                        </MudSelect>
+                                    </div>
+                                    <div data-testid="@($"file-upload-{pair.Key}")">
+                                        <MudFileUpload T="IBrowserFile" Class="@className" Accept=".png,.jpg">
+                                            <CustomContent>
+                                                <MudButton Class="@className" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Upload">Upload</MudButton>
+                                            </CustomContent>
+                                        </MudFileUpload>
+                                    </div>
+                                    <div data-testid="@($"dropzone-{pair.Key}")">
+                                        <MudDropContainer T="string" Items="@_previewDropItems" ItemsSelector="@((item, zone) => zone == "preview")">
+                                            <ChildContent>
+                                                <MudDropZone T="string" Identifier="preview" Class="@className">
+                                                    <MudText Typo="Typo.caption">Drop zone</MudText>
+                                                </MudDropZone>
+                                            </ChildContent>
+                                        </MudDropContainer>
                                     </div>
                                 </MudStack>
+                                </MudForm>
+                                </div>
                             </MudPaper>
                             <MudPaper Class="pa-3" Outlined="true" data-theme="@previewTheme">
                                 <MudText Typo="Typo.caption" Class="@Ui(NerdDesignSystemUi.MutedContent)">Feedback and structure</MudText>
-                                <MudProgressLinear Class="@($"{className} mt-3")" Value="60" />
-                                <MudAlert Class="@($"{className} mt-3")" Variant="Variant.Filled" Dense="true">Alert preview</MudAlert>
-                                <MudText Class="@($"{className} mt-3")" Typo="Typo.h6">Heading</MudText>
-                                <MudSimpleTable Dense="true" Hover="true" Bordered="true" Class="@className">
-                                    <tbody><tr><td>Value</td><td>@ColorValue(token.Value)</td></tr><tr><td>Contrast</td><td>@ColorValue(previewContrast)</td></tr></tbody>
-                                </MudSimpleTable>
+                                <div data-testid="@($"progress-linear-{pair.Key}")">
+                                    <MudProgressLinear Class="@($"{className} mt-3")" Value="60" />
+                                </div>
+                                <div data-testid="@($"progress-circular-{pair.Key}")" class="mt-3">
+                                    <MudProgressCircular Class="@className" Value="60" />
+                                </div>
+                                <div data-testid="@($"tooltip-{pair.Key}")" class="mt-3">
+                                    <MudTooltip Text="Tooltip preview">
+                                        <MudButton Class="@className" Variant="Variant.Outlined">Tooltip</MudButton>
+                                    </MudTooltip>
+                                </div>
+                                <div data-testid="@($"alert-{pair.Key}")">
+                                    <MudAlert Class="@($"{className} mt-3")" Variant="Variant.Filled" Dense="true">Alert preview</MudAlert>
+                                </div>
+                                <div data-testid="@($"snackbar-{pair.Key}")" class="mt-2">
+                                    <div class="@($"mud-snackbar {className}")" style="position:relative;display:flex;">
+                                        <div class="mud-snackbar-content">
+                                            <div class="mud-snackbar-content-message">Snackbar preview</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div data-testid="@($"divider-{pair.Key}")" class="mt-2">
+                                    <MudDivider Class="@className" />
+                                </div>
+                                <div data-testid="@($"image-{pair.Key}")" class="mt-2">
+                                    <MudImage Class="@className"
+                                              Alt="Preview"
+                                              Width="80"
+                                              Height="40"
+                                              Src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='40'%3E%3Crect width='80' height='40' fill='%23d1d5db'/%3E%3C/svg%3E" />
+                                </div>
+                                <MudText data-testid="@($"typography-{pair.Key}")" Class="@($"{className} mt-3")" Typo="Typo.h6">Heading</MudText>
+                                <div data-testid="@($"simpletable-{pair.Key}")" class="mt-2">
+                                    <MudSimpleTable Dense="true" Hover="true" Bordered="true" Class="@className">
+                                        <tbody><tr><td>Value</td><td>@ColorValue(token.Value)</td></tr><tr><td>Contrast</td><td>@ColorValue(previewContrast)</td></tr></tbody>
+                                    </MudSimpleTable>
+                                </div>
+                            </MudPaper>
+                            <MudPaper Class="pa-3" Outlined="true" data-theme="@previewTheme">
+                                <MudText Typo="Typo.caption" Class="@Ui(NerdDesignSystemUi.MutedContent)">Navigation preview</MudText>
+                                <div data-testid="@($"breadcrumbs-{pair.Key}")" class="mt-2">
+                                    <MudBreadcrumbs Class="@className"
+                                                    Items="@(new List<BreadcrumbItem> { new("Home", href: "#"), new("Token", href: null, disabled: true) })" />
+                                </div>
+                                <div data-testid="@($"list-{pair.Key}")" class="mt-2">
+                                    <MudList T="string" Class="@className" Dense="true" SelectionMode="SelectionMode.SingleSelection" SelectedValue="@("alpha")">
+                                        <MudListItem T="string" Value="@("alpha")" Text="Alpha" />
+                                        <MudListItem T="string" Value="@("beta")" Text="Beta" />
+                                    </MudList>
+                                </div>
+                                <div data-testid="@($"stepper-{pair.Key}")" class="mt-2">
+                                    <MudStepper Class="@className" ActiveIndex="1">
+                                        <MudStep Title="One" />
+                                        <MudStep Title="Two" />
+                                        <MudStep Title="Three" />
+                                    </MudStepper>
+                                </div>
+                                <div data-testid="@($"navmenu-{pair.Key}")" class="mt-2">
+                                    <MudNavMenu Class="@className" Dense="true">
+                                        <MudNavLink Class="@className" Href="#" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
+                                        <MudNavLink Class="@className" Href="#settings" Icon="@Icons.Material.Filled.Settings">Settings</MudNavLink>
+                                    </MudNavMenu>
+                                </div>
+                                <div data-testid="@($"menu-{pair.Key}")" class="mt-2">
+                                    <MudMenu Class="@className" Label="Menu" Dense="true" AnchorOrigin="Origin.BottomCenter">
+                                        <MudMenuItem>Item 1</MudMenuItem>
+                                        <MudMenuItem>Item 2</MudMenuItem>
+                                    </MudMenu>
+                                </div>
+                            </MudPaper>
+                            <MudPaper Class="pa-3" Outlined="true" data-theme="@previewTheme">
+                                <MudText Typo="Typo.caption" Class="@Ui(NerdDesignSystemUi.MutedContent)">Data preview</MudText>
+                                <div data-testid="@($"table-{pair.Key}")" class="mt-2">
+                                    <MudSimpleTable Dense="true" Hover="true" Bordered="true" Class="@className">
+                                        <tbody>
+                                            <tr><td>Key</td><td>@pair.Key</td></tr>
+                                            <tr><td>Value</td><td>@ColorValue(token.Value)</td></tr>
+                                        </tbody>
+                                    </MudSimpleTable>
+                                </div>
+                                <div data-testid="@($"data-grid-{pair.Key}")" class="mt-2">
+                                    <MudDataGrid T="NerdCatalogGridRow" Items="@_previewGridRows" Class="@className" Dense="true" Bordered="true" Style="max-height:120px">
+                                        <Columns>
+                                            <PropertyColumn Property="x => x.Name" Title="Name" />
+                                            <PropertyColumn Property="x => x.Quantity" Title="Qty" />
+                                        </Columns>
+                                    </MudDataGrid>
+                                </div>
+                                <div data-testid="@($"pagination-{pair.Key}")" class="mt-2">
+                                    <MudPagination Class="@className" Count="5" Selected="1" />
+                                </div>
+                                <div data-testid="@($"treeview-{pair.Key}")" class="mt-2">
+                                    <MudTreeView T="string" Dense="true" Class="@className" AutoExpand="true">
+                                        <MudTreeViewItem Value="@("parent")" Text="Parent" Expanded="true">
+                                            <MudTreeViewItem Value="@("child")" Text="Child" />
+                                        </MudTreeViewItem>
+                                    </MudTreeView>
+                                </div>
+                                <div data-testid="@($"timeline-{pair.Key}")" class="mt-2">
+                                    <MudTimeline Class="@className" TimelinePosition="TimelinePosition.Start">
+                                        <MudTimelineItem>
+                                            <MudText Typo="Typo.body2">Step one</MudText>
+                                        </MudTimelineItem>
+                                        <MudTimelineItem>
+                                            <MudText Typo="Typo.body2">Step two</MudText>
+                                        </MudTimelineItem>
+                                    </MudTimeline>
+                                </div>
+                            </MudPaper>
+                            <MudPaper Class="pa-3" Outlined="true" data-theme="@previewTheme">
+                                <MudText Typo="Typo.caption" Class="@Ui(NerdDesignSystemUi.MutedContent)">Structure and media preview</MudText>
+                                <div data-testid="@($"expansion-panel-{pair.Key}")" class="mt-2">
+                                    <MudExpansionPanels Class="@className" Elevation="0">
+                                        <MudExpansionPanel Text="Panel title" Expanded="true">
+                                            <MudText Typo="Typo.body2">Panel content</MudText>
+                                        </MudExpansionPanel>
+                                    </MudExpansionPanels>
+                                </div>
+                                <div data-testid="@($"carousel-{pair.Key}")" class="mt-2">
+                                    <MudCarousel TData="object" Class="@className" Style="height:120px" ShowArrows="true" ShowBullets="true" AutoCycle="false">
+                                        <MudCarouselItem>
+                                            <MudText Class="d-flex align-center justify-center" Style="height:120px">Slide one</MudText>
+                                        </MudCarouselItem>
+                                        <MudCarouselItem>
+                                            <MudText Class="d-flex align-center justify-center" Style="height:120px">Slide two</MudText>
+                                        </MudCarouselItem>
+                                    </MudCarousel>
+                                </div>
+                                <div data-testid="@($"card-{pair.Key}")" class="mt-2">
+                                    <MudCard Class="@className" Elevation="1">
+                                        <MudCardContent>
+                                            <MudText Typo="Typo.body2">Card content</MudText>
+                                        </MudCardContent>
+                                    </MudCard>
+                                </div>
+                                <div data-testid="@($"drawer-{pair.Key}")" class="mt-2" style="position:relative;height:140px;overflow:hidden;">
+                                    <MudDrawer Open="true" Variant="DrawerVariant.Persistent" Class="@className" ClipMode="DrawerClipMode.Never" Style="position:absolute;width:120px">
+                                        <MudText Class="pa-2">Drawer</MudText>
+                                    </MudDrawer>
+                                </div>
+                                <div data-testid="@($"chart-{pair.Key}")" class="mt-2">
+                                    <MudChart ChartType="ChartType.Bar" ChartSeries="@_previewChartSeries" Class="@className" Height="120px" />
+                                </div>
+                            </MudPaper>
+                            <MudPaper Class="pa-3" Outlined="true" data-theme="@previewTheme">
+                                <MudText Typo="Typo.caption" Class="@Ui(NerdDesignSystemUi.MutedContent)">Shell preview</MudText>
+                                <div data-testid="@($"skeleton-{pair.Key}")" class="mt-2">
+                                    <MudSkeleton Class="@className" Width="100%" Height="40px" />
+                                </div>
+                                <div data-testid="@($"paper-{pair.Key}")" class="mt-2">
+                                    <MudPaper Class="@className" Elevation="1">
+                                        <MudText Class="pa-2">Paper surface</MudText>
+                                    </MudPaper>
+                                </div>
+                                <div data-testid="@($"overlay-{pair.Key}")" class="mt-2" style="position:relative;height:80px;">
+                                    <MudOverlay Visible="true" Absolute="true" DarkBackground="true" Class="@className">
+                                        <MudText Class="pa-2">Overlay</MudText>
+                                    </MudOverlay>
+                                </div>
+                                <div data-testid="@($"toolbar-{pair.Key}")" class="mt-2">
+                                    <MudToolBar Class="@className" Dense="true">
+                                        <MudText>Toolbar</MudText>
+                                    </MudToolBar>
+                                </div>
+                                <div data-testid="@($"appbar-{pair.Key}")" class="mt-2" style="position:relative;">
+                                    <MudAppBar Class="@className" Dense="true" Fixed="false" Elevation="0">
+                                        <MudText Class="ml-2">App bar</MudText>
+                                    </MudAppBar>
+                                </div>
+                                <div data-testid="@($"collapse-{pair.Key}")" class="mt-2">
+                                    <MudCollapse Expanded="true" Class="@className">
+                                        <MudText Typo="Typo.body2">Collapse content</MudText>
+                                    </MudCollapse>
+                                </div>
+                            </MudPaper>
+                            <MudPaper Class="pa-3" Outlined="true" data-theme="@previewTheme">
+                                <MudText Typo="Typo.caption" Class="@Ui(NerdDesignSystemUi.MutedContent)">Layout utilities preview</MudText>
+                                <div data-testid="@($"grid-{pair.Key}")" class="mt-2">
+                                    <MudGrid Class="@className">
+                                        <MudItem xs="6"><MudText Typo="Typo.caption">Grid A</MudText></MudItem>
+                                        <MudItem xs="6"><MudText Typo="Typo.caption">Grid B</MudText></MudItem>
+                                    </MudGrid>
+                                </div>
+                                <div data-testid="@($"layout-{pair.Key}")" class="mt-2">
+                                    <MudContainer Class="@className" MaxWidth="MaxWidth.Small">
+                                        <MudText Typo="Typo.caption">Container</MudText>
+                                    </MudContainer>
+                                </div>
+                                <div data-testid="@($"flexbreak-{pair.Key}")" class="mt-2 d-flex flex-wrap align-center gap-1">
+                                    <MudText Typo="Typo.caption">Before</MudText>
+                                    <div class="mud-flex-break" />
+                                    <MudText Typo="Typo.caption">After break</MudText>
+                                </div>
+                                <div data-testid="@($"splitpanel-{pair.Key}")" class="mt-2 mud-splitter" style="height:80px;display:flex;">
+                                    <div class="mud-split-panel pa-2" style="flex:1;">Left</div>
+                                    <div class="mud-split-panel pa-2" style="flex:1;">Right</div>
+                                </div>
+                            </MudPaper>
+                            <MudPaper Class="pa-3" Outlined="true" data-theme="@previewTheme">
+                                <MudText Typo="Typo.caption" Class="@Ui(NerdDesignSystemUi.MutedContent)">Overlay preview</MudText>
+                                <div data-testid="@($"dialog-{pair.Key}")" class="mt-2" style="position:relative;">
+                                    <div class="@($"mud-dialog {className}")" style="position:relative;max-width:220px;">
+                                        <div class="mud-dialog-content pa-2">Dialog preview</div>
+                                    </div>
+                                </div>
+                                <div data-testid="@($"popover-{pair.Key}")" class="mt-2" style="position:relative;">
+                                    <div class="@($"mud-popover mud-popover-open {className}")" style="position:relative;display:inline-block;">
+                                        <MudPaper Class="pa-2" Elevation="1">Popover content</MudPaper>
+                                    </div>
+                                </div>
                             </MudPaper>
                         </MudStack>
                     </MudTabPanel>
@@ -346,31 +769,6 @@ else
                 </MudPaper>
             }
 
-            @if (Options.Radii.Count > 0 || Options.Shadows.Count > 0)
-            {
-                <MudText Typo="Typo.h6">Radius and shadows</MudText>
-                <MudGrid Spacing="2">
-                    @foreach (var radius in Options.Radii.OrderBy(pair => pair.Key, StringComparer.Ordinal))
-                    {
-                        <MudItem xs="12" sm="6" md="4">
-                            <MudPaper Class="@($"{Options.Prefix}-radius-{radius.Key} pa-4")" Outlined="true">
-                                <MudText Typo="Typo.subtitle2">@radius.Key</MudText>
-                                <MudText Typo="Typo.caption"><code>@radius.Value</code></MudText>
-                            </MudPaper>
-                        </MudItem>
-                    }
-                    @foreach (var shadow in Options.Shadows.OrderBy(pair => pair.Key, StringComparer.Ordinal))
-                    {
-                        <MudItem xs="12" sm="6" md="4">
-                            <MudPaper Class="@($"{Options.Prefix}-shadow-{shadow.Key} pa-4")" Outlined="true">
-                                <MudText Typo="Typo.subtitle2">@shadow.Key</MudText>
-                                <MudText Typo="Typo.caption"><code>@shadow.Value</code></MudText>
-                            </MudPaper>
-                        </MudItem>
-                    }
-                </MudGrid>
-            }
-
             @if (Options.Opacities.Count > 0)
             {
                 <MudText Typo="Typo.h6">Watermark / opacity overlays</MudText>
@@ -379,7 +777,7 @@ else
                     {
                         var overlayClass = GetOpacityClassName(opacity.Key);
                         <MudItem xs="12" sm="6" md="4">
-                            <MudPaper Outlined="true" Class="pa-3">
+                            <MudPaper Outlined="true" Class="pa-3" id="@($"token-opacity-{opacity.Key}")">
                                 <MudText Typo="Typo.subtitle2">@opacity.Key</MudText>
                                 <MudText Typo="Typo.caption" Class="@Ui(NerdDesignSystemUi.MutedContent)">
                                     @opacity.Value.BaseToken · @opacity.Value.Opacity.ToString("0.##") opacity
@@ -393,7 +791,9 @@ else
                     }
                 </MudGrid>
             }
+                </MudItem>
+            </MudGrid>
         </MudStack>
-    </MudContainer>
+    </NerdCatalogPage>
     </NerdCatalogThemeProvider>
 }
