@@ -40,5 +40,16 @@ appsettings.local.json
 artifacts/
 
 # Playwright
-tests/e2e/node_modules/
-tests/e2e/test-results/
+node_modules/
+**/node_modules/
+test-results/
+playwright-report/
+blob-report/
+.playwright/
+**/test-results/
+**/playwright-report/
+**/blob-report/
+**/.playwright/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
