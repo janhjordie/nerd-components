@@ -1,3 +1,4 @@
+using System.Text;
 using MudBlazor.Utilities;
 using TheNerdCollective.Brand.Tnc;
 using TheNerdCollective.MudComponents.DesignTokens;
@@ -72,5 +73,23 @@ public sealed class NerdMudIntentThemeFactoryTests
         var scope = NerdMudRecipeThemeFactory.GetPseudoCssScope(options, NerdDesignSystemUi.SidebarRecipe);
 
         Assert.Equal(":root .tnc-recipe-sidebar", scope);
+    }
+
+    [Fact]
+    public void AppendPreviewScopes_emits_inactive_brand_intent_scopes()
+    {
+        NerdBrandPackTestBootstrap.EnsureRegistered();
+
+        var css = new StringBuilder();
+        NerdMudPreviewThemeEmitter.AppendPreviewScopes(
+            css,
+            ["tnc", "dnf"],
+            activePrefix: "tnc",
+            brandTheme: null,
+            isDark: false);
+
+        var result = css.ToString();
+        Assert.Contains(":root .dnf-primary-action {", result);
+        Assert.DoesNotContain(":root .tnc-primary-action {", result);
     }
 }

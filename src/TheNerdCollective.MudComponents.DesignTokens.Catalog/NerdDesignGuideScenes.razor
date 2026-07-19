@@ -9,6 +9,36 @@
             Storybook-style shell compositions from pack recipes — hero, navigation and footer in one viewport.
         </MudText>
 
+        @if (DarkHeroRecipeName is not null)
+        {
+            <MudPaper Outlined="true" Class="pa-4 mb-4" data-testid="design-guide-hero-dark">
+                <MudText Typo="Typo.subtitle2">Dark hero zone</MudText>
+                <MudText Typo="Typo.caption" Class="@Ui(NerdDesignSystemUi.MutedContent)">
+                    PseudoCss scope <code>:root .@RecipeClass(DarkHeroRecipeName)</code>
+                    @(UsesHeroOverlay(DarkHeroRecipeName) ? " + hero-overlay opacity token." : ".")
+                </MudText>
+                <MudPaper Class="@($"{RecipeClass(DarkHeroRecipeName)} pa-6 mt-3")"
+                          Outlined="true"
+                          Style="@(UsesHeroOverlay(DarkHeroRecipeName) ? "position:relative; overflow:hidden;" : null)">
+                    @if (UsesHeroOverlay(DarkHeroRecipeName))
+                    {
+                        <div class="@($"{TokenOptions.Prefix}-opacity-hero-overlay")"
+                             style="position:absolute; inset:0; pointer-events:none;"
+                             aria-hidden="true"></div>
+                    }
+                    <div style="@(UsesHeroOverlay(DarkHeroRecipeName) ? "position:relative;" : null)">
+                        <MudText Typo="Typo.h4">@SceneHeadline</MudText>
+                        <MudText Typo="Typo.body1" Class="mt-2">@SceneSubline</MudText>
+                        <MudButton Class="@($"{Ui(NerdDesignSystemUi.PrimaryAction)} mt-3")"
+                                   Variant="Variant.Filled"
+                                   data-testid="design-guide-hero-dark-cta">
+                            @SceneCta
+                        </MudButton>
+                    </div>
+                </MudPaper>
+            </MudPaper>
+        }
+
         <MudPaper Outlined="true" Class="@($"{SceneClass} overflow-hidden")" data-testid="design-guide-layout-scene">
             @if (TryGetRecipe("hero-photo", out _))
             {
@@ -71,6 +101,12 @@
     private bool IsDnf =>
         string.Equals(TokenOptions.Prefix, "dnf", StringComparison.OrdinalIgnoreCase);
 
+    private string? DarkHeroRecipeName =>
+        TryGetRecipe("hero-photo", out _) ? "hero-photo" :
+        TryGetRecipe("hero-organic", out _) ? "hero-organic" :
+        TryGetRecipe("hero", out _) ? "hero" :
+        null;
+
     private string SceneClass => Ui(NerdDesignSystemUi.PageSurface);
 
     private string SceneHeadline =>
@@ -90,4 +126,9 @@
 
     private bool TryGetRecipe(string name, out NerdDesignTokenRecipe recipe) =>
         TokenOptions.Recipes.TryGetValue(name, out recipe!);
+
+    private bool UsesHeroOverlay(string recipeName) =>
+        (string.Equals(recipeName, "hero-photo", StringComparison.OrdinalIgnoreCase) ||
+         string.Equals(recipeName, "hero-organic", StringComparison.OrdinalIgnoreCase)) &&
+        TokenOptions.Opacities.ContainsKey("hero-overlay");
 }

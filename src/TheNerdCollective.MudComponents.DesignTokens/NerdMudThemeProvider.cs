@@ -12,6 +12,12 @@ public partial class NerdMudThemeProvider : MudThemeProvider
     [Parameter]
     public NerdDesignTokenOptions? DesignTokenOptions { get; set; }
 
+    /// <summary>
+    /// Inactive brand pack ids to emit PseudoCss preview scopes for (e.g. tnc + dnf side-by-side).
+    /// </summary>
+    [Parameter]
+    public IReadOnlyList<string>? PreviewBrandPackIds { get; set; }
+
     private bool IsDark => base.IsDarkMode;
 
     protected string BuildNerdScopedTheme()
@@ -30,6 +36,16 @@ public partial class NerdMudThemeProvider : MudThemeProvider
         {
             AppendIntentScopes(themeStringBuilder);
             AppendRecipeScopes(themeStringBuilder);
+
+            if (PreviewBrandPackIds is { Count: > 0 })
+            {
+                NerdMudPreviewThemeEmitter.AppendPreviewScopes(
+                    themeStringBuilder,
+                    PreviewBrandPackIds,
+                    DesignTokenOptions.Prefix,
+                    Theme,
+                    IsDark);
+            }
         }
 
         themeStringBuilder.AppendLine("</style>");
@@ -38,37 +54,19 @@ public partial class NerdMudThemeProvider : MudThemeProvider
 
     private void AppendIntentScopes(StringBuilder themeStringBuilder)
     {
-        var options = DesignTokenOptions!;
-        var brandTheme = Theme ?? NerdMudThemeFactory.Create(options);
-
-        foreach (var alias in NerdMudIntentPaletteMap.GetIntentAliases(options))
-        {
-            var intentTheme = NerdMudIntentThemeFactory.CreateIntentTheme(options, alias, brandTheme, IsDark);
-            var palette = IsDark ? intentTheme.PaletteDark : intentTheme.PaletteLight;
-            themeStringBuilder.Append(NerdMudIntentPaletteMap.GetPseudoCssScope(options, alias));
-            themeStringBuilder.AppendLine(" {");
-            NerdMudThemeCssEmitter.AppendPalette(themeStringBuilder, palette);
-            themeStringBuilder.AppendLine("}");
-        }
+        NerdMudPreviewThemeEmitter.AppendIntentScopes(
+            themeStringBuilder,
+            DesignTokenOptions!,
+            Theme,
+            IsDark);
     }
 
     private void AppendRecipeScopes(StringBuilder themeStringBuilder)
     {
-        var options = DesignTokenOptions!;
-        var brandTheme = Theme ?? NerdMudThemeFactory.Create(options);
-
-        foreach (var recipeName in options.Recipes.Keys.OrderBy(name => name, StringComparer.OrdinalIgnoreCase))
-        {
-            var recipeTheme = NerdMudRecipeThemeFactory.CreateRecipeTheme(
-                options,
-                recipeName,
-                brandTheme,
-                IsDark);
-            var palette = IsDark ? recipeTheme.PaletteDark : recipeTheme.PaletteLight;
-            themeStringBuilder.Append(NerdMudRecipeThemeFactory.GetPseudoCssScope(options, recipeName));
-            themeStringBuilder.AppendLine(" {");
-            NerdMudThemeCssEmitter.AppendPalette(themeStringBuilder, palette);
-            themeStringBuilder.AppendLine("}");
-        }
+        NerdMudPreviewThemeEmitter.AppendRecipeScopes(
+            themeStringBuilder,
+            DesignTokenOptions!,
+            Theme,
+            IsDark);
     }
 }

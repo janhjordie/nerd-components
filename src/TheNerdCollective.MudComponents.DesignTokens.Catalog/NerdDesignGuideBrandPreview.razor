@@ -1,0 +1,53 @@
+@using TheNerdCollective.MudComponents.DesignTokens
+@using TheNerdCollective.MudComponents.Shared
+
+<MudPaper Outlined="true" Class="pa-4" data-testid="design-guide-brand-preview-panel">
+    <MudText Typo="Typo.h6">Side-by-side brand preview</MudText>
+    <MudText Typo="Typo.body2" Class="mb-3 mud-text-secondary">
+        TNC and DNF in one viewport via PseudoCss preview scopes —
+        <code>:root .tnc-primary-action</code> and <code>:root .dnf-primary-action</code>
+        without switching the global brand.
+    </MudText>
+
+    <MudGrid Spacing="3">
+        @foreach (var preview in PreviewBrands)
+        {
+            <MudItem xs="12" md="6">
+                <MudText Typo="Typo.subtitle2" Class="mb-2">@preview.Label</MudText>
+                <MudPaper Outlined="true"
+                          Class="@($"{preview.PrimaryScope} pa-4")"
+                          data-testid="@preview.TestId">
+                    <MudText Typo="Typo.body2" Class="@Ui(NerdDesignSystemUi.MutedContent, preview.Prefix)">
+                        Scope <code>@preview.PrimaryScope</code>
+                    </MudText>
+                    <MudStack Row="true" Spacing="2" Class="mt-3 flex-wrap">
+                        <MudButton Variant="Variant.Filled"
+                                   Class="@Ui(NerdDesignSystemUi.PrimaryAction, preview.Prefix)">
+                            primary-action
+                        </MudButton>
+                        <MudButton Variant="Variant.Outlined"
+                                   Class="@Ui(NerdDesignSystemUi.SecondaryAction, preview.Prefix)">
+                            secondary-action
+                        </MudButton>
+                    </MudStack>
+                </MudPaper>
+            </MudItem>
+        }
+    </MudGrid>
+</MudPaper>
+
+@code {
+    private static readonly PreviewBrand[] PreviewBrands =
+    [
+        new("tnc", "TNC", "brand-preview-tnc"),
+        new("dnf", "DNF", "brand-preview-dnf")
+    ];
+
+    private string Ui(string semanticAlias, string prefix) =>
+        NerdDesignSystemUi.TokenClass(prefix, semanticAlias);
+
+    private sealed record PreviewBrand(string Prefix, string Label, string TestId)
+    {
+        public string PrimaryScope => $"{Prefix}-primary-action";
+    }
+}
