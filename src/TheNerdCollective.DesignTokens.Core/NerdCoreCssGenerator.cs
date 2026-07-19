@@ -5,7 +5,7 @@ namespace TheNerdCollective.MudComponents.DesignTokens;
 
 /// <summary>
 /// Framework-neutral CSS: custom properties, spacing, foundation tokens, recipes (region only), opacity, intents.
-/// Mud/Radzen/Fluent adapters add component-specific rules on top (HR-114).
+/// MudBlazor adapter adds component-specific rules on top (HR-114).
 /// </summary>
 public static class NerdCoreCssGenerator
 {

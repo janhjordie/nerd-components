@@ -20,9 +20,6 @@ else
     }
     else
     {
-    <HeadContent>
-        <link rel="stylesheet" href="_content/Radzen.Blazor/css/material-base.css" />
-    </HeadContent>
     <NerdDesignSystemScripts />
     <NerdCatalogThemeProvider IsDarkMode="false">
         <NerdDesignTokenStyles />
@@ -172,25 +169,14 @@ else
                                 </MudAlert>
                             }
                             <MudGrid Spacing="2" Class="mt-2">
-                                <MudItem xs="12" md="6">
-                                    <MudText Typo="Typo.subtitle2">MudBlazor</MudText>
+                                <MudItem xs="12">
+                                    <MudText Typo="Typo.subtitle2">MudBlazor preview</MudText>
                                     <MudStack Row="true" Spacing="2" Class="@($"{BrandRootClass} flex-wrap mt-2 pa-3")"
                                               Style="border: 1px solid var(--mud-palette-lines-default); border-radius: 8px;"
                                               data-testid="workbook-intent-mud-preview">
                                         <MudButton Variant="Variant.Filled" Class="@IntentClass">Primary button</MudButton>
                                         <MudButton Variant="Variant.Outlined" Class="@Ui(NerdDesignSystemUi.SecondaryAction)">Secondary</MudButton>
                                         <MudTextField T="string" Class="@Ui(NerdDesignSystemUi.InputSurface)" Label="Input preview" Variant="Variant.Outlined" Margin="Margin.Dense" />
-                                    </MudStack>
-                                </MudItem>
-                                <MudItem xs="12" md="6">
-                                    <MudText Typo="Typo.subtitle2">Radzen (live)</MudText>
-                                    <MudStack Spacing="2" Class="@($"{RadzenRootClass} mt-2 pa-3")"
-                                              Style="border: 1px solid var(--mud-palette-lines-default); border-radius: 8px;"
-                                              data-testid="workbook-intent-radzen-preview">
-                                        <RadzenButton Text="Primary" ButtonStyle="Radzen.ButtonStyle.Primary"
-                                                      data-testid="workbook-radzen-primary-button" />
-                                        <RadzenButton Text="Secondary" ButtonStyle="Radzen.ButtonStyle.Secondary"
-                                                      data-testid="workbook-radzen-secondary-button" />
                                     </MudStack>
                                 </MudItem>
                             </MudGrid>

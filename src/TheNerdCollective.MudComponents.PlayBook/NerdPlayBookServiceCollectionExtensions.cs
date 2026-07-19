@@ -1,5 +1,4 @@
 using Microsoft.Extensions.DependencyInjection;
-using Radzen;
 using TheNerdCollective.MudComponents.Shared;
 
 namespace TheNerdCollective.MudComponents.PlayBook;
@@ -16,7 +15,6 @@ public static class NerdPlayBookServiceCollectionExtensions
         configure?.Invoke(options);
 
         services.AddNerdDesignSystem(hub => hub.PlayBookRoute = options.PlayBookRoute);
-        services.AddRadzenComponents();
         services.AddSingleton(options);
 
         return services;

@@ -35,10 +35,6 @@ public static class MudBlazorDesignTokenCssGenerator
             if (options.EmitFrameworkNeutralIntents)
             {
                 NerdIntentCssGenerator.AppendBrandIntentVariables(css, options);
-                NerdFluentDesignTokenCssGenerator.AppendFluentBrandPalette(css, options);
-                NerdRadzenDesignTokenCssGenerator.AppendRadzenBrandPalette(css, options);
-                NerdBootstrapDesignTokenCssGenerator.AppendBootstrapBrandPalette(css, options);
-                NerdBlazoriseDesignTokenCssGenerator.AppendBlazoriseBrandPalette(css, options);
             }
         }
 

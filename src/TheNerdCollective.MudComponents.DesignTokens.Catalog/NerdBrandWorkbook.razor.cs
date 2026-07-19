@@ -115,9 +115,6 @@ public partial class NerdBrandWorkbook
 
     private string BrandRootClass => NerdBrandRootClasses.Combine(Options.Prefix);
 
-    private string RadzenRootClass =>
-        $"{NerdIntentCssManifest.BrandRootClass(Options.Prefix)} {NerdRadzenPaletteManifest.BrandRootClass(Options.Prefix)}";
-
     private void SyncIntentTargetFromSelection()
     {
         _intentTarget = NerdIntentCatalogTools.ResolveAliasTarget(Options, _selectedIntent)

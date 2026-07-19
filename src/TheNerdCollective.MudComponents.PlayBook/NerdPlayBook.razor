@@ -8,9 +8,6 @@
 }
 else
 {
-    <HeadContent>
-        <link rel="stylesheet" href="_content/Radzen.Blazor/css/material-base.css" />
-    </HeadContent>
     <NerdDesignSystemScripts />
     <NerdDesignTokenStyles />
     <NerdResponsiveTypographyStyles />
@@ -113,12 +110,6 @@ else
                     <MudTabPanel Text="Typography" Icon="@Icons.Material.Filled.TextFields">
                         <div class="mt-4">
                             <NerdPlayBookTypographyPanel PreviewTheme="@_previewTheme" @bind-ViewportWidth="_typographyViewport" />
-                        </div>
-                    </MudTabPanel>
-
-                    <MudTabPanel Text="Framework bridge" Icon="@Icons.Material.Filled.Hub">
-                        <div class="mt-4">
-                            <NerdPlayBookFrameworkBridge TokenOptions="@TokenOptions" @key="@TokenOptions.Prefix" />
                         </div>
                     </MudTabPanel>
 

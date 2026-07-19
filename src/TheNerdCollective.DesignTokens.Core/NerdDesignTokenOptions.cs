@@ -49,7 +49,7 @@ public sealed class NerdDesignTokenOptions
     public bool UseIntentPseudoCssThemes { get; set; }
 
     /// <summary>
-    /// When true with palette-first mode, emit <c>--nerd-intent-*</c> and Fluent UI bridge variables.
+    /// When true with palette-first mode, emit <c>--nerd-intent-*</c> CSS variables.
     /// </summary>
     public bool EmitFrameworkNeutralIntents { get; set; } = true;
 

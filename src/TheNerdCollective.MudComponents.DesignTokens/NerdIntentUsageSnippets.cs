@@ -2,7 +2,7 @@ using TheNerdCollective.MudComponents.Shared;
 
 namespace TheNerdCollective.MudComponents.DesignTokens;
 
-/// <summary>Copy-paste snippets showing how semantic intents map per UI framework.</summary>
+/// <summary>Copy-paste snippets showing how semantic intents map in MudBlazor.</summary>
 public static class NerdIntentUsageSnippets
 {
     public static IReadOnlyList<NerdIntentUsageSnippet> CoreIntents { get; } =
@@ -23,15 +23,10 @@ public static class NerdIntentUsageSnippets
     ];
 
     private static NerdIntentUsageSnippet Intent(string alias, string usage) =>
-        new(alias, usage,
-            MudBlazor: $"Class=\"@Ui(\"{alias}\")\"",
-            Radzen: $"class=\"rz-{alias}\" /* HR-115 */",
-            FluentUi: $"class=\"fluent-{alias}\" /* planned */");
+        new(alias, usage, MudBlazor: $"Class=\"@Ui(\"{alias}\")\"");
 
     public sealed record NerdIntentUsageSnippet(
         string IntentAlias,
         string Usage,
-        string MudBlazor,
-        string Radzen,
-        string FluentUi);
+        string MudBlazor);
 }
