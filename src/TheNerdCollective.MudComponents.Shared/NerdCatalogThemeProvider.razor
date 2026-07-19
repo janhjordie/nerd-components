@@ -1,12 +1,28 @@
 @using MudBlazor
 
-<MudThemeProvider Theme="@EffectiveTheme" IsDarkMode="@IsDarkMode" />
-@ChildContent
+@if (HostProvidesTheme)
+{
+    @ChildContent
+}
+else
+{
+    <MudThemeProvider Theme="@EffectiveTheme" IsDarkMode="@IsDarkMode">
+        @ChildContent
+    </MudThemeProvider>
+}
 
 @code {
-    [Parameter] public RenderFragment? ChildContent { get; set; }
-    [Parameter] public MudTheme? Theme { get; set; }
-    [Parameter] public bool IsDarkMode { get; set; }
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public MudTheme? Theme { get; set; }
+
+    [Parameter]
+    public bool IsDarkMode { get; set; }
+
+    [CascadingParameter(Name = NerdMudThemeHost.CascadingName)]
+    public bool HostProvidesTheme { get; set; }
 
     private MudTheme EffectiveTheme => Theme ?? new MudTheme();
 }

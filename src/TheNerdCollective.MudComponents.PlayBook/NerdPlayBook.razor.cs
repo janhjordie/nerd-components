@@ -32,6 +32,9 @@ public partial class NerdPlayBook
     private NerdResponsiveTypographyCss TypographyCss { get; set; } = default!;
 
     [Inject]
+    private INerdMudThemeController? ThemeController { get; set; }
+
+    [Inject]
     private IEnumerable<INerdBrandPack> BrandPacks { get; set; } = [];
 
     private int _activeSectionTabIndex;
@@ -132,11 +135,19 @@ public partial class NerdPlayBook
     private Task SwitchBrandAsync(string brand)
     {
         _selectedBrand = brand;
-        NerdBrandPackRegistry.Instance.Configure(brand, TokenOptions);
-        TokenCss.Update(TokenOptions);
-        HubOptions.ActiveTokenPackId = brand;
-        HubOptions.ActiveBrandIdentityVersion = TokenOptions.ActiveBrandIdentityVersion;
-        NerdBrandTypographySwitcher.TrySwitchBrand(brand, TypographyOptions, HubOptions, _previewTheme);
+        if (ThemeController is not null)
+        {
+            ThemeController.ApplyBrandPack(brand);
+        }
+        else
+        {
+            NerdBrandPackRegistry.Instance.Configure(brand, TokenOptions);
+            TokenCss.Update(TokenOptions);
+            HubOptions.ActiveTokenPackId = brand;
+            HubOptions.ActiveBrandIdentityVersion = TokenOptions.ActiveBrandIdentityVersion;
+            NerdBrandTypographySwitcher.TrySwitchBrand(brand, TypographyOptions, HubOptions, _previewTheme);
+        }
+
         RefreshTokenNames();
         ApplyTypographyPreset();
         StateHasChanged();

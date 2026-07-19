@@ -20,6 +20,10 @@ public partial class NerdMudThemeProvider : MudThemeProvider
         themeStringBuilder.AppendLine("<style class=\"mud-theme-provider\">");
         themeStringBuilder.AppendLine(":root {");
         GenerateTheme(themeStringBuilder);
+        if (DesignTokenOptions is not null)
+        {
+            NerdMudRootTokenVariables.Append(themeStringBuilder, DesignTokenOptions);
+        }
         themeStringBuilder.AppendLine("}");
 
         if (DesignTokenOptions?.UseIntentPseudoCssThemes == true)

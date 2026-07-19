@@ -201,24 +201,29 @@ Markup (identisk på tværs af frameworks):
 **Regel:** Udviklere sætter **intent**, ikke `Color="Color.Primary"` og ikke `dnf-graes`
 i applikationskode (undtagen brand-showcase/catalog).
 
-### 8. Framework adapter control (MudBlazor best practice)
+### 8. Framework adapter control (MudBlazor theme-first + PseudoCss)
 
-Sådan “tæmmer” man et færdigt framework uden at genopfinde det:
+Sådan “tæmmer” man MudBlazor uden at genopfinde det:
 
-1. **Class-first override** — `MudBlazorComponentRuleBuilder` mapper intents til
-   `[class*="mud-button-filled"]`, `mud-nav-link`, `mud-input`, osv. med state-regler
-   (default, hover, focus, active, disabled).
-2. **Minimér MudTheme** — brug `MudThemeProvider` som fallback eller fjern i
-   fuldt dogfoodede apps; tokens ejer farver, ikke `Theme.Palette.Primary`.
-3. **Portal scope** — pickers, selects, menus, date/time popovers arver token via
-   `PopoverClass` + `nerd-shared.js` (HR-006).
-4. **Shell recipes** — store regions (drawer, hero, footer) får recipe-klasse;
-   primitives (knap, input) får intent-klasse.
-5. **Framework defaults i pack** — valgfri JSON der siger “i denne app er navMenu = sidebar
-   recipe, button.filled = primary-action” (se §9).
-6. **PlayBook som regressions-matrix** — hver intent × hver understøttet komponent med
-   state storyboard (HR-013).
-7. **WCAG gate** — pairings fra designmanual (DNF PDF) som `approvedPairings` + CI.
+1. **Theme Provider First** — `NerdMudThemeProvider` ejer global `:root` brand-palette via
+   `NerdMudThemeFactory` + `MudThemeProvider.GenerateTheme`. Token CSS duplikerer ikke
+   `--mud-palette-*` på brand root (HR-158).
+2. **PseudoCss per intent/recipe** — `:root .{prefix}-{intent}` scopes fra
+   `NerdMudIntentThemeFactory` / `NerdMudRecipeThemeFactory` i **ét** `<style>` (HR-170).
+   Slå intent palette CSS fra i token stylesheet når `UseIntentPseudoCssThemes` er true (HR-167).
+3. **Bridges only i token CSS** — `MudBlazorSwitchBridge` m.m. for switch/tabs/inputs; ingen
+   bulk `[class*="mud-button-filled"]` på semantic intents (HR-161).
+4. **Én provider i host** — `MainLayout` / `NerdAppShell` bruger `NerdMudThemeProvider`;
+   catalogs passerer igennem via `NerdCatalogThemeProvider` når `NerdMudThemeHost` cascade er sat (HR-171).
+5. **Brand switch** — `INerdMudThemeController.ApplyBrandPack` opdaterer `MudTheme` uden at
+   regenerere hele token CSS unødigt (HR-172).
+6. **Typography + layout i MudTheme** — `NerdResponsiveTypographyOptions` → `MudTheme.Typography`;
+   pack `radii` / `shadows` / `spacing.drawer-width` → `LayoutProperties` + `Shadows` (HR-173–174).
+7. **Portal scope** — pickers, selects, menus arver token via `PopoverClass` + `nerd-shared.js`.
+8. **PlayBook som regressions-matrix** — hver intent × komponent med state storyboard.
+9. **WCAG gate** — pairings fra designmanual som `approvedPairings` + CI.
+
+**Undgå:** Flere nested `MudThemeProvider` (HR-166 parked). Én `GenerateTheme` emitter alle scopes.
 
 **Inspiration fra industrien:**
 

@@ -26,6 +26,9 @@ public partial class NerdDesignTokenRecipesCatalog
     private NerdDesignTokenCss TokenCss { get; set; } = default!;
 
     [Inject]
+    private INerdMudThemeController? ThemeController { get; set; }
+
+    [Inject]
     private IServiceProvider ServiceProvider { get; set; } = default!;
 
     [Inject]
@@ -388,9 +391,17 @@ public partial class NerdDesignTokenRecipesCatalog
     private Task SwitchBrandAsync(string brand)
     {
         _selectedBrand = brand;
-        NerdBrandPackRegistry.Instance.Configure(brand, Options);
-        TokenCss.Update(Options);
-        HubOptions.ActiveTokenPackId = brand;
+        if (ThemeController is not null)
+        {
+            ThemeController.ApplyBrandPack(brand);
+        }
+        else
+        {
+            NerdBrandPackRegistry.Instance.Configure(brand, Options);
+            TokenCss.Update(Options);
+            HubOptions.ActiveTokenPackId = brand;
+        }
+
         ApplyBrandTypography(brand);
         _undoStack.Clear();
         _redoStack.Clear();

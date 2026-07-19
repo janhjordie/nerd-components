@@ -37,6 +37,9 @@ public partial class NerdDesignTokensCatalog
     private NerdDesignTokenCss TokenCss { get; set; } = default!;
 
     [Inject]
+    private INerdMudThemeController? ThemeController { get; set; }
+
+    [Inject]
     private IServiceProvider ServiceProvider { get; set; } = default!;
 
     [Inject]
@@ -323,16 +326,25 @@ public partial class NerdDesignTokensCatalog
     {
         _selectedBrand = brand;
         _diffBaseline = brand;
-        NerdBrandPackRegistry.Instance.Configure(brand, Options);
-        foreach (var (id, set) in NerdThemeSetTools.CreateFromOptions(Options))
+        if (ThemeController is not null)
         {
-            if (!Options.ThemeSets.ContainsKey(id))
-            {
-                Options.SetThemeSet(id, set);
-            }
+            ThemeController.ApplyBrandPack(brand);
         }
-        TokenCss.Update(Options);
-        HubOptions.ActiveTokenPackId = brand;
+        else
+        {
+            NerdBrandPackRegistry.Instance.Configure(brand, Options);
+            foreach (var (id, set) in NerdThemeSetTools.CreateFromOptions(Options))
+            {
+                if (!Options.ThemeSets.ContainsKey(id))
+                {
+                    Options.SetThemeSet(id, set);
+                }
+            }
+
+            TokenCss.Update(Options);
+            HubOptions.ActiveTokenPackId = brand;
+        }
+
         ApplyBrandTypography(brand);
         RefreshCatalogState();
         _saveStatus = $"Switched to {brand} brand.";

@@ -47,6 +47,8 @@ public static class NerdDesignTokenServiceCollectionExtensions
             _ => new FileNerdTokenPackStore("App_Data/token-packs"));
         services.AddSingleton(sp => new NerdDesignTokenCss(
             MudBlazorDesignTokenCssGenerator.Generate(sp.GetRequiredService<NerdDesignTokenOptions>())));
+        services.TryAddSingleton<INerdMudThemeConfigurator, NullNerdMudThemeConfigurator>();
+        services.TryAddSingleton<INerdMudThemeController, NerdMudThemeController>();
         services.TryAddSingleton<INerdBrandPackImportSink, NerdBrandPackImportSink>();
 
         if (options.Colors.Count > 0 && options.WarnOnAccessibilityFailuresAtStartup)

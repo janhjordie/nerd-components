@@ -327,11 +327,11 @@ Slet overflødig CSS/generator-kode når theme-laget overtager (ingen deprecatio
 | ID | P | Status | Task | DoD (verifiable) | Evidence | Source |
 |----|---|--------|------|------------------|----------|--------|
 | HR-170 | P0 | done | `NerdMudThemeProvider` (fase 2 spike) | Arver `MudThemeProvider`; `GenerateTheme` emitter `:root` brand + intent/recipe scopes (`:root .{prefix}-{intent}`) i **ét** `<style>` — erstat HR-166 | `NerdMudThemeProvider.cs` | theme strategy fase 2 |
-| HR-171 | P1 | open | Host migration til `NerdMudThemeProvider` | `MainLayout`/`NerdAppShell` bruger én provider; fjern løs `MudThemeProvider` + redundant theme CSS | `NerdAppShell.razor` | theme strategy fase 3 |
-| HR-172 | P1 | open | `CurrentPalette` brand switch API | `INerdMudThemeController` opdaterer aktiv palette fra pack; catalogs trigger refresh uden CSS regen | `INerdMudThemeController.cs` | theme strategy fase 3 |
-| HR-173 | P2 | open | Typography i `MudTheme` | `NerdMudThemeFactory` mapper `NerdResponsiveTypographyOptions` → `MudTheme.Typography` | `NerdMudThemeFactory.cs` | theme strategy fase 3 |
-| HR-174 | P2 | open | Layout + shadows i `MudTheme` | `LayoutProperties` (border-radius, drawer width) + `Shadows` fra token pack | `NerdMudThemeFactory.cs` | theme strategy fase 3 |
-| HR-175 | P2 | open | STRATEGY docs PseudoCss model | `STRATEGY.md` §8 opdateret: theme-first + PseudoCss; fjern multi-framework theme refs i Mud-sektion | `docs/STRATEGY.md` | theme strategy fase 3 |
+| HR-171 | P1 | done | Host migration til `NerdMudThemeProvider` | `MainLayout`/`NerdAppShell` bruger én provider; fjern løs `MudThemeProvider` + redundant theme CSS | `NerdAppShell.razor` | theme strategy fase 3 |
+| HR-172 | P1 | done | `CurrentPalette` brand switch API | `INerdMudThemeController` opdaterer aktiv palette fra pack; catalogs trigger refresh uden CSS regen | `INerdMudThemeController.cs` | theme strategy fase 3 |
+| HR-173 | P2 | done | Typography i `MudTheme` | `NerdMudThemeFactory` mapper `NerdResponsiveTypographyOptions` → `MudTheme.Typography` | `NerdMudThemeFactory.cs` | theme strategy fase 3 |
+| HR-174 | P2 | done | Layout + shadows i `MudTheme` | `LayoutProperties` (border-radius, drawer width) + `Shadows` fra token pack | `NerdMudThemeFactory.cs` | theme strategy fase 3 |
+| HR-175 | P2 | done | STRATEGY docs PseudoCss model | `STRATEGY.md` §8 opdateret: theme-first + PseudoCss; fjern multi-framework theme refs i Mud-sektion | `docs/STRATEGY.md` | theme strategy fase 3 |
 
 ## Open — Cross-framework adapters (HR-115–HR-118)
 

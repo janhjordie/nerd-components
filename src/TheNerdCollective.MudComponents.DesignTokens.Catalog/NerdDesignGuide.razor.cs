@@ -23,6 +23,9 @@ public partial class NerdDesignGuide
     private NerdDesignTokenCss TokenCss { get; set; } = default!;
 
     [Inject]
+    private INerdMudThemeController? ThemeController { get; set; }
+
+    [Inject]
     private IServiceProvider ServiceProvider { get; set; } = default!;
 
     [Inject]
@@ -99,9 +102,17 @@ public partial class NerdDesignGuide
     {
         _selectedBrand = brand;
         _clientId = brand;
-        NerdBrandPackRegistry.Instance.Configure(brand, Options);
-        TokenCss.Update(Options);
-        HubOptions.ActiveTokenPackId = brand;
+        if (ThemeController is not null)
+        {
+            ThemeController.ApplyBrandPack(brand);
+        }
+        else
+        {
+            NerdBrandPackRegistry.Instance.Configure(brand, Options);
+            TokenCss.Update(Options);
+            HubOptions.ActiveTokenPackId = brand;
+        }
+
         ApplyBrandTypography(brand);
         RefreshParity();
         return Task.CompletedTask;

@@ -1,6 +1,8 @@
 using MudBlazor.Utilities;
 using TheNerdCollective.Brand.Tnc;
 using TheNerdCollective.MudComponents.DesignTokens;
+using TheNerdCollective.MudComponents.ResponsiveTypography;
+using TheNerdCollective.MudComponents.Shared;
 
 namespace TheNerdCollective.MudComponents.DesignTokens.Tests;
 
@@ -44,6 +46,26 @@ public sealed class NerdMudBrandPaletteTests
         Assert.Equal(new MudColor(NerdTncDesignTokenPresets.Snow), theme.PaletteLight.Surface);
         Assert.NotEqual(default(MudColor), theme.PaletteDark.Primary);
         Assert.NotEqual(default(MudColor), theme.PaletteDark.Background);
+    }
+
+    [Fact]
+    public void NerdMudThemeFactory_applies_typography_and_layout_from_pack()
+    {
+        var options = new NerdDesignTokenOptions { Prefix = "tnc" };
+        NerdTncDesignTokenPresets.Apply(options);
+        options.AddRadius("md", "12px");
+        options.AddShadow("md", "0 4px 12px rgba(0,0,0,0.15)");
+        options.AddSpacing("drawer-width", "280px");
+
+        var typography = new NerdResponsiveTypographyOptions();
+        typography.Typography.H3 = "2.5rem";
+
+        var theme = NerdMudThemeFactory.Create(options, mudTheme => mudTheme.UseResponsiveTypography(typography.Typography));
+
+        Assert.Equal("12px", theme.LayoutProperties.DefaultBorderRadius);
+        Assert.Equal("280px", theme.LayoutProperties.DrawerWidthLeft);
+        Assert.Equal("2.5rem", theme.Typography.H3.FontSize);
+        Assert.Equal("0 4px 12px rgba(0,0,0,0.15)", theme.Shadows.Elevation[2]);
     }
 
     [Fact]

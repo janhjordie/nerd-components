@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using MudBlazor;
+using TheNerdCollective.MudComponents.DesignTokens;
 using TheNerdCollective.MudComponents.Shared;
 
 namespace TheNerdCollective.MudComponents.ResponsiveTypography;
@@ -36,6 +37,8 @@ public static class NerdResponsiveTypographyServiceCollectionExtensions
         services.AddSingleton(sp => new NerdResponsiveTypographyCss(
             MudBlazorResponsiveTypographyCssGenerator.Generate(options.Typography)));
         services.AddSingleton<MudTheme>(options.CreatePreviewTheme());
+        services.RemoveAll<INerdMudThemeConfigurator>();
+        services.AddSingleton<INerdMudThemeConfigurator, NerdResponsiveMudThemeConfigurator>();
         services.TryAddSingleton<INerdTypographyPackStore>(
             _ => new FileNerdTypographyPackStore("App_Data/typography-packs"));
 
