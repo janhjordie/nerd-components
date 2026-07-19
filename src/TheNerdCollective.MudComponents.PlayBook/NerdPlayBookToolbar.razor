@@ -16,8 +16,13 @@
             </MudItem>
         }
         <MudItem xs="12" md="3">
-            <MudSelect T="string" Label="Design token" @bind-Value="SelectedTokenFilter" Variant="Variant.Outlined" Margin="Margin.Dense">
-                <MudSelectItem Value="@("all")">All tokens</MudSelectItem>
+            <MudSelect T="string" Label="Preview scope" @bind-Value="SelectedTokenFilter" Variant="Variant.Outlined" Margin="Margin.Dense">
+                <MudSelectItem Value="@NerdPlayBookTokenFilter.AllIntents">All intents</MudSelectItem>
+                @foreach (var intent in IntentEntries)
+                {
+                    <MudSelectItem Value="@intent.Name">@intent.Name</MudSelectItem>
+                }
+                <MudSelectItem Value="@NerdPlayBookTokenFilter.AllPalette" Disabled="@(TokenNames.Count == 0)">All palette colors</MudSelectItem>
                 @foreach (var name in TokenNames)
                 {
                     <MudSelectItem Value="@name">@name</MudSelectItem>
@@ -75,7 +80,7 @@
     public bool ShowBrandSwitcher { get; set; }
 
     [Parameter]
-    public string SelectedTokenFilter { get; set; } = "all";
+    public string SelectedTokenFilter { get; set; } = NerdPlayBookTokenFilter.AllIntents;
 
     [Parameter]
     public EventCallback<string> SelectedTokenFilterChanged { get; set; }
@@ -107,6 +112,9 @@
     private Task OnTypographyPresetChanged(string value) => TypographyPresetChanged.InvokeAsync(value);
 
     private Task OnBrandChanged(string value) => SelectedBrandChanged.InvokeAsync(value);
+
+    private IEnumerable<NerdIntentCatalogEntry> IntentEntries =>
+        NerdIntentCatalogTools.StandardIntents.Where(entry => TokenOptions.Aliases.ContainsKey(entry.Name));
 
     private string Ui(string semanticAlias) => NerdDesignSystemUi.TokenClass(TokenOptions.Prefix, semanticAlias);
 }

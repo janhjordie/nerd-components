@@ -17,6 +17,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\TheNerdCollective.Brand.Tnc\TheNerdCollective.Brand.Tnc.csproj" />
+    <ProjectReference Include="..\..\src\TheNerdCollective.MudComponents.DesignTokens\TheNerdCollective.MudComponents.DesignTokens.csproj" />
     <ProjectReference Include="..\..\src\TheNerdCollective.MudComponents.PlayBook\TheNerdCollective.MudComponents.PlayBook.csproj" />
   </ItemGroup>
 </Project>

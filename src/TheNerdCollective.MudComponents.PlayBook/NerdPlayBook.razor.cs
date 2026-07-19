@@ -42,7 +42,7 @@ public partial class NerdPlayBook
     private bool _previewDark;
     private string _selectedBrand = string.Empty;
     private string _typographyPreset = NerdPlayBookTypography.DefaultPreset;
-    private string _selectedTokenFilter = "all";
+    private string _selectedTokenFilter = NerdPlayBookTokenFilter.AllIntents;
     private string _searchQuery = string.Empty;
     private double _typographyViewport = 1280;
     private MudTheme _previewTheme = new();
@@ -66,14 +66,10 @@ public partial class NerdPlayBook
         (!Options.RestrictPlayBookToDevelopment || HostEnvironment.IsDevelopment());
 
     private IReadOnlyList<string> VisibleTokens =>
-        _selectedTokenFilter == "all"
-            ? _tokenNames.Select(name => $"{TokenOptions.Prefix}-{name}").ToList()
-            : [$"{TokenOptions.Prefix}-{_selectedTokenFilter}"];
+        NerdPlayBookTokenFilter.ResolveVisibleClasses(TokenOptions, _selectedTokenFilter, _tokenNames);
 
     private string PlaygroundTokenClass =>
-        _selectedTokenFilter == "all"
-            ? VisibleTokens.FirstOrDefault() ?? string.Empty
-            : $"{TokenOptions.Prefix}-{_selectedTokenFilter}";
+        VisibleTokens.FirstOrDefault() ?? string.Empty;
 
     private string Ui(string semanticAlias) => NerdDesignSystemUi.TokenClass(TokenOptions.Prefix, semanticAlias);
 
@@ -125,10 +121,9 @@ public partial class NerdPlayBook
     {
         _tokenNames = TokenOptions.Colors.Keys.OrderBy(name => name, StringComparer.Ordinal).ToList();
 
-        if (_selectedTokenFilter != "all" &&
-            !_tokenNames.Contains(_selectedTokenFilter, StringComparer.OrdinalIgnoreCase))
+        if (!NerdPlayBookTokenFilter.IsValid(TokenOptions, _selectedTokenFilter, _tokenNames))
         {
-            _selectedTokenFilter = "all";
+            _selectedTokenFilter = NerdPlayBookTokenFilter.AllIntents;
         }
     }
 

@@ -47,15 +47,19 @@ internal static class MudBlazorComponentRuleBuilder
         "mud-slider", "mud-slider-input", "mud-rating", "mud-form"
     ];
 
+    private static readonly string[] DataSurfacePatterns =
+    [
+        "mud-table", "mud-table-row", "mud-table-cell", "mud-data-grid", "mud-datagrid", "mud-simple-table"
+    ];
+
     private static readonly string[] StructurePatterns =
     [
-        "mud-table", "mud-table-row", "mud-table-cell", "mud-data-grid", "mud-datagrid",
         "mud-card", "mud-paper", "mud-expansion-panel", "mud-expansion-panels", "mud-expand-panel", "mud-dialog", "mud-drawer",
         "mud-appbar", "mud-toolbar", "mud-tooltip", "mud-popover", "mud-carousel",
         "mud-timeline", "mud-stepper", "mud-treeview", "mud-pagination", "mud-chart",
         "mud-skeleton", "mud-divider", "mud-grid", "mud-container", "mud-list", "mud-button-group",
         "mud-file-upload", "mud-fab-menu", "mud-drop-zone",
-        "mud-overlay", "mud-collapse", "mud-simple-table", "mud-image"
+        "mud-overlay", "mud-collapse", "mud-image"
     ];
 
     public static void AppendRules(
@@ -162,6 +166,10 @@ internal static class MudBlazorComponentRuleBuilder
 
         AppendPatternRules(css, root, InputPatterns,
             $"color: var({contentVariable}){importantSuffix}; caret-color: var({variable}){importantSuffix}; border-color: var({borderVariable}){importantSuffix};");
+
+        var surfaceVariable = contentVariable.Replace("-content", "-surface", StringComparison.Ordinal);
+        AppendPatternRules(css, root, DataSurfacePatterns,
+            $"background-color: var({surfaceVariable}){importantSuffix}; color: var({contentVariable}){importantSuffix}; border-color: var({borderVariable}){importantSuffix};");
 
         AppendPatternRules(css, root, StructurePatterns,
             $"color: var({contentVariable}){importantSuffix}; border-color: var({borderVariable}){importantSuffix};");

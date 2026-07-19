@@ -85,7 +85,7 @@
         </MudButton>
         break;
     case "table":
-        <MudTable Items="_tableItems" Dense="@PDense()" Hover="true" Bordered="true">
+        <MudTable Items="_tableItems" Class="@Tc" Dense="@PDense()" Hover="true" Bordered="true">
             <HeaderContent>
                 <MudTh>Name</MudTh>
                 <MudTh>Qty</MudTh>
@@ -97,7 +97,7 @@
         </MudTable>
         break;
     case "simple-table":
-        <MudSimpleTable Dense="@PDense()" Bordered="true">
+        <MudSimpleTable Class="@Tc" Dense="@PDense()" Bordered="true">
             <tbody>
                 <tr><td>Row</td><td>1</td></tr>
                 <tr><td>Row</td><td>2</td></tr>
@@ -105,7 +105,7 @@
         </MudSimpleTable>
         break;
     case "data-grid":
-        <MudDataGrid T="PlayBookRow" Items="_tableItems" Dense="@PDense()" Bordered="true" Style="max-height:120px">
+        <MudDataGrid T="PlayBookRow" Items="_tableItems" Class="@Tc" Dense="@PDense()" Bordered="true" Style="max-height:120px">
             <Columns>
                 <PropertyColumn Property="x => x.Name" Title="Name" />
                 <PropertyColumn Property="x => x.Quantity" Title="Qty" />
