@@ -36,6 +36,22 @@ public sealed class NerdMudIntentThemeFactoryTests
     }
 
     [Fact]
+    public void CreateIntentTheme_brand_chrome_uses_on_brand_chrome_for_text_primary()
+    {
+        var options = new NerdDesignTokenOptions { Prefix = "tnc" };
+        NerdTncDesignTokenPresets.Apply(options);
+        var brand = NerdMudThemeFactory.Create(options);
+
+        var intent = NerdMudIntentThemeFactory.CreateIntentTheme(
+            options,
+            NerdDesignSystemUi.BrandChrome,
+            brand,
+            isDarkMode: false);
+
+        Assert.Equal(new MudColor(NerdTncDesignTokenPresets.Snow), intent.PaletteLight.TextPrimary);
+    }
+
+    [Fact]
     public void Generate_skips_intent_palette_css_when_pseudo_css_enabled()
     {
         var options = new NerdDesignTokenOptions

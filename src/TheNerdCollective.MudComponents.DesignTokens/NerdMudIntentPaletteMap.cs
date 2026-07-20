@@ -30,7 +30,29 @@ public static class NerdMudIntentPaletteMap
         }
 
         var bundle = NerdMudBrandPaletteMap.ResolveAliasBundle(options, alias, mode);
-        return ApplyIntentOverrides(brand, alias, bundle);
+        var map = ApplyIntentOverrides(brand, alias, bundle);
+        return ApplyBrandChromeInputPaletteOverrides(options, alias, map, mode);
+    }
+
+    private static NerdMudBrandPaletteMap ApplyBrandChromeInputPaletteOverrides(
+        NerdDesignTokenOptions options,
+        string alias,
+        NerdMudBrandPaletteMap map,
+        NerdMudPaletteMode mode)
+    {
+        if (!string.Equals(alias, NerdDesignSystemUi.BrandChrome, StringComparison.OrdinalIgnoreCase) ||
+            !options.Aliases.ContainsKey(NerdDesignSystemUi.OnBrandChrome))
+        {
+            return map;
+        }
+
+        var onChrome = NerdMudBrandPaletteMap.ResolveAliasBundle(options, NerdDesignSystemUi.OnBrandChrome, mode);
+        return map with
+        {
+            TextPrimary = onChrome.Color,
+            TextSecondary = onChrome.Color,
+            LinesInputs = onChrome.Border
+        };
     }
 
     public static void AppendIntentPaletteOverrides(
@@ -148,6 +170,14 @@ public static class NerdMudIntentPaletteMap
         {
             css.AppendLine($"  --mud-palette-appbar-background: var({variable}){importantSuffix};");
             css.AppendLine($"  --mud-palette-appbar-text: var({textVariable}){importantSuffix};");
+            var onBrandChromeVariable = variable.Replace(
+                $"-color-{aliasName}",
+                $"-color-{NerdDesignSystemUi.OnBrandChrome}",
+                StringComparison.OrdinalIgnoreCase);
+            css.AppendLine($"  --mud-palette-text-primary: var({onBrandChromeVariable}){importantSuffix};");
+            css.AppendLine($"  --mud-palette-text-secondary: var({onBrandChromeVariable}){importantSuffix};");
+            css.AppendLine(
+                $"  --mud-palette-lines-inputs: var({onBrandChromeVariable}-border, var({onBrandChromeVariable})){importantSuffix};");
             return;
         }
 

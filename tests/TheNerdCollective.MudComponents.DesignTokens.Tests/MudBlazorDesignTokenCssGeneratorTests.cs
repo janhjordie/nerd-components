@@ -281,8 +281,28 @@ public class MudBlazorDesignTokenCssGeneratorTests
             css.IndexOf(":root .tnc-brand-chrome.mud-button-outlined", StringComparison.Ordinal),
             200);
         Assert.Contains("color: var(--tnc-color-on-brand-chrome)", brandChromeOutlined);
+        Assert.DoesNotContain(":root .tnc-brand-chrome .mud-button-outlined", css);
+        Assert.DoesNotContain(":root .tnc-page-surface .mud-button-outlined", css);
         Assert.Contains(":root .tnc-page-surface.mud-button-outlined", css);
         Assert.Contains("color: var(--tnc-color-secondary-action)", css);
+    }
+
+    [Fact]
+    public void Generate_brand_chrome_surface_uses_on_brand_chrome_for_inputs()
+    {
+        var options = new NerdDesignTokenOptions { Prefix = "tnc", UseImportantOverrides = false };
+        NerdTncDesignTokenPresets.Apply(options);
+
+        var css = MudBlazorDesignTokenCssGenerator.Generate(options);
+
+        Assert.Contains(":root .tnc-brand-chrome.mud-input-control :where([class*=\"mud-input-label\"])", css);
+        Assert.Contains(":root .tnc-brand-chrome.mud-input-control :where([class*=\"mud-input-slot\"])", css);
+        Assert.DoesNotContain(":root .tnc-page-surface .tnc-brand-chrome.mud-input-control", css);
+
+        var labelRule = css.Substring(
+            css.IndexOf(":root .tnc-brand-chrome.mud-input-control :where([class*=\"mud-input-label\"])", StringComparison.Ordinal),
+            120);
+        Assert.Contains("color: var(--tnc-color-on-brand-chrome)", labelRule);
     }
 
     [Fact]

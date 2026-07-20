@@ -659,26 +659,108 @@ public static class MudBlazorDesignTokenCssGenerator
         ], filled: false, important, textOnly: true);
 
         var outlinedColor = $"var(--{prefix}-color-{outlinedIntent})";
-        var outlinedBorder = $"var(--{prefix}-color-{outlinedIntent}-border)";
+        var outlinedBorder =
+            $"var(--{prefix}-color-{outlinedIntent}-border, var(--{prefix}-color-{outlinedIntent}))";
 
-        css.AppendLine($"{root}[class*=\"mud-toggle-item\"][class*=\"mud-button-outlined\"],");
-        css.AppendLine($"{root} :where([class*=\"mud-toggle-item\"][class*=\"mud-button-outlined\"]) {{");
+        css.AppendLine($"{root}[class*=\"mud-toggle-item\"][class*=\"mud-button-outlined\"] {{");
         css.AppendLine($"  color: {outlinedColor}{important};");
         css.AppendLine($"  border-color: {outlinedBorder}{important};");
         css.AppendLine($"  background-color: transparent{important};");
         css.AppendLine("}");
 
-        css.AppendLine($"{root}[class*=\"mud-toggle-item\"][class*=\"mud-button-outlined\"]:hover,");
-        css.AppendLine($"{root} :where([class*=\"mud-toggle-item\"][class*=\"mud-button-outlined\"]):hover {{");
+        css.AppendLine($"{root}[class*=\"mud-toggle-item\"][class*=\"mud-button-outlined\"]:hover {{");
         css.AppendLine($"  color: {outlinedColor}{important};");
         css.AppendLine($"  background-color: color-mix(in srgb, {outlinedColor} 12%, transparent){important};");
         css.AppendLine("}");
 
         css.AppendLine($"{root}.mud-button-outlined .mud-button-label,");
-        css.AppendLine($"{root} .mud-button-outlined .mud-button-label,");
         css.AppendLine($"{root}[class*=\"mud-button-outlined\"] .mud-button-label {{");
         css.AppendLine($"  color: inherit{important};");
         css.AppendLine("}");
+
+        AppendSurfaceScopedInputRules(css, root, prefix, options, surfaceAlias, important);
+    }
+
+    private static void AppendSurfaceScopedInputRules(
+        StringBuilder css,
+        string root,
+        string prefix,
+        NerdDesignTokenOptions options,
+        string surfaceAlias,
+        string important)
+    {
+        var inputIntent = ResolveSurfaceInputIntent(options, surfaceAlias);
+        var surfaceVariable = $"--{prefix}-color-{surfaceAlias}-surface";
+        string labelColor;
+        string valueColor;
+        string borderColor;
+
+        if (string.Equals(inputIntent, surfaceAlias, StringComparison.OrdinalIgnoreCase))
+        {
+            var contentVariable = $"var(--{prefix}-color-{surfaceAlias}-content)";
+            labelColor = contentVariable;
+            valueColor = contentVariable;
+            borderColor = $"var(--{prefix}-color-{surfaceAlias}-border, var(--{prefix}-color-{surfaceAlias}))";
+        }
+        else
+        {
+            var intentVariable = $"var(--{prefix}-color-{inputIntent})";
+            labelColor = intentVariable;
+            valueColor = intentVariable;
+            borderColor = $"var(--{prefix}-color-{inputIntent}-border, var(--{prefix}-color-{inputIntent}))";
+        }
+
+        var surfaceMix = $"var({surfaceVariable})";
+        string[] inputHosts =
+        [
+            "mud-input-control", "mud-text-field", "mud-numeric-field", "mud-select", "mud-autocomplete", "mud-picker"
+        ];
+
+        foreach (var host in inputHosts)
+        {
+            css.AppendLine($"{root}.{host} > .mud-input-control-input-container > [class*=\"mud-input-label\"],");
+            css.AppendLine($"{root}.{host} :where([class*=\"mud-input-label\"]) {{");
+            css.AppendLine($"  color: {labelColor}{important};");
+            css.AppendLine("}");
+
+            css.AppendLine($"{root}.{host} :where([class*=\"mud-input-slot\"]),");
+            css.AppendLine($"{root}.{host} :where([class*=\"mud-input-text\"]) {{");
+            css.AppendLine($"  color: {valueColor}{important};");
+            css.AppendLine($"  caret-color: {labelColor}{important};");
+            css.AppendLine("}");
+
+            css.AppendLine($"{root}.{host} :where([class*=\"mud-input-adornment\"]) {{");
+            css.AppendLine($"  color: {labelColor}{important};");
+            css.AppendLine("}");
+
+            css.AppendLine($"{root}.{host} :where(.mud-input-outlined) .mud-input-outlined-border {{");
+            css.AppendLine(
+                $"  border-color: color-mix(in srgb, {borderColor} 65%, {surfaceMix}){important};");
+            css.AppendLine("}");
+
+            css.AppendLine($"{root}.{host} :where(.mud-input-outlined.mud-input-focused) .mud-input-outlined-border {{");
+            css.AppendLine($"  border-color: {borderColor}{important};");
+            css.AppendLine("}");
+        }
+
+        css.AppendLine($"{root}.mud-checkbox label,");
+        css.AppendLine($"{root}.mud-radio label,");
+        css.AppendLine($"{root}.mud-input-control label,");
+        css.AppendLine($"{root}.mud-switch ~ .mud-typography,");
+        css.AppendLine($"{root}.mud-switch + .mud-typography {{");
+        css.AppendLine($"  color: {labelColor}{important};");
+        css.AppendLine("}");
+    }
+
+    private static string ResolveSurfaceInputIntent(NerdDesignTokenOptions options, string surfaceAlias)
+    {
+        if (string.Equals(surfaceAlias, NerdDesignSystemUi.BrandChrome, StringComparison.OrdinalIgnoreCase) &&
+            options.Aliases.ContainsKey(NerdDesignSystemUi.OnBrandChrome))
+        {
+            return NerdDesignSystemUi.OnBrandChrome;
+        }
+
+        return surfaceAlias;
     }
 
     private static (string Filled, string Outlined, string Text) ResolveSurfaceButtonIntents(
@@ -715,11 +797,12 @@ public static class MudBlazorDesignTokenCssGenerator
     {
         var color = $"var(--{prefix}-color-{intent})";
         var text = $"var(--{prefix}-color-{intent}-text)";
-        var border = $"var(--{prefix}-color-{intent}-border)";
+        var border =
+            $"var(--{prefix}-color-{intent}-border, var(--{prefix}-color-{intent}))";
 
         foreach (var pattern in patterns)
         {
-            css.AppendLine($"{root}.{pattern}, {root} .{pattern}, {root}[class*=\"{pattern}\"] {{");
+            css.AppendLine($"{root}.{pattern}, {root}[class*=\"{pattern}\"] {{");
             if (filled)
             {
                 css.AppendLine($"  background-color: {color}{important};");
