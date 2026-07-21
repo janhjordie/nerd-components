@@ -4,17 +4,6 @@
 
 <MudPaper Outlined="true" Class="pa-3" data-nerd-token="@Ui(NerdDesignSystemUi.PageSurface)">
     <MudGrid Spacing="2">
-        @if (ShowBrandSwitcher)
-        {
-            <MudItem xs="12" md="3">
-                <MudSelect T="string" Label="Brand" Value="@SelectedBrand" ValueChanged="OnBrandChanged" Variant="Variant.Outlined" Margin="Margin.Dense">
-                    @foreach (var brandPack in BrandPacks)
-                    {
-                        <MudSelectItem Value="@brandPack.Id">@NerdBrandPackLabels.Format(brandPack)</MudSelectItem>
-                    }
-                </MudSelect>
-            </MudItem>
-        }
         <MudItem xs="12" md="3">
             <MudSelect T="string" Label="Preview scope" @bind-Value="SelectedTokenFilter" Variant="Variant.Outlined" Margin="Margin.Dense">
                 <MudSelectItem Value="@NerdPlayBookTokenFilter.AllIntents">All intents</MudSelectItem>
@@ -68,18 +57,6 @@
     public IReadOnlyList<string> TokenNames { get; set; } = [];
 
     [Parameter]
-    public IEnumerable<INerdBrandPack> BrandPacks { get; set; } = [];
-
-    [Parameter]
-    public string SelectedBrand { get; set; } = string.Empty;
-
-    [Parameter]
-    public EventCallback<string> SelectedBrandChanged { get; set; }
-
-    [Parameter]
-    public bool ShowBrandSwitcher { get; set; }
-
-    [Parameter]
     public string SelectedTokenFilter { get; set; } = NerdPlayBookTokenFilter.AllIntents;
 
     [Parameter]
@@ -110,8 +87,6 @@
     public bool ShowDarkModeToggle { get; set; } = true;
 
     private Task OnTypographyPresetChanged(string value) => TypographyPresetChanged.InvokeAsync(value);
-
-    private Task OnBrandChanged(string value) => SelectedBrandChanged.InvokeAsync(value);
 
     private IEnumerable<NerdIntentCatalogEntry> IntentEntries =>
         NerdIntentCatalogTools.StandardIntents.Where(entry => TokenOptions.Aliases.ContainsKey(entry.Name));

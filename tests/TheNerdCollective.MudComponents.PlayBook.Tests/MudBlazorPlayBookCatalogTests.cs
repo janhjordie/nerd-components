@@ -1,4 +1,6 @@
 using Xunit;
+using TheNerdCollective.Brand.Tnc;
+using TheNerdCollective.MudComponents.DesignTokens;
 using TheNerdCollective.MudComponents.PlayBook;
 
 namespace TheNerdCollective.MudComponents.PlayBook.Tests;
@@ -54,6 +56,28 @@ public class MudBlazorPlayBookCatalogTests
         var dense = NerdPlayBookTypography.CreateTheme(NerdPlayBookTypography.DensePreset);
         Assert.NotNull(marketing);
         Assert.NotNull(dense);
+    }
+
+    [Fact]
+    public void ResolveTypography_applies_marketing_preset()
+    {
+        var typography = NerdPlayBookTypography.ResolveTypography(NerdPlayBookTypography.MarketingPreset);
+
+        Assert.Equal("500", typography.FontWeight);
+        Assert.Contains("H1", typography.ConfiguredRoles);
+    }
+
+    [Fact]
+    public void CreateBrandTheme_applies_token_radii_and_typography()
+    {
+        var options = new NerdDesignTokenOptions { Prefix = "tnc" };
+        NerdTncDesignTokenPresets.Apply(options);
+        NerdFoundationTaxonomyTools.ApplyDefaults(options);
+
+        var theme = NerdPlayBookTypography.CreateBrandTheme(NerdPlayBookTypography.DensePreset, options);
+
+        Assert.Equal("8px", theme.LayoutProperties.DefaultBorderRadius);
+        Assert.Equal("400", theme.Typography.Body1.FontWeight);
     }
 
     [Fact]

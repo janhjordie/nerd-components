@@ -20,6 +20,7 @@
     <ProjectReference Include="..\..\src\TheNerdCollective.Brand.Acme\TheNerdCollective.Brand.Acme.csproj" />
     <ProjectReference Include="..\..\src\TheNerdCollective.Brand.Demo\TheNerdCollective.Brand.Demo.csproj" />
     <ProjectReference Include="..\..\src\TheNerdCollective.Brand.Dnf\TheNerdCollective.Brand.Dnf.csproj" />
+    <ProjectReference Include="..\..\src\TheNerdCollective.Brand.Dryk\TheNerdCollective.Brand.Dryk.csproj" />
     <ProjectReference Include="..\..\src\TheNerdCollective.Brand.Tnc\TheNerdCollective.Brand.Tnc.csproj" />
     <ProjectReference Include="..\..\src\TheNerdCollective.MudComponents.ResponsiveTypography\TheNerdCollective.MudComponents.ResponsiveTypography.csproj" />
   </ItemGroup>

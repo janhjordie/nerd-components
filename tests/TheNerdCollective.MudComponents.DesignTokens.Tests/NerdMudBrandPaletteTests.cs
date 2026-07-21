@@ -49,13 +49,32 @@ public sealed class NerdMudBrandPaletteTests
     }
 
     [Fact]
+    public void NerdMudThemeFactory_maps_content_intents_to_paint_colors_for_dnf()
+    {
+        var options = new NerdDesignTokenOptions { Prefix = "dnf" };
+        TheNerdCollective.Brand.Dnf.NerdDnfDesignTokenPresets.Apply(options);
+
+        var theme = NerdMudThemeFactory.Create(options);
+
+        // on-brand-chrome → kridt (paint), not contrast-of-kridt (skov)
+        Assert.Equal(new MudColor(TheNerdCollective.Brand.Dnf.NerdDnfDesignTokenPresets.Kridt), theme.PaletteLight.AppbarText);
+        // brand-chrome → skov
+        Assert.Equal(new MudColor(TheNerdCollective.Brand.Dnf.NerdDnfDesignTokenPresets.Skov), theme.PaletteLight.AppbarBackground);
+        // nav-item → skov (paint), not content-on-skov (kridt)
+        Assert.Equal(new MudColor(TheNerdCollective.Brand.Dnf.NerdDnfDesignTokenPresets.Skov), theme.PaletteLight.DrawerText);
+        Assert.Equal(new MudColor(TheNerdCollective.Brand.Dnf.NerdDnfDesignTokenPresets.Kridt), theme.PaletteLight.DrawerBackground);
+    }
+
+    [Fact]
     public void NerdMudThemeFactory_applies_typography_and_layout_from_pack()
     {
         var options = new NerdDesignTokenOptions { Prefix = "tnc" };
         NerdTncDesignTokenPresets.Apply(options);
-        options.AddRadius("md", "12px");
+        options.AddRadius("default", "12px");
         options.AddShadow("md", "0 4px 12px rgba(0,0,0,0.15)");
         options.AddSpacing("drawer-width", "280px");
+        options.AddZIndex("modal", "1400");
+        options.AddZIndex("tooltip", "1600");
 
         var typography = new NerdResponsiveTypographyOptions();
         typography.Typography.H3 = "2.5rem";
@@ -66,6 +85,8 @@ public sealed class NerdMudBrandPaletteTests
         Assert.Equal("280px", theme.LayoutProperties.DrawerWidthLeft);
         Assert.Equal("2.5rem", theme.Typography.H3.FontSize);
         Assert.Equal("0 4px 12px rgba(0,0,0,0.15)", theme.Shadows.Elevation[2]);
+        Assert.Equal(1400, theme.ZIndex.Dialog);
+        Assert.Equal(1600, theme.ZIndex.Tooltip);
     }
 
     [Fact]

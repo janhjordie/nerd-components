@@ -9,7 +9,11 @@
 else
 {
     <NerdDesignSystemScripts />
-    <NerdCatalogThemeProvider IsDarkMode="_previewDark">
+    @if (ShowResponsiveTypography)
+    {
+        <NerdResponsiveTypographyStyles />
+    }
+    <NerdCatalogThemeProvider Theme="_catalogTheme" IsDarkMode="_previewDark">
         <NerdDesignTokenStyles />
         <NerdCatalogPage>
         <MudStack Spacing="3">
@@ -32,12 +36,6 @@ else
                             }
                         </MudSelect>
                     }
-                    <MudSelect T="string" Value="_selectedBrand" ValueChanged="SwitchBrandAsync" Label="Brand" Style="min-width: 140px;">
-                        @foreach (var brandPack in InstalledBrandPacks)
-                        {
-                            <MudSelectItem Value="@brandPack.Id">@NerdBrandPackLabels.Format(brandPack)</MudSelectItem>
-                        }
-                    </MudSelect>
                     <MudButton Href="@HubOptions.HubRoute" Variant="Variant.Text" Class="@Ui(NerdDesignSystemUi.MutedContent)">Design system</MudButton>
                 </MudStack>
             </MudStack>
@@ -409,7 +407,7 @@ else
                                         <MudIconButton Class="@className" Icon="@Icons.Material.Filled.Favorite" />
                                     </div>
                                     <div data-testid="@($"fab-{pair.Key}")">
-                                        <MudFab Class="@className" Icon="@Icons.Material.Filled.Add" />
+                                        <MudFab Class="@className" StartIcon="@Icons.Material.Filled.Add" Label="Add" />
                                     </div>
                                     <div data-testid="@($"button-group-{pair.Key}")">
                                         <MudButtonGroup Variant="Variant.Filled">
@@ -418,9 +416,9 @@ else
                                         </MudButtonGroup>
                                     </div>
                                     <div data-testid="@($"fab-menu-{pair.Key}")">
-                                        <MudFabMenu Class="@className" Icon="@Icons.Material.Filled.Menu">
-                                            <MudFabMenuItem Text="One" />
-                                            <MudFabMenuItem Text="Two" />
+                                        <MudFabMenu Class="@className">
+                                            <MudFabMenuItem />
+                                            <MudFabMenuItem />
                                         </MudFabMenu>
                                     </div>
                                     <div data-testid="@($"badge-{pair.Key}")">
@@ -458,7 +456,7 @@ else
                                         <MudRadio Class="@className" Value="@("radio")" Ripple="false">Radio</MudRadio>
                                     </MudRadioGroup>
                                     <div data-testid="@($"toggle-group-{pair.Key}")">
-                                        <MudToggleGroup T="string" Value="@("a")" Class="@className" Color="Color.Default" Variant="Variant.Outlined" Size="Size.Small">
+                                        <MudToggleGroup T="string" Value="@("a")" Class="@className" Color="Color.Default" Size="Size.Small">
                                             <MudToggleItem Value="@("a")" Class="@className">A</MudToggleItem>
                                             <MudToggleItem Value="@("b")" Class="@className">B</MudToggleItem>
                                         </MudToggleGroup>

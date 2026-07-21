@@ -1,6 +1,7 @@
 using TheNerdCollective.Brand.Acme;
 using TheNerdCollective.Brand.Demo;
 using TheNerdCollective.Brand.Dnf;
+using TheNerdCollective.Brand.Dryk;
 using TheNerdCollective.Brand.Tnc;
 
 namespace TheNerdCollective.MudComponents.ResponsiveTypography.Tests;
@@ -19,6 +20,7 @@ public static class NerdBrandTypographyTestBootstrap
 
         registry.Reset();
         registry.Register(NerdDnfBrandTypographyPack.Instance);
+        registry.Register(NerdDrykBrandTypographyPack.Instance);
         registry.Register(NerdAcmeBrandTypographyPack.Instance);
         registry.Register(NerdDemoBrandTypographyPack.Instance);
         registry.Register(NerdTncBrandTypographyPack.Instance);

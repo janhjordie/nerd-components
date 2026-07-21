@@ -110,6 +110,7 @@ public static class MudBlazorDesignTokenCssGenerator
         AppendCatalogChromeRules(css, options);
         AppendCatalogToolbarRules(css, options);
         AppendPairingSurfaceRules(css, options);
+        AppendShellSelectionRules(css, options);
         AppendRecipeTypographyOverrides(css, options);
         if (options.UseCssLayer)
         {
@@ -133,14 +134,9 @@ public static class MudBlazorDesignTokenCssGenerator
         var contentToken = options.Colors[recipe.Content];
         var actionToken = recipe.Action is null ? surfaceToken : options.Colors[recipe.Action];
         var borderToken = recipe.Border is null ? surfaceToken : options.Colors[recipe.Border];
-        var surfaceBase = surfaceToken.Surface ?? surfaceToken.Light ?? surfaceToken.Value;
-        var surfaceColor = surfaceToken.Surface is not null
-            ? surfaceBase
-            : NerdColorDerivatives.Lighten(surfaceBase, 0.42);
-        var contentColor = contentToken.Content
-                           ?? NerdColorParser.ContentText(
-                               contentToken.Light ?? contentToken.Value,
-                               contentToken.ContrastText ?? NerdColorValue.ContrastText(contentToken.Light ?? contentToken.Value));
+        var surfaceColor = NerdTokenPairingTools.ResolvePairingSurfaceColor(recipe.Surface, options);
+        // Recipe Content names the paint token — use pairing foreground, not token.Content.
+        var contentColor = NerdTokenPairingTools.ResolvePairingForegroundColor(recipe.Content, options);
         var actionColor = actionToken.Light ?? actionToken.Value;
         var actionText = actionToken.ContrastText ?? NerdColorValue.ContrastText(actionColor);
         var borderColor = borderToken.Border ?? borderToken.Light ?? borderToken.Value;
@@ -186,13 +182,9 @@ public static class MudBlazorDesignTokenCssGenerator
             : NerdColorDerivatives.Lighten(
                 darkSurfaceToken.Dark ?? darkSurfaceToken.Light ?? darkSurfaceToken.Value,
                 0.42);
-        var darkContentColor = darkContentToken.Content
-                               ?? NerdColorParser.ContentText(
-                                   darkContentToken.Dark ?? darkContentToken.Light ?? darkContentToken.Value,
-                                   darkContentToken.DarkContrastText
-                                   ?? darkContentToken.ContrastText
-                                   ?? NerdColorValue.ContrastText(
-                                       darkContentToken.Dark ?? darkContentToken.Light ?? darkContentToken.Value));
+        var darkContentColor = darkContentToken.Dark
+                               ?? darkContentToken.Light
+                               ?? darkContentToken.Value;
         var darkActionColor = darkActionToken.Dark ?? darkActionToken.Light ?? darkActionToken.Value;
         var darkActionText = darkActionToken.DarkContrastText
                              ?? darkActionToken.ContrastText
@@ -272,8 +264,9 @@ public static class MudBlazorDesignTokenCssGenerator
         css.AppendLine($"{root} .mud-navmenu .mud-nav-link.active, {root}.mud-navmenu .mud-nav-link.active,");
         css.AppendLine($"{root} .mud-nav-link:hover, {root}.mud-nav-link:hover,");
         css.AppendLine($"{root} .mud-nav-link.active, {root}.mud-nav-link.active {{");
-        css.AppendLine($"  background-color: color-mix(in srgb, {actionColor} 12%, transparent){important};");
-        css.AppendLine($"  color: {actionColor}{important};");
+        css.AppendLine($"  background-color: {NerdShellSelectionTools.BuildTintBackground(actionColor)}{important};");
+        // Keep content paint for text — action is accent only (avoids graes-on-pale).
+        css.AppendLine($"  color: {contentColor}{important};");
         css.AppendLine("}");
 
         css.AppendLine($"{root} .mud-nav-link:hover .mud-nav-link-text,");
@@ -288,7 +281,7 @@ public static class MudBlazorDesignTokenCssGenerator
         css.AppendLine($"{root}.mud-nav-link.active .mud-nav-link-text,");
         css.AppendLine($"{root}.mud-nav-link.active .mud-nav-link-icon,");
         css.AppendLine($"{root}.mud-nav-link.active .mud-icon-root {{");
-        css.AppendLine($"  color: {actionColor}{important};");
+        css.AppendLine($"  color: {contentColor}{important};");
         css.AppendLine("}");
     }
 
@@ -470,7 +463,7 @@ public static class MudBlazorDesignTokenCssGenerator
 
         var inputValueVariable = contentVariable;
         var inputBorderMixVariable = variable;
-        if (options.Aliases.ContainsKey(NerdDesignSystemUi.PageSurface))
+        if (options.Aliases.ContainsKey(NerdDesignSystemUi.PageSurface) && !IsContentIntentAlias(name))
         {
             inputValueVariable = $"--{prefix}-color-{NerdDesignSystemUi.PageSurface}-content";
             if (!string.IsNullOrWhiteSpace(pageSurfaceVariable)
@@ -505,7 +498,8 @@ public static class MudBlazorDesignTokenCssGenerator
             switchCheckedTrackBackground,
             switchTrackBorderVariable,
             inputValueVariable,
-            inputBorderMixVariable);
+            inputBorderMixVariable,
+            IsContentIntentAlias(name));
 
         if (options.EnablePortalTokenScope)
         {
@@ -528,7 +522,8 @@ public static class MudBlazorDesignTokenCssGenerator
                 switchCheckedTrackBackground,
                 switchTrackBorderVariable,
                 inputValueVariable,
-                inputBorderMixVariable);
+                inputBorderMixVariable,
+                IsContentIntentAlias(name));
         }
     }
 
@@ -621,6 +616,9 @@ public static class MudBlazorDesignTokenCssGenerator
         {
             css.AppendLine($"  --mud-palette-appbar-background: var({surfaceVariable}){important};");
             css.AppendLine($"  --mud-palette-appbar-text: var({textVariable}){important};");
+            css.AppendLine($"  --mud-palette-surface: var({surfaceVariable}){important};");
+            css.AppendLine($"  --mud-palette-text-primary: var({contentVariable}){important};");
+            css.AppendLine($"  --mud-palette-text-secondary: var({contentVariable}){important};");
         }
         else if (string.Equals(aliasName, NerdDesignSystemUi.NavSurface, StringComparison.OrdinalIgnoreCase))
         {
@@ -679,6 +677,40 @@ public static class MudBlazorDesignTokenCssGenerator
         css.AppendLine("}");
 
         AppendSurfaceScopedInputRules(css, root, prefix, options, surfaceAlias, important);
+        AppendSurfaceScopedContentRules(css, root, prefix, options, surfaceAlias, important);
+    }
+
+    private static void AppendSurfaceScopedContentRules(
+        StringBuilder css,
+        string root,
+        string prefix,
+        NerdDesignTokenOptions options,
+        string surfaceAlias,
+        string important)
+    {
+        var contentIntent = ResolveSurfaceInputIntent(options, surfaceAlias);
+        string contentColor;
+        string borderColor;
+
+        if (string.Equals(contentIntent, surfaceAlias, StringComparison.OrdinalIgnoreCase))
+        {
+            contentColor = $"var(--{prefix}-color-{surfaceAlias}-content)";
+            borderColor =
+                $"var(--{prefix}-color-{surfaceAlias}-border, var(--{prefix}-color-{surfaceAlias}))";
+        }
+        else
+        {
+            contentColor = $"var(--{prefix}-color-{contentIntent})";
+            borderColor =
+                $"var(--{prefix}-color-{contentIntent}-border, var(--{prefix}-color-{contentIntent}))";
+        }
+
+        MudBlazorComponentRuleBuilder.AppendSurfaceContentRules(
+            css,
+            root,
+            contentColor,
+            borderColor,
+            options.UseImportantOverrides);
     }
 
     private static void AppendSurfaceScopedInputRules(
@@ -718,10 +750,17 @@ public static class MudBlazorDesignTokenCssGenerator
 
         foreach (var host in inputHosts)
         {
-            css.AppendLine($"{root}.{host} > .mud-input-control-input-container > [class*=\"mud-input-label\"],");
+            var (labelPath, scopePath) = ResolveSurfaceInputControlPaths(host);
+            css.AppendLine($"{root}.{host} {labelPath} .mud-input-control-input-container > [class*=\"mud-input-label\"],");
             css.AppendLine($"{root}.{host} :where([class*=\"mud-input-label\"]) {{");
             css.AppendLine($"  color: {labelColor}{important};");
             css.AppendLine("}");
+
+            if (!string.IsNullOrEmpty(scopePath))
+            {
+                css.AppendLine($"{root}.{host} {scopePath} :where([class*=\"mud-input-slot\"]),");
+                css.AppendLine($"{root}.{host} {scopePath} :where([class*=\"mud-input-text\"]),");
+            }
 
             css.AppendLine($"{root}.{host} :where([class*=\"mud-input-slot\"]),");
             css.AppendLine($"{root}.{host} :where([class*=\"mud-input-text\"]) {{");
@@ -729,14 +768,29 @@ public static class MudBlazorDesignTokenCssGenerator
             css.AppendLine($"  caret-color: {labelColor}{important};");
             css.AppendLine("}");
 
+            if (!string.IsNullOrEmpty(scopePath))
+            {
+                css.AppendLine($"{root}.{host} {scopePath} :where([class*=\"mud-input-adornment\"]),");
+            }
+
             css.AppendLine($"{root}.{host} :where([class*=\"mud-input-adornment\"]) {{");
             css.AppendLine($"  color: {labelColor}{important};");
             css.AppendLine("}");
+
+            if (!string.IsNullOrEmpty(scopePath))
+            {
+                css.AppendLine($"{root}.{host} {scopePath} :where(.mud-input-outlined) .mud-input-outlined-border,");
+            }
 
             css.AppendLine($"{root}.{host} :where(.mud-input-outlined) .mud-input-outlined-border {{");
             css.AppendLine(
                 $"  border-color: color-mix(in srgb, {borderColor} 65%, {surfaceMix}){important};");
             css.AppendLine("}");
+
+            if (!string.IsNullOrEmpty(scopePath))
+            {
+                css.AppendLine($"{root}.{host} {scopePath} :where(.mud-input-outlined.mud-input-focused) .mud-input-outlined-border,");
+            }
 
             css.AppendLine($"{root}.{host} :where(.mud-input-outlined.mud-input-focused) .mud-input-outlined-border {{");
             css.AppendLine($"  border-color: {borderColor}{important};");
@@ -746,11 +800,21 @@ public static class MudBlazorDesignTokenCssGenerator
         css.AppendLine($"{root}.mud-checkbox label,");
         css.AppendLine($"{root}.mud-radio label,");
         css.AppendLine($"{root}.mud-input-control label,");
+        css.AppendLine($"{root}.mud-picker .mud-input-control label,");
         css.AppendLine($"{root}.mud-switch ~ .mud-typography,");
         css.AppendLine($"{root}.mud-switch + .mud-typography {{");
         css.AppendLine($"  color: {labelColor}{important};");
         css.AppendLine("}");
     }
+
+    /// <summary>
+    /// Mud pickers host <c>mud-input-control</c> between the picker root and the input container,
+    /// so surface-scoped label rules need an extra anchor to beat MudBlazor's label specificity.
+    /// </summary>
+    private static (string LabelPath, string ScopePath) ResolveSurfaceInputControlPaths(string host) =>
+        string.Equals(host, "mud-picker", StringComparison.Ordinal)
+            ? (".mud-input-control >", ".mud-input-control")
+            : (">", string.Empty);
 
     private static string ResolveSurfaceInputIntent(NerdDesignTokenOptions options, string surfaceAlias)
     {
@@ -854,13 +918,22 @@ public static class MudBlazorDesignTokenCssGenerator
         css.AppendLine("}");
 
         css.AppendLine($"{root} .mud-list-item-clickable:hover,");
+        css.AppendLine($"{root} .mud-list-item.mud-selected,");
+        css.AppendLine($"{root}.mud-list-item.mud-selected,");
+        css.AppendLine($"{root} .mud-list-item.mud-selected-item,");
+        css.AppendLine($"{root}.mud-list-item.mud-selected-item,");
+        css.AppendLine($"{root} [role=\"option\"][aria-selected=\"true\"],");
+        css.AppendLine($"{root}[role=\"option\"][aria-selected=\"true\"],");
         css.AppendLine($"{root} .mud-selected-item,");
         css.AppendLine($"{root} .mud-selected {{");
-        css.AppendLine($"  background-color: color-mix(in srgb, var({contentVar}) 8%, var({surfaceVar})){important};");
+        css.AppendLine($"  background-color: {NerdShellSelectionTools.BuildTintBackground(NerdShellSelectionTools.ResolveAccentCssVariable(options))}{important};");
         css.AppendLine($"  color: var({contentVar}){important};");
         css.AppendLine("}");
 
         css.AppendLine($"{root} .mud-list-item-clickable:hover .mud-typography,");
+        css.AppendLine($"{root} .mud-list-item.mud-selected .mud-typography,");
+        css.AppendLine($"{root} .mud-list-item.mud-selected-item .mud-typography,");
+        css.AppendLine($"{root} [role=\"option\"][aria-selected=\"true\"] .mud-typography,");
         css.AppendLine($"{root} .mud-selected-item .mud-typography,");
         css.AppendLine($"{root} .mud-selected .mud-typography {{");
         css.AppendLine($"  color: inherit{important};");
@@ -883,6 +956,38 @@ public static class MudBlazorDesignTokenCssGenerator
         css.AppendLine("}");
     }
 
+    private static void AppendShellSelectionRules(StringBuilder css, NerdDesignTokenOptions options)
+    {
+        if (!options.Aliases.ContainsKey(NerdDesignSystemUi.PageSurface))
+        {
+            return;
+        }
+
+        var prefix = options.Prefix;
+        var important = options.UseImportantOverrides ? " !important" : string.Empty;
+        var pageSurface = NerdDesignSystemUi.PageSurface;
+        var portalRoot = $".{prefix}-{pageSurface}{options.PortalScopeSelector}";
+        var accent = NerdShellSelectionTools.ResolveAccentCssVariable(options);
+        var tint = NerdShellSelectionTools.BuildTintBackground(accent);
+        var content = NerdShellSelectionTools.ResolveContentCssVariable(options, pageSurface);
+
+        css.AppendLine($"{portalRoot} .mud-list-item.mud-selected,");
+        css.AppendLine($"{portalRoot}.mud-list-item.mud-selected,");
+        css.AppendLine($"{portalRoot} .mud-list-item.mud-selected-item,");
+        css.AppendLine($"{portalRoot}.mud-list-item.mud-selected-item,");
+        css.AppendLine($"{portalRoot} [role=\"option\"][aria-selected=\"true\"],");
+        css.AppendLine($"{portalRoot}[role=\"option\"][aria-selected=\"true\"] {{");
+        css.AppendLine($"  background-color: {tint}{important};");
+        css.AppendLine($"  color: {content}{important};");
+        css.AppendLine("}");
+
+        css.AppendLine($"{portalRoot} .mud-list-item.mud-selected .mud-typography,");
+        css.AppendLine($"{portalRoot} .mud-list-item.mud-selected-item .mud-typography,");
+        css.AppendLine($"{portalRoot} [role=\"option\"][aria-selected=\"true\"] .mud-typography {{");
+        css.AppendLine($"  color: inherit{important};");
+        css.AppendLine("}");
+    }
+
     private static void AppendCatalogChromeRules(StringBuilder css, NerdDesignTokenOptions options)
     {
         if (!options.Aliases.ContainsKey(NerdDesignSystemUi.PageSurface) ||
@@ -897,16 +1002,25 @@ public static class MudBlazorDesignTokenCssGenerator
         var accent = $"var(--{prefix}-color-{NerdDesignSystemUi.PrimaryAction})";
         var accentRoot =
             $".{NerdDesignSystemUi.CatalogChromeClass} [data-nerd-accent=\"{prefix}-{NerdDesignSystemUi.PrimaryAction}\"]";
+        const string previewScopeExclude = ":not(:is([data-nerd-accent] [data-nerd-token] *))";
 
-        css.AppendLine($"{accentRoot} .mud-typography:not(.mud-tab),");
-        css.AppendLine($"{accentRoot} .mud-input-label,");
-        css.AppendLine($"{accentRoot} .mud-input-label-inputcontrol,");
-        css.AppendLine($"{accentRoot} .mud-input-control .mud-typography,");
-        css.AppendLine($"{accentRoot} .mud-input-control-input-container .mud-typography,");
-        css.AppendLine($"{accentRoot} .mud-switch + .mud-typography,");
-        css.AppendLine($"{accentRoot} label,");
-        css.AppendLine($"{accentRoot} .mud-input,");
-        css.AppendLine($"{accentRoot} .mud-input-control {{");
+        css.AppendLine($"{accentRoot} .mud-paper:not([class*=\"-recipe-\"]){previewScopeExclude},");
+        css.AppendLine($"{accentRoot} .mud-card:not([class*=\"-recipe-\"]){previewScopeExclude},");
+        css.AppendLine($"{accentRoot} .mud-simple-table{previewScopeExclude},");
+        css.AppendLine($"{accentRoot} .mud-table-root{previewScopeExclude},");
+        css.AppendLine($"{accentRoot} .mud-table-root .mud-table-cell{previewScopeExclude} {{");
+        css.AppendLine($"  color: {pageContent}{important};");
+        css.AppendLine("}");
+
+        css.AppendLine($"{accentRoot} .mud-typography:not(.mud-tab):not(:is([class*=\"-recipe-\"] *)){previewScopeExclude},");
+        css.AppendLine($"{accentRoot} .mud-input-label{previewScopeExclude},");
+        css.AppendLine($"{accentRoot} .mud-input-label-inputcontrol{previewScopeExclude},");
+        css.AppendLine($"{accentRoot} .mud-input-control .mud-typography{previewScopeExclude},");
+        css.AppendLine($"{accentRoot} .mud-input-control-input-container .mud-typography{previewScopeExclude},");
+        css.AppendLine($"{accentRoot} .mud-switch + .mud-typography{previewScopeExclude},");
+        css.AppendLine($"{accentRoot} label{previewScopeExclude},");
+        css.AppendLine($"{accentRoot} .mud-input{previewScopeExclude},");
+        css.AppendLine($"{accentRoot} .mud-input-control{previewScopeExclude} {{");
         css.AppendLine($"  color: {pageContent}{important};");
         css.AppendLine($"  caret-color: {accent}{important};");
         css.AppendLine("}");
@@ -977,14 +1091,14 @@ public static class MudBlazorDesignTokenCssGenerator
                 continue;
             }
 
-            var contentColor = contentToken.Content
-                               ?? NerdColorParser.ContentText(
-                                   contentToken.Light ?? contentToken.Value,
-                                   contentToken.ContrastText ?? NerdColorValue.ContrastText(contentToken.Light ?? contentToken.Value));
-            var root = $".{options.Prefix}-recipe-{recipe.Key}.mud-paper";
-            css.AppendLine($"{root} .mud-typography,");
-            css.AppendLine($"{root} .mud-typography-h1, {root} .mud-typography-h2, {root} .mud-typography-h3,");
-            css.AppendLine($"{root} .mud-typography-h4, {root} .mud-typography-h5, {root} .mud-typography-h6 {{");
+            var contentColor = contentToken.Light ?? contentToken.Value;
+            var root = $".{options.Prefix}-recipe-{recipe.Key}";
+            css.AppendLine($"{root}.mud-paper .mud-typography,");
+            css.AppendLine($"{root}.mud-card .mud-typography,");
+            css.AppendLine($"{root}.mud-paper .mud-typography-h1, {root}.mud-paper .mud-typography-h2, {root}.mud-paper .mud-typography-h3,");
+            css.AppendLine($"{root}.mud-card .mud-typography-h1, {root}.mud-card .mud-typography-h2, {root}.mud-card .mud-typography-h3,");
+            css.AppendLine($"{root}.mud-paper .mud-typography-h4, {root}.mud-paper .mud-typography-h5, {root}.mud-paper .mud-typography-h6,");
+            css.AppendLine($"{root}.mud-card .mud-typography-h4, {root}.mud-card .mud-typography-h5, {root}.mud-card .mud-typography-h6 {{");
             css.AppendLine($"  color: {contentColor}{important};");
             css.AppendLine($"  --mud-palette-text-primary: {contentColor}{important};");
             css.AppendLine("}");

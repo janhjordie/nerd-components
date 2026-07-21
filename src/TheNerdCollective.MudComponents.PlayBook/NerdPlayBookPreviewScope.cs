@@ -8,13 +8,19 @@ public static class NerdPlayBookPreviewScope
 {
     public static bool NeedsContrastBackdrop(NerdDesignTokenOptions options, string tokenClass)
     {
-        if (!TryResolveTokenName(options, tokenClass, out var tokenName) ||
-            !options.Colors.TryGetValue(tokenName, out var token))
+        if (!TryResolveTokenName(options, tokenClass, out var tokenName))
         {
             return false;
         }
 
-        if (NerdPlayBookTokenFilter.IsIntentScope(tokenName))
+        if (TryResolveOnIntentParentSurface(tokenName, out var parentSurface) &&
+            options.Aliases.ContainsKey(parentSurface))
+        {
+            return true;
+        }
+
+        if (NerdPlayBookTokenFilter.IsIntentScope(tokenName) ||
+            !options.Colors.TryGetValue(tokenName, out var token))
         {
             return false;
         }
@@ -37,6 +43,12 @@ public static class NerdPlayBookPreviewScope
         if (!TryResolveTokenName(options, tokenClass, out var tokenName))
         {
             return null;
+        }
+
+        if (TryResolveOnIntentParentSurface(tokenName, out var parentSurface) &&
+            options.Aliases.ContainsKey(parentSurface))
+        {
+            return NerdDesignSystemUi.TokenClass(options.Prefix, parentSurface);
         }
 
         if (options.PairingPolicy is not null)
@@ -71,6 +83,53 @@ public static class NerdPlayBookPreviewScope
             is { } fallbackName
             ? NerdDesignSystemUi.TokenClass(options.Prefix, fallbackName)
             : null;
+    }
+
+    /// <summary>
+    /// Non-surface backdrops (palette tokens, action intents) need an explicit surface paint;
+    /// surface intents like <c>brand-chrome</c> already set <c>background-color</c> on their root class.
+    /// </summary>
+    public static string? ResolveBackdropStyle(NerdDesignTokenOptions options, string tokenClass)
+    {
+        if (!NeedsContrastBackdrop(options, tokenClass) ||
+            !TryResolveTokenName(options, tokenClass, out var contentTokenName))
+        {
+            return null;
+        }
+
+        var backdropClass = ResolveBackdropClass(options, tokenClass);
+        if (backdropClass is null || !TryResolveTokenName(options, backdropClass, out var surfaceTokenName))
+        {
+            return null;
+        }
+
+        if (IsSurfaceIntent(surfaceTokenName))
+        {
+            return null;
+        }
+
+        var prefix = options.Prefix;
+        return
+            $"background-color: var(--{prefix}-color-{surfaceTokenName}); color: var(--{prefix}-color-{contentTokenName});";
+    }
+
+    private static bool IsSurfaceIntent(string tokenName) =>
+        string.Equals(tokenName, NerdDesignSystemUi.PageSurface, StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(tokenName, NerdDesignSystemUi.BrandChrome, StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(tokenName, NerdDesignSystemUi.NavSurface, StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(tokenName, NerdDesignSystemUi.InputSurface, StringComparison.OrdinalIgnoreCase);
+
+    private static bool TryResolveOnIntentParentSurface(string tokenName, out string parentSurface)
+    {
+        const string onPrefix = "on-";
+        if (tokenName.StartsWith(onPrefix, StringComparison.Ordinal) && tokenName.Length > onPrefix.Length)
+        {
+            parentSurface = tokenName[onPrefix.Length..];
+            return true;
+        }
+
+        parentSurface = string.Empty;
+        return false;
     }
 
     private static bool TryResolveTokenName(NerdDesignTokenOptions options, string tokenClass, out string tokenName)

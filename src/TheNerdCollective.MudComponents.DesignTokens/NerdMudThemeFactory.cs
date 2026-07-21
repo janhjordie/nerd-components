@@ -22,7 +22,8 @@ public static class NerdMudThemeFactory
             PaletteLight = NerdMudThemePaletteConverter.ToPaletteLight(lightMap),
             PaletteDark = NerdMudThemePaletteConverter.ToPaletteDark(darkMap),
             LayoutProperties = ResolveLayoutProperties(options),
-            Shadows = ResolveShadows(options)
+            Shadows = ResolveShadows(options),
+            ZIndex = ResolveZIndex(options)
         };
 
         configure?.Invoke(theme);
@@ -90,5 +91,60 @@ public static class NerdMudThemeFactory
 
         borderRadius = options.Radii.Values.FirstOrDefault() ?? string.Empty;
         return !string.IsNullOrWhiteSpace(borderRadius);
+    }
+
+    /// <summary>
+    /// Maps design-token z-index names onto MudBlazor's <see cref="ZIndex"/>
+    /// (<c>Drawer</c>, <c>Popover</c>, <c>AppBar</c>, <c>Dialog</c>, <c>Snackbar</c>, <c>Tooltip</c>).
+    /// </summary>
+    private static ZIndex ResolveZIndex(NerdDesignTokenOptions options)
+    {
+        var zIndex = new ZIndex();
+        if (TryParseZ(options, ["drawer", "sticky"], out var drawer))
+        {
+            zIndex.Drawer = drawer;
+        }
+
+        if (TryParseZ(options, ["popover", "dropdown"], out var popover))
+        {
+            zIndex.Popover = popover;
+        }
+
+        if (TryParseZ(options, ["appbar", "sticky"], out var appBar))
+        {
+            zIndex.AppBar = appBar;
+        }
+
+        if (TryParseZ(options, ["dialog", "modal"], out var dialog))
+        {
+            zIndex.Dialog = dialog;
+        }
+
+        if (TryParseZ(options, ["snackbar"], out var snackbar))
+        {
+            zIndex.Snackbar = snackbar;
+        }
+
+        if (TryParseZ(options, ["tooltip"], out var tooltip))
+        {
+            zIndex.Tooltip = tooltip;
+        }
+
+        return zIndex;
+    }
+
+    private static bool TryParseZ(NerdDesignTokenOptions options, string[] keys, out int value)
+    {
+        foreach (var key in keys)
+        {
+            if (options.ZIndex.TryGetValue(key, out var raw) &&
+                int.TryParse(raw.Replace("px", string.Empty, StringComparison.OrdinalIgnoreCase).Trim(), out value))
+            {
+                return true;
+            }
+        }
+
+        value = 0;
+        return false;
     }
 }

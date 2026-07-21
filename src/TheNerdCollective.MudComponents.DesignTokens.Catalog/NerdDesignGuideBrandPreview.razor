@@ -2,32 +2,27 @@
 @using TheNerdCollective.MudComponents.Shared
 
 <MudPaper Outlined="true" Class="pa-4" data-testid="design-guide-brand-preview-panel">
-    <MudText Typo="Typo.h6">Side-by-side brand preview</MudText>
-    <MudText Typo="Typo.body2" Class="mb-3 mud-text-secondary">
-        TNC and DNF in one viewport via PseudoCss preview scopes —
-        <code>:root .tnc-primary-action</code> and <code>:root .dnf-primary-action</code>
-        without switching the global brand.
+    <MudText Typo="Typo.h6">Side-by-side brands</MudText>
+    <MudText Typo="Typo.body2" Class="@($"{Ui(NerdDesignSystemUi.MutedContent, "tnc")} mb-3")">
+        Compare TNC and DNF in one viewport without switching the global brand.
     </MudText>
 
     <MudGrid Spacing="3">
         @foreach (var preview in PreviewBrands)
         {
             <MudItem xs="12" md="6">
-                <MudText Typo="Typo.subtitle2" Class="mb-2">@preview.Label</MudText>
                 <MudPaper Outlined="true"
-                          Class="@($"{preview.PrimaryScope} pa-4")"
+                          Class="@($"{preview.PrimaryScope} pa-5")"
                           data-testid="@preview.TestId">
-                    <MudText Typo="Typo.body2" Class="@Ui(NerdDesignSystemUi.MutedContent, preview.Prefix)">
-                        Scope <code>@preview.PrimaryScope</code>
-                    </MudText>
+                    <MudText Typo="Typo.subtitle1">@preview.Label</MudText>
                     <MudStack Row="true" Spacing="2" Class="mt-3 flex-wrap">
                         <MudButton Variant="Variant.Filled"
                                    Class="@Ui(NerdDesignSystemUi.PrimaryAction, preview.Prefix)">
-                            primary-action
+                            Primary
                         </MudButton>
                         <MudButton Variant="Variant.Outlined"
                                    Class="@Ui(NerdDesignSystemUi.SecondaryAction, preview.Prefix)">
-                            secondary-action
+                            Secondary
                         </MudButton>
                     </MudStack>
                 </MudPaper>

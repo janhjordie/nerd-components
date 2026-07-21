@@ -48,6 +48,7 @@ public static class NerdResponsiveTypographyServiceCollectionExtensions
         }
 
         services.AddNerdBrandPackIntegration();
+        services.TryAddSingleton<INerdBrandSwitcher, NerdBrandSwitcher>();
 
         return services;
     }

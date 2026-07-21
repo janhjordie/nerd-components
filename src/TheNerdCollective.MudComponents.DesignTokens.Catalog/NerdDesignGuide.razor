@@ -13,177 +13,32 @@ else
 {
     <NerdDesignSystemScripts />
     <NerdDesignTokenStyles />
-    <NerdCatalogPage>
-        <MudStack Spacing="4">
+    <NerdCatalogPage MaxWidth="MaxWidth.ExtraLarge">
+        <MudStack Spacing="5">
             <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-3">
                 <div>
                     <MudText Typo="Typo.h4">Design guide</MudText>
                     <MudText Typo="Typo.body2" Class="@Ui(NerdDesignSystemUi.MutedContent)">
-                        Live brand manual for <strong>@(Options.ActiveBrandPackId ?? Options.Prefix)</strong>
+                        @(Options.ActiveBrandPackId ?? Options.Prefix)
                         @if (!string.IsNullOrWhiteSpace(Options.ActiveBrandIdentityVersion))
                         {
-                            <span> · identity @Options.ActiveBrandIdentityVersion</span>
+                            <span> · @Options.ActiveBrandIdentityVersion</span>
                         }
-                        · Prefix <code>@Options.Prefix</code>
                     </MudText>
                 </div>
                 <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="flex-wrap">
-                    <MudSelect T="string" Value="_selectedBrand" ValueChanged="SwitchBrandAsync" Label="Brand" Style="min-width: 160px;">
-                        @foreach (var brandPack in InstalledBrandPacks)
-                        {
-                            <MudSelectItem Value="@brandPack.Id">@NerdBrandPackLabels.Format(brandPack)</MudSelectItem>
-                        }
-                    </MudSelect>
-                    <MudButton Href="@HubOptions.HubRoute" Variant="Variant.Text" Class="@Ui(NerdDesignSystemUi.MutedContent)">Design system</MudButton>
-                    <MudButton Href="@HubOptions.PlayBookRoute" Variant="Variant.Text" Class="@Ui(NerdDesignSystemUi.MutedContent)">PlayBook</MudButton>
+                    <MudButton Href="@HubOptions.HubRoute" Variant="Variant.Text" Size="Size.Small" Class="@Ui(NerdDesignSystemUi.MutedContent)">System</MudButton>
+                    <MudButton Href="@HubOptions.PlayBookRoute" Variant="Variant.Text" Size="Size.Small" Class="@Ui(NerdDesignSystemUi.MutedContent)">PlayBook</MudButton>
                 </MudStack>
             </MudStack>
 
-            <MudPaper Outlined="true" Class="pa-4">
-                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-3">
-                    <div>
-                        <MudText Typo="Typo.h6">Design-to-code parity</MudText>
-                        <MudText Typo="Typo.body2" Class="@Ui(NerdDesignSystemUi.MutedContent)">
-                            How closely runtime matches a complete brand manual (shell, recipes, pairings, defaults).
-                        </MudText>
-                    </div>
-                    <MudProgressCircular Value="@_parity.Score" Size="Size.Large" Color="@ParityColor">
-                        <MudText Typo="Typo.h6">@_parity.Score</MudText>
-                    </MudProgressCircular>
-                </MudStack>
-                <MudGrid Spacing="2" Class="mt-3">
-                    @foreach (var metric in _parity.Metrics)
-                    {
-                        <MudItem xs="12" sm="6" md="4">
-                            <MudPaper Outlined="true" Class="pa-3">
-                                <MudText Typo="Typo.subtitle2">@metric.Name</MudText>
-                                <MudText Typo="Typo.caption" Class="@Ui(NerdDesignSystemUi.MutedContent)">@metric.Detail</MudText>
-                                <MudProgressLinear Value="@metric.Score" Color="@(metric.Score >= 80 ? Color.Success : metric.Score >= 50 ? Color.Warning : Color.Error)" Class="mt-2" />
-                            </MudPaper>
-                        </MudItem>
-                    }
-                </MudGrid>
-            </MudPaper>
-
-            <MudPaper Outlined="true" Class="pa-4" data-testid="mud-state-parity-panel">
-                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-3">
-                    <div>
-                        <MudText Typo="Typo.h6">Mud state parity</MudText>
-                        <MudText Typo="Typo.body2" Class="@Ui(NerdDesignSystemUi.MutedContent)">
-                            Inventory-driven P1/P3 components — required state selectors in generated CSS for @Options.Prefix.
-                        </MudText>
-                    </div>
-                    <MudProgressCircular Value="@_mudStateParity.Score" Size="Size.Large" Color="@MudStateParityColor">
-                        <MudText Typo="Typo.h6">@_mudStateParity.Score</MudText>
-                    </MudProgressCircular>
-                </MudStack>
-                <MudGrid Spacing="2" Class="mt-3">
-                    @foreach (var component in _mudStateParity.Components)
-                    {
-                        <MudItem xs="12" sm="6" md="4">
-                            <MudPaper Outlined="true"
-                                      Class="pa-3"
-                                      data-testid="@($"mud-parity-{component.Component}")">
-                                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
-                                    <MudText Typo="Typo.subtitle2">@component.Component</MudText>
-                                    <MudChip T="string" Size="Size.Small" Color="@(component.Passes ? Color.Success : Color.Warning)">
-                                        @component.Classification
-                                    </MudChip>
-                                </MudStack>
-                                <MudText Typo="Typo.caption" Class="@Ui(NerdDesignSystemUi.MutedContent)">
-                                    @component.Family · @component.Detail
-                                </MudText>
-                                <MudProgressLinear Value="@component.Score"
-                                                   Color="@(component.Passes ? Color.Success : Color.Warning)"
-                                                   Class="mt-2" />
-                            </MudPaper>
-                        </MudItem>
-                    }
-                </MudGrid>
-            </MudPaper>
-
-            <MudPaper Outlined="true" Class="pa-4" data-testid="mud-palette-fidelity-panel">
-                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-3">
-                    <div>
-                        <MudText Typo="Typo.h6">Mud palette fidelity</MudText>
-                        <MudText Typo="Typo.body2" Class="@Ui(NerdDesignSystemUi.MutedContent)">
-                            Palette-first reskin checks — brand root coverage, intent overrides, bridges-only semantics.
-                        </MudText>
-                    </div>
-                    <MudProgressCircular Value="@_mudPaletteFidelity.Score" Size="Size.Large" Color="@MudPaletteFidelityColor">
-                        <MudText Typo="Typo.h6">@_mudPaletteFidelity.Score</MudText>
-                    </MudProgressCircular>
-                </MudStack>
-                <MudGrid Spacing="2" Class="mt-3">
-                    @foreach (var check in _mudPaletteFidelity.Checks)
-                    {
-                        <MudItem xs="12" sm="6" md="4">
-                            <MudPaper Outlined="true"
-                                      Class="pa-3"
-                                      data-testid="@($"mud-palette-{check.Name.Replace(' ', '-').ToLowerInvariant()}")">
-                                <MudText Typo="Typo.subtitle2">@check.Name</MudText>
-                                <MudText Typo="Typo.caption" Class="@Ui(NerdDesignSystemUi.MutedContent)">@check.Detail</MudText>
-                                <MudProgressLinear Value="@check.Score"
-                                                   Color="@(check.Score >= 80 ? Color.Success : check.Score >= 50 ? Color.Warning : Color.Error)"
-                                                   Class="mt-2" />
-                            </MudPaper>
-                        </MudItem>
-                    }
-                </MudGrid>
-            </MudPaper>
-
-            <MudPaper Outlined="true" Class="pa-4" data-testid="component-family-map-panel">
-                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-3">
-                    <div>
-                        <MudText Typo="Typo.h6">Component family intent map</MudText>
-                        <MudText Typo="Typo.body2" Class="@Ui(NerdDesignSystemUi.MutedContent)">
-                            Framework-neutral parts mapped to semantic intents for MudBlazor.
-                        </MudText>
-                    </div>
-                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">TS-034</MudChip>
-                </MudStack>
-                <MudSimpleTable Dense="true" Hover="true" Bordered="true" Class="mt-3">
-                    <thead>
-                        <tr>
-                            <th>Family</th>
-                            <th>Part</th>
-                            <th>Intent</th>
-                            <th>Mud selector</th>
-                            <th>CSS variable</th>
-                            <th>Sample</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var binding in _familyBindings)
-                        {
-                            <tr data-testid="@($"family-map-{binding.Family}-{binding.PartId}")">
-                                <td><code>@binding.Family</code></td>
-                                <td><code>@binding.PartId</code></td>
-                                <td><code>@binding.IntentAlias</code></td>
-                                <td><code>@(binding.MudSelectors.FirstOrDefault() ?? "—")</code></td>
-                                <td><code>@binding.CssVariable</code></td>
-                                <td>
-                                    @if (!string.IsNullOrWhiteSpace(binding.SampleColor))
-                                    {
-                                        <span data-testid="@($"family-swatch-{binding.Family}-{binding.PartId}")"
-                                              style="display:inline-block;width:20px;height:20px;border-radius:4px;border:1px solid var(--mud-palette-lines-default);background:@binding.SampleColor"></span>
-                                        <code class="ml-1">@binding.SampleColor</code>
-                                    }
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </MudSimpleTable>
-                <MudText Typo="Typo.caption" Class="@($"{Ui(NerdDesignSystemUi.MutedContent)} mt-2")">
-                    Dogfood: <code>picker.day-selected</code> and generated <code>.mud-day.mud-selected</code> both resolve to
-                    <code>@NerdComponentFamilyTools.ResolveCssVariable(Options, "primary-action")</code>.
-                </MudText>
-            </MudPaper>
+            <NerdDesignGuideScenes TokenOptions="Options" />
+            <NerdDesignGuideBrandPreview />
 
             <MudPaper Outlined="true" Class="pa-4">
                 <MudText Typo="Typo.h6">Color palette</MudText>
                 <MudText Typo="Typo.caption" Class="@Ui(NerdDesignSystemUi.MutedContent)">
-                    Brand tokens — use via semantic intents in markup, not raw names.
+                    Brand tokens — prefer semantic intents in markup, not raw names.
                 </MudText>
                 <MudGrid Spacing="2" Class="mt-2">
                     @foreach (var color in Options.Colors.OrderBy(pair => pair.Key, StringComparer.Ordinal))
@@ -220,21 +75,153 @@ else
 
             <NerdDesignTokenIntentPanel Options="Options" HubOptions="HubOptions" />
 
-            <NerdDesignGuideBrandPreview />
+            <MudExpansionPanels Elevation="0" Outlined="true" Class="mud-expand-panel-border" data-testid="health-engineering-panel">
+                <MudExpansionPanel Text="Health &amp; engineering" Dense="true">
+                    <MudText Typo="Typo.caption" Class="@Ui(NerdDesignSystemUi.MutedContent)">
+                        Parity scores and implementation maps — secondary to the visual guide above.
+                    </MudText>
+            <MudGrid Spacing="3" Class="mt-3">
+                <MudItem xs="12" md="4">
+                    <MudPaper Outlined="true" Class="pa-4" Style="height:100%;">
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-2">
+                            <div>
+                                <MudText Typo="Typo.subtitle1">Design-to-code parity</MudText>
+                                <MudText Typo="Typo.caption" Class="@Ui(NerdDesignSystemUi.MutedContent)">
+                                    Shell, recipes, pairings, defaults.
+                                </MudText>
+                            </div>
+                            <MudProgressCircular Value="@_parity.Score" Size="Size.Medium" Color="@ParityColor">
+                                <MudText Typo="Typo.subtitle2">@_parity.Score</MudText>
+                            </MudProgressCircular>
+                        </MudStack>
+                        <MudStack Spacing="2" Class="mt-3">
+                            @foreach (var metric in _parity.Metrics)
+                            {
+                                <div>
+                                    <MudText Typo="Typo.caption">@metric.Name · @metric.Detail</MudText>
+                                    <MudProgressLinear Value="@metric.Score" Color="@(metric.Score >= 80 ? Color.Success : metric.Score >= 50 ? Color.Warning : Color.Error)" Class="mt-1" Size="Size.Small" />
+                                </div>
+                            }
+                        </MudStack>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudPaper Outlined="true" Class="pa-4" Style="height:100%;" data-testid="mud-state-parity-panel">
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-2">
+                            <div>
+                                <MudText Typo="Typo.subtitle1">Mud state parity</MudText>
+                                <MudText Typo="Typo.caption" Class="@Ui(NerdDesignSystemUi.MutedContent)">
+                                    Inventory P1/P3 state selectors for @Options.Prefix.
+                                </MudText>
+                            </div>
+                            <MudProgressCircular Value="@_mudStateParity.Score" Size="Size.Medium" Color="@MudStateParityColor">
+                                <MudText Typo="Typo.subtitle2">@_mudStateParity.Score</MudText>
+                            </MudProgressCircular>
+                        </MudStack>
+                        <MudStack Spacing="2" Class="mt-3">
+                            @foreach (var component in _mudStateParity.Components)
+                            {
+                                <MudPaper Outlined="true"
+                                          Class="pa-2"
+                                          data-testid="@($"mud-parity-{component.Component}")">
+                                    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                                        <MudText Typo="Typo.caption">@component.Component</MudText>
+                                        <MudChip T="string" Size="Size.Small" Color="@(component.Passes ? Color.Success : Color.Warning)">
+                                            @component.Classification
+                                        </MudChip>
+                                    </MudStack>
+                                    <MudProgressLinear Value="@component.Score"
+                                                       Color="@(component.Passes ? Color.Success : Color.Warning)"
+                                                       Class="mt-1"
+                                                       Size="Size.Small" />
+                                </MudPaper>
+                            }
+                        </MudStack>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudPaper Outlined="true" Class="pa-4" Style="height:100%;" data-testid="mud-palette-fidelity-panel">
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-2">
+                            <div>
+                                <MudText Typo="Typo.subtitle1">Mud palette fidelity</MudText>
+                                <MudText Typo="Typo.caption" Class="@Ui(NerdDesignSystemUi.MutedContent)">
+                                    Palette-first reskin checks.
+                                </MudText>
+                            </div>
+                            <MudProgressCircular Value="@_mudPaletteFidelity.Score" Size="Size.Medium" Color="@MudPaletteFidelityColor">
+                                <MudText Typo="Typo.subtitle2">@_mudPaletteFidelity.Score</MudText>
+                            </MudProgressCircular>
+                        </MudStack>
+                        <MudStack Spacing="2" Class="mt-3">
+                            @foreach (var check in _mudPaletteFidelity.Checks)
+                            {
+                                <MudPaper Outlined="true"
+                                          Class="pa-2"
+                                          data-testid="@($"mud-palette-{check.Name.Replace(' ', '-').ToLowerInvariant()}")">
+                                    <MudText Typo="Typo.caption">@check.Name</MudText>
+                                    <MudProgressLinear Value="@check.Score"
+                                                       Color="@(check.Score >= 80 ? Color.Success : check.Score >= 50 ? Color.Warning : Color.Error)"
+                                                       Class="mt-1"
+                                                       Size="Size.Small" />
+                                </MudPaper>
+                            }
+                        </MudStack>
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+                </MudExpansionPanel>
+            </MudExpansionPanels>
 
-            <NerdDesignGuideScenes TokenOptions="Options" />
+            <MudExpansionPanels Elevation="0" Outlined="true" Class="mud-expand-panel-border" data-testid="component-family-map-panel">
+                <MudExpansionPanel Text="Component family intent map" Dense="true">
+                    <MudText Typo="Typo.caption" Class="@Ui(NerdDesignSystemUi.MutedContent)">
+                        Framework-neutral parts mapped to semantic intents for MudBlazor.
+                    </MudText>
+                    <MudSimpleTable Dense="true" Hover="true" Bordered="true" Class="mt-2" Style="overflow-x:auto;">
+                        <thead>
+                            <tr>
+                                <th>Family</th>
+                                <th>Part</th>
+                                <th>Intent</th>
+                                <th>Mud selector</th>
+                                <th>CSS variable</th>
+                                <th>Sample</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var binding in _familyBindings)
+                            {
+                                <tr data-testid="@($"family-map-{binding.Family}-{binding.PartId}")">
+                                    <td><code>@binding.Family</code></td>
+                                    <td><code>@binding.PartId</code></td>
+                                    <td><code>@binding.IntentAlias</code></td>
+                                    <td><code>@(binding.MudSelectors.FirstOrDefault() ?? "—")</code></td>
+                                    <td><code>@binding.CssVariable</code></td>
+                                    <td>
+                                        @if (!string.IsNullOrWhiteSpace(binding.SampleColor))
+                                        {
+                                            <span data-testid="@($"family-swatch-{binding.Family}-{binding.PartId}")"
+                                                  style="display:inline-block;width:20px;height:20px;border-radius:4px;border:1px solid var(--mud-palette-lines-default);background:@binding.SampleColor"></span>
+                                            <code class="ml-1">@binding.SampleColor</code>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </MudSimpleTable>
+                    <MudText Typo="Typo.caption" Class="@($"{Ui(NerdDesignSystemUi.MutedContent)} mt-2")">
+                        Dogfood: <code>picker.day-selected</code> and generated <code>.mud-day.mud-selected</code> both resolve to
+                        <code>@NerdComponentFamilyTools.ResolveCssVariable(Options, "primary-action")</code>.
+                    </MudText>
+                </MudExpansionPanel>
+            </MudExpansionPanels>
 
-            <MudPaper Outlined="true" Class="pa-4">
-                <MudText Typo="Typo.h6">Typography</MudText>
-                <MudText Typo="Typo.body2" Class="@Ui(NerdDesignSystemUi.MutedContent)">
-                    Responsive roles and clamp scales live in the typography catalog.
-                </MudText>
-                <MudButton Href="@HubOptions.TypographyRoute" Variant="Variant.Outlined" Class="@($"{Ui(NerdDesignSystemUi.PrimaryAction)} mt-2")">
-                    Open typography catalog
+            <MudStack Row="true" Spacing="2" Class="flex-wrap" AlignItems="AlignItems.Center">
+                <MudButton Href="@HubOptions.TypographyRoute" Variant="Variant.Outlined" Size="Size.Small" Class="@Ui(NerdDesignSystemUi.PrimaryAction)">
+                    Typography catalog
                 </MudButton>
-            </MudPaper>
-
-            <NerdDesignHandoffExporter ClientId="@_clientId" DesignGuideUrl="@DesignGuideUrl" />
+                <NerdDesignHandoffExporter ClientId="@_clientId" DesignGuideUrl="@DesignGuideUrl" />
+            </MudStack>
         </MudStack>
     </NerdCatalogPage>
 }

@@ -8,7 +8,7 @@ using TheNerdCollective.MudComponents.Shared;
 
 namespace TheNerdCollective.MudComponents.PlayBook;
 
-public partial class NerdPlayBook
+public partial class NerdPlayBook : IDisposable
 {
     [Inject]
     private NerdPlayBookOptions Options { get; set; } = default!;
@@ -35,12 +35,11 @@ public partial class NerdPlayBook
     private INerdMudThemeController? ThemeController { get; set; }
 
     [Inject]
-    private IEnumerable<INerdBrandPack> BrandPacks { get; set; } = [];
+    private INerdBrandSwitcher BrandSwitcher { get; set; } = default!;
 
     private int _activeSectionTabIndex;
     private int _activeCategoryTabIndex;
     private bool _previewDark;
-    private string _selectedBrand = string.Empty;
     private string _typographyPreset = NerdPlayBookTypography.DefaultPreset;
     private string _selectedTokenFilter = NerdPlayBookTokenFilter.AllIntents;
     private string _searchQuery = string.Empty;
@@ -49,14 +48,9 @@ public partial class NerdPlayBook
     private IReadOnlyList<string> _tokenNames = [];
     private string? _inspectedTokenClass;
 
-    private IEnumerable<INerdBrandPack> InstalledBrandPacks =>
-        BrandPacks.OrderBy(pack => pack.Id, StringComparer.OrdinalIgnoreCase);
-
-    private bool ShowBrandSwitcher => InstalledBrandPacks.Any();
-
     protected override void OnInitialized()
     {
-        _selectedBrand = TokenOptions.ActiveBrandPackId ?? TokenOptions.Prefix;
+        BrandSwitcher.BrandChanged += OnGlobalBrandChanged;
         RefreshTokenNames();
         ApplyTypographyPreset();
     }
@@ -113,8 +107,19 @@ public partial class NerdPlayBook
 
     private void ApplyTypographyPreset()
     {
-        _previewTheme = NerdPlayBookTypography.CreateTheme(_typographyPreset, TypographyOptions);
-        TypographyCss.Update(TypographyOptions.Typography);
+        var typography = NerdPlayBookTypography.ResolveTypography(_typographyPreset, TypographyOptions);
+
+        if (ThemeController is not null)
+        {
+            ThemeController.RefreshTheme(theme => theme.UseResponsiveTypography(typography.CopyTo));
+            _previewTheme = ThemeController.CurrentTheme;
+        }
+        else
+        {
+            _previewTheme = NerdPlayBookTypography.CreateBrandTheme(_typographyPreset, TokenOptions, TypographyOptions);
+        }
+
+        TypographyCss.Update(typography);
     }
 
     private void RefreshTokenNames()
@@ -127,26 +132,11 @@ public partial class NerdPlayBook
         }
     }
 
-    private Task SwitchBrandAsync(string brand)
+    private void OnGlobalBrandChanged(string _)
     {
-        _selectedBrand = brand;
-        if (ThemeController is not null)
-        {
-            ThemeController.ApplyBrandPack(brand);
-        }
-        else
-        {
-            NerdBrandPackRegistry.Instance.Configure(brand, TokenOptions);
-            TokenCss.Update(TokenOptions);
-            HubOptions.ActiveTokenPackId = brand;
-            HubOptions.ActiveBrandIdentityVersion = TokenOptions.ActiveBrandIdentityVersion;
-            NerdBrandTypographySwitcher.TrySwitchBrand(brand, TypographyOptions, HubOptions, _previewTheme);
-        }
-
         RefreshTokenNames();
         ApplyTypographyPreset();
-        StateHasChanged();
-        return Task.CompletedTask;
+        InvokeAsync(StateHasChanged);
     }
 
     private Task OnTypographyPresetChanged(string value)
@@ -157,4 +147,6 @@ public partial class NerdPlayBook
     }
 
     private void InspectToken(string tokenClass) => _inspectedTokenClass = tokenClass;
+
+    public void Dispose() => BrandSwitcher.BrandChanged -= OnGlobalBrandChanged;
 }

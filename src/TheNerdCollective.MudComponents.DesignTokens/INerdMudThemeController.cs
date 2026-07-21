@@ -17,5 +17,6 @@ public interface INerdMudThemeController
 
     void SetDarkMode(bool isDarkMode);
 
-    void RefreshTheme();
+    /// <param name="configure">Optional Mud theme mutation (e.g. PlayBook typography preset). Skips <see cref="INerdMudThemeConfigurator"/> when set.</param>
+    void RefreshTheme(Action<MudTheme>? configure = null);
 }

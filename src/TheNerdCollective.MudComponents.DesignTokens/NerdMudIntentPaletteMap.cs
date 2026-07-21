@@ -108,10 +108,10 @@ public static class NerdMudIntentPaletteMap
 
         if (string.Equals(aliasName, NerdDesignSystemUi.NavItem, StringComparison.OrdinalIgnoreCase))
         {
-            css.AppendLine($"  --mud-palette-drawer-text: var({contentVariable}){importantSuffix};");
-            css.AppendLine($"  --mud-palette-drawer-icon: var({contentVariable}){importantSuffix};");
+            css.AppendLine($"  --mud-palette-drawer-text: var({variable}){importantSuffix};");
+            css.AppendLine($"  --mud-palette-drawer-icon: var({variable}){importantSuffix};");
             css.AppendLine($"  --mud-palette-action-default: var({variable}){importantSuffix};");
-            css.AppendLine($"  --mud-palette-text-secondary: var({contentVariable}){importantSuffix};");
+            css.AppendLine($"  --mud-palette-text-secondary: var({variable}){importantSuffix};");
             return;
         }
 
@@ -125,22 +125,22 @@ public static class NerdMudIntentPaletteMap
 
         if (string.Equals(aliasName, NerdDesignSystemUi.MutedContent, StringComparison.OrdinalIgnoreCase))
         {
-            css.AppendLine($"  --mud-palette-text-secondary: var({contentVariable}){importantSuffix};");
-            css.AppendLine($"  --mud-palette-text-primary: var({contentVariable}){importantSuffix};");
+            css.AppendLine($"  --mud-palette-text-secondary: var({variable}){importantSuffix};");
+            css.AppendLine($"  --mud-palette-text-primary: var({variable}){importantSuffix};");
             css.AppendLine($"  --mud-palette-action-default: var({variable}){importantSuffix};");
             return;
         }
 
         if (string.Equals(aliasName, NerdDesignSystemUi.OnBrandChrome, StringComparison.OrdinalIgnoreCase))
         {
-            css.AppendLine($"  --mud-palette-appbar-text: var({textVariable}){importantSuffix};");
-            css.AppendLine($"  --mud-palette-text-primary: var({textVariable}){importantSuffix};");
+            css.AppendLine($"  --mud-palette-appbar-text: var({variable}){importantSuffix};");
+            css.AppendLine($"  --mud-palette-text-primary: var({variable}){importantSuffix};");
             return;
         }
 
         if (string.Equals(aliasName, NerdDesignSystemUi.OnPrimaryAction, StringComparison.OrdinalIgnoreCase))
         {
-            css.AppendLine($"  --mud-palette-primary-text: var({textVariable}){importantSuffix};");
+            css.AppendLine($"  --mud-palette-primary-text: var({variable}){importantSuffix};");
             return;
         }
 
@@ -245,6 +245,41 @@ public static class NerdMudIntentPaletteMap
         if (string.Equals(alias, NerdDesignSystemUi.Danger, StringComparison.OrdinalIgnoreCase))
         {
             return brand with { Error = bundle.Color, ErrorText = bundle.Text };
+        }
+
+        if (string.Equals(alias, NerdDesignSystemUi.NavItem, StringComparison.OrdinalIgnoreCase))
+        {
+            return brand with
+            {
+                DrawerText = bundle.Color,
+                DrawerIcon = bundle.Color,
+                ActionDefault = bundle.Color,
+                TextSecondary = bundle.Color
+            };
+        }
+
+        if (string.Equals(alias, NerdDesignSystemUi.MutedContent, StringComparison.OrdinalIgnoreCase))
+        {
+            return brand with
+            {
+                TextSecondary = bundle.Color,
+                TextPrimary = bundle.Color,
+                ActionDefault = bundle.Color
+            };
+        }
+
+        if (string.Equals(alias, NerdDesignSystemUi.OnBrandChrome, StringComparison.OrdinalIgnoreCase))
+        {
+            return brand with
+            {
+                AppbarText = bundle.Color,
+                TextPrimary = bundle.Color
+            };
+        }
+
+        if (string.Equals(alias, NerdDesignSystemUi.OnPrimaryAction, StringComparison.OrdinalIgnoreCase))
+        {
+            return brand with { PrimaryText = bundle.Color };
         }
 
         if (string.Equals(alias, NerdDesignSystemUi.PageSurface, StringComparison.OrdinalIgnoreCase))

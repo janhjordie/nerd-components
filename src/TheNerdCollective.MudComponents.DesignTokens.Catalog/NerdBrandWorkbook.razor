@@ -21,7 +21,11 @@ else
     else
     {
     <NerdDesignSystemScripts />
-    <NerdCatalogThemeProvider IsDarkMode="false">
+    @if (ShowResponsiveTypography)
+    {
+        <NerdResponsiveTypographyStyles />
+    }
+    <NerdCatalogThemeProvider Theme="_catalogTheme" IsDarkMode="false">
         <NerdDesignTokenStyles />
         <NerdCatalogPage MaxWidth="MaxWidth.Large">
             <MudStack Spacing="3">
@@ -256,7 +260,8 @@ else
                                 <NerdBrandPreviewTemplates Recipe="PreviewRecipe"
                                                            Validation="PreviewValidation"
                                                            Prefix="Options.Prefix"
-                                                           RecipeName="@PreviewRecipeName" />
+                                                           RecipeName="@PreviewRecipeName"
+                                                           RecipeClassName="@($"{Options.Prefix}-recipe-{PreviewRecipeName}")" />
                             }
                         </MudPaper>
                         break;

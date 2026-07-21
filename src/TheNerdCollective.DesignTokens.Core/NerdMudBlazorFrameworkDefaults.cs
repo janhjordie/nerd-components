@@ -11,6 +11,8 @@ public sealed class NerdMudBlazorFrameworkDefaults
 
     public NerdMudBlazorComponentIntent? DatePicker { get; init; }
 
+    public NerdMudBlazorComponentIntent? Select { get; init; }
+
     public NerdMudBlazorNavLinkDefaults? NavLink { get; init; }
 }
 
@@ -28,6 +30,9 @@ public sealed class NerdMudBlazorComponentIntent
     public string? Intent { get; init; }
 
     public string? Popover { get; init; }
+
+    /// <summary>Semantic intent for selected list/menu option (shell: nav-item-active).</summary>
+    public string? Selected { get; init; }
 }
 
 public sealed class NerdMudBlazorNavLinkDefaults

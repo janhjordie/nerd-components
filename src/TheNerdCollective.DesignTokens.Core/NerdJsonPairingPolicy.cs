@@ -94,7 +94,19 @@ public sealed class NerdJsonPairingPolicy : INerdPairingPolicy
         ArgumentException.ThrowIfNullOrWhiteSpace(tokenName);
         ArgumentNullException.ThrowIfNull(options);
         var token = options.Colors[tokenName];
-        return token.Content ?? token.Light ?? token.Value;
+        var paint = token.Light ?? token.Value;
+
+        // Content means "text on this token when used as a surface".
+        // Use it as pairing foreground only when the token is not its own surface paint
+        // (e.g. kridt surface tint vs kridt text ink; skov keeps its green value).
+        if (!string.IsNullOrWhiteSpace(token.Content) &&
+            !string.Equals(token.Content, paint, StringComparison.OrdinalIgnoreCase) &&
+            string.IsNullOrWhiteSpace(token.Surface))
+        {
+            return token.Content;
+        }
+
+        return paint;
     }
 
     public string ResolveSurfaceColor(string tokenName, NerdDesignTokenOptions options)

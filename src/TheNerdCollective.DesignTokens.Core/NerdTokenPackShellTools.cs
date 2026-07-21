@@ -23,6 +23,11 @@ public static class NerdTokenPackShellTools
         },
         TextField = new NerdMudBlazorComponentIntent { Intent = NerdDesignSystemUi.InputSurface },
         DatePicker = new NerdMudBlazorComponentIntent { Popover = NerdDesignSystemUi.PageSurface },
+        Select = new NerdMudBlazorComponentIntent
+        {
+            Popover = NerdDesignSystemUi.PageSurface,
+            Selected = NerdDesignSystemUi.NavItemActive
+        },
         NavLink = new NerdMudBlazorNavLinkDefaults
         {
             Default = NerdDesignSystemUi.NavItem,

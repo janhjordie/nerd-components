@@ -37,8 +37,7 @@ public sealed class NerdMudThemeController : INerdMudThemeController
         ArgumentException.ThrowIfNullOrWhiteSpace(brandPackId);
         NerdBrandPackRegistry.Instance.Configure(brandPackId, _tokenOptions);
         _tokenCss.Update(_tokenOptions);
-        _hubOptions.ActiveTokenPackId = brandPackId;
-        _hubOptions.ActiveBrandIdentityVersion = _tokenOptions.ActiveBrandIdentityVersion;
+        NerdDesignSystemHubSync.FromTokenOptions(_hubOptions, _tokenOptions);
         RefreshTheme();
         _themeConfigurator.OnBrandPackApplied(brandPackId, CurrentTheme);
     }
@@ -54,9 +53,19 @@ public sealed class NerdMudThemeController : INerdMudThemeController
         ThemeChanged?.Invoke();
     }
 
-    public void RefreshTheme()
+    public void RefreshTheme(Action<MudTheme>? configure = null)
     {
-        CurrentTheme = NerdMudThemeFactory.Create(_tokenOptions, _themeConfigurator.Configure);
+        CurrentTheme = NerdMudThemeFactory.Create(_tokenOptions, theme =>
+        {
+            if (configure is not null)
+            {
+                configure(theme);
+            }
+            else
+            {
+                _themeConfigurator.Configure(theme);
+            }
+        });
         ThemeChanged?.Invoke();
     }
 }

@@ -260,6 +260,8 @@ public class MudBlazorDesignTokenCssGeneratorTests
         Assert.Contains("background-color: var(--dnf-color-page-surface-surface)", css);
         Assert.Contains("--mud-palette-surface: var(--dnf-color-page-surface-surface)", css);
         Assert.Contains(".dnf-page-surface.mud-popover-open .mud-selected-item", css);
+        Assert.Contains(".dnf-page-surface.mud-popover-open .mud-list-item.mud-selected", css);
+        Assert.Contains("color-mix(in srgb, var(--dnf-color-nav-item-active) 12%, transparent)", css);
         Assert.Contains("color: var(--dnf-color-page-surface-content)", css);
         Assert.Contains(":root .dnf-page-surface.mud-button-outlined", css);
         Assert.Contains(":root .dnf-page-surface.mud-button-filled", css);
@@ -297,6 +299,9 @@ public class MudBlazorDesignTokenCssGeneratorTests
 
         Assert.Contains(":root .tnc-brand-chrome.mud-input-control :where([class*=\"mud-input-label\"])", css);
         Assert.Contains(":root .tnc-brand-chrome.mud-input-control :where([class*=\"mud-input-slot\"])", css);
+        Assert.Contains(
+            ":root .tnc-brand-chrome.mud-picker .mud-input-control > .mud-input-control-input-container > [class*=\"mud-input-label\"]",
+            css);
         Assert.DoesNotContain(":root .tnc-page-surface .tnc-brand-chrome.mud-input-control", css);
 
         var labelRule = css.Substring(
@@ -413,6 +418,57 @@ public class MudBlazorDesignTokenCssGeneratorTests
         Assert.Contains(".nerd-pairing-surface--swatch", css);
         Assert.Contains(".tnc-recipe-hero .mud-button-outlined", css);
         Assert.Contains("border-color: currentColor", css);
+    }
+
+    [Fact]
+    public void Generate_catalog_chrome_resets_non_recipe_surfaces_inside_accent_scope()
+    {
+        var options = new NerdDesignTokenOptions { Prefix = "tnc", UseImportantOverrides = false };
+        NerdTncDesignTokenPresets.Apply(options);
+
+        var css = MudBlazorDesignTokenCssGenerator.Generate(options);
+
+        Assert.Contains(
+            ".nerd-catalog-chrome [data-nerd-accent=\"tnc-primary-action\"] .mud-paper:not([class*=\"-recipe-\"])",
+            css);
+        Assert.Contains(
+            ".nerd-catalog-chrome [data-nerd-accent=\"tnc-primary-action\"] .mud-typography:not(.mud-tab):not(:is([class*=\"-recipe-\"] *))",
+            css);
+        Assert.Contains(":not(:is([data-nerd-accent] [data-nerd-token] *))", css);
+        Assert.Contains(".tnc-recipe-hero.mud-card .mud-typography", css);
+    }
+
+    [Fact]
+    public void Generate_brand_chrome_surface_paints_content_on_tables_and_typography()
+    {
+        var options = new NerdDesignTokenOptions { Prefix = "tnc", UseImportantOverrides = false };
+        NerdTncDesignTokenPresets.Apply(options);
+
+        var css = MudBlazorDesignTokenCssGenerator.Generate(options);
+
+        Assert.Contains(":root .tnc-brand-chrome[class*=\"mud-typography\"]", css);
+        Assert.Contains(":root .tnc-brand-chrome[class*=\"mud-table\"]", css);
+        Assert.DoesNotContain(":root .tnc-page-surface :where([class*=\"mud-table-cell\"])", css);
+        Assert.Contains("color: var(--tnc-color-on-brand-chrome)", css);
+        Assert.Contains("--mud-palette-text-primary: var(--tnc-color-brand-chrome-content)", css);
+    }
+
+    [Fact]
+    public void Generate_on_brand_chrome_content_intent_paints_typography_without_page_surface_input_values()
+    {
+        var options = new NerdDesignTokenOptions { Prefix = "tnc", UseImportantOverrides = false };
+        NerdTncDesignTokenPresets.Apply(options);
+
+        var css = MudBlazorDesignTokenCssGenerator.Generate(options);
+
+        Assert.Contains(".tnc-on-brand-chrome[class*=\"mud-typography\"]", css);
+        var inputSlotIndex = css.IndexOf(
+            ".tnc-on-brand-chrome :where([class*=\"mud-input-slot\"])",
+            StringComparison.Ordinal);
+        Assert.True(inputSlotIndex >= 0);
+        var inputSlotRule = css.Substring(inputSlotIndex, 180);
+        Assert.Contains("color: var(--tnc-color-on-brand-chrome-content)", inputSlotRule);
+        Assert.DoesNotContain("page-surface-content", inputSlotRule);
     }
 
     [Fact]

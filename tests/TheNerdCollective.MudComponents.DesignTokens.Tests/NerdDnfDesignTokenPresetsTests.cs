@@ -37,7 +37,8 @@ public class NerdDnfDesignTokenPresetsTests
 
         var css = MudBlazorDesignTokenCssGenerator.Generate(options);
 
-        Assert.Contains("--dnf-color-skov-content: #002D26", css);
+        Assert.Contains("--dnf-color-skov-content: #FDFAF3", css);
+        Assert.Contains("--dnf-color-skov-surface: #002D26", css);
         Assert.Contains("--dnf-color-kridt-content: #002D26", css);
     }
 
@@ -69,7 +70,7 @@ public class NerdDnfDesignTokenPresetsTests
         Assert.Equal("graes", options.Aliases["nav-item-active"]);
         Assert.Equal("kridt", options.Recipes["kridt-himmel"].Surface);
         Assert.Equal("skov", options.Recipes["kridt-himmel"].Content);
-        Assert.Equal("himmel", options.Recipes["kridt-himmel"].Action);
+        Assert.Equal("graes", options.Recipes["kridt-himmel"].Action);
 
         var css = MudBlazorDesignTokenCssGenerator.Generate(options);
 
@@ -109,7 +110,7 @@ public class NerdDnfDesignTokenPresetsTests
     [Theory]
     [InlineData("#002D26", "#FDFAF3", "#002D26")]
     [InlineData("#E8E0D3", "#002D26", "#002D26")]
-    [InlineData("#FE993F", "#002D26", "#002D26")]
+    [InlineData("#FF5E63", "#002D26", "#002D26")]
     public void ContentText_uses_skov_on_light_and_brand_on_dark(
         string brand,
         string contrast,

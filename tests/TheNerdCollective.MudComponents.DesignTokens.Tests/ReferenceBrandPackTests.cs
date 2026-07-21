@@ -10,6 +10,7 @@ public sealed class ReferenceBrandPackTests
     [Theory]
     [InlineData("tnc")]
     [InlineData("dnf")]
+    [InlineData("dryk")]
     [InlineData("acme")]
     [InlineData("demo")]
     public void Reference_pack_roundtrips_from_registered_brand(string brandId)
@@ -59,7 +60,7 @@ public sealed class ReferenceBrandPackTests
             "src", "TheNerdCollective.MudComponents.DesignTokens", "reference", "brands"));
         Directory.CreateDirectory(outputDir);
 
-        foreach (var brandId in new[] { "tnc", "dnf", "acme", "demo" })
+        foreach (var brandId in new[] { "tnc", "dnf", "dryk", "acme", "demo" })
         {
             var brandPack = NerdBrandPackRegistry.Instance.GetRequired(brandId);
             var referenceOptions = NerdBrandPackTestBootstrap.CreateReferenceOptions(brandId);
@@ -95,6 +96,7 @@ public sealed class ReferenceBrandPackTests
                 {
                     "tnc" => ["navy", "coral"],
                     "dnf" => ["skov", "kridt"],
+                    "dryk" => ["skov", "kridt"],
                     _ => []
                 },
                 Shell = pack.Shell ?? referencePack.Shell,
@@ -110,6 +112,7 @@ public sealed class ReferenceBrandPackTests
     [Theory]
     [InlineData("tnc")]
     [InlineData("dnf")]
+    [InlineData("dryk")]
     [InlineData("acme")]
     [InlineData("demo")]
     public void Embedded_brand_pack_loads_json(string brandId)

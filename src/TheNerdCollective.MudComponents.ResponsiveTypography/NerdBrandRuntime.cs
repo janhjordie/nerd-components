@@ -37,9 +37,7 @@ public static class NerdBrandRuntime
 
         NerdBrandPackRegistry.Instance.Configure(brandId, tokenOptions);
         tokenCss.Update(tokenOptions);
-        hubOptions.ActiveTokenPackId = tokenOptions.ActiveBrandPackId;
-        hubOptions.ActiveBrandIdentityVersion = tokenOptions.ActiveBrandIdentityVersion;
-        hubOptions.TokenPrefix = tokenOptions.Prefix;
+        NerdDesignSystemHubSync.FromTokenOptions(hubOptions, tokenOptions);
         NerdBrandTypographySwitcher.TrySwitchBrand(brandId, typographyOptions, hubOptions, theme);
         typographyCss.Update(typographyOptions.Typography);
     }

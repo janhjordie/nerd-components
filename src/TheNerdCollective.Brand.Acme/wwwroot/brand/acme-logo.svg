@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 168 40" role="img" aria-label="Acme">
+  <path fill="#1F6B3A" d="M6 6h28L20 34 6 6z"/>
+  <path fill="#F4A236" d="M14 14h12L20 26l-6-12z"/>
+  <text x="42" y="27" fill="#F5F7FA" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="22" font-weight="700" letter-spacing="0.08em">ACME</text>
+</svg>

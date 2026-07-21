@@ -8,8 +8,11 @@ namespace TheNerdCollective.Brand.Dnf;
 /// </summary>
 public static class NerdDnfDesignTokenPresets
 {
-    public const string KridtText = "#FDFAF3";
-    public const string SkovText = "#002D26";
+    public const string Graes = "#A6E54C";
+    public const string Kridt = "#FDFAF3";
+    public const string Skov = "#002D26";
+    public const string KridtText = Kridt;
+    public const string SkovText = Skov;
 
     public static void Apply(NerdDesignTokenOptions options)
     {
@@ -19,54 +22,56 @@ public static class NerdDnfDesignTokenPresets
         AddDark(options, "jord", "#3B342E");
         AddDark(options, "ler", "#6D5346");
         AddLight(options, "kridt", "#E8E0D3");
-        AddLight(options, "kridt-lys", "#FDFAF3");
+        AddLight(options, "kridt-lys", Kridt);
         AddLight(options, "sol", "#FE993F");
         AddLight(options, "morgenrode", "#FF5E63");
         AddDark(options, "hav", "#0C2E3A");
-        AddLight(options, "himmel", "#81ABFF");
+        AddLight(options, "himmel", "#80ABFF");
         AddLight(options, "flod", "#6BE6E4");
-        AddDark(options, "skov", "#002D26");
+        AddDark(options, "skov", Skov);
         AddDark(options, "blad", "#0E4D3A");
-        AddLight(options, "graes", "#A6E54C");
+        AddLight(options, "graes", Graes);
 
+        // DNF's core identity is skov, kridt and græs. Himmel/flod remain
+        // supporting colors for links and information states.
         options.AddRecipe(
             "kridt-himmel",
             new NerdDesignTokenRecipe(
                 Surface: "kridt",
                 Content: "skov",
-                Action: "himmel",
-                Border: "himmel"));
+                Action: "graes",
+                Border: "graes"));
 
         options.AddRecipe(
             "hero",
             new NerdDesignTokenRecipe(
                 Surface: "kridt-lys",
                 Content: "skov",
-                Action: "himmel"));
+                Action: "graes"));
 
         options.AddRecipe(
             "cta-strip",
             new NerdDesignTokenRecipe(
                 Surface: "skov",
                 Content: "kridt",
-                Action: "sol"));
+                Action: "graes"));
 
         options.AddRecipe(
             "link-card",
             new NerdDesignTokenRecipe(
                 Surface: "kridt",
                 Content: "skov",
-                Action: "hav"));
+                Action: "skov"));
 
         options.AddRecipe(
             "footer",
             new NerdDesignTokenRecipe(
                 Surface: "jord",
                 Content: "kridt",
-                Action: "himmel"));
+                Action: "graes"));
 
-        options.Alias("primary-action", "himmel");
-        options.Alias("secondary-action", "hav");
+        options.Alias("primary-action", "graes");
+        options.Alias("secondary-action", "skov");
         options.Alias("on-primary-action", "skov");
         options.Alias("page-surface", "kridt-lys");
         options.Alias("brand-chrome", "skov");
@@ -75,9 +80,9 @@ public static class NerdDnfDesignTokenPresets
         options.Alias("nav-item", "skov");
         options.Alias("nav-item-active", "graes");
         options.Alias("input-surface", "kridt-lys");
-        options.Alias("input-border", "hav");
-        options.Alias("focus-ring", "himmel");
-        options.Alias("muted-content", "hav");
+        options.Alias("input-border", "skov");
+        options.Alias("focus-ring", "graes");
+        options.Alias("muted-content", "skov");
         options.Alias("info", "flod");
         options.Alias("highlight", "sol");
         options.Alias("danger", "morgenrode");
@@ -98,7 +103,7 @@ public static class NerdDnfDesignTokenPresets
         options.AddRecipe(
             "hero-photo",
             new NerdDesignTokenRecipe(
-                Surface: "jord",
+                Surface: "skov",
                 Content: "kridt",
                 Action: "graes",
                 Label: "Photo hero",
@@ -152,7 +157,7 @@ public static class NerdDnfDesignTokenPresets
             new NerdDesignTokenRecipe(
                 Surface: "kridt-lys",
                 Content: "skov",
-                Action: "himmel",
+                Action: "graes",
                 Label: "Form strip",
                 Usage: "Light form surface with skov labels"));
 
@@ -177,6 +182,8 @@ public static class NerdDnfDesignTokenPresets
         options.Add(name, new NerdColorToken
         {
             Value = value,
+            Surface = value,
+            Content = KridtText,
             ContrastText = KridtText,
             Hover = NerdColorDerivatives.Darken(value, 0.08)
         });

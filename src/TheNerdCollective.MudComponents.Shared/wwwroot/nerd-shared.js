@@ -91,8 +91,11 @@ window.nerdShared = window.nerdShared || {
       applyingPortalToken = false;
     }
   };
+  const resolvePortalToken = (tokenHost) =>
+    tokenHost?.dataset?.nerdPortalToken || tokenHost?.dataset?.nerdToken;
+
   const setActiveToken = (tokenHost) => {
-    const token = tokenHost?.dataset?.nerdToken;
+    const token = resolvePortalToken(tokenHost);
     if (!token || token === activeToken) {
       return;
     }
@@ -477,7 +480,7 @@ window.nerdShared = window.nerdShared || {
     const brokenOutlinedPaint =
       element.matches('.mud-button-outlined, .mud-chip-outlined') &&
       isWhite(foreground) &&
-      (isWhite(surfaceBackground) || isTransparentBackground(style.backgroundColor));
+      isWhite(surfaceBackground);
 
     const brokenFilledPaint =
       element.matches('.mud-chip-filled') &&

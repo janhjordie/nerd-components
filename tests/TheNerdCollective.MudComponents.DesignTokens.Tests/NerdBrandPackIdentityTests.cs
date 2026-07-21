@@ -1,6 +1,7 @@
 using TheNerdCollective.Brand.Acme;
 using TheNerdCollective.Brand.Demo;
 using TheNerdCollective.Brand.Dnf;
+using TheNerdCollective.Brand.Dryk;
 using TheNerdCollective.Brand.Tnc;
 using TheNerdCollective.MudComponents.DesignTokens;
 
@@ -10,6 +11,7 @@ public class NerdBrandPackIdentityTests
 {
     [Theory]
     [InlineData(typeof(NerdDnfBrandPack), "dnf", "1.0.0")]
+    [InlineData(typeof(NerdDrykBrandPack), "dryk", "1.0.0")]
     [InlineData(typeof(NerdTncBrandPack), "tnc", "1.0.0")]
     [InlineData(typeof(NerdAcmeBrandPack), "acme", "1.0.0")]
     [InlineData(typeof(NerdDemoBrandPack), "demo", "1.0.0")]

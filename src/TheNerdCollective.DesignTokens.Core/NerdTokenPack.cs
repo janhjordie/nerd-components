@@ -224,6 +224,7 @@ public sealed class NerdTokenPack
 
         options.Shell = Shell;
         options.FrameworkDefaults = FrameworkDefaults;
+        NerdFoundationTaxonomyTools.ApplyDefaults(options);
         return options;
     }
 

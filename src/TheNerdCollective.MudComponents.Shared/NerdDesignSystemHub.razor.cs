@@ -3,11 +3,10 @@ using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using MudBlazor;
-using TheNerdCollective.MudComponents.Shared;
 
 namespace TheNerdCollective.MudComponents.Shared;
 
-public partial class NerdDesignSystemHub
+public partial class NerdDesignSystemHub : IDisposable
 {
     [Inject]
     private NerdDesignSystemOptions Options { get; set; } = default!;
@@ -25,7 +24,14 @@ public partial class NerdDesignSystemHub
         Options.EnableHubPage &&
         (!Options.RestrictHubToDevelopment || HostEnvironment.IsDevelopment());
 
+    protected override void OnInitialized()
+    {
+        Options.BrandChanged += OnGlobalBrandChanged;
+    }
+
     private string Ui(string semanticAlias) => NerdDesignSystemUi.TokenClass(Options, semanticAlias);
+
+    private void OnGlobalBrandChanged() => InvokeAsync(StateHasChanged);
 
     private async Task OnImportAsync(InputFileChangeEventArgs args)
     {
@@ -49,4 +55,6 @@ public partial class NerdDesignSystemHub
         _importStatus = result.Message;
         _importStatusColor = result.Success ? Color.Success : Color.Error;
     }
+
+    public void Dispose() => Options.BrandChanged -= OnGlobalBrandChanged;
 }

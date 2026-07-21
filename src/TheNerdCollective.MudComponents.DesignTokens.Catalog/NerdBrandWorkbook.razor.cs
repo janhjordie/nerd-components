@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using MudBlazor;
+using TheNerdCollective.MudComponents.ResponsiveTypography;
 using TheNerdCollective.MudComponents.Shared;
 
 namespace TheNerdCollective.MudComponents.DesignTokens;
@@ -25,6 +26,22 @@ public partial class NerdBrandWorkbook
 
     [Inject]
     private INerdCatalogEntitlements Entitlements { get; set; } = default!;
+
+    [Inject]
+    private INerdMudThemeController? ThemeController { get; set; }
+
+    [Inject]
+    private INerdMudThemeConfigurator? ThemeConfigurator { get; set; }
+
+    [Inject]
+    private NerdResponsiveTypographyOptions? TypographyOptions { get; set; }
+
+    [Inject]
+    private NerdResponsiveTypographyCss? TypographyCss { get; set; }
+
+    private bool ShowResponsiveTypography => TypographyCss is not null;
+
+    private MudTheme _catalogTheme = new();
 
     private const int ExportStepIndex = 9;
 
@@ -94,6 +111,23 @@ public partial class NerdBrandWorkbook
 
         LoadPairingsFromOptions();
         EnsureEditorDefaults();
+        RefreshCatalogTheme();
+    }
+
+    private void RefreshCatalogTheme()
+    {
+        if (TypographyOptions is not null)
+        {
+            TypographyCss?.Update(TypographyOptions.Typography);
+        }
+
+        _catalogTheme = NerdCatalogThemeResolver.CreateForCatalog(
+            Options,
+            ThemeController,
+            ThemeController is null && TypographyOptions is not null
+                ? theme => theme.UseResponsiveTypography(TypographyOptions.Typography)
+                : null,
+            ThemeConfigurator);
     }
 
     private void EnsureEditorDefaults()
@@ -169,6 +203,7 @@ public partial class NerdBrandWorkbook
     {
         SyncPairingPolicy();
         TokenCss.Update(Options);
+        RefreshCatalogTheme();
         HubOptions.ActiveTokenPackId = Options.ActiveBrandPackId ?? Options.Prefix;
         HubOptions.DesignTokenCount = Options.Colors.Count;
         HubOptions.DesignTokenRecipeCount = Options.Recipes.Count;
@@ -447,6 +482,7 @@ public partial class NerdBrandWorkbook
 
         NerdThemeSetTools.SyncColorTokensFromThemeSets(Options);
         TokenCss.Update(Options);
+        RefreshCatalogTheme();
         _status = "Theme sets refreshed from palette.";
         _statusSeverity = Severity.Success;
         return Task.CompletedTask;

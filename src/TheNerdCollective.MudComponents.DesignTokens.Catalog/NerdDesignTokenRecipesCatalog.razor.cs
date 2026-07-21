@@ -8,7 +8,7 @@ using TheNerdCollective.MudComponents.Shared;
 
 namespace TheNerdCollective.MudComponents.DesignTokens;
 
-public partial class NerdDesignTokenRecipesCatalog
+public partial class NerdDesignTokenRecipesCatalog : IDisposable
 {
     [Inject]
     private NerdDesignTokenOptions Options { get; set; } = default!;
@@ -29,12 +29,21 @@ public partial class NerdDesignTokenRecipesCatalog
     private INerdMudThemeController? ThemeController { get; set; }
 
     [Inject]
-    private IServiceProvider ServiceProvider { get; set; } = default!;
+    private INerdMudThemeConfigurator? ThemeConfigurator { get; set; }
 
     [Inject]
-    private IEnumerable<INerdBrandPack> BrandPacks { get; set; } = [];
+    private NerdResponsiveTypographyOptions? TypographyOptions { get; set; }
+
+    [Inject]
+    private NerdResponsiveTypographyCss? TypographyCss { get; set; }
+
+    [Inject]
+    private INerdBrandSwitcher BrandSwitcher { get; set; } = default!;
+
+    private bool ShowResponsiveTypography => TypographyCss is not null;
 
     private bool _previewDark;
+    private MudTheme _catalogTheme = new();
     private bool _contrastDark;
     private string? _studioToken;
     private string _studioColor = "#365C3A";
@@ -47,7 +56,6 @@ public partial class NerdDesignTokenRecipesCatalog
     private string _recipeAction = "himmel";
     private string? _saveStatus;
     private bool _showContrastMatrix;
-    private string _selectedBrand = string.Empty;
     private IReadOnlyList<NerdAccessibilityWarning> _warnings = [];
     private IReadOnlyList<NerdContrastPairResult> _contrastMatrix = [];
     private Dictionary<(string Foreground, string Background), NerdContrastPairResult> _contrastMatrixByKey = [];
@@ -55,9 +63,6 @@ public partial class NerdDesignTokenRecipesCatalog
     private NerdManualComplianceResult? _manualCompliance;
     private readonly Stack<NerdTokenPack> _undoStack = new();
     private readonly Stack<NerdTokenPack> _redoStack = new();
-
-    private IEnumerable<INerdBrandPack> InstalledBrandPacks =>
-        BrandPacks.OrderBy(pack => pack.Id, StringComparer.OrdinalIgnoreCase);
 
     private INerdPairingPolicy? ActivePairingPolicy =>
         Options.PairingPolicy is not null && Options.PairingPolicy.IsActive(Options)
@@ -91,7 +96,18 @@ public partial class NerdDesignTokenRecipesCatalog
     private string? StudioActionClassName =>
         string.IsNullOrWhiteSpace(_studioAction) ? null : GetClassName(_studioAction);
 
-    private string ComposerClassName => $"{Options.Prefix}-recipe-{_recipeName}";
+    private const string ComposerPreviewRecipeKey = "composer-preview";
+    private const string StudioPreviewRecipeKey = "studio-preview";
+
+    private string ComposerClassName => GetRecipeClassName(ComposerPreviewRecipeKey);
+
+    private string StudioPreviewClassName => GetRecipeClassName(StudioPreviewRecipeKey);
+
+    private NerdDesignTokenRecipe ComposerPreviewRecipe =>
+        new(_recipeSurface, _recipeContent, _recipeAction);
+
+    private string? ComposerActionClassName =>
+        string.IsNullOrWhiteSpace(_recipeAction) ? null : GetClassName(_recipeAction);
 
     private IEnumerable<string> TokenNames =>
         Options.Colors.Keys.OrderBy(name => name, StringComparer.Ordinal);
@@ -120,7 +136,8 @@ public partial class NerdDesignTokenRecipesCatalog
             return;
         }
 
-        _selectedBrand = Options.Prefix;
+        BrandSwitcher.BrandChanged += OnGlobalBrandChanged;
+        RefreshCatalogTheme();
         RefreshCatalogState();
     }
 
@@ -144,6 +161,8 @@ public partial class NerdDesignTokenRecipesCatalog
         HubOptions.DesignTokenRecipeCount = Options.Recipes.Count;
         HubOptions.DesignTokenCount = Options.Colors.Count;
         HubOptions.ActiveBrandIdentityVersion = Options.ActiveBrandIdentityVersion;
+        ApplyComposerPreview();
+        ApplyStudioPreview();
 
         var firstToken = Options.Colors.Keys.OrderBy(name => name, StringComparer.Ordinal).FirstOrDefault();
         if (firstToken is not null && string.IsNullOrWhiteSpace(_studioToken))
@@ -178,6 +197,8 @@ public partial class NerdDesignTokenRecipesCatalog
         _recipeSurface = recipe.Surface;
         _recipeContent = recipe.Content;
         _recipeAction = _studioAction;
+        ApplyComposerPreview();
+        ApplyStudioPreview();
     }
 
     private void ApplyStudioPairingFromPolicy(string? editedToken = null)
@@ -195,6 +216,7 @@ public partial class NerdDesignTokenRecipesCatalog
                 _studioSurface = pairing.Surface;
                 _studioContent = pairing.Content;
                 _studioAction = ActivePairingPolicy.SuggestActionToken(Options, _studioSurface, _studioContent);
+                ApplyStudioPreview();
                 return;
             }
         }
@@ -202,6 +224,7 @@ public partial class NerdDesignTokenRecipesCatalog
         _studioSurface = TokenNames.First();
         _studioContent = NerdTokenPairingTools.SuggestContentToken(_studioSurface, Options);
         _studioAction = NerdTokenPairingTools.SuggestActionToken(Options, _studioSurface, _studioContent);
+        ApplyStudioPreview();
     }
 
     private string ResolveStudioTokenColor(string tokenName) =>
@@ -260,6 +283,7 @@ public partial class NerdDesignTokenRecipesCatalog
 
         _studioContent = contentToken;
         _studioAction = NerdTokenPairingTools.SuggestActionToken(Options, _studioSurface, _studioContent);
+        ApplyStudioPreview();
         return Task.CompletedTask;
     }
 
@@ -273,6 +297,7 @@ public partial class NerdDesignTokenRecipesCatalog
         }
 
         _studioAction = actionToken;
+        ApplyStudioPreview();
         return Task.CompletedTask;
     }
 
@@ -388,46 +413,108 @@ public partial class NerdDesignTokenRecipesCatalog
     private NerdTokenPairingValidation ValidateApprovedPairing(string content, string surface) =>
         NerdTokenPairingTools.ValidatePairing(content, surface, Options);
 
-    private Task SwitchBrandAsync(string brand)
+    private Task OnRecipeNameChanged(string recipeName)
     {
-        _selectedBrand = brand;
-        if (ThemeController is not null)
+        _recipeName = string.IsNullOrWhiteSpace(recipeName) ? "custom" : recipeName.Trim();
+        return Task.CompletedTask;
+    }
+
+    private Task OnRecipeSurfaceChanged(string surfaceToken)
+    {
+        _recipeSurface = surfaceToken;
+        ApplyComposerPreview();
+        return Task.CompletedTask;
+    }
+
+    private Task OnRecipeContentChanged(string contentToken)
+    {
+        _recipeContent = contentToken;
+        ApplyComposerPreview();
+        return Task.CompletedTask;
+    }
+
+    private Task OnRecipeActionChanged(string actionToken)
+    {
+        _recipeAction = actionToken;
+        ApplyComposerPreview();
+        return Task.CompletedTask;
+    }
+
+    private Task ApplyComposerPreviewAsync()
+    {
+        ApplyComposerPreview();
+        _saveStatus = $"Previewing {_recipeName} recipe.";
+        return Task.CompletedTask;
+    }
+
+    private void ApplyComposerPreview()
+    {
+        if (!IsAvailable || Options.Colors.Count == 0)
         {
-            ThemeController.ApplyBrandPack(brand);
-        }
-        else
-        {
-            NerdBrandPackRegistry.Instance.Configure(brand, Options);
-            TokenCss.Update(Options);
-            HubOptions.ActiveTokenPackId = brand;
+            return;
         }
 
-        ApplyBrandTypography(brand);
+        if (string.IsNullOrWhiteSpace(_recipeSurface) ||
+            string.IsNullOrWhiteSpace(_recipeContent) ||
+            string.IsNullOrWhiteSpace(_recipeAction) ||
+            !Options.Colors.ContainsKey(_recipeSurface) ||
+            !Options.Colors.ContainsKey(_recipeContent) ||
+            !Options.Colors.ContainsKey(_recipeAction))
+        {
+            return;
+        }
+
+        Options.AddRecipe(ComposerPreviewRecipeKey, ComposerPreviewRecipe);
+        TokenCss.Update(Options);
+    }
+
+    private void ApplyStudioPreview()
+    {
+        if (!IsAvailable || Options.Colors.Count == 0)
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_studioSurface) ||
+            string.IsNullOrWhiteSpace(_studioContent) ||
+            string.IsNullOrWhiteSpace(_studioAction) ||
+            !Options.Colors.ContainsKey(_studioSurface) ||
+            !Options.Colors.ContainsKey(_studioContent) ||
+            !Options.Colors.ContainsKey(_studioAction))
+        {
+            return;
+        }
+
+        Options.AddRecipe(StudioPreviewRecipeKey, StudioPreviewRecipe);
+        TokenCss.Update(Options);
+    }
+
+    private void OnGlobalBrandChanged(string brand)
+    {
+        RefreshCatalogTheme();
         _undoStack.Clear();
         _redoStack.Clear();
         _studioToken = null;
         RefreshCatalogState();
         _saveStatus = $"Switched to {brand} brand.";
-        return Task.CompletedTask;
+        InvokeAsync(StateHasChanged);
     }
 
-    private void ApplyBrandTypography(string brand)
+    private void RefreshCatalogTheme()
     {
-        var typographyOptions = ServiceProvider.GetService<NerdResponsiveTypographyOptions>();
-        if (typographyOptions is null)
-        {
-            return;
-        }
-
-        NerdBrandTypographySwitcher.TrySwitchBrand(
-            brand,
-            typographyOptions,
-            HubOptions,
-            ServiceProvider.GetService<MudTheme>());
+        _catalogTheme = NerdCatalogThemeResolver.CreateForCatalog(
+            Options,
+            ThemeController,
+            ThemeController is null && TypographyOptions is not null
+                ? theme => theme.UseResponsiveTypography(TypographyOptions.Typography)
+                : null,
+            ThemeConfigurator);
     }
 
     private Task DownloadCssAsync() =>
         DownloadService.DownloadTextAsync(
             $"{Options.Prefix}-tokens.css",
             MudBlazorDesignTokenCssGenerator.Generate(Options)).AsTask();
+
+    public void Dispose() => BrandSwitcher.BrandChanged -= OnGlobalBrandChanged;
 }

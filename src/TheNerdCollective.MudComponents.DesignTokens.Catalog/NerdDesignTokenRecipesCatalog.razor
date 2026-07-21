@@ -9,7 +9,11 @@
 else
 {
     <NerdDesignSystemScripts />
-    <NerdCatalogThemeProvider IsDarkMode="_previewDark">
+    @if (ShowResponsiveTypography)
+    {
+        <NerdResponsiveTypographyStyles />
+    }
+    <NerdCatalogThemeProvider Theme="_catalogTheme" IsDarkMode="_previewDark">
         <NerdDesignTokenStyles />
         <NerdCatalogPage>
             <MudStack Spacing="3">
@@ -22,12 +26,6 @@ else
                     </div>
                     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="flex-wrap" data-nerd-token="@Ui(NerdDesignSystemUi.PageSurface)">
                         <MudSwitch @bind-Value="_previewDark" Label="Preview dark mode" />
-                        <MudSelect T="string" Value="_selectedBrand" ValueChanged="SwitchBrandAsync" Label="Brand" Style="min-width: 140px;">
-                            @foreach (var brandPack in InstalledBrandPacks)
-                            {
-                                <MudSelectItem Value="@brandPack.Id">@NerdBrandPackLabels.Format(brandPack)</MudSelectItem>
-                            }
-                        </MudSelect>
                         <MudButton Href="@HubOptions.HubRoute" Variant="Variant.Text" Class="@Ui(NerdDesignSystemUi.MutedContent)">Design system</MudButton>
                     </MudStack>
                 </MudStack>
@@ -199,7 +197,8 @@ else
                                 <NerdBrandPreviewTemplates Recipe="StudioPreviewRecipe"
                                                            Validation="StudioPairingValidation"
                                                            Prefix="Options.Prefix"
-                                                           RecipeName="@StudioPreviewRecipeName" />
+                                                           RecipeName="@StudioPreviewRecipeName"
+                                                           RecipeClassName="@StudioPreviewClassName" />
                             }
                         }
                     </MudStack>
@@ -209,25 +208,30 @@ else
                     <MudStack Spacing="2">
                         <MudText Typo="Typo.h6">Recipe composer</MudText>
                         <MudStack Row="true" Spacing="2" Class="flex-wrap">
-                            <MudTextField @bind-Value="_recipeName" Label="Recipe name" Immediate="true" />
-                            <MudSelect T="string" Label="Surface" @bind-Value="_recipeSurface">
+                            <MudTextField T="string" Value="_recipeName" ValueChanged="OnRecipeNameChanged" Label="Recipe name" Immediate="true" />
+                            <MudSelect T="string" Label="Surface" Value="_recipeSurface" ValueChanged="OnRecipeSurfaceChanged">
                                 @foreach (var tokenName in TokenNames)
                                 {
                                     <MudSelectItem Value="@tokenName">@tokenName</MudSelectItem>
                                 }
                             </MudSelect>
-                            <MudSelect T="string" Label="Content" @bind-Value="_recipeContent">
+                            <MudSelect T="string" Label="Content" Value="_recipeContent" ValueChanged="OnRecipeContentChanged">
                                 @foreach (var tokenName in TokenNames)
                                 {
                                     <MudSelectItem Value="@tokenName">@tokenName</MudSelectItem>
                                 }
                             </MudSelect>
-                            <MudSelect T="string" Label="Action" @bind-Value="_recipeAction">
+                            <MudSelect T="string" Label="Action" Value="_recipeAction" ValueChanged="OnRecipeActionChanged">
                                 @foreach (var tokenName in TokenNames)
                                 {
                                     <MudSelectItem Value="@tokenName">@tokenName</MudSelectItem>
                                 }
                             </MudSelect>
+                            <MudButton Variant="Variant.Filled"
+                                       Class="@Ui(NerdDesignSystemUi.BrandChrome)"
+                                       OnClick="ApplyComposerPreviewAsync">
+                                Update preview
+                            </MudButton>
                         </MudStack>
                         <code>.@ComposerClassName</code>
                         <MudCard Class="@($"pa-4 {ComposerClassName}")"
@@ -235,7 +239,7 @@ else
                                  data-theme="@(_previewDark ? "dark" : "light")">
                             <MudText Style="color:inherit;" Typo="Typo.h6">@_recipeName recipe preview</MudText>
                             <MudText Style="color:inherit;">@_recipeContent on @_recipeSurface</MudText>
-                            <MudButton Class="@GetClassName(_recipeAction)" Variant="Variant.Filled">@_recipeAction action</MudButton>
+                            <MudButton Class="@ComposerActionClassName" Variant="Variant.Filled" Disabled="@(ComposerActionClassName is null)">@_recipeAction action</MudButton>
                         </MudCard>
                     </MudStack>
                 </MudPaper>

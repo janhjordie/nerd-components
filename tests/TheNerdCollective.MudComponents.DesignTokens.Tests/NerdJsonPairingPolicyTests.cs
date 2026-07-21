@@ -1,3 +1,4 @@
+using TheNerdCollective.Brand.Dnf;
 using TheNerdCollective.MudComponents.DesignTokens;
 
 namespace TheNerdCollective.MudComponents.DesignTokens.Tests;
@@ -79,5 +80,38 @@ public sealed class NerdJsonPairingPolicyTests
         Assert.True(result.Success);
         Assert.NotNull(result.Pack);
         Assert.Single(result.Pack.Colors);
+    }
+
+    [Fact]
+    public void ResolveForegroundColor_uses_skov_green_not_contrast_text_on_light_surfaces()
+    {
+        NerdBrandPackTestBootstrap.EnsureRegistered();
+        var options = new NerdDesignTokenOptions();
+        NerdBrandPackRegistry.Instance.Configure("dnf", options);
+        var policy = Assert.IsType<NerdJsonPairingPolicy>(options.PairingPolicy);
+
+        Assert.Equal(NerdDnfDesignTokenPresets.SkovText, policy.ResolveForegroundColor("skov", options));
+        Assert.Equal(NerdDnfDesignTokenPresets.KridtText, policy.ResolveForegroundColor("kridt", options));
+    }
+
+    [Theory]
+    [InlineData("skov", "kridt")]
+    [InlineData("skov", "sol")]
+    [InlineData("kridt", "jord")]
+    public void ValidatePairing_resolves_dnf_approved_pairings_from_json_policy(string content, string surface)
+    {
+        NerdBrandPackTestBootstrap.EnsureRegistered();
+        var options = new NerdDesignTokenOptions();
+        NerdBrandPackRegistry.Instance.Configure("dnf", options);
+
+        var validation = NerdTokenPairingTools.ValidatePairing(content, surface, options);
+
+        Assert.True(validation.IsBrandApproved);
+        Assert.True(validation.MeetsAa);
+        Assert.Equal(
+            string.Equals(content, "kridt", StringComparison.OrdinalIgnoreCase)
+                ? NerdDnfDesignTokenPresets.KridtText
+                : NerdDnfDesignTokenPresets.SkovText,
+            validation.ContentColor);
     }
 }

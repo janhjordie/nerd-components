@@ -5,15 +5,33 @@ namespace TheNerdCollective.MudComponents.DesignTokens.Tests;
 public sealed class NerdFoundationTaxonomyToolsTests
 {
     [Fact]
-    public void ApplyDefaults_adds_breakpoints_motion_and_z_index()
+    public void ApplyDefaults_fills_missing_radii_and_shadows()
     {
-        var options = new NerdDesignTokenOptions { Prefix = "tnc" };
+        var options = new NerdDesignTokenOptions { Prefix = "test" };
 
         NerdFoundationTaxonomyTools.ApplyDefaults(options);
 
-        Assert.Equal("600px", options.Breakpoints["sm"]);
-        Assert.Equal("250ms", options.MotionDurations["normal"]);
-        Assert.Equal("cubic-bezier(0.4, 0, 0.2, 1)", options.MotionEasings["standard"]);
-        Assert.Equal("1300", options.ZIndex["modal"]);
+        Assert.Equal("8px", options.Radii["default"]);
+        Assert.Equal("4px", options.Radii["sm"]);
+        Assert.Contains("md", options.Shadows.Keys);
+    }
+
+    [Fact]
+    public void ToOptions_applies_foundation_defaults()
+    {
+        var pack = new NerdTokenPack
+        {
+            ClientId = "test",
+            Prefix = "test",
+            Colors = new Dictionary<string, NerdColorToken>
+            {
+                ["primary"] = new() { Value = "#336699" }
+            }
+        };
+
+        var options = pack.ToOptions();
+
+        Assert.Equal("8px", options.Radii["default"]);
+        Assert.True(options.Breakpoints.ContainsKey("md"));
     }
 }

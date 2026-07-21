@@ -1,0 +1,25 @@
+{
+  "clientId": "dryk",
+  "brandId": "dryk",
+  "displayName": "DRYK",
+  "brandIdentityVersion": "1.0.0",
+  "roles": {
+    "Default": "1rem",
+    "H1": "clamp(1.5rem, 2.5vw, 2rem)",
+    "H2": "clamp(1.375rem, 2vw, 1.75rem)",
+    "H3": "clamp(1.25rem, 1.6vw, 1.5rem)",
+    "H4": "clamp(1.125rem, 1.4vw, 1.25rem)",
+    "H5": "clamp(1rem, 1.2vw, 1.125rem)",
+    "H6": "1rem",
+    "Subtitle1": "1rem",
+    "Subtitle2": "0.875rem",
+    "Body1": "1rem",
+    "Body2": "0.875rem",
+    "Button": "0.875rem",
+    "Caption": "0.75rem",
+    "Overline": "0.75rem"
+  },
+  "lineHeight": "1.5",
+  "letterSpacing": "0.12em",
+  "fontWeight": "400"
+}

@@ -43,6 +43,7 @@
                     </MudText>
                     @{
                         var backdropClass = ResolveBackdropClass(token);
+                        var backdropStyle = ResolveBackdropStyle(token);
                     }
                     @if (backdropClass is null)
                     {
@@ -52,7 +53,9 @@
                     }
                     else
                     {
-                        <div class="@($"{backdropClass} pa-2 rounded")" data-testid="@($"playbook-backdrop-{token}")">
+                        <div class="@($"{backdropClass} pa-2 rounded")"
+                             style="@backdropStyle"
+                             data-testid="@($"playbook-backdrop-{token}")">
                             <div class="@token" data-nerd-token="@token">
                                 <NerdPlayBookPreview ComponentId="@Entry.Id" TokenClass="@token" />
                             </div>
@@ -128,4 +131,7 @@
         NerdPlayBookPreviewScope.NeedsContrastBackdrop(TokenOptions, tokenClass)
             ? NerdPlayBookPreviewScope.ResolveBackdropClass(TokenOptions, tokenClass)
             : null;
+
+    private string? ResolveBackdropStyle(string tokenClass) =>
+        NerdPlayBookPreviewScope.ResolveBackdropStyle(TokenOptions, tokenClass);
 }

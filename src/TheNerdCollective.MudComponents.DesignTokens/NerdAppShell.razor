@@ -1,5 +1,7 @@
+@implements IDisposable
 @using TheNerdCollective.MudComponents.Shared
 @inject NerdDesignTokenOptions TokenOptions
+@inject INerdBrandSwitcher BrandSwitcher
 
 <MudLayout Class="@BrandRootClasses">
     <MudAppBar Elevation="@AppBarElevation" Class="@AppBarClass">
@@ -65,4 +67,13 @@
     private string? MainStyle => NerdTokenPackShellTools.ResolveSurfaceStyle(TokenOptions, Shell.Main);
 
     private string BrandRootClasses => NerdBrandRootClasses.Combine(TokenOptions.Prefix);
+
+    protected override void OnInitialized()
+    {
+        BrandSwitcher.BrandChanged += OnGlobalBrandChanged;
+    }
+
+    private void OnGlobalBrandChanged(string _) => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => BrandSwitcher.BrandChanged -= OnGlobalBrandChanged;
 }

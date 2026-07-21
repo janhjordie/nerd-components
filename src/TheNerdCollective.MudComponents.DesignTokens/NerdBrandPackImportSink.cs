@@ -29,10 +29,7 @@ public sealed class NerdBrandPackImportSink : INerdBrandPackImportSink
 
         result.Pack.ApplyTo(_options);
         _tokenCss.Update(_options);
-        _hubOptions.ActiveTokenPackId = result.Pack.BrandId ?? result.Pack.Prefix;
-        _hubOptions.DesignTokenCount = _options.Colors.Count;
-        _hubOptions.DesignTokenRecipeCount = _options.Recipes.Count;
-        _hubOptions.ActiveBrandIdentityVersion = result.Pack.BrandIdentityVersion;
+        NerdDesignSystemHubSync.FromTokenOptions(_hubOptions, _options);
         return Task.FromResult(new NerdBrandPackImportResult(true, result.Message));
     }
 }

@@ -1,14 +1,12 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using MudBlazor;
-using TheNerdCollective.MudComponents.ResponsiveTypography;
 using TheNerdCollective.MudComponents.Shared;
 
 namespace TheNerdCollective.MudComponents.DesignTokens;
 
-public partial class NerdDesignGuide
+public partial class NerdDesignGuide : IDisposable
 {
     [Inject]
     private NerdDesignTokenOptions Options { get; set; } = default!;
@@ -20,29 +18,16 @@ public partial class NerdDesignGuide
     private IWebHostEnvironment HostEnvironment { get; set; } = default!;
 
     [Inject]
-    private NerdDesignTokenCss TokenCss { get; set; } = default!;
-
-    [Inject]
-    private INerdMudThemeController? ThemeController { get; set; }
-
-    [Inject]
-    private IServiceProvider ServiceProvider { get; set; } = default!;
-
-    [Inject]
-    private IEnumerable<INerdBrandPack> BrandPacks { get; set; } = [];
+    private INerdBrandSwitcher BrandSwitcher { get; set; } = default!;
 
     [Inject]
     private NavigationManager Navigation { get; set; } = default!;
 
-    private string _selectedBrand = string.Empty;
     private string _clientId = "client";
     private NerdDesignParityResult _parity = new(0, []);
     private NerdMudStateParityResult _mudStateParity = new(0, []);
     private NerdMudPaletteFidelityResult _mudPaletteFidelity = new(0, []);
     private IReadOnlyList<NerdComponentFamilyBinding> _familyBindings = [];
-
-    private IEnumerable<INerdBrandPack> InstalledBrandPacks =>
-        BrandPacks.OrderBy(pack => pack.Id, StringComparer.OrdinalIgnoreCase);
 
     private bool IsAvailable =>
         HubOptions.EnableDesignGuidePage &&
@@ -78,8 +63,8 @@ public partial class NerdDesignGuide
             return;
         }
 
-        _selectedBrand = Options.Prefix;
         _clientId = Options.ActiveBrandPackId ?? Options.Prefix;
+        BrandSwitcher.BrandChanged += OnGlobalBrandChanged;
         RefreshParity();
     }
 
@@ -98,38 +83,12 @@ public partial class NerdDesignGuide
         _familyBindings = NerdComponentFamilyTools.ResolveBindings(Options);
     }
 
-    private Task SwitchBrandAsync(string brand)
+    private void OnGlobalBrandChanged(string brand)
     {
-        _selectedBrand = brand;
         _clientId = brand;
-        if (ThemeController is not null)
-        {
-            ThemeController.ApplyBrandPack(brand);
-        }
-        else
-        {
-            NerdBrandPackRegistry.Instance.Configure(brand, Options);
-            TokenCss.Update(Options);
-            HubOptions.ActiveTokenPackId = brand;
-        }
-
-        ApplyBrandTypography(brand);
         RefreshParity();
-        return Task.CompletedTask;
+        InvokeAsync(StateHasChanged);
     }
 
-    private void ApplyBrandTypography(string brand)
-    {
-        var typographyOptions = ServiceProvider.GetService<NerdResponsiveTypographyOptions>();
-        if (typographyOptions is null)
-        {
-            return;
-        }
-
-        NerdBrandTypographySwitcher.TrySwitchBrand(
-            brand,
-            typographyOptions,
-            HubOptions,
-            ServiceProvider.GetService<MudTheme>());
-    }
+    public void Dispose() => BrandSwitcher.BrandChanged -= OnGlobalBrandChanged;
 }

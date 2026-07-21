@@ -80,7 +80,8 @@ internal static class MudBlazorComponentRuleBuilder
         string? switchCheckedTrackBackground = null,
         string? switchTrackBorderVariable = null,
         string? inputValueVariable = null,
-        string? inputBorderMixVariable = null)
+        string? inputBorderMixVariable = null,
+        bool isContentIntent = false)
     {
         var importantSuffix = important ? " !important" : string.Empty;
         var resolvedInactiveTabContent = inactiveTabContentVariable ?? contentVariable;
@@ -88,6 +89,17 @@ internal static class MudBlazorComponentRuleBuilder
         var resolvedSwitchTrackBorder = switchTrackBorderVariable ?? hoverVariable;
         var resolvedInputValue = inputValueVariable ?? contentVariable;
         var resolvedInputBorderMix = inputBorderMixVariable ?? variable;
+
+        if (bridgesOnly && isContentIntent)
+        {
+            AppendContentIntentPatternRules(
+                css,
+                root,
+                variable,
+                contentVariable,
+                borderVariable,
+                importantSuffix);
+        }
 
         if (!bridgesOnly)
         {
@@ -582,6 +594,99 @@ internal static class MudBlazorComponentRuleBuilder
 
         css.AppendLine($"{root}[class*=\"mud-picker-color\"], {root} :where([class*=\"mud-picker-color\"]) {{");
         css.AppendLine($"  color: var({contentVariable}){importantSuffix};");
+        css.AppendLine("}");
+    }
+
+    /// <summary>
+    /// Surface hosts (brand-chrome, nav-surface, …) skip bulk Mud rules; paint readable content on the host and descendants.
+    /// Uses host-paired selectors only so page-surface on catalog chrome does not bleed into nested token previews.
+    /// </summary>
+    public static void AppendSurfaceContentRules(
+        StringBuilder css,
+        string root,
+        string contentColor,
+        string borderColor,
+        bool important)
+    {
+        var importantSuffix = important ? " !important" : string.Empty;
+        var transparentBg = $"background-color: transparent{importantSuffix};";
+
+        AppendHostPatternRules(css, root, ContentTextPatterns,
+            $"color: {contentColor}{importantSuffix}; {transparentBg}");
+
+        AppendHostPatternRules(css, root, DataSurfacePatterns,
+            $"color: {contentColor}{importantSuffix}; {transparentBg} border-color: {borderColor}{importantSuffix};");
+
+        AppendHostPatternRules(css, root, StructurePatterns,
+            $"color: {contentColor}{importantSuffix}; border-color: {borderColor}{importantSuffix};");
+
+        AppendHostPatternRules(css, root, AccentTextPatterns,
+            $"color: {contentColor}{importantSuffix}; {transparentBg}");
+
+        foreach (var host in DataSurfacePatterns)
+        {
+            css.AppendLine($"{root}[class*=\"{host}\"] :where([class*=\"mud-table-cell\"]),");
+            css.AppendLine($"{root}[class*=\"{host}\"] :where([class*=\"mud-table-head\"]),");
+            css.AppendLine($"{root}[class*=\"{host}\"] :where([class*=\"mud-progress-circular\"]),");
+            css.AppendLine($"{root}[class*=\"{host}\"] :where([class*=\"mud-progress-linear\"]),");
+            css.AppendLine($"{root}[class*=\"{host}\"] :where([class*=\"mud-skeleton\"]) {{");
+            css.AppendLine($"  color: {contentColor}{importantSuffix};");
+            css.AppendLine($"  background-color: transparent{importantSuffix};");
+            css.AppendLine("}");
+        }
+    }
+
+    private static void AppendContentIntentPatternRules(
+        StringBuilder css,
+        string root,
+        string variable,
+        string contentVariable,
+        string borderVariable,
+        string importantSuffix)
+    {
+        // Content intents (on-brand-chrome, nav-item, …): the alias value IS the paint color.
+        var transparentBg = $"background-color: transparent{importantSuffix};";
+        _ = contentVariable;
+
+        AppendPatternRules(css, root, ContentTextPatterns,
+            $"color: var({variable}){importantSuffix}; {transparentBg}");
+
+        AppendPatternRules(css, root, DataSurfacePatterns,
+            $"color: var({variable}){importantSuffix}; {transparentBg} border-color: var({borderVariable}){importantSuffix};");
+
+        AppendPatternRules(css, root, StructurePatterns,
+            $"color: var({variable}){importantSuffix}; border-color: var({borderVariable}){importantSuffix};");
+
+        AppendPatternRules(css, root, AccentTextPatterns,
+            $"color: var({variable}){importantSuffix}; {transparentBg}");
+
+        css.AppendLine($"{root} :where([class*=\"mud-table-cell\"]),");
+        css.AppendLine($"{root} :where([class*=\"mud-table-head\"]),");
+        css.AppendLine($"{root} :where([class*=\"mud-progress-circular\"]),");
+        css.AppendLine($"{root} :where([class*=\"mud-progress-linear\"]),");
+        css.AppendLine($"{root} :where([class*=\"mud-skeleton\"]) {{");
+        css.AppendLine($"  color: var({variable}){importantSuffix};");
+        css.AppendLine("}");
+    }
+
+    private static void AppendHostPatternRules(
+        StringBuilder css,
+        string root,
+        IReadOnlyList<string> patterns,
+        string declarations)
+    {
+        if (patterns.Count == 0)
+        {
+            return;
+        }
+
+        for (var i = 0; i < patterns.Count; i++)
+        {
+            css.Append($"{root}[class*=\"{patterns[i]}\"]");
+            css.AppendLine(i == patterns.Count - 1 ? " {" : ",");
+        }
+
+        css.AppendLine($"  {declarations}");
         css.AppendLine("}");
     }
 

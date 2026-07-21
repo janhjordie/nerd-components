@@ -1,6 +1,7 @@
 using TheNerdCollective.Brand.Acme;
 using TheNerdCollective.Brand.Demo;
 using TheNerdCollective.Brand.Dnf;
+using TheNerdCollective.Brand.Dryk;
 using TheNerdCollective.Brand.Tnc;
 using TheNerdCollective.MudComponents.DesignTokens;
 
@@ -20,6 +21,7 @@ public static class NerdBrandPackTestBootstrap
 
         registry.Reset();
         registry.Register(NerdDnfBrandPack.Instance);
+        registry.Register(NerdDrykBrandPack.Instance);
         registry.Register(NerdAcmeBrandPack.Instance);
         registry.Register(NerdDemoBrandPack.Instance);
         registry.Register(NerdTncBrandPack.Instance);
@@ -34,6 +36,10 @@ public static class NerdBrandPackTestBootstrap
             case "dnf":
                 NerdDnfDesignTokenPresets.Apply(options);
                 options.PairingPolicy = new NerdDnfPairingPolicy();
+                break;
+            case "dryk":
+                NerdDrykDesignTokenPresets.Apply(options);
+                options.PairingPolicy = new NerdDrykPairingPolicy();
                 break;
             case "tnc":
                 NerdTncDesignTokenPresets.Apply(options);

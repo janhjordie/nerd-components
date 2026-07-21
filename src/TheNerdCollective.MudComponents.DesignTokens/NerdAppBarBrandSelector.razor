@@ -1,0 +1,47 @@
+@implements IDisposable
+@using TheNerdCollective.MudComponents.Shared
+@inject NerdDesignTokenOptions TokenOptions
+@inject INerdBrandSwitcher BrandSwitcher
+@inject IEnumerable<INerdBrandPack> BrandPacks
+
+@if (_brandPacks.Count > 0)
+{
+    <div data-testid="app-bar-brand-selector"
+         data-nerd-token="@Ui(NerdDesignSystemUi.OnBrandChrome)"
+         data-nerd-portal-token="@Ui(NerdDesignSystemUi.PageSurface)"
+         class="mr-3"
+         style="min-width: 160px; max-width: 220px;">
+        <MudSelect T="string"
+                   Label="Brand"
+                   Value="@BrandSwitcher.ActiveBrandId"
+                   ValueChanged="OnBrandSelected"
+                   Variant="Variant.Outlined"
+                   Margin="Margin.Dense"
+                   Dense="true"
+                   PopoverClass="@Ui(NerdDesignSystemUi.PageSurface)">
+            @foreach (var brandPack in _brandPacks)
+            {
+                <MudSelectItem Value="@brandPack.Id">@NerdBrandPackLabels.Format(brandPack)</MudSelectItem>
+            }
+        </MudSelect>
+    </div>
+}
+
+@code {
+    private IReadOnlyList<INerdBrandPack> _brandPacks = [];
+
+    protected override void OnInitialized()
+    {
+        _brandPacks = BrandPacks.OrderBy(pack => pack.Id, StringComparer.OrdinalIgnoreCase).ToList();
+        BrandSwitcher.BrandChanged += OnGlobalBrandChanged;
+    }
+
+    private void OnBrandSelected(string brandId) => BrandSwitcher.SwitchBrand(brandId);
+
+    private void OnGlobalBrandChanged(string _) => InvokeAsync(StateHasChanged);
+
+    private string Ui(string semanticAlias) =>
+        NerdDesignSystemUi.TokenClass(TokenOptions.Prefix, semanticAlias);
+
+    public void Dispose() => BrandSwitcher.BrandChanged -= OnGlobalBrandChanged;
+}

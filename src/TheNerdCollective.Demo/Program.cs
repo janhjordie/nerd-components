@@ -2,6 +2,7 @@ using MudBlazor.Services;
 using TheNerdCollective.Brand.Acme;
 using TheNerdCollective.Brand.Demo;
 using TheNerdCollective.Brand.Dnf;
+using TheNerdCollective.Brand.Dryk;
 using TheNerdCollective.Brand.Tnc;
 using TheNerdCollective.Demo.Components;
 using TheNerdCollective.MudComponents.DesignTokens;
@@ -22,11 +23,13 @@ builder.Services.AddMudServices();
 
 builder.Services.AddNerdDesignTokenBrandPacks(
     NerdDnfBrandPack.Instance,
+    NerdDrykBrandPack.Instance,
     NerdAcmeBrandPack.Instance,
     NerdDemoBrandPack.Instance,
     NerdTncBrandPack.Instance);
 builder.Services.AddNerdBrandTypographyPacks(
     NerdDnfBrandTypographyPack.Instance,
+    NerdDrykBrandTypographyPack.Instance,
     NerdAcmeBrandTypographyPack.Instance,
     NerdDemoBrandTypographyPack.Instance,
     NerdTncBrandTypographyPack.Instance);

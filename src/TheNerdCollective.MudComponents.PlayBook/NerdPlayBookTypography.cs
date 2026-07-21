@@ -1,4 +1,5 @@
 using MudBlazor;
+using TheNerdCollective.MudComponents.DesignTokens;
 using TheNerdCollective.MudComponents.ResponsiveTypography;
 
 namespace TheNerdCollective.MudComponents.PlayBook;
@@ -19,7 +20,9 @@ public static class NerdPlayBookTypography
         (DensePreset, "Dense app")
     ];
 
-    public static MudTheme CreateTheme(string presetId, NerdResponsiveTypographyOptions? configuredOptions = null)
+    public static ResponsiveTypographyOptions ResolveTypography(
+        string presetId,
+        NerdResponsiveTypographyOptions? configuredOptions = null)
     {
         var typography = new ResponsiveTypographyOptions();
         if (configuredOptions is not null)
@@ -37,8 +40,25 @@ public static class NerdPlayBookTypography
                 break;
         }
 
+        return typography;
+    }
+
+    public static MudTheme CreateTheme(string presetId, NerdResponsiveTypographyOptions? configuredOptions = null)
+    {
+        var typography = ResolveTypography(presetId, configuredOptions);
         var theme = new MudTheme();
         theme.UseResponsiveTypography(typography.CopyTo);
         return theme;
     }
+
+    public static MudTheme CreateBrandTheme(
+        NerdDesignTokenOptions tokenOptions,
+        ResponsiveTypographyOptions typography) =>
+        NerdMudThemeFactory.Create(tokenOptions, theme => theme.UseResponsiveTypography(typography.CopyTo));
+
+    public static MudTheme CreateBrandTheme(
+        string presetId,
+        NerdDesignTokenOptions tokenOptions,
+        NerdResponsiveTypographyOptions? configuredOptions = null) =>
+        CreateBrandTheme(tokenOptions, ResolveTypography(presetId, configuredOptions));
 }

@@ -3,82 +3,75 @@
 
 @if (TokenOptions.Recipes.Count > 0)
 {
-    <MudPaper Outlined="true" Class="pa-4 mb-4">
-        <MudText Typo="Typo.h6">Layout scenes</MudText>
-        <MudText Typo="Typo.body2" Class="@($"{Ui(NerdDesignSystemUi.MutedContent)} mb-3")">
-            Storybook-style shell compositions from pack recipes — hero, navigation and footer in one viewport.
-        </MudText>
-
+    <MudStack Spacing="3">
+        <MudText Typo="Typo.h5">Layout scenes</MudText>
         @if (DarkHeroRecipeName is not null)
         {
-            <MudPaper Outlined="true" Class="pa-4 mb-4" data-testid="design-guide-hero-dark">
-                <MudText Typo="Typo.subtitle2">Dark hero zone</MudText>
-                <MudText Typo="Typo.caption" Class="@Ui(NerdDesignSystemUi.MutedContent)">
-                    PseudoCss scope <code>:root .@RecipeClass(DarkHeroRecipeName)</code>
-                    @(UsesHeroOverlay(DarkHeroRecipeName) ? " + hero-overlay opacity token." : ".")
-                </MudText>
-                <MudPaper Class="@($"{RecipeClass(DarkHeroRecipeName)} pa-6 mt-3")"
-                          Outlined="true"
-                          Style="@(UsesHeroOverlay(DarkHeroRecipeName) ? "position:relative; overflow:hidden;" : null)">
-                    @if (UsesHeroOverlay(DarkHeroRecipeName))
-                    {
-                        <div class="@($"{TokenOptions.Prefix}-opacity-hero-overlay")"
-                             style="position:absolute; inset:0; pointer-events:none;"
-                             aria-hidden="true"></div>
-                    }
-                    <div style="@(UsesHeroOverlay(DarkHeroRecipeName) ? "position:relative;" : null)">
-                        <MudText Typo="Typo.h4">@SceneHeadline</MudText>
-                        <MudText Typo="Typo.body1" Class="mt-2">@SceneSubline</MudText>
-                        <MudButton Class="@($"{Ui(NerdDesignSystemUi.PrimaryAction)} mt-3")"
-                                   Variant="Variant.Filled"
-                                   data-testid="design-guide-hero-dark-cta">
-                            @SceneCta
-                        </MudButton>
-                    </div>
-                </MudPaper>
+            <MudPaper Outlined="true"
+                      Class="@($"{RecipeClass(DarkHeroRecipeName)} pa-8")"
+                      data-testid="design-guide-hero-dark"
+                      Style="@(UsesHeroOverlay(DarkHeroRecipeName) ? "position:relative; overflow:hidden; min-height: 280px;" : "min-height: 280px;")">
+                @if (UsesHeroOverlay(DarkHeroRecipeName))
+                {
+                    <div class="@($"{TokenOptions.Prefix}-opacity-hero-overlay")"
+                         style="position:absolute; inset:0; pointer-events:none;"
+                         aria-hidden="true"></div>
+                }
+                <div style="@(UsesHeroOverlay(DarkHeroRecipeName) ? "position:relative;" : null)">
+                    <MudText Typo="Typo.h3">@SceneHeadline</MudText>
+                    <MudText Typo="Typo.body1" Class="mt-2">@SceneSubline</MudText>
+                    <MudButton Class="@($"{Ui(NerdDesignSystemUi.PrimaryAction)} mt-4")"
+                               Variant="Variant.Filled"
+                               data-testid="design-guide-hero-dark-cta">
+                        @SceneCta
+                    </MudButton>
+                    <MudText Typo="Typo.caption" Class="@($"{Ui(NerdDesignSystemUi.MutedContent)} mt-4")">
+                        Recipe scope <code>:root .@RecipeClass(DarkHeroRecipeName)</code>
+                    </MudText>
+                </div>
             </MudPaper>
         }
 
         <MudPaper Outlined="true" Class="@($"{SceneClass} overflow-hidden")" data-testid="design-guide-layout-scene">
-            @if (TryGetRecipe("hero-photo", out _))
+            @if (ShowSceneHero && TryGetRecipe("hero-photo", out _))
             {
-                <MudPaper Class="@($"{RecipeClass("hero-photo")} pa-4")" Square="true" Elevation="0">
-                    <MudText Typo="Typo.h5">@SceneHeadline</MudText>
-                    <MudText Typo="Typo.body2" Class="mt-1">@SceneSubline</MudText>
-                    <MudButton Class="@($"{Ui(NerdDesignSystemUi.PrimaryAction)} mt-3")" Variant="Variant.Filled" Size="Size.Small">
+                <MudPaper Class="@($"{RecipeClass("hero-photo")} pa-6")" Square="true" Elevation="0">
+                    <MudText Typo="Typo.h4">@SceneHeadline</MudText>
+                    <MudText Typo="Typo.body1" Class="mt-2">@SceneSubline</MudText>
+                    <MudButton Class="@($"{Ui(NerdDesignSystemUi.PrimaryAction)} mt-4")" Variant="Variant.Filled">
                         @SceneCta
                     </MudButton>
                 </MudPaper>
             }
-            else if (TryGetRecipe("hero", out _))
+            else if (ShowSceneHero && TryGetRecipe("hero", out _))
             {
-                <MudPaper Class="@($"{RecipeClass("hero")} pa-4")" Square="true" Elevation="0">
-                    <MudText Typo="Typo.h5">@SceneHeadline</MudText>
-                    <MudText Typo="Typo.body2" Class="mt-1">@SceneSubline</MudText>
-                    <MudButton Class="@($"{Ui(NerdDesignSystemUi.PrimaryAction)} mt-3")" Variant="Variant.Filled" Size="Size.Small">
+                <MudPaper Class="@($"{RecipeClass("hero")} pa-6")" Square="true" Elevation="0">
+                    <MudText Typo="Typo.h4">@SceneHeadline</MudText>
+                    <MudText Typo="Typo.body1" Class="mt-2">@SceneSubline</MudText>
+                    <MudButton Class="@($"{Ui(NerdDesignSystemUi.PrimaryAction)} mt-4")" Variant="Variant.Filled">
                         @SceneCta
                     </MudButton>
                 </MudPaper>
             }
 
             <MudGrid Class="ma-0">
-                @if (TryGetRecipe(NerdDesignSystemUi.SidebarRecipe, out var sidebar))
+                @if (TryGetRecipe(NerdDesignSystemUi.SidebarRecipe, out _))
                 {
                     <MudItem xs="12" md="3" Class="pa-0">
-                        <MudPaper Class="@($"{RecipeClass(NerdDesignSystemUi.SidebarRecipe)} pa-2")" Square="true" Elevation="0" Style="min-height: 180px;">
+                        <MudPaper Class="@($"{RecipeClass(NerdDesignSystemUi.SidebarRecipe)} pa-2")" Square="true" Elevation="0" Style="min-height: 200px;">
                             <MudText Typo="Typo.overline" Class="pa-2">Navigation</MudText>
                             <MudNavMenu>
                                 <MudNavLink Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
-                                <MudNavLink Icon="@Icons.Material.Filled.Campaign" Class="mud-nav-link-active">Campaign</MudNavLink>
+                                <MudNavLink Icon="@Icons.Material.Filled.Campaign" active="true">Campaign</MudNavLink>
                                 <MudNavLink Icon="@Icons.Material.Filled.Info">About</MudNavLink>
                             </MudNavMenu>
                         </MudPaper>
                     </MudItem>
                 }
-                <MudItem xs="12" md="@(TryGetRecipe(NerdDesignSystemUi.SidebarRecipe, out _) ? 9 : 12)" Class="pa-4">
-                    <MudText Typo="Typo.h6">Main content</MudText>
+                <MudItem xs="12" md="@(TryGetRecipe(NerdDesignSystemUi.SidebarRecipe, out _) ? 9 : 12)" Class="pa-6">
+                    <MudText Typo="Typo.h5">Main content</MudText>
                     <MudText Typo="Typo.body2" Class="@Ui(NerdDesignSystemUi.MutedContent)">
-                        Page surface uses <code>@Ui(NerdDesignSystemUi.PageSurface)</code>.
+                        Page surface · <code>@Ui(NerdDesignSystemUi.PageSurface)</code>
                     </MudText>
                 </MudItem>
             </MudGrid>
@@ -87,11 +80,11 @@
             {
                 var footerName = TokenOptions.Recipes.ContainsKey("footer-minimal") ? "footer-minimal" : "footer";
                 <MudPaper Class="@($"{RecipeClass(footerName)} pa-3")" Square="true" Elevation="0">
-                    <MudText Typo="Typo.caption" Align="Align.Center">Footer scene · <code>@RecipeClass(footerName)</code></MudText>
+                    <MudText Typo="Typo.caption" Align="Align.Center">Footer · <code>@RecipeClass(footerName)</code></MudText>
                 </MudPaper>
             }
         </MudPaper>
-    </MudPaper>
+    </MudStack>
 }
 
 @code {
@@ -106,6 +99,8 @@
         TryGetRecipe("hero-organic", out _) ? "hero-organic" :
         TryGetRecipe("hero", out _) ? "hero" :
         null;
+
+    private bool ShowSceneHero => DarkHeroRecipeName is null;
 
     private string SceneClass => Ui(NerdDesignSystemUi.PageSurface);
 

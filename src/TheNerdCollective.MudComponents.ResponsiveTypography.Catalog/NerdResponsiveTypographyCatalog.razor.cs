@@ -10,7 +10,7 @@ using TheNerdCollective.MudComponents.Shared;
 
 namespace TheNerdCollective.MudComponents.ResponsiveTypography;
 
-public partial class NerdResponsiveTypographyCatalog
+public partial class NerdResponsiveTypographyCatalog : IDisposable
 {
     private static readonly (string Label, double Width)[] DeviceFrames =
     [
@@ -44,6 +44,9 @@ public partial class NerdResponsiveTypographyCatalog
 
     [Inject]
     private INerdCatalogEntitlements Entitlements { get; set; } = default!;
+
+    [Inject]
+    private INerdBrandSwitcher BrandSwitcher { get; set; } = default!;
 
     private const string PreviewScopeSelector = ".nerd-typography-catalog-preview";
 
@@ -92,6 +95,20 @@ public partial class NerdResponsiveTypographyCatalog
 
         SyncEditorFromRole();
         Navigation.LocationChanged += OnLocationChanged;
+        BrandSwitcher.BrandChanged += OnGlobalBrandChanged;
+    }
+
+    private void OnGlobalBrandChanged(string _)
+    {
+        RefreshPreviewTheme();
+        SyncEditorFromRole();
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        Navigation.LocationChanged -= OnLocationChanged;
+        BrandSwitcher.BrandChanged -= OnGlobalBrandChanged;
     }
 
     private void OnLocationChanged(object? sender, LocationChangedEventArgs e) => RefreshPreviewTheme();

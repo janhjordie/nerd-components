@@ -14,8 +14,8 @@
       "dark": null,
       "contrastText": "#FDFAF3",
       "darkContrastText": null,
-      "surface": null,
-      "content": null,
+      "surface": "#3B342E",
+      "content": "#FDFAF3",
       "interactive": null,
       "hover": "#36302A",
       "active": null,
@@ -30,8 +30,8 @@
       "dark": null,
       "contrastText": "#FDFAF3",
       "darkContrastText": null,
-      "surface": null,
-      "content": null,
+      "surface": "#6D5346",
+      "content": "#FDFAF3",
       "interactive": null,
       "hover": "#644C40",
       "active": null,
@@ -97,7 +97,7 @@
       "surface": null,
       "content": null,
       "interactive": null,
-      "hover": "#E05357",
+      "hover": "#E5535A",
       "active": null,
       "border": null,
       "disabled": null,
@@ -110,8 +110,8 @@
       "dark": null,
       "contrastText": "#FDFAF3",
       "darkContrastText": null,
-      "surface": null,
-      "content": null,
+      "surface": "#0C2E3A",
+      "content": "#FDFAF3",
       "interactive": null,
       "hover": "#0B2A35",
       "active": null,
@@ -121,8 +121,8 @@
       "roles": null
     },
     "himmel": {
-      "value": "#81ABFF",
-      "light": "#81ABFF",
+      "value": "#80ABFF",
+      "light": "#80ABFF",
       "dark": null,
       "contrastText": "#002D26",
       "darkContrastText": null,
@@ -158,8 +158,8 @@
       "dark": null,
       "contrastText": "#FDFAF3",
       "darkContrastText": null,
-      "surface": null,
-      "content": null,
+      "surface": "#002D26",
+      "content": "#FDFAF3",
       "interactive": null,
       "hover": "#002923",
       "active": null,
@@ -174,8 +174,8 @@
       "dark": null,
       "contrastText": "#FDFAF3",
       "darkContrastText": null,
-      "surface": null,
-      "content": null,
+      "surface": "#0E4D3A",
+      "content": "#FDFAF3",
       "interactive": null,
       "hover": "#0D4735",
       "active": null,
@@ -202,8 +202,8 @@
     }
   },
   "aliases": {
-    "primary-action": "himmel",
-    "secondary-action": "hav",
+    "primary-action": "graes",
+    "secondary-action": "skov",
     "on-primary-action": "skov",
     "page-surface": "kridt-lys",
     "brand-chrome": "skov",
@@ -212,9 +212,9 @@
     "nav-item": "skov",
     "nav-item-active": "graes",
     "input-surface": "kridt-lys",
-    "input-border": "hav",
-    "focus-ring": "himmel",
-    "muted-content": "hav",
+    "input-border": "skov",
+    "focus-ring": "graes",
+    "muted-content": "skov",
     "info": "flod",
     "highlight": "sol",
     "danger": "morgenrode",
@@ -287,15 +287,15 @@
       "action": "graes",
       "border": null,
       "label": "App sidebar",
-      "usage": "Drawer navigation with gr\u00E6s active accent"
+      "usage": "Drawer navigation with græs active accent"
     },
     "hero-photo": {
-      "surface": "jord",
+      "surface": "skov",
       "content": "kridt",
       "action": "graes",
       "border": null,
       "label": "Photo hero",
-      "usage": "Full-bleed photo hero with kridt headline and gr\u00E6s CTA"
+      "usage": "Full-bleed photo hero with kridt headline and græs CTA"
     },
     "hero-organic": {
       "surface": "skov",
@@ -303,7 +303,7 @@
       "action": "graes",
       "border": null,
       "label": "Organic hero",
-      "usage": "Dark skov hero with organic watermark and gr\u00E6s CTA"
+      "usage": "Dark skov hero with organic watermark and græs CTA"
     },
     "hero-light": {
       "surface": "himmel",
@@ -425,7 +425,7 @@
           "content": null
         },
         "himmel": {
-          "value": "#81ABFF",
+          "value": "#80ABFF",
           "light": null,
           "dark": null,
           "contrastText": "#002D26",
@@ -586,6 +586,10 @@
       "navLink": {
         "default": "nav-item",
         "active": "nav-item-active"
+      },
+      "select": {
+        "popover": "page-surface",
+        "selected": "nav-item-active"
       }
     }
   }

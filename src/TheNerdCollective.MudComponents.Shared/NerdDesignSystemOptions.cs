@@ -89,4 +89,9 @@ public sealed class NerdDesignSystemOptions
 
     /// <summary>CSS class prefix for design tokens (set by AddNerdDesignTokens).</summary>
     public string TokenPrefix { get; set; } = "nerd";
+
+    /// <summary>Raised when the active token pack prefix or counts change.</summary>
+    public event Action? BrandChanged;
+
+    public void NotifyBrandChanged() => BrandChanged?.Invoke();
 }

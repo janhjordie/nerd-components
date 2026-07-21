@@ -6,7 +6,7 @@
   "version": 2,
   "brandIdentityVersion": "1.0.0",
   "pairingGuideName": "Demo",
-  "updatedAt": "2026-07-19T19:51:02.853189+00:00",
+  "updatedAt": "2026-07-20T18:11:41.159813+00:00",
   "colors": {
     "violet": {
       "value": "#6D28D9",
@@ -93,8 +93,19 @@
     "danger": "violet",
     "success": "sky"
   },
-  "radii": {},
-  "shadows": {},
+  "radii": {
+    "sm": "4px",
+    "default": "8px",
+    "md": "8px",
+    "lg": "12px",
+    "card": "12px"
+  },
+  "shadows": {
+    "sm": "0 1px 3px rgba(0,0,0,.12)",
+    "md": "0 4px 12px rgba(0,0,0,.12)",
+    "lg": "0 8px 24px rgba(0,0,0,.16)",
+    "elevated": "0 4px 16px rgba(0,0,0,.16)"
+  },
   "spacing": {},
   "breakpoints": {},
   "motionDurations": {},
@@ -243,6 +254,10 @@
       "navLink": {
         "default": "nav-item",
         "active": "nav-item-active"
+      },
+      "select": {
+        "popover": "page-surface",
+        "selected": "nav-item-active"
       }
     }
   }

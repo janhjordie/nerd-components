@@ -134,7 +134,11 @@ public sealed record NerdMudBrandPaletteMap
             TextPrimary = ResolveContent(options, bindings.TextPrimary, "rgba(0,0,0,0.87)", useDark),
             TextSecondary = ResolveContent(options, bindings.TextSecondary, "rgba(0,0,0,0.54)", useDark),
             TextDisabled = ResolveDisabled(options, bindings.TextDisabled, useDark),
-            ActionDefault = ResolveColor(options, bindings.ActionDefault, bindings.Primary, useDark),
+            ActionDefault = ResolveColor(
+                options,
+                bindings.ActionDefault,
+                bindings.Primary ?? NerdDesignSystemUi.PrimaryAction,
+                useDark),
             ActionDefaultHover = ResolveHover(options, bindings.ActionDefault, useDark),
             ActionDisabled = ResolveDisabled(options, bindings.TextDisabled, useDark),
             ActionDisabledBackground = ResolveDisabledBackground(options, bindings.ActionDisabled),
@@ -142,10 +146,11 @@ public sealed record NerdMudBrandPaletteMap
             Background = ResolveSurface(options, bindings.Background, useDark),
             BackgroundGray = ResolveGray(options, bindings.Background, useDark),
             DrawerBackground = ResolveSurface(options, bindings.DrawerBackground, useDark),
-            DrawerText = ResolveContent(options, bindings.DrawerText, "rgba(0,0,0,0.87)", useDark),
-            DrawerIcon = ResolveContent(options, bindings.DrawerIcon, "rgba(0,0,0,0.54)", useDark),
+            // Nav-item / on-brand-chrome are content intents: the alias value IS the paint color.
+            DrawerText = ResolveColor(options, bindings.DrawerText, "rgba(0,0,0,0.87)", useDark),
+            DrawerIcon = ResolveColor(options, bindings.DrawerIcon, "rgba(0,0,0,0.54)", useDark),
             AppbarBackground = ResolveColorOrFallback(options, bindings.AppbarBackground, bindings.Secondary, "#594AE2", useDark),
-            AppbarText = ResolveText(options, bindings.AppbarText, "#FFFFFF", useDark),
+            AppbarText = ResolveColor(options, bindings.AppbarText, "#FFFFFF", useDark),
             LinesDefault = ResolveBorder(options, bindings.LinesDefault, useDark),
             LinesInputs = ResolveBorder(options, bindings.LinesInputs, useDark),
             Divider = ResolveBorder(options, bindings.LinesDefault, useDark),
@@ -262,7 +267,9 @@ public sealed record NerdMudBrandPaletteMap
             var light = useDark
                 ? token.Dark ?? token.Light ?? token.Value
                 : token.Light ?? token.Value;
-            return token.Border ?? token.Content ?? NerdColorParser.ContentText(light, token.ContrastText);
+            return token.Border
+                   ?? token.Content
+                   ?? NerdColorParser.ContentText(light, token.ContrastText ?? NerdColorValue.ContrastText(light));
         }
 
         return "rgba(0,0,0,0.12)";

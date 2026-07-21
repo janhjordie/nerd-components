@@ -9,6 +9,8 @@ namespace TheNerdCollective.MudComponents.DesignTokens;
 /// </summary>
 public partial class NerdMudThemeProvider : MudThemeProvider
 {
+    private bool _isDark;
+
     [Parameter]
     public NerdDesignTokenOptions? DesignTokenOptions { get; set; }
 
@@ -18,7 +20,17 @@ public partial class NerdMudThemeProvider : MudThemeProvider
     [Parameter]
     public IReadOnlyList<string>? PreviewBrandPackIds { get; set; }
 
-    private bool IsDark => base.IsDarkMode;
+    private bool IsDark => _isDark;
+
+    public override async Task SetParametersAsync(ParameterView parameters)
+    {
+        if (parameters.TryGetValue<bool>(nameof(IsDarkMode), out var isDark))
+        {
+            _isDark = isDark;
+        }
+
+        await base.SetParametersAsync(parameters);
+    }
 
     protected string BuildNerdScopedTheme()
     {

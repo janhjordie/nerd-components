@@ -106,7 +106,9 @@ public static class NerdTokenPairingTools
         }
 
         var token = options.Colors[tokenName];
-        return token.Content ?? token.Light ?? token.Value;
+        // Foreground paint is the token's own color — never token.Content
+        // (Content means "text on this token when used as a surface").
+        return token.Light ?? token.Value;
     }
 
     public static string ResolvePairingSurfaceColor(string tokenName, NerdDesignTokenOptions options)

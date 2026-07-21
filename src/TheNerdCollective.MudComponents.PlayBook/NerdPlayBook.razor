@@ -38,10 +38,6 @@ else
 
                 <NerdPlayBookToolbar
                     TokenNames="@_tokenNames"
-                    BrandPacks="@InstalledBrandPacks"
-                    SelectedBrand="@_selectedBrand"
-                    SelectedBrandChanged="@SwitchBrandAsync"
-                    ShowBrandSwitcher="@ShowBrandSwitcher"
                     @bind-SelectedTokenFilter="_selectedTokenFilter"
                     TypographyPreset="@_typographyPreset"
                     TypographyPresetChanged="@OnTypographyPresetChanged"
@@ -49,10 +45,13 @@ else
                     @bind-SearchQuery="_searchQuery" />
 
                 <NerdCatalogChrome>
-                <MudTabs @bind-ActivePanelIndex="_activeSectionTabIndex" Elevation="1" Rounded="true" ApplyEffectsToContainer="true">
+                <MudTabs @bind-ActivePanelIndex="_activeSectionTabIndex" Elevation="1" Rounded="true">
                     <MudTabPanel Text="Mud components" Icon="@Icons.Material.Filled.Widgets">
                         <MudStack Spacing="3" Class="mt-4">
-                            <MudTabs @bind-ActivePanelIndex="_activeCategoryTabIndex" Elevation="0" Rounded="true" Centered="true" Class="flex-wrap">
+                            <MudTabs @bind-ActivePanelIndex="_activeCategoryTabIndex"
+                                     Elevation="0"
+                                     Rounded="true"
+                                     Style="max-width: 100%;">
                                 <MudTabPanel Text="@($"All ({CountInCategory(null)})")" />
                                 @foreach (var category in MudBlazorPlayBookCatalog.Categories)
                                 {

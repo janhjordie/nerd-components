@@ -1,0 +1,488 @@
+{
+  "clientId": "dryk",
+  "brandId": "dryk",
+  "displayName": "DRYK",
+  "prefix": "dryk",
+  "version": 2,
+  "brandIdentityVersion": "1.0.0",
+  "pairingGuideName": "DRYK",
+  "updatedAt": "2026-07-20T18:10:06.360237+00:00",
+  "colors": {
+    "skov": {
+      "value": "#2A4B42",
+      "light": "#2A4B42",
+      "dark": null,
+      "contrastText": "#FFFFFF",
+      "darkContrastText": null,
+      "surface": "#2A4B42",
+      "content": "#FFFFFF",
+      "interactive": null,
+      "hover": "#27453D",
+      "active": null,
+      "border": null,
+      "disabled": null,
+      "description": null,
+      "roles": null
+    },
+    "mint": {
+      "value": "#DAEAE0",
+      "light": "#DAEAE0",
+      "dark": null,
+      "contrastText": "#000000",
+      "darkContrastText": null,
+      "surface": null,
+      "content": null,
+      "interactive": null,
+      "hover": "#C0CEC5",
+      "active": null,
+      "border": null,
+      "disabled": null,
+      "description": null,
+      "roles": null
+    },
+    "graes": {
+      "value": "#93C1A4",
+      "light": "#93C1A4",
+      "dark": null,
+      "contrastText": "#000000",
+      "darkContrastText": null,
+      "surface": null,
+      "content": null,
+      "interactive": null,
+      "hover": "#81AA90",
+      "active": null,
+      "border": null,
+      "disabled": null,
+      "description": null,
+      "roles": null
+    },
+    "sten": {
+      "value": "#EEEEEE",
+      "light": "#EEEEEE",
+      "dark": null,
+      "contrastText": "#000000",
+      "darkContrastText": null,
+      "surface": null,
+      "content": null,
+      "interactive": null,
+      "hover": "#D1D1D1",
+      "active": null,
+      "border": null,
+      "disabled": null,
+      "description": null,
+      "roles": null
+    },
+    "kridt": {
+      "value": "#FFFFFF",
+      "light": "#FFFFFF",
+      "dark": null,
+      "contrastText": "#000000",
+      "darkContrastText": null,
+      "surface": null,
+      "content": null,
+      "interactive": null,
+      "hover": "#E0E0E0",
+      "active": null,
+      "border": null,
+      "disabled": null,
+      "description": null,
+      "roles": null
+    },
+    "ink": {
+      "value": "#000000",
+      "light": "#000000",
+      "dark": null,
+      "contrastText": "#FFFFFF",
+      "darkContrastText": null,
+      "surface": null,
+      "content": null,
+      "interactive": null,
+      "hover": "#000000",
+      "active": null,
+      "border": null,
+      "disabled": null,
+      "description": null,
+      "roles": null
+    },
+    "aerter": {
+      "value": "#6B9B4F",
+      "light": "#6B9B4F",
+      "dark": null,
+      "contrastText": "#000000",
+      "darkContrastText": null,
+      "surface": null,
+      "content": null,
+      "interactive": null,
+      "hover": "#5E8846",
+      "active": null,
+      "border": null,
+      "disabled": null,
+      "description": null,
+      "roles": null
+    },
+    "havre": {
+      "value": "#E5D4A0",
+      "light": "#E5D4A0",
+      "dark": null,
+      "contrastText": "#000000",
+      "darkContrastText": null,
+      "surface": null,
+      "content": null,
+      "interactive": null,
+      "hover": "#CABB8D",
+      "active": null,
+      "border": null,
+      "disabled": null,
+      "description": null,
+      "roles": null
+    },
+    "sol": {
+      "value": "#D97928",
+      "light": "#D97928",
+      "dark": null,
+      "contrastText": "#000000",
+      "darkContrastText": null,
+      "surface": null,
+      "content": null,
+      "interactive": null,
+      "hover": "#BF6A23",
+      "active": null,
+      "border": null,
+      "disabled": null,
+      "description": null,
+      "roles": null
+    }
+  },
+  "aliases": {
+    "primary-action": "graes",
+    "secondary-action": "skov",
+    "on-primary-action": "skov",
+    "page-surface": "sten",
+    "brand-chrome": "skov",
+    "on-brand-chrome": "kridt",
+    "nav-surface": "kridt",
+    "nav-item": "skov",
+    "nav-item-active": "graes",
+    "input-surface": "kridt",
+    "input-border": "skov",
+    "focus-ring": "graes",
+    "muted-content": "ink",
+    "info": "mint",
+    "highlight": "sol",
+    "danger": "sol",
+    "success": "graes"
+  },
+  "radii": {
+    "sm": "4px",
+    "default": "8px",
+    "md": "8px",
+    "lg": "12px",
+    "card": "12px"
+  },
+  "shadows": {
+    "sm": "0 1px 3px rgba(0,0,0,.12)",
+    "md": "0 4px 12px rgba(0,0,0,.12)",
+    "lg": "0 8px 24px rgba(0,0,0,.16)",
+    "elevated": "0 4px 16px rgba(0,0,0,.16)"
+  },
+  "spacing": {
+    "0": "0px",
+    "1": "4px",
+    "2": "8px",
+    "3": "12px",
+    "4": "16px",
+    "5": "20px",
+    "6": "24px",
+    "8": "32px",
+    "10": "40px",
+    "12": "48px",
+    "16": "64px"
+  },
+  "breakpoints": {},
+  "motionDurations": {},
+  "motionEasings": {},
+  "zIndex": {},
+  "transforms": {},
+  "recipes": {
+    "hero": {
+      "surface": "sten",
+      "content": "skov",
+      "action": "graes",
+      "border": null,
+      "label": "Hero surface",
+      "usage": "Light sten hero with skov headline"
+    },
+    "cta-strip": {
+      "surface": "skov",
+      "content": "kridt",
+      "action": "graes",
+      "border": null,
+      "label": "CTA strip",
+      "usage": "Skov strip with kridt text and græs action"
+    },
+    "link-card": {
+      "surface": "kridt",
+      "content": "ink",
+      "action": "skov",
+      "border": null,
+      "label": "Link card",
+      "usage": "Kridt card with ink content"
+    },
+    "footer": {
+      "surface": "skov",
+      "content": "kridt",
+      "action": "graes",
+      "border": null,
+      "label": "Footer",
+      "usage": "Skov footer with kridt text"
+    },
+    "sidebar": {
+      "surface": "kridt",
+      "content": "skov",
+      "action": "graes",
+      "border": null,
+      "label": "App sidebar",
+      "usage": "Drawer navigation with græs active accent"
+    },
+    "hero-photo": {
+      "surface": "skov",
+      "content": "kridt",
+      "action": "graes",
+      "border": null,
+      "label": "Photo hero",
+      "usage": "Full-bleed photo hero with kridt headline and græs CTA"
+    },
+    "footer-minimal": {
+      "surface": "skov",
+      "content": "kridt",
+      "action": null,
+      "border": null,
+      "label": "Minimal footer",
+      "usage": "Single-line legal footer bar"
+    },
+    "formular": {
+      "surface": "kridt",
+      "content": "ink",
+      "action": "graes",
+      "border": null,
+      "label": "Form strip",
+      "usage": "Light form surface with ink labels"
+    }
+  },
+  "opacities": {
+    "watermark": {
+      "baseToken": "skov",
+      "opacity": 0.12
+    },
+    "hero-overlay": {
+      "baseToken": "skov",
+      "opacity": 0.45
+    }
+  },
+  "themeSets": {
+    "light": {
+      "id": "light",
+      "displayName": "Light",
+      "colors": {
+        "skov": {
+          "value": "#2A4B42",
+          "light": null,
+          "dark": null,
+          "contrastText": "#FFFFFF",
+          "darkContrastText": null,
+          "surface": "#2A4B42",
+          "content": "#FFFFFF"
+        },
+        "mint": {
+          "value": "#DAEAE0",
+          "light": null,
+          "dark": null,
+          "contrastText": "#000000",
+          "darkContrastText": null,
+          "surface": null,
+          "content": null
+        },
+        "graes": {
+          "value": "#93C1A4",
+          "light": null,
+          "dark": null,
+          "contrastText": "#000000",
+          "darkContrastText": null,
+          "surface": null,
+          "content": null
+        },
+        "sten": {
+          "value": "#EEEEEE",
+          "light": null,
+          "dark": null,
+          "contrastText": "#000000",
+          "darkContrastText": null,
+          "surface": null,
+          "content": null
+        },
+        "kridt": {
+          "value": "#FFFFFF",
+          "light": null,
+          "dark": null,
+          "contrastText": "#000000",
+          "darkContrastText": null,
+          "surface": null,
+          "content": null
+        },
+        "ink": {
+          "value": "#000000",
+          "light": null,
+          "dark": null,
+          "contrastText": "#FFFFFF",
+          "darkContrastText": null,
+          "surface": null,
+          "content": null
+        },
+        "aerter": {
+          "value": "#6B9B4F",
+          "light": null,
+          "dark": null,
+          "contrastText": "#000000",
+          "darkContrastText": null,
+          "surface": null,
+          "content": null
+        },
+        "havre": {
+          "value": "#E5D4A0",
+          "light": null,
+          "dark": null,
+          "contrastText": "#000000",
+          "darkContrastText": null,
+          "surface": null,
+          "content": null
+        },
+        "sol": {
+          "value": "#D97928",
+          "light": null,
+          "dark": null,
+          "contrastText": "#000000",
+          "darkContrastText": null,
+          "surface": null,
+          "content": null
+        }
+      }
+    }
+  },
+  "approvedPairings": [
+    {
+      "content": "kridt",
+      "surface": "skov"
+    },
+    {
+      "content": "ink",
+      "surface": "kridt"
+    },
+    {
+      "content": "ink",
+      "surface": "mint"
+    },
+    {
+      "content": "ink",
+      "surface": "sten"
+    },
+    {
+      "content": "ink",
+      "surface": "graes"
+    },
+    {
+      "content": "skov",
+      "surface": "kridt"
+    },
+    {
+      "content": "skov",
+      "surface": "mint"
+    },
+    {
+      "content": "skov",
+      "surface": "sten"
+    },
+    {
+      "content": "skov",
+      "surface": "graes"
+    },
+    {
+      "content": "skov",
+      "surface": "havre"
+    },
+    {
+      "content": "kridt",
+      "surface": "sol"
+    }
+  ],
+  "lockedTokens": [
+    "skov",
+    "kridt"
+  ],
+  "shell": {
+    "appBar": {
+      "alias": "brand-chrome",
+      "recipe": null
+    },
+    "drawer": {
+      "alias": "nav-surface",
+      "recipe": null
+    },
+    "navMenu": {
+      "alias": null,
+      "recipe": "sidebar"
+    },
+    "main": {
+      "alias": "page-surface",
+      "recipe": null
+    }
+  },
+  "frameworkDefaults": {
+    "mudBlazor": {
+      "palette": {
+        "primary": "primary-action",
+        "secondary": "secondary-action",
+        "tertiary": "highlight",
+        "info": "info",
+        "success": "success",
+        "warning": "highlight",
+        "error": "danger",
+        "dark": "muted-content",
+        "surface": "page-surface",
+        "background": "page-surface",
+        "textPrimary": "page-surface",
+        "textSecondary": "muted-content",
+        "textDisabled": "muted-content",
+        "actionDefault": "primary-action",
+        "actionDisabled": null,
+        "appbarBackground": "brand-chrome",
+        "appbarText": "on-brand-chrome",
+        "drawerBackground": "nav-surface",
+        "drawerText": "nav-item",
+        "drawerIcon": "nav-item",
+        "linesDefault": "input-border",
+        "linesInputs": "input-border"
+      },
+      "button": {
+        "filled": "primary-action",
+        "outlined": "secondary-action",
+        "text": "muted-content"
+      },
+      "textField": {
+        "intent": "input-surface",
+        "popover": null
+      },
+      "datePicker": {
+        "intent": null,
+        "popover": "page-surface"
+      },
+      "navLink": {
+        "default": "nav-item",
+        "active": "nav-item-active"
+      },
+      "select": {
+        "popover": "page-surface",
+        "selected": "nav-item-active"
+      }
+    }
+  }
+}

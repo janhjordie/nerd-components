@@ -10,7 +10,7 @@ using TheNerdCollective.MudComponents.Shared;
 
 namespace TheNerdCollective.MudComponents.DesignTokens;
 
-public partial class NerdDesignTokensCatalog
+public partial class NerdDesignTokensCatalog : IDisposable
 {
     [Inject]
     private NerdDesignTokenOptions Options { get; set; } = default!;
@@ -40,7 +40,16 @@ public partial class NerdDesignTokensCatalog
     private INerdMudThemeController? ThemeController { get; set; }
 
     [Inject]
-    private IServiceProvider ServiceProvider { get; set; } = default!;
+    private INerdMudThemeConfigurator? ThemeConfigurator { get; set; }
+
+    [Inject]
+    private NerdResponsiveTypographyOptions? TypographyOptions { get; set; }
+
+    [Inject]
+    private NerdResponsiveTypographyCss? TypographyCss { get; set; }
+
+    [Inject]
+    private INerdBrandSwitcher BrandSwitcher { get; set; } = default!;
 
     [Inject]
     private IEnumerable<INerdBrandPack> BrandPacks { get; set; } = [];
@@ -54,7 +63,10 @@ public partial class NerdDesignTokensCatalog
     [Inject]
     private IJSRuntime Js { get; set; } = default!;
 
+    private bool ShowResponsiveTypography => TypographyCss is not null;
+
     private bool _previewDark;
+    private MudTheme _catalogTheme = new();
     private bool _dualPreview = true;
     private string _clientId = "client";
     private string? _selectedPackId;
@@ -65,7 +77,6 @@ public partial class NerdDesignTokensCatalog
     private IReadOnlyList<string> _packIds = [];
     private IReadOnlyList<NerdAccessibilityResult> _accessibility = [];
     private IReadOnlyList<NerdAccessibilityWarning> _warnings = [];
-    private string _selectedBrand = string.Empty;
     private string _diffBaseline = string.Empty;
     private IReadOnlyList<NerdTokenPackDiffEntry> _packDiff = [];
     private Dictionary<string, string> _comments = new(StringComparer.OrdinalIgnoreCase);
@@ -123,9 +134,10 @@ public partial class NerdDesignTokensCatalog
             return;
         }
 
-        _selectedBrand = Options.Prefix;
         _diffBaseline = Options.Prefix;
 
+        BrandSwitcher.BrandChanged += OnGlobalBrandChanged;
+        RefreshCatalogTheme();
         RefreshCatalogState();
         RefreshPackDiff();
         _packIds = await TokenPackStore.ListAsync();
@@ -289,7 +301,7 @@ public partial class NerdDesignTokensCatalog
         _activeThemeSet = themeSetId ?? string.Empty;
         if (string.IsNullOrWhiteSpace(_activeThemeSet))
         {
-            NerdBrandPackRegistry.Instance.Configure(_selectedBrand, Options);
+            NerdBrandPackRegistry.Instance.Configure(BrandSwitcher.ActiveBrandId, Options);
         }
         else
         {
@@ -322,48 +334,25 @@ public partial class NerdDesignTokensCatalog
         return Task.CompletedTask;
     }
 
-    private Task SwitchBrandAsync(string brand)
+    private void OnGlobalBrandChanged(string brand)
     {
-        _selectedBrand = brand;
         _diffBaseline = brand;
-        if (ThemeController is not null)
-        {
-            ThemeController.ApplyBrandPack(brand);
-        }
-        else
-        {
-            NerdBrandPackRegistry.Instance.Configure(brand, Options);
-            foreach (var (id, set) in NerdThemeSetTools.CreateFromOptions(Options))
-            {
-                if (!Options.ThemeSets.ContainsKey(id))
-                {
-                    Options.SetThemeSet(id, set);
-                }
-            }
-
-            TokenCss.Update(Options);
-            HubOptions.ActiveTokenPackId = brand;
-        }
-
-        ApplyBrandTypography(brand);
+        RefreshCatalogTheme();
         RefreshCatalogState();
+        RefreshPackDiff();
         _saveStatus = $"Switched to {brand} brand.";
-        return Task.CompletedTask;
+        InvokeAsync(StateHasChanged);
     }
 
-    private void ApplyBrandTypography(string brand)
+    private void RefreshCatalogTheme()
     {
-        var typographyOptions = ServiceProvider.GetService<NerdResponsiveTypographyOptions>();
-        if (typographyOptions is null)
-        {
-            return;
-        }
-
-        NerdBrandTypographySwitcher.TrySwitchBrand(
-            brand,
-            typographyOptions,
-            HubOptions,
-            ServiceProvider.GetService<MudTheme>());
+        _catalogTheme = NerdCatalogThemeResolver.CreateForCatalog(
+            Options,
+            ThemeController,
+            ThemeController is null && TypographyOptions is not null
+                ? theme => theme.UseResponsiveTypography(TypographyOptions.Typography)
+                : null,
+            ThemeConfigurator);
     }
 
     private static string DiffSymbol(NerdTokenPackDiffKind kind) => kind switch
@@ -536,4 +525,6 @@ public partial class NerdDesignTokensCatalog
         RefreshCatalogState();
         _saveStatus = $"Loaded {pack.ClientId}.";
     }
+
+    public void Dispose() => BrandSwitcher.BrandChanged -= OnGlobalBrandChanged;
 }

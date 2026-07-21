@@ -8,6 +8,7 @@
 }
 else
 {
+    <NerdDesignSystemScripts />
     <NerdCatalogPage MaxWidth="MaxWidth.Medium">
         <MudStack Spacing="3">
             <MudText Typo="Typo.h4">Nerd design system</MudText>
@@ -17,31 +18,31 @@ else
             <MudButton Href="@Options.DesignTokensRoute" Variant="Variant.Filled" Class="@Ui(NerdDesignSystemUi.PrimaryAction)">
                 Colors@(Options.DesignTokenCount > 0 ? $" ({Options.DesignTokenCount})" : "")
             </MudButton>
-            <MudButton Href="@Options.DesignTokenRecipesRoute" Variant="Variant.Outlined" Class="@Ui(NerdDesignSystemUi.PrimaryAction)">
+            <MudButton Href="@Options.DesignTokenRecipesRoute" Variant="Variant.Filled" Class="@Ui(NerdDesignSystemUi.PrimaryAction)">
                 Recipes@(Options.DesignTokenRecipeCount > 0 ? $" ({Options.DesignTokenRecipeCount})" : "")
             </MudButton>
-            <MudButton Href="@Options.TypographyRoute" Variant="Variant.Outlined" Class="@Ui(NerdDesignSystemUi.PrimaryAction)">
+            <MudButton Href="@Options.TypographyRoute" Variant="Variant.Filled" Class="@Ui(NerdDesignSystemUi.PrimaryAction)">
                 Responsive typography@(Options.TypographyRoleCount > 0 ? $" ({Options.TypographyRoleCount})" : "")
             </MudButton>
             @if (!string.IsNullOrWhiteSpace(Options.ActiveTokenPackId))
             {
-                <MudChip T="string" Class="@Ui(NerdDesignSystemUi.Info)" Variant="Variant.Outlined" Href="@Options.DesignTokensRoute">
+                <MudChip T="string" Class="@Ui(NerdDesignSystemUi.PrimaryAction)" Variant="Variant.Filled" Href="@Options.DesignTokensRoute">
                     Token pack: @Options.FormatActiveTokenPackLabel()
                 </MudChip>
             }
             @if (!string.IsNullOrWhiteSpace(Options.ActiveTypographyPackId))
             {
-                <MudChip T="string" Class="@Ui(NerdDesignSystemUi.Info)" Variant="Variant.Outlined" Href="@Options.TypographyRoute">
+                <MudChip T="string" Class="@Ui(NerdDesignSystemUi.PrimaryAction)" Variant="Variant.Filled" Href="@Options.TypographyRoute">
                     Typography pack: @Options.ActiveTypographyPackId
                 </MudChip>
             }
-            <MudButton Href="@Options.BrandWorkbookRoute" Variant="Variant.Outlined" Class="@Ui(NerdDesignSystemUi.PrimaryAction)">
+            <MudButton Href="@Options.BrandWorkbookRoute" Variant="Variant.Filled" Class="@Ui(NerdDesignSystemUi.PrimaryAction)">
                 Brand workbook
             </MudButton>
-            <MudButton Href="@Options.DesignGuideRoute" Variant="Variant.Outlined" Class="@Ui(NerdDesignSystemUi.PrimaryAction)">
+            <MudButton Href="@Options.DesignGuideRoute" Variant="Variant.Filled" Class="@Ui(NerdDesignSystemUi.PrimaryAction)">
                 Design guide
             </MudButton>
-            <MudButton Href="@Options.WcagGuideRoute" Variant="Variant.Outlined" Class="@Ui(NerdDesignSystemUi.PrimaryAction)">
+            <MudButton Href="@Options.WcagGuideRoute" Variant="Variant.Filled" Class="@Ui(NerdDesignSystemUi.PrimaryAction)">
                 WCAG guide
             </MudButton>
             @if (ImportSink is not null)
@@ -64,7 +65,7 @@ else
                     </MudStack>
                 </MudPaper>
             }
-            <MudButton Href="@Options.PlayBookRoute" Variant="Variant.Outlined" Class="@Ui(NerdDesignSystemUi.MutedContent)">
+            <MudButton Href="@Options.PlayBookRoute" Variant="Variant.Filled" Class="@Ui(NerdDesignSystemUi.PrimaryAction)">
                 MudBlazor PlayBook
             </MudButton>
             <NerdBrandPackExporter />
