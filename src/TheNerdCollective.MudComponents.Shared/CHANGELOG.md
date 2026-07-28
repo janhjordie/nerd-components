@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.0
+
+- Added `INerdBrandPackImportSink` for design-system hub token-pack import.
+
 ## 1.4.0
 
 - Added `PlayBookRoute` to `NerdDesignSystemOptions` and a PlayBook link on the design system hub.
