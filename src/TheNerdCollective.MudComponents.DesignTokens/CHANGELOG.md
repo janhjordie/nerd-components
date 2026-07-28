@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.1.0
+
+- Brand pack registry: `NerdEmbeddedBrandPack`, `AddNerdDesignTokensFromBrand`, `RegisterBrandPack`.
+- `NerdMudThemeFactory`, `NerdMudThemeProvider`, intent pseudo CSS themes.
+- Embedded reference brand JSON (`dnf`, `tnc`, `acme`, `demo`) ships in package.
+
 ## 2.0.0
 
 - Complete MudBlazor 9.6 palette coverage: all 80 `--mud-palette-*` variables are now mapped per token.

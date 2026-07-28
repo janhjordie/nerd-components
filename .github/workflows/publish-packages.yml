@@ -55,6 +55,11 @@ jobs:
             ["TheNerdCollective.MudComponents.ResponsiveTypography"]="src/TheNerdCollective.MudComponents.ResponsiveTypography"
             ["TheNerdCollective.MudComponents.Shared"]="src/TheNerdCollective.MudComponents.Shared"
             ["TheNerdCollective.MudComponents.PlayBook"]="src/TheNerdCollective.MudComponents.PlayBook"
+            ["TheNerdCollective.Brand.Dnf"]="src/TheNerdCollective.Brand.Dnf"
+            ["TheNerdCollective.Brand.Tnc"]="src/TheNerdCollective.Brand.Tnc"
+            ["TheNerdCollective.Brand.Acme"]="src/TheNerdCollective.Brand.Acme"
+            ["TheNerdCollective.Brand.Demo"]="src/TheNerdCollective.Brand.Demo"
+            ["TheNerdCollective.Brand.Dryk"]="src/TheNerdCollective.Brand.Dryk"
           )
           
           # Detect which packages changed
