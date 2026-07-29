@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.0
+
+- Added `INerdBrandTypographyPack`, `NerdBrandTypographyRegistry`, and `RegisterBrandTypography` for brand-pack typography switching.
+
 ## 1.4.0
 
 - Added per-role `Roles.H1.LineHeight`, `Roles.Body1.LetterSpacing`, and related overrides.
