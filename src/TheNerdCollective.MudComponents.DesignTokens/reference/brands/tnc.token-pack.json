@@ -6,7 +6,7 @@
   "version": 2,
   "brandIdentityVersion": "1.0.0",
   "pairingGuideName": "TNC",
-  "updatedAt": "2026-07-20T18:11:41.154249+00:00",
+  "updatedAt": "2026-07-29T20:55:21.501901+00:00",
   "colors": {
     "navy": {
       "value": "#122E43",
@@ -308,19 +308,18 @@
       },
       "textField": {
         "intent": "input-surface",
-        "popover": null
+        "popover": null,
+        "selected": null
       },
       "datePicker": {
         "intent": null,
-        "popover": "page-surface"
+        "popover": "page-surface",
+        "selected": null
       },
+      "select": null,
       "navLink": {
         "default": "nav-item",
         "active": "nav-item-active"
-      },
-      "select": {
-        "popover": "page-surface",
-        "selected": "nav-item-active"
       }
     }
   }

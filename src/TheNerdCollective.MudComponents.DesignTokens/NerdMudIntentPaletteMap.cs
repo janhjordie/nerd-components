@@ -125,9 +125,9 @@ public static class NerdMudIntentPaletteMap
 
         if (string.Equals(aliasName, NerdDesignSystemUi.MutedContent, StringComparison.OrdinalIgnoreCase))
         {
-            css.AppendLine($"  --mud-palette-text-secondary: var({variable}){importantSuffix};");
-            css.AppendLine($"  --mud-palette-text-primary: var({variable}){importantSuffix};");
-            css.AppendLine($"  --mud-palette-action-default: var({variable}){importantSuffix};");
+            css.AppendLine($"  --mud-palette-text-secondary: var({contentVariable}){importantSuffix};");
+            css.AppendLine($"  --mud-palette-text-primary: var({contentVariable}){importantSuffix};");
+            css.AppendLine($"  --mud-palette-action-default: var({contentVariable}){importantSuffix};");
             return;
         }
 
