@@ -1,8 +1,9 @@
 using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using TheNerdCollective.Blazor.Observability;
 
-namespace TheNerdCollective.Blazor.Observability.Backends;
+namespace TheNerdCollective.Blazor.Observability.SigNoz;
 
 /// <summary>Parses SigNoz query API JSON into dashboard DTOs.</summary>
 public static class SigNozResponseParser

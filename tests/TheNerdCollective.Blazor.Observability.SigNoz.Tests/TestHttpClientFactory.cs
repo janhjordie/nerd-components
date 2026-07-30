@@ -1,4 +1,4 @@
-namespace TheNerdCollective.Blazor.Observability.Tests;
+namespace TheNerdCollective.Blazor.Observability.SigNoz.Tests;
 
 internal sealed class TestHttpClientFactory : IHttpClientFactory
 {

@@ -20,14 +20,14 @@ public static class ObservabilityDashboardEndpointExtensions
     /// Maps observability dashboard API endpoints.
     /// Host applications should call <c>.RequireAuthorization()</c> on the returned group.
     /// </summary>
-    public static IEndpointRouteBuilder MapObservabilityDashboardEndpoints(
+    public static RouteGroupBuilder? MapObservabilityDashboardEndpoints(
         this IEndpointRouteBuilder endpoints,
         string pattern = "/api/observability")
     {
         var options = endpoints.ServiceProvider.GetRequiredService<IOptions<ObservabilityDashboardOptions>>().Value;
         if (!options.EnableMinimalApi)
         {
-            return endpoints;
+            return null;
         }
 
         var group = endpoints.MapGroup(pattern);
@@ -89,6 +89,6 @@ public static class ObservabilityDashboardEndpointExtensions
         .WithName("GetObservabilityHealth")
         .WithDescription("Get coarse health summary for a service");
 
-        return endpoints;
+        return group;
     }
 }

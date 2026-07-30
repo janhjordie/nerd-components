@@ -2,12 +2,15 @@
 
 Backend-agnostic observability dashboard services for **Blazor Server** apps instrumented with **OpenTelemetry**.
 
-Pairs with [`TheNerdCollective.MudComponents.ObservabilityDashboard`](../TheNerdCollective.MudComponents.ObservabilityDashboard/README.md) for MudBlazor 9.7 UI components.
+Pairs with:
+
+- [`TheNerdCollective.Blazor.Observability.SigNoz`](../TheNerdCollective.Blazor.Observability.SigNoz/README.md) — SigNoz adapter (v1)
+- [`TheNerdCollective.MudComponents.ObservabilityDashboard`](../TheNerdCollective.MudComponents.ObservabilityDashboard/README.md) — MudBlazor 9.7 UI
 
 ## Features
 
-- **SigNoz adapter** — preset panels for request rate, P95 latency, 5xx rate, error %
-- **`IObservabilityBackend`** — swap backends without changing UI
+- **`IObservabilityBackend`** — swap query backends without changing UI
+- **`IObservabilityDashboardService`** — overview snapshots and preset panels
 - **Minimal API** — `/api/observability/*` for dashboard data
 - **Server-side only** — API tokens never sent to the browser
 
@@ -15,22 +18,19 @@ Pairs with [`TheNerdCollective.MudComponents.ObservabilityDashboard`](../TheNerd
 
 ```bash
 dotnet add package TheNerdCollective.Blazor.Observability
+dotnet add package TheNerdCollective.Blazor.Observability.SigNoz   # SigNoz backend
+dotnet add package TheNerdCollective.MudComponents.ObservabilityDashboard   # optional UI
 ```
 
 ## Quick start
 
 ```csharp
 using TheNerdCollective.Blazor.Observability;
+using TheNerdCollective.Blazor.Observability.SigNoz;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddObservabilityDashboard(o =>
-{
-    o.DefaultServiceName = "my-app";
-    o.ExternalDashboardBaseUrl = "https://devops.example.com";
-    o.SigNoz.BaseUrl = "http://127.0.0.1:8080";
-    o.SigNoz.ApiToken = builder.Configuration["NerdObservability:SigNoz:ApiToken"];
-});
+builder.Services.AddObservabilityDashboardWithSigNoz(builder.Configuration);
 
 var app = builder.Build();
 
@@ -67,22 +67,29 @@ app.Run();
 
 ## Preset panels
 
-Aligned with SigNoz span metrics (`signoz_latency.count`, `signoz_calls_total`, etc.) — same semantics as Nerd Consent `consent-host-overview.json`.
+Panel IDs are backend-neutral (`ObservabilityPanelId`). Each adapter maps them to backend-specific queries — SigNoz uses span metrics aligned with Nerd Consent `consent-host-overview.json`.
 
 ## Backend extensibility (SigNoz vs Grafana)
 
-This package is **backend-agnostic at the UI boundary**:
+| Layer | Package | Role |
+|-------|---------|------|
+| Instrumentation | Host app (`OpenTelemetry.*`) | Export traces/metrics via OTLP |
+| Query adapter | `Blazor.Observability.SigNoz`, future `*.Grafana` | Implement `IObservabilityBackend` |
+| Dashboard | `Blazor.Observability` + MudComponents | Backend-agnostic UI |
 
-- Blazor components depend on `IObservabilityDashboardService` / `IObservabilityBackend` — not SigNoz directly.
-- **OpenTelemetry** is the instrumentation layer (your app exports traces/metrics via OTLP). It does **not** automatically make this dashboard talk to Grafana or any other backend.
-- **v1 ships with `SigNozObservabilityBackend`** — preset panel queries target SigNoz v4 APIs and span-derived metrics.
-- **Grafana / Prometheus** support requires a new backend class (e.g. `GrafanaObservabilityBackend`) that implements `IObservabilityBackend` and maps the same `ObservabilityPanelId` presets to PromQL/Grafana HTTP APIs. Register it via `ObservabilityDashboardOptions.Backend`.
+**OpenTelemetry does not automatically connect this dashboard to Grafana.** OTel exports data; each backend adapter queries it back via that backend's HTTP API.
 
-Use `ExternalDashboardBaseUrl` to deep-link to your full Grafana or SigNoz UI regardless of query backend.
+Register adapters explicitly:
+
+```csharp
+builder.Services.AddObservabilityDashboard(configuration);
+builder.Services.AddSigNozObservabilityBackend(configuration);
+// future: builder.Services.AddGrafanaObservabilityBackend(configuration);
+```
 
 ## Security
 
-- Keep SigNoz API tokens in server configuration/secrets only
+- Keep backend API tokens in server configuration/secrets only
 - Protect minimal API routes with your admin authorization policy
 - This package queries aggregates — no trace payloads or PII
 

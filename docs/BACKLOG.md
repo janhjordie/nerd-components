@@ -366,7 +366,8 @@ Public MudBlazor ops dashboard reading OpenTelemetry backends (SigNoz v1). Does 
 
 | ID | P | Status | Task | DoD (verifiable) | Evidence | Source |
 |----|---|--------|------|------------------|----------|--------|
-| HR-187 | P0 | open | Nerd Consent dogfood | `/admin/ops` super-admin; package ref; Playwright `observability-dashboard.spec.ts` | Consent PR + e2e | Plan §7 |
+| HR-187 | P0 | done | Nerd Consent dogfood | `/admin/ops` super-admin; package ref; Playwright `observability-dashboard.spec.ts` | Consent PR + e2e | Plan §7 |
+| HR-191 | P0 | done | SigNoz adapter package | `TheNerdCollective.Blazor.Observability.SigNoz` NuGet; core backend-neutral; Grafana-ready pattern | csproj + 13 tests | Plan §5 v1.1 |
 | HR-188 | P1 | open | Publish v1.0.0 | Both packages on nuget.org | Tags on main | Plan §10 |
 | HR-189 | P2 | open | SessionMonitor embed | Optional quick bar when SessionMonitor registered | Dashboard slot | Plan §12 |
 | HR-190 | P2 | open | In-process backend | Runtime/GC metrics without SigNoz | `InProcessObservabilityBackend` | Plan §3.5 |
@@ -401,10 +402,10 @@ Licence gate, pricing, hosted Studio, multi-framework adapters (**HR-111–HR-11
 
 | Status | Count |
 |--------|------:|
-| **open** | **24** |
+| **open** | **22** |
 | **in_progress** | **0** |
 | **partial** | **0** |
-| **done** | **126** |
+| **done** | **128** |
 | **parked** | **1** |
 | **Total** | **151** |
 

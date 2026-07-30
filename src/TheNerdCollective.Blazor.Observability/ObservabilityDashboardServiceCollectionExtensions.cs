@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using TheNerdCollective.Blazor.Observability.Backends;
+using TheNerdCollective.Blazor.Observability;
 
 namespace TheNerdCollective.Blazor.Observability;
 
@@ -20,7 +20,11 @@ public static class ObservabilityDashboardServiceCollectionExtensions
         IConfigurationSection section)
         => services.AddObservabilityDashboard(options => section.Bind(options));
 
-    /// <summary>Registers observability dashboard services using a configure delegate.</summary>
+    /// <summary>
+    /// Registers backend-neutral observability dashboard services.
+    /// Pair with an adapter package such as
+    /// <c>TheNerdCollective.Blazor.Observability.SigNoz</c> that registers <see cref="IObservabilityBackend"/>.
+    /// </summary>
     public static IServiceCollection AddObservabilityDashboard(
         this IServiceCollection services,
         Action<ObservabilityDashboardOptions> configure)
@@ -28,25 +32,6 @@ public static class ObservabilityDashboardServiceCollectionExtensions
         services.AddOptions<ObservabilityDashboardOptions>()
             .Configure(configure);
 
-        services.AddHttpClient(SigNozObservabilityBackend.HttpClientName, (sp, client) =>
-        {
-            var options = sp.GetRequiredService<IOptions<ObservabilityDashboardOptions>>().Value.SigNoz;
-            client.Timeout = options.HttpTimeout;
-        });
-
-        services.AddSingleton<IObservabilityBackend>(sp =>
-        {
-            var options = sp.GetRequiredService<IOptions<ObservabilityDashboardOptions>>().Value;
-            return options.Backend switch
-            {
-                ObservabilityBackendKind.SigNoz => sp.GetRequiredService<SigNozObservabilityBackend>(),
-                ObservabilityBackendKind.InProcess => throw new NotSupportedException(
-                    "In-process observability backend is not implemented yet. Use ObservabilityBackendKind.SigNoz."),
-                _ => sp.GetRequiredService<SigNozObservabilityBackend>()
-            };
-        });
-
-        services.AddSingleton<SigNozObservabilityBackend>();
         services.AddSingleton<IObservabilityDashboardService, ObservabilityDashboardService>();
 
         return services;

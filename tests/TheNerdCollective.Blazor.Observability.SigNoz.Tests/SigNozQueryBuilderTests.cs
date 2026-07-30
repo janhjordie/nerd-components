@@ -1,8 +1,8 @@
 using System.Text.Json.Nodes;
 using TheNerdCollective.Blazor.Observability;
-using TheNerdCollective.Blazor.Observability.Backends;
+using TheNerdCollective.Blazor.Observability.SigNoz;
 
-namespace TheNerdCollective.Blazor.Observability.Tests;
+namespace TheNerdCollective.Blazor.Observability.SigNoz.Tests;
 
 public sealed class SigNozQueryBuilderTests
 {

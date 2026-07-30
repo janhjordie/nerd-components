@@ -3,8 +3,9 @@ using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json.Nodes;
 using Microsoft.Extensions.Options;
+using TheNerdCollective.Blazor.Observability;
 
-namespace TheNerdCollective.Blazor.Observability.Backends;
+namespace TheNerdCollective.Blazor.Observability.SigNoz;
 
 /// <summary>SigNoz-backed observability queries via HTTP API.</summary>
 public sealed class SigNozObservabilityBackend : IObservabilityBackend
@@ -15,11 +16,14 @@ public sealed class SigNozObservabilityBackend : IObservabilityBackend
     private readonly SigNozBackendOptions _signozOptions;
     private readonly ObservabilityDashboardOptions _dashboardOptions;
 
-    public SigNozObservabilityBackend(IHttpClientFactory httpClientFactory, IOptions<ObservabilityDashboardOptions> options)
+    public SigNozObservabilityBackend(
+        IHttpClientFactory httpClientFactory,
+        IOptions<SigNozBackendOptions> signozOptions,
+        IOptions<ObservabilityDashboardOptions> dashboardOptions)
     {
         _httpClient = httpClientFactory.CreateClient(HttpClientName);
-        _dashboardOptions = options.Value;
-        _signozOptions = options.Value.SigNoz;
+        _signozOptions = signozOptions.Value;
+        _dashboardOptions = dashboardOptions.Value;
     }
 
     /// <inheritdoc />

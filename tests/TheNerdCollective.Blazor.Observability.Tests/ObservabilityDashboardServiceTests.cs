@@ -1,7 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using TheNerdCollective.Blazor.Observability;
-using TheNerdCollective.Blazor.Observability.Backends;
 
 namespace TheNerdCollective.Blazor.Observability.Tests;
 
@@ -49,17 +48,16 @@ public sealed class ObservabilityDashboardServiceTests
     public void AddObservabilityDashboard_registers_dashboard_service()
     {
         var services = new ServiceCollection();
+        services.AddSingleton<IObservabilityBackend, FakeObservabilityBackend>();
         services.AddObservabilityDashboard(o =>
         {
             o.DefaultServiceName = "test-app";
-            o.SigNoz.BaseUrl = "http://127.0.0.1:8080";
         });
 
         using var provider = services.BuildServiceProvider();
 
         Assert.NotNull(provider.GetService<IObservabilityDashboardService>());
-        Assert.NotNull(provider.GetService<IObservabilityBackend>());
-        Assert.IsType<SigNozObservabilityBackend>(provider.GetRequiredService<IObservabilityBackend>());
+        Assert.IsType<FakeObservabilityBackend>(provider.GetRequiredService<IObservabilityBackend>());
     }
 
     private sealed class FakeObservabilityBackend : IObservabilityBackend

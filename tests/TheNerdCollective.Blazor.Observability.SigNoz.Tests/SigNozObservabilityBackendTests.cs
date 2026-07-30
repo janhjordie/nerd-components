@@ -3,9 +3,9 @@ using System.Net.Http.Headers;
 using System.Text;
 using Microsoft.Extensions.Options;
 using TheNerdCollective.Blazor.Observability;
-using TheNerdCollective.Blazor.Observability.Backends;
+using TheNerdCollective.Blazor.Observability.SigNoz;
 
-namespace TheNerdCollective.Blazor.Observability.Tests;
+namespace TheNerdCollective.Blazor.Observability.SigNoz.Tests;
 
 public sealed class SigNozObservabilityBackendTests
 {
@@ -102,15 +102,15 @@ public sealed class SigNozObservabilityBackendTests
         var client = new HttpClient(handler) { BaseAddress = new Uri("http://signoz.test") };
         var options = Options.Create(new ObservabilityDashboardOptions
         {
-            SigNoz = new SigNozBackendOptions
-            {
-                BaseUrl = "http://signoz.test",
-                ApiToken = apiToken
-            },
             UnhealthyErrorPercentage = unhealthyErrorPercentage
         });
+        var signoz = Options.Create(new SigNozBackendOptions
+        {
+            BaseUrl = "http://signoz.test",
+            ApiToken = apiToken
+        });
 
-        return new SigNozObservabilityBackend(new TestHttpClientFactory(client), options);
+        return new SigNozObservabilityBackend(new TestHttpClientFactory(client), signoz, options);
     }
 
     private static HttpResponseMessage JsonResponse(string json) =>

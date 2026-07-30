@@ -1,9 +1,11 @@
 namespace TheNerdCollective.Blazor.Observability;
 
-/// <summary>Supported observability backend kinds.</summary>
+/// <summary>Supported observability backend adapter kinds (metadata only).</summary>
 public enum ObservabilityBackendKind
 {
     SigNoz,
+    Grafana,
+    Prometheus,
     InProcess
 }
 

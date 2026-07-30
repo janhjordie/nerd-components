@@ -2,25 +2,21 @@
 
 MudBlazor **9.7** observability dashboard components for Blazor Server ops overviews.
 
-Requires [`TheNerdCollective.Blazor.Observability`](../TheNerdCollective.Blazor.Observability/README.md).
+Requires [`TheNerdCollective.Blazor.Observability`](../TheNerdCollective.Blazor.Observability/README.md) and a query adapter such as [`TheNerdCollective.Blazor.Observability.SigNoz`](../TheNerdCollective.Blazor.Observability.SigNoz/README.md).
 
 ## Installation
 
 ```bash
 dotnet add package TheNerdCollective.MudComponents.ObservabilityDashboard
 dotnet add package TheNerdCollective.Blazor.Observability
+dotnet add package TheNerdCollective.Blazor.Observability.SigNoz
 ```
 
 ## Quick start
 
 ```csharp
 // Program.cs
-builder.Services.AddObservabilityDashboard(o =>
-{
-    o.DefaultServiceName = "my-app";
-    o.SigNoz.BaseUrl = "http://127.0.0.1:8080";
-    o.ExternalDashboardBaseUrl = "https://devops.example.com";
-});
+builder.Services.AddObservabilityDashboardWithSigNoz(builder.Configuration);
 ```
 
 ```razor

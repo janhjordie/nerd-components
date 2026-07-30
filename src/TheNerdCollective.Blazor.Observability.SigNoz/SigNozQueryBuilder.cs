@@ -1,6 +1,7 @@
 using System.Text.Json.Nodes;
+using TheNerdCollective.Blazor.Observability;
 
-namespace TheNerdCollective.Blazor.Observability.Backends;
+namespace TheNerdCollective.Blazor.Observability.SigNoz;
 
 /// <summary>Builds SigNoz v4 <c>query_range</c> payloads for preset panels.</summary>
 public static class SigNozQueryBuilder
