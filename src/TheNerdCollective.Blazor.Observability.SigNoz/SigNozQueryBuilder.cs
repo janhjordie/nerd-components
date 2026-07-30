@@ -3,10 +3,10 @@ using TheNerdCollective.Blazor.Observability;
 
 namespace TheNerdCollective.Blazor.Observability.SigNoz;
 
-/// <summary>Builds SigNoz v4 <c>query_range</c> payloads for preset panels.</summary>
+/// <summary>Builds SigNoz v5 <c>query_range</c> payloads for preset panels.</summary>
 public static class SigNozQueryBuilder
 {
-    /// <summary>Builds a SigNoz <c>/api/v4/query_range</c> request body.</summary>
+    /// <summary>Builds a SigNoz <c>/api/v5/query_range</c> request body.</summary>
     public static JsonObject BuildQueryRangeRequest(ObservabilityPanelQuery query)
     {
         var stepSeconds = Math.Max(1, (int)query.TimeRange.Step.TotalSeconds);
@@ -17,8 +17,7 @@ public static class SigNozQueryBuilder
         {
             ["start"] = startMs,
             ["end"] = endMs,
-            ["step"] = stepSeconds,
-            ["variables"] = new JsonObject(),
+            ["requestType"] = "time_series",
             ["compositeQuery"] = BuildCompositeQuery(query.PanelId, query.ServiceName, stepSeconds)
         };
     }
@@ -175,32 +174,50 @@ public static class SigNozQueryBuilder
     {
         return new JsonObject
         {
-            ["queryType"] = "builder",
-            ["panelType"] = "graph",
             ["queries"] = new JsonArray
+            {
+                BuildBuilderQuery(stepIntervalSeconds, metricName, timeAggregation, spaceAggregation, legend, filterExpression)
+            }
+        };
+    }
+
+    private static JsonObject BuildBuilderQuery(
+        int stepIntervalSeconds,
+        string metricName,
+        string timeAggregation,
+        string spaceAggregation,
+        string legend,
+        string filterExpression,
+        string name = "A",
+        bool disabled = false)
+    {
+        var spec = new JsonObject
+        {
+            ["name"] = name,
+            ["signal"] = "metrics",
+            ["stepInterval"] = stepIntervalSeconds,
+            ["aggregations"] = new JsonArray
             {
                 new JsonObject
                 {
-                    ["type"] = "builder_query",
-                    ["spec"] = new JsonObject
-                    {
-                        ["name"] = "A",
-                        ["signal"] = "metrics",
-                        ["stepInterval"] = stepIntervalSeconds,
-                        ["aggregations"] = new JsonArray
-                        {
-                            new JsonObject
-                            {
-                                ["metricName"] = metricName,
-                                ["timeAggregation"] = timeAggregation,
-                                ["spaceAggregation"] = spaceAggregation
-                            }
-                        },
-                        ["filter"] = new JsonObject { ["expression"] = filterExpression },
-                        ["legend"] = legend
-                    }
+                    ["metricName"] = metricName,
+                    ["timeAggregation"] = timeAggregation,
+                    ["spaceAggregation"] = spaceAggregation
                 }
-            }
+            },
+            ["filter"] = new JsonObject { ["expression"] = filterExpression },
+            ["legend"] = legend
+        };
+
+        if (disabled)
+        {
+            spec["disabled"] = true;
+        }
+
+        return new JsonObject
+        {
+            ["type"] = "builder_query",
+            ["spec"] = spec
         };
     }
 
@@ -211,54 +228,26 @@ public static class SigNozQueryBuilder
 
         return new JsonObject
         {
-            ["queryType"] = "builder",
-            ["panelType"] = "graph",
             ["queries"] = new JsonArray
             {
-                new JsonObject
-                {
-                    ["type"] = "builder_query",
-                    ["spec"] = new JsonObject
-                    {
-                        ["name"] = "A",
-                        ["signal"] = "metrics",
-                        ["stepInterval"] = stepIntervalSeconds,
-                        ["disabled"] = true,
-                        ["aggregations"] = new JsonArray
-                        {
-                            new JsonObject
-                            {
-                                ["metricName"] = "signoz_calls_total",
-                                ["timeAggregation"] = "rate",
-                                ["spaceAggregation"] = "sum"
-                            }
-                        },
-                        ["filter"] = new JsonObject { ["expression"] = errorFilter },
-                        ["legend"] = "errors"
-                    }
-                },
-                new JsonObject
-                {
-                    ["type"] = "builder_query",
-                    ["spec"] = new JsonObject
-                    {
-                        ["name"] = "B",
-                        ["signal"] = "metrics",
-                        ["stepInterval"] = stepIntervalSeconds,
-                        ["disabled"] = true,
-                        ["aggregations"] = new JsonArray
-                        {
-                            new JsonObject
-                            {
-                                ["metricName"] = "signoz_calls_total",
-                                ["timeAggregation"] = "rate",
-                                ["spaceAggregation"] = "sum"
-                            }
-                        },
-                        ["filter"] = new JsonObject { ["expression"] = serviceFilter },
-                        ["legend"] = "total"
-                    }
-                }
+                BuildBuilderQuery(
+                    stepIntervalSeconds,
+                    "signoz_calls_total",
+                    "rate",
+                    "sum",
+                    "errors",
+                    errorFilter,
+                    name: "A",
+                    disabled: true),
+                BuildBuilderQuery(
+                    stepIntervalSeconds,
+                    "signoz_calls_total",
+                    "rate",
+                    "sum",
+                    "total",
+                    serviceFilter,
+                    name: "B",
+                    disabled: true)
             },
             ["formulas"] = new JsonArray
             {

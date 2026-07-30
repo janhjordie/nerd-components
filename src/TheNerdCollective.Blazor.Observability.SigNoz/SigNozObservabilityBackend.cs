@@ -54,7 +54,7 @@ public sealed class SigNozObservabilityBackend : IObservabilityBackend
         CancellationToken cancellationToken = default)
     {
         var body = SigNozQueryBuilder.BuildQueryRangeRequest(query);
-        using var request = CreateJsonRequest(HttpMethod.Post, "/api/v4/query_range", body);
+        using var request = CreateJsonRequest(HttpMethod.Post, "/api/v5/query_range", body);
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
 

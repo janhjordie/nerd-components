@@ -27,7 +27,7 @@ public sealed class SigNozObservabilityBackendTests
 
         var result = await backend.QueryTimeSeriesAsync(query);
 
-        Assert.Equal("/api/v4/query_range", capturedPath);
+        Assert.Equal("/api/v5/query_range", capturedPath);
         Assert.Equal(2, result.Points.Count);
     }
 

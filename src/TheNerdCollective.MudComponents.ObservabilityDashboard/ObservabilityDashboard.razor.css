@@ -3,24 +3,25 @@
 }
 
 .observability-dashboard-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
     width: 100%;
-    justify-content: flex-end;
+}
+
+.observability-dashboard-action {
+    flex: 0 1 auto;
 }
 
 @media (max-width: 600px) {
     .observability-dashboard-actions {
-        justify-content: stretch;
+        justify-content: stretch !important;
     }
 
-    .observability-dashboard-actions .mud-button-root {
-        flex: 1 1 calc(50% - 0.25rem);
+    .observability-dashboard-action {
+        flex: 1 1 calc(50% - 0.5rem);
         min-width: 0;
+        max-width: calc(50% - 0.25rem);
     }
 
-    .observability-dashboard-actions .mud-button-root .mud-button-label {
+    .observability-dashboard-action .mud-button-label {
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;

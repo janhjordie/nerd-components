@@ -1,0 +1,21 @@
+{
+  "status": "success",
+  "data": {
+    "results": [
+      {
+        "aggregations": [
+          {
+            "series": [
+              {
+                "values": [
+                  { "timestamp": 1710000000000, "value": "12.5" },
+                  { "timestamp": 1710000060000, "value": "14.2" }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

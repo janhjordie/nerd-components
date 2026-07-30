@@ -6,6 +6,19 @@ namespace TheNerdCollective.Blazor.Observability.SigNoz.Tests;
 public sealed class SigNozResponseParserTests
 {
     [Fact]
+    public void ParseTimeSeries_reads_v5_aggregation_series()
+    {
+        var json = ReadFixture("query_range_v5_series.json");
+        var result = SigNozResponseParser.ParseTimeSeries(json, ObservabilityPanelId.RequestRate);
+
+        Assert.Equal("rps", result.Legend);
+        Assert.Equal("reqps", result.Unit);
+        Assert.Equal(2, result.Points.Count);
+        Assert.Equal(12.5, result.Points[0].Value, precision: 3);
+        Assert.Equal(14.2, result.Points[1].Value, precision: 3);
+    }
+
+    [Fact]
     public void ParseTimeSeries_reads_series_tuple_values()
     {
         var json = ReadFixture("query_range_series.json");

@@ -12,7 +12,7 @@ public sealed class SigNozQueryBuilderTests
         var query = CreateQuery(ObservabilityPanelId.RequestRate);
         var body = SigNozQueryBuilder.BuildQueryRangeRequest(query);
 
-        Assert.Equal("builder", body["compositeQuery"]?["queryType"]?.GetValue<string>());
+        Assert.Equal("time_series", body["requestType"]?.GetValue<string>());
         var spec = body["compositeQuery"]?["queries"]?[0]?["spec"] as JsonObject;
         Assert.NotNull(spec);
         Assert.Equal("signoz_latency.count", spec["aggregations"]?[0]?["metricName"]?.GetValue<string>());

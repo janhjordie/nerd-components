@@ -18,11 +18,16 @@
                 }
             </MudStack>
 
-            <div class="observability-dashboard-actions">
+            <MudStack Row="true"
+                      Spacing="2"
+                      Wrap="Wrap.Wrap"
+                      Justify="Justify.FlexEnd"
+                      Class="observability-dashboard-actions">
                 @if (ShowExternalLink && ExternalUrl is not null)
                 {
                     <MudButton Variant="Variant.Outlined"
                                Size="Size.Small"
+                               Class="observability-dashboard-action"
                                Href="@ExternalUrl.ToString()"
                                Target="_blank"
                                StartIcon="@Icons.Material.Filled.OpenInNew">
@@ -32,12 +37,13 @@
 
                 <MudButton Variant="Variant.Outlined"
                            Size="Size.Small"
+                           Class="observability-dashboard-action"
                            StartIcon="@Icons.Material.Filled.Refresh"
                            Disabled="@IsLoading"
                            OnClick="RefreshAsync">
                     Refresh
                 </MudButton>
-            </div>
+            </MudStack>
         </MudStack>
 
         @if (!string.IsNullOrWhiteSpace(ErrorMessage))
@@ -207,18 +213,17 @@
             ExternalUrl = DashboardService.GetExternalDashboardUrl(ResolvedServiceName);
 
             var timeRange = ObservabilityTimeRange.LastMinutes(TimeRangeMinutes);
-            RequestRateSeries = await DashboardService.GetPanelAsync(
-                ObservabilityPanelId.RequestRate,
-                ResolvedServiceName,
-                timeRange);
-            P95Series = await DashboardService.GetPanelAsync(
-                ObservabilityPanelId.P95Latency,
-                ResolvedServiceName,
-                timeRange);
+            RequestRateSeries = await SafePanelAsync(ObservabilityPanelId.RequestRate, timeRange);
+            P95Series = await SafePanelAsync(ObservabilityPanelId.P95Latency, timeRange);
 
             if (ShowExtendedPanels)
             {
                 await LoadExtendedPanelsAsync(timeRange);
+            }
+
+            if (HasNoBackendData())
+            {
+                ErrorMessage = "SigNoz returned no metrics for this period. Check connectivity or generate traffic with the probes below.";
             }
         }
         catch (Exception ex)
@@ -233,15 +238,15 @@
 
     private async Task LoadExtendedPanelsAsync(ObservabilityTimeRange timeRange)
     {
-        var hostCpu = await DashboardService.GetScalarAsync(ObservabilityPanelId.HostCpuUtilization, ResolvedServiceName, timeRange);
-        var hostMemory = await DashboardService.GetScalarAsync(ObservabilityPanelId.HostMemoryUtilization, ResolvedServiceName, timeRange);
-        var hostDisk = await DashboardService.GetScalarAsync(ObservabilityPanelId.HostDiskUtilization, ResolvedServiceName, timeRange);
-        var gcHeap = await DashboardService.GetScalarAsync(ObservabilityPanelId.RuntimeGcHeap, ResolvedServiceName, timeRange);
-        var processMemory = await DashboardService.GetScalarAsync(ObservabilityPanelId.RuntimeProcessMemory, ResolvedServiceName, timeRange);
-        var dbRate = await DashboardService.GetScalarAsync(ObservabilityPanelId.DbQueryRate, ResolvedServiceName, timeRange);
-        var dbP95 = await DashboardService.GetScalarAsync(ObservabilityPanelId.DbQueryP95, ResolvedServiceName, timeRange);
-        var httpRate = await DashboardService.GetScalarAsync(ObservabilityPanelId.HttpClientRate, ResolvedServiceName, timeRange);
-        var httpP95 = await DashboardService.GetScalarAsync(ObservabilityPanelId.HttpClientP95, ResolvedServiceName, timeRange);
+        var hostCpu = await SafeScalarAsync(ObservabilityPanelId.HostCpuUtilization, timeRange);
+        var hostMemory = await SafeScalarAsync(ObservabilityPanelId.HostMemoryUtilization, timeRange);
+        var hostDisk = await SafeScalarAsync(ObservabilityPanelId.HostDiskUtilization, timeRange);
+        var gcHeap = await SafeScalarAsync(ObservabilityPanelId.RuntimeGcHeap, timeRange);
+        var processMemory = await SafeScalarAsync(ObservabilityPanelId.RuntimeProcessMemory, timeRange);
+        var dbRate = await SafeScalarAsync(ObservabilityPanelId.DbQueryRate, timeRange);
+        var dbP95 = await SafeScalarAsync(ObservabilityPanelId.DbQueryP95, timeRange);
+        var httpRate = await SafeScalarAsync(ObservabilityPanelId.HttpClientRate, timeRange);
+        var httpP95 = await SafeScalarAsync(ObservabilityPanelId.HttpClientP95, timeRange);
 
         HostCards =
         [
@@ -268,13 +273,49 @@
             new("P95 latency", httpP95, Color.Success, Icons.Material.Filled.NetworkCheck, "observability-metric-http-p95")
         ];
 
-        HostCpuSeries = await DashboardService.GetPanelAsync(ObservabilityPanelId.HostCpuUtilization, ResolvedServiceName, timeRange);
-        HostMemorySeries = await DashboardService.GetPanelAsync(ObservabilityPanelId.HostMemoryUtilization, ResolvedServiceName, timeRange);
-        HostDiskSeries = await DashboardService.GetPanelAsync(ObservabilityPanelId.HostDiskUtilization, ResolvedServiceName, timeRange);
-        DbQueryRateSeries = await DashboardService.GetPanelAsync(ObservabilityPanelId.DbQueryRate, ResolvedServiceName, timeRange);
-        DbQueryP95Series = await DashboardService.GetPanelAsync(ObservabilityPanelId.DbQueryP95, ResolvedServiceName, timeRange);
-        HttpClientRateSeries = await DashboardService.GetPanelAsync(ObservabilityPanelId.HttpClientRate, ResolvedServiceName, timeRange);
-        HttpClientP95Series = await DashboardService.GetPanelAsync(ObservabilityPanelId.HttpClientP95, ResolvedServiceName, timeRange);
+        HostCpuSeries = await SafePanelAsync(ObservabilityPanelId.HostCpuUtilization, timeRange);
+        HostMemorySeries = await SafePanelAsync(ObservabilityPanelId.HostMemoryUtilization, timeRange);
+        HostDiskSeries = await SafePanelAsync(ObservabilityPanelId.HostDiskUtilization, timeRange);
+        DbQueryRateSeries = await SafePanelAsync(ObservabilityPanelId.DbQueryRate, timeRange);
+        DbQueryP95Series = await SafePanelAsync(ObservabilityPanelId.DbQueryP95, timeRange);
+        HttpClientRateSeries = await SafePanelAsync(ObservabilityPanelId.HttpClientRate, timeRange);
+        HttpClientP95Series = await SafePanelAsync(ObservabilityPanelId.HttpClientP95, timeRange);
+    }
+
+    private bool HasNoBackendData() =>
+        Overview?.RequestRate is null
+        && (RequestRateSeries?.Points.Count ?? 0) == 0
+        && HostCards.Count > 0
+        && HostCards.All(card => card.Value?.Value == 0);
+
+    private async Task<ObservabilityScalarResult> SafeScalarAsync(
+        ObservabilityPanelId panelId,
+        ObservabilityTimeRange timeRange)
+    {
+        try
+        {
+            return await DashboardService.GetScalarAsync(panelId, ResolvedServiceName, timeRange);
+        }
+        catch
+        {
+            var definition = ObservabilityPanelCatalog.GetDefinition(panelId);
+            return new ObservabilityScalarResult(0, definition.Unit, definition.Title);
+        }
+    }
+
+    private async Task<ObservabilityTimeSeriesResult> SafePanelAsync(
+        ObservabilityPanelId panelId,
+        ObservabilityTimeRange timeRange)
+    {
+        try
+        {
+            return await DashboardService.GetPanelAsync(panelId, ResolvedServiceName, timeRange);
+        }
+        catch
+        {
+            var definition = ObservabilityPanelCatalog.GetDefinition(panelId);
+            return new ObservabilityTimeSeriesResult(definition.Legend, definition.Unit, []);
+        }
     }
 
     public void Dispose()

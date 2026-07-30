@@ -73,26 +73,58 @@ public static class SigNozResponseParser
             return points;
         }
 
-        var resultNode = root["data"]?["result"] ?? root["result"];
-        if (resultNode is not JsonArray results)
+        var v5Results = root["data"]?["results"] as JsonArray;
+        if (v5Results is not null)
         {
-            return points;
-        }
-
-        foreach (var result in results)
-        {
-            if (result is not JsonObject resultObject)
+            foreach (var result in v5Results)
             {
-                continue;
-            }
+                if (result is not JsonObject resultObject)
+                {
+                    continue;
+                }
 
-            AppendSeriesPoints(resultObject["series"], points);
-            AppendSeriesPoints(resultObject["values"], points);
-            AppendValuesArray(resultObject["values"], points);
+                AppendV5Aggregations(resultObject["aggregations"], points);
+            }
+        }
+        else
+        {
+            var resultNode = root["data"]?["result"] ?? root["result"];
+            if (resultNode is JsonArray results)
+            {
+                foreach (var result in results)
+                {
+                    if (result is not JsonObject resultObject)
+                    {
+                        continue;
+                    }
+
+                    AppendSeriesPoints(resultObject["series"], points);
+                    AppendSeriesPoints(resultObject["values"], points);
+                    AppendValuesArray(resultObject["values"], points);
+                }
+            }
         }
 
         points.Sort(static (a, b) => a.Timestamp.CompareTo(b.Timestamp));
         return points;
+    }
+
+    private static void AppendV5Aggregations(JsonNode? aggregationsNode, List<ObservabilityTimeSeriesPoint> points)
+    {
+        if (aggregationsNode is not JsonArray aggregations)
+        {
+            return;
+        }
+
+        foreach (var aggregation in aggregations)
+        {
+            if (aggregation is not JsonObject aggregationObject)
+            {
+                continue;
+            }
+
+            AppendSeriesPoints(aggregationObject["series"], points);
+        }
     }
 
     private static void AppendSeriesPoints(JsonNode? seriesNode, List<ObservabilityTimeSeriesPoint> points)
