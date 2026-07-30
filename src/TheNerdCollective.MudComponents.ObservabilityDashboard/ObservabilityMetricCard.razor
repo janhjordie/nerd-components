@@ -1,0 +1,37 @@
+@using MudBlazor
+
+<MudPaper Class="pa-4" Elevation="1" data-testid="@DataTestId">
+    <MudStack Spacing="2">
+        <MudStack Row="true" Class="align-center">
+            <MudIcon Icon="@Icon" Color="@Color" Size="Size.Medium" />
+            <MudText Typo="Typo.subtitle2" Color="Color.Secondary">@Title</MudText>
+        </MudStack>
+
+        <MudText Typo="Typo.h4" Color="@Color">@Value</MudText>
+
+        @if (!string.IsNullOrWhiteSpace(Subtitle))
+        {
+            <MudText Typo="Typo.caption" Color="Color.Secondary">@Subtitle</MudText>
+        }
+    </MudStack>
+</MudPaper>
+
+@code {
+    [Parameter]
+    public string Title { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Value { get; set; } = "—";
+
+    [Parameter]
+    public string? Subtitle { get; set; }
+
+    [Parameter]
+    public Color Color { get; set; } = Color.Primary;
+
+    [Parameter]
+    public string Icon { get; set; } = Icons.Material.Filled.Analytics;
+
+    [Parameter]
+    public string? DataTestId { get; set; }
+}

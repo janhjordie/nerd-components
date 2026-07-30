@@ -1,0 +1,154 @@
+@using TheNerdCollective.Blazor.Observability
+@using MudBlazor
+@implements IDisposable
+@inject IObservabilityDashboardService DashboardService
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="py-4" data-testid="observability-dashboard">
+    <MudStack Spacing="3">
+        <MudStack Row="true" Class="align-center">
+            <MudStack Spacing="0">
+                <MudText Typo="Typo.h4">Observability</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">@ResolvedServiceName</MudText>
+            </MudStack>
+
+            <MudSpacer />
+
+            @if (Overview is not null)
+            {
+                <ObservabilityHealthBadge Status="@Overview.Health" />
+            }
+
+            @if (ShowExternalLink && ExternalUrl is not null)
+            {
+                <MudButton Variant="Variant.Outlined"
+                           Size="Size.Small"
+                           Href="@ExternalUrl.ToString()"
+                           Target="_blank"
+                           StartIcon="@Icons.Material.Filled.OpenInNew">
+                    @ExternalLinkText
+                </MudButton>
+            }
+
+            <MudButton Variant="Variant.Outlined"
+                       Size="Size.Small"
+                       StartIcon="@Icons.Material.Filled.Refresh"
+                       Disabled="@IsLoading"
+                       OnClick="RefreshAsync">
+                Refresh
+            </MudButton>
+        </MudStack>
+
+        @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+        {
+            <MudAlert Severity="Severity.Error">@ErrorMessage</MudAlert>
+        }
+
+        @if (Overview is not null)
+        {
+            <ObservabilityOverviewCards Snapshot="@Overview" />
+        }
+
+        <MudGrid>
+            <MudItem xs="12" md="6">
+                <ObservabilityTimeSeriesChart Title="Request rate"
+                                              Series="@RequestRateSeries"
+                                              DataTestId="observability-chart-request-rate" />
+            </MudItem>
+
+            <MudItem xs="12" md="6">
+                <ObservabilityTimeSeriesChart Title="P95 latency"
+                                              Series="@P95Series"
+                                              DataTestId="observability-chart-p95-latency" />
+            </MudItem>
+        </MudGrid>
+
+        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="text-center">
+            Last updated: @(Overview?.QueriedAtUtc.ToLocalTime().ToString("g") ?? "—")
+            · Lookback: @TimeRangeMinutes min
+        </MudText>
+    </MudStack>
+</MudContainer>
+
+@code {
+    [Parameter]
+    public string? ServiceName { get; set; }
+
+    [Parameter]
+    public int TimeRangeMinutes { get; set; } = 15;
+
+    [Parameter]
+    public bool ShowExternalLink { get; set; } = true;
+
+    [Parameter]
+    public string ExternalLinkText { get; set; } = "Open full observability";
+
+    [Parameter]
+    public int AutoRefreshSeconds { get; set; }
+
+    private ObservabilityOverviewSnapshot? Overview;
+    private ObservabilityTimeSeriesResult? RequestRateSeries;
+    private ObservabilityTimeSeriesResult? P95Series;
+    private Uri? ExternalUrl;
+    private string? ErrorMessage;
+    private bool IsLoading;
+    private Timer? _refreshTimer;
+
+    private string ResolvedServiceName =>
+        string.IsNullOrWhiteSpace(ServiceName)
+            ? DashboardService.Options.DefaultServiceName
+            : ServiceName;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RefreshAsync();
+
+        if (AutoRefreshSeconds > 0)
+        {
+            _refreshTimer = new Timer(async _ =>
+            {
+                await RefreshAsync();
+                await InvokeAsync(StateHasChanged);
+            }, null, TimeSpan.FromSeconds(AutoRefreshSeconds), TimeSpan.FromSeconds(AutoRefreshSeconds));
+        }
+    }
+
+    private async Task RefreshAsync()
+    {
+        if (IsLoading)
+        {
+            return;
+        }
+
+        IsLoading = true;
+        ErrorMessage = null;
+
+        try
+        {
+            Overview = await DashboardService.GetOverviewAsync(ResolvedServiceName);
+            ExternalUrl = DashboardService.GetExternalDashboardUrl(ResolvedServiceName);
+
+            var timeRange = ObservabilityTimeRange.LastMinutes(TimeRangeMinutes);
+            RequestRateSeries = await DashboardService.GetPanelAsync(
+                ObservabilityPanelId.RequestRate,
+                ResolvedServiceName,
+                timeRange);
+            P95Series = await DashboardService.GetPanelAsync(
+                ObservabilityPanelId.P95Latency,
+                ResolvedServiceName,
+                timeRange);
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    public void Dispose()
+    {
+        _refreshTimer?.Dispose();
+    }
+}

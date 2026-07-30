@@ -69,6 +69,17 @@ app.Run();
 
 Aligned with SigNoz span metrics (`signoz_latency.count`, `signoz_calls_total`, etc.) — same semantics as Nerd Consent `consent-host-overview.json`.
 
+## Backend extensibility (SigNoz vs Grafana)
+
+This package is **backend-agnostic at the UI boundary**:
+
+- Blazor components depend on `IObservabilityDashboardService` / `IObservabilityBackend` — not SigNoz directly.
+- **OpenTelemetry** is the instrumentation layer (your app exports traces/metrics via OTLP). It does **not** automatically make this dashboard talk to Grafana or any other backend.
+- **v1 ships with `SigNozObservabilityBackend`** — preset panel queries target SigNoz v4 APIs and span-derived metrics.
+- **Grafana / Prometheus** support requires a new backend class (e.g. `GrafanaObservabilityBackend`) that implements `IObservabilityBackend` and maps the same `ObservabilityPanelId` presets to PromQL/Grafana HTTP APIs. Register it via `ObservabilityDashboardOptions.Backend`.
+
+Use `ExternalDashboardBaseUrl` to deep-link to your full Grafana or SigNoz UI regardless of query backend.
+
 ## Security
 
 - Keep SigNoz API tokens in server configuration/secrets only

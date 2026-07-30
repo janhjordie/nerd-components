@@ -356,9 +356,9 @@ Public MudBlazor ops dashboard reading OpenTelemetry backends (SigNoz v1). Does 
 
 | ID | P | Status | Task | DoD (verifiable) | Evidence | Source |
 |----|---|--------|------|------------------|----------|--------|
-| HR-182 | P0 | open | Metric card + health badge | `ObservabilityMetricCard`, `ObservabilityHealthBadge`; bUnit smoke | Razor + test | Plan §4 |
-| HR-183 | P0 | open | Time series chart | `ObservabilityTimeSeriesChart` MudChart wrapper | Razor + test | Plan §4 |
-| HR-184 | P0 | open | Composed dashboard | `ObservabilityDashboard.razor` — 4 cards, 2 charts, refresh | Razor | Plan §4 |
+| HR-182 | P0 | done | Metric card + health badge | `ObservabilityMetricCard`, `ObservabilityHealthBadge`; bUnit smoke | Razor + test | Plan §4 |
+| HR-183 | P0 | done | Time series chart | `ObservabilityTimeSeriesChart` MudChart wrapper | Razor + test | Plan §4 |
+| HR-184 | P0 | done | Composed dashboard | `ObservabilityDashboard.razor` — 4 cards, 2 charts, refresh | Razor | Plan §4 |
 | HR-185 | P1 | open | Service selector + time range | MudSelect services; 15m/1h/24h presets | Razor | Plan §4 |
 | HR-186 | P1 | open | Installation guide | `docs/ObservabilityDashboard-Installation-Guide.md` (SessionMonitor style) | Doc | Plan §6 |
 
@@ -401,10 +401,10 @@ Licence gate, pricing, hosted Studio, multi-framework adapters (**HR-111–HR-11
 
 | Status | Count |
 |--------|------:|
-| **open** | **27** |
+| **open** | **24** |
 | **in_progress** | **0** |
 | **partial** | **0** |
-| **done** | **123** |
+| **done** | **126** |
 | **parked** | **1** |
 | **Total** | **151** |
 

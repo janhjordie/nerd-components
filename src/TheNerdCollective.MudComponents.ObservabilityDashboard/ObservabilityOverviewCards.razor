@@ -1,0 +1,46 @@
+@using MudBlazor
+@using TheNerdCollective.Blazor.Observability
+
+<MudGrid>
+    <MudItem xs="12" sm="6" md="3">
+        <ObservabilityMetricCard Title="Request rate"
+                                 Value="@ObservabilityValueFormatter.FormatScalar(Snapshot?.RequestRate)"
+                                 Color="Color.Primary"
+                                 Icon="@Icons.Material.Filled.Speed"
+                                 DataTestId="observability-metric-request-rate" />
+    </MudItem>
+
+    <MudItem xs="12" sm="6" md="3">
+        <ObservabilityMetricCard Title="P95 latency"
+                                 Value="@ObservabilityValueFormatter.FormatScalar(Snapshot?.P95LatencyMs)"
+                                 Color="Color.Info"
+                                 Icon="@Icons.Material.Filled.Timer"
+                                 DataTestId="observability-metric-p95-latency" />
+    </MudItem>
+
+    <MudItem xs="12" sm="6" md="3">
+        <ObservabilityMetricCard Title="5xx rate"
+                                 Value="@ObservabilityValueFormatter.FormatScalar(Snapshot?.ErrorRate5xx)"
+                                 Color="Color.Warning"
+                                 Icon="@Icons.Material.Filled.ReportProblem"
+                                 DataTestId="observability-metric-5xx-rate" />
+    </MudItem>
+
+    <MudItem xs="12" sm="6" md="3">
+        <ObservabilityMetricCard Title="Error percentage"
+                                 Value="@ObservabilityValueFormatter.FormatScalar(Snapshot?.ErrorPercentage)"
+                                 Color="@ErrorColor"
+                                 Icon="@Icons.Material.Filled.ErrorOutline"
+                                 DataTestId="observability-metric-error-percentage" />
+    </MudItem>
+</MudGrid>
+
+@code {
+    [Parameter]
+    public ObservabilityOverviewSnapshot? Snapshot { get; set; }
+
+    private Color ErrorColor =>
+        Snapshot?.Health is ObservabilityHealthStatus.Unhealthy or ObservabilityHealthStatus.Degraded
+            ? Color.Error
+            : Color.Secondary;
+}
