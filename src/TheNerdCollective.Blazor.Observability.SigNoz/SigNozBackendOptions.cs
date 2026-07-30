@@ -9,7 +9,7 @@ public sealed class SigNozBackendOptions
     /// <summary>SigNoz base URL without trailing slash.</summary>
     public string BaseUrl { get; set; } = "http://127.0.0.1:8080";
 
-    /// <summary>Bearer API token (server-side only).</summary>
+    /// <summary>SigNoz service-account API key (server-side only; sent as SIGNOZ-API-KEY).</summary>
     public string? ApiToken { get; set; }
 
     /// <summary>Optional org id for v2 session APIs (not required for API keys).</summary>

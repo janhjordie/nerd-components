@@ -32,12 +32,14 @@ public sealed class SigNozObservabilityBackendTests
     }
 
     [Fact]
-    public async Task ListServicesAsync_sends_bearer_token_when_configured()
+    public async Task ListServicesAsync_sends_signoz_api_key_when_configured()
     {
-        string? authHeader = null;
+        string? apiKeyHeader = null;
         var handler = new StubHttpMessageHandler(request =>
         {
-            authHeader = request.Headers.Authorization?.Parameter;
+            apiKeyHeader = request.Headers.TryGetValues("SIGNOZ-API-KEY", out var values)
+                ? values.FirstOrDefault()
+                : null;
             return JsonResponse(ReadFixture("services_list.json"));
         });
 
@@ -48,7 +50,7 @@ public sealed class SigNozObservabilityBackendTests
 
         var services = await backend.ListServicesAsync(context);
 
-        Assert.Equal("secret-key", authHeader);
+        Assert.Equal("secret-key", apiKeyHeader);
         Assert.Single(services, s => s.Name == "nerd-consent-host");
     }
 
