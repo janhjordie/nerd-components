@@ -54,6 +54,37 @@ public sealed class SigNozQueryBuilderTests
     }
 
     [Fact]
+    public void BuildQueryRangeRequest_db_queries_filter_db_system()
+    {
+        var query = CreateQuery(ObservabilityPanelId.DbQueryP95);
+        var body = SigNozQueryBuilder.BuildQueryRangeRequest(query);
+        var expression = body["compositeQuery"]?["queries"]?[0]?["spec"]?["filter"]?["expression"]?.GetValue<string>();
+
+        Assert.Contains("db.system EXISTS", expression);
+    }
+
+    [Fact]
+    public void BuildQueryRangeRequest_http_client_filters_span_kind()
+    {
+        var query = CreateQuery(ObservabilityPanelId.HttpClientRate);
+        var body = SigNozQueryBuilder.BuildQueryRangeRequest(query);
+        var expression = body["compositeQuery"]?["queries"]?[0]?["spec"]?["filter"]?["expression"]?.GetValue<string>();
+
+        Assert.Contains("span_kind = 'SPAN_KIND_CLIENT'", expression);
+    }
+
+    [Fact]
+    public void BuildQueryRangeRequest_host_disk_uses_filesystem_metric()
+    {
+        var query = CreateQuery(ObservabilityPanelId.HostDiskUtilization);
+        var body = SigNozQueryBuilder.BuildQueryRangeRequest(query);
+        var spec = body["compositeQuery"]?["queries"]?[0]?["spec"] as JsonObject;
+
+        Assert.Equal("system.filesystem.utilization", spec?["aggregations"]?[0]?["metricName"]?.GetValue<string>());
+        Assert.Contains("mountpoint = '/'", spec?["filter"]?["expression"]?.GetValue<string>());
+    }
+
+    [Fact]
     public void BuildServiceFilter_escapes_single_quotes()
     {
         var filter = SigNozQueryBuilder.BuildServiceFilter("app's-service", "http_status_code >= 500");

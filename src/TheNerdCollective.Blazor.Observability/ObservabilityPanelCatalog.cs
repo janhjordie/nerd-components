@@ -11,7 +11,15 @@ public static class ObservabilityPanelCatalog
             [ObservabilityPanelId.ErrorRate5xx] = new("5xx rate", "reqps", "5xx/s"),
             [ObservabilityPanelId.ErrorPercentage] = new("Error percentage", "percentunit", "error %"),
             [ObservabilityPanelId.ActiveCircuits] = new("Active circuits", "short", "circuits"),
-            [ObservabilityPanelId.RuntimeGcHeap] = new("GC heap", "bytes", "gc heap")
+            [ObservabilityPanelId.RuntimeGcHeap] = new("GC heap", "bytes", "gc heap"),
+            [ObservabilityPanelId.RuntimeProcessMemory] = new("Process memory", "bytes", "memory"),
+            [ObservabilityPanelId.HostCpuUtilization] = new("CPU", "percentunit", "cpu"),
+            [ObservabilityPanelId.HostMemoryUtilization] = new("RAM", "percentunit", "ram"),
+            [ObservabilityPanelId.HostDiskUtilization] = new("Disk", "percentunit", "disk"),
+            [ObservabilityPanelId.DbQueryRate] = new("DB queries", "reqps", "db/s"),
+            [ObservabilityPanelId.DbQueryP95] = new("DB P95", "ms", "db p95"),
+            [ObservabilityPanelId.HttpClientRate] = new("HTTP outbound", "reqps", "http/s"),
+            [ObservabilityPanelId.HttpClientP95] = new("HTTP P95", "ms", "http p95")
         };
 
     /// <summary>Gets metadata for a panel id.</summary>

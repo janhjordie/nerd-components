@@ -1,0 +1,31 @@
+@using MudBlazor
+@using TheNerdCollective.Blazor.Observability
+
+@if (Title is not null)
+{
+    <MudText Typo="Typo.h6" Class="mt-2 mb-1">@Title</MudText>
+}
+
+<MudGrid>
+    @foreach (var card in Cards)
+    {
+        <MudItem xs="12" sm="6" md="@ColumnWidth">
+            <ObservabilityMetricCard Title="@card.Title"
+                                     Value="@ObservabilityValueFormatter.FormatScalar(card.Value)"
+                                     Color="@card.Color"
+                                     Icon="@card.Icon"
+                                     DataTestId="@card.DataTestId" />
+        </MudItem>
+    }
+</MudGrid>
+
+@code {
+    [Parameter]
+    public string? Title { get; set; }
+
+    [Parameter]
+    public IReadOnlyList<ObservabilityMetricCardModel> Cards { get; set; } = [];
+
+    [Parameter]
+    public int ColumnWidth { get; set; } = 3;
+}

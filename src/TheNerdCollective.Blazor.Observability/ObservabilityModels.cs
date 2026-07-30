@@ -17,7 +17,15 @@ public enum ObservabilityPanelId
     ErrorRate5xx,
     ErrorPercentage,
     ActiveCircuits,
-    RuntimeGcHeap
+    RuntimeGcHeap,
+    RuntimeProcessMemory,
+    HostCpuUtilization,
+    HostMemoryUtilization,
+    HostDiskUtilization,
+    DbQueryRate,
+    DbQueryP95,
+    HttpClientRate,
+    HttpClientP95
 }
 
 /// <summary>Coarse health status for ops dashboards.</summary>

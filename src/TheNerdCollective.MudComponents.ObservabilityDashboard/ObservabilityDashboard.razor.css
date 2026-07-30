@@ -1,0 +1,28 @@
+.observability-dashboard-header {
+    width: 100%;
+}
+
+.observability-dashboard-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    width: 100%;
+    justify-content: flex-end;
+}
+
+@media (max-width: 600px) {
+    .observability-dashboard-actions {
+        justify-content: stretch;
+    }
+
+    .observability-dashboard-actions .mud-button-root {
+        flex: 1 1 calc(50% - 0.25rem);
+        min-width: 0;
+    }
+
+    .observability-dashboard-actions .mud-button-root .mud-button-label {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}

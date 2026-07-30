@@ -21,6 +21,13 @@ public interface IObservabilityDashboardService
         ObservabilityTimeRange timeRange,
         CancellationToken cancellationToken = default);
 
+    /// <summary>Gets the latest scalar value for a preset panel.</summary>
+    Task<ObservabilityScalarResult?> GetScalarAsync(
+        ObservabilityPanelId panelId,
+        string serviceName,
+        ObservabilityTimeRange? timeRange = null,
+        CancellationToken cancellationToken = default);
+
     /// <summary>External deep-link URL (SigNoz/Grafana UI) when configured.</summary>
     Uri? GetExternalDashboardUrl(string? serviceName = null);
 }
