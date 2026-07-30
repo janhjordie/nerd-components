@@ -1,4 +1,3 @@
-using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json.Nodes;
@@ -134,7 +133,7 @@ public sealed class SigNozObservabilityBackend : IObservabilityBackend
     {
         if (!string.IsNullOrWhiteSpace(_signozOptions.ApiToken))
         {
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _signozOptions.ApiToken);
+            request.Headers.TryAddWithoutValidation("SIGNOZ-API-KEY", _signozOptions.ApiToken);
         }
     }
 
