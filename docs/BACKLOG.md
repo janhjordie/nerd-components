@@ -2,7 +2,7 @@
 title: "TheNerdCollective.Components — Master Backlog"
 status: Active
 author: "@janhjordie"
-last_updated: "19-07-2026 19.00"
+last_updated: "30-07-2026 13.30"
 id_prefix: "HR"
 ---
 
@@ -333,6 +333,49 @@ Slet overflødig CSS/generator-kode når theme-laget overtager (ingen deprecatio
 | HR-174 | P2 | done | Layout + shadows i `MudTheme` | `LayoutProperties` (border-radius, drawer width) + `Shadows` fra token pack | `NerdMudThemeFactory.cs` | theme strategy fase 3 |
 | HR-175 | P2 | done | STRATEGY docs PseudoCss model | `STRATEGY.md` §8 opdateret: theme-first + PseudoCss; fjern multi-framework theme refs i Mud-sektion | `docs/STRATEGY.md` | theme strategy fase 3 |
 
+---
+
+## Open — Observability Dashboard NuGet (HR-176–HR-190)
+
+> **Spec:** [00-observability-dashboard-plan.md](00-backlogs/00-observability-dashboard-plan.md) · **Pattern:** SessionMonitor two-package model · **First consumer:** Nerd Consent `/admin/ops`
+
+Public MudBlazor ops dashboard reading OpenTelemetry backends (SigNoz v1). Does **not** replace SigNoz UI — executive summary + link to full observability.
+
+### Fase 1 — Core + SigNoz adapter
+
+| ID | P | Status | Task | DoD (verifiable) | Evidence | Source |
+|----|---|--------|------|------------------|----------|--------|
+| HR-176 | P0 | done | Scaffold packages | `Blazor.Observability` + `MudComponents.ObservabilityDashboard` in sln; `publish-packages.yml`; README stubs; net10.0 Apache-2.0 | csproj + sln + workflow | Observability plan §5–6 |
+| HR-177 | P0 | done | Core abstractions | `IObservabilityBackend`, `IObservabilityDashboardService`, DTOs per spec §3.2 | Public API + XML docs | Plan §3.1–3.2 |
+| HR-178 | P0 | done | SigNoz query builder | 4 preset panels match Consent `consent-host-overview.json`; golden JSON unit tests | `SigNozQueryBuilderTests` | Plan §3.4 |
+| HR-179 | P0 | done | SigNoz backend | Mocked HTTP parses v4 `query_range`; Bearer auth from options | `SigNozObservabilityBackendTests` | Plan §3.4 |
+| HR-180 | P0 | done | DI + dashboard service | `AddObservabilityDashboard()`; options bind; overview snapshot | Extension + service tests | Plan §3.3 |
+| HR-181 | P0 | done | Minimal API endpoints | `/api/observability/*` routes; README documents host `[Authorize]` | Endpoint tests | Plan §3.3 |
+
+### Fase 2 — MudBlazor UI
+
+| ID | P | Status | Task | DoD (verifiable) | Evidence | Source |
+|----|---|--------|------|------------------|----------|--------|
+| HR-182 | P0 | done | Metric card + health badge | `ObservabilityMetricCard`, `ObservabilityHealthBadge`; bUnit smoke | Razor + test | Plan §4 |
+| HR-183 | P0 | done | Time series chart | `ObservabilityTimeSeriesChart` MudChart wrapper | Razor + test | Plan §4 |
+| HR-184 | P0 | done | Composed dashboard | `ObservabilityDashboard.razor` — 4 cards, 2 charts, refresh | Razor | Plan §4 |
+| HR-185 | P1 | open | Service selector + time range | MudSelect services; 15m/1h/24h presets | Razor | Plan §4 |
+| HR-186 | P1 | open | Installation guide | `docs/ObservabilityDashboard-Installation-Guide.md` (SessionMonitor style) | Doc | Plan §6 |
+
+### Fase 3 — Dogfood + publish
+
+| ID | P | Status | Task | DoD (verifiable) | Evidence | Source |
+|----|---|--------|------|------------------|----------|--------|
+| HR-187 | P0 | done | Nerd Consent dogfood | `/admin/ops` super-admin; package ref; Playwright `observability-dashboard.spec.ts` | Consent PR + e2e | Plan §7 |
+| HR-191 | P0 | done | SigNoz adapter package | `TheNerdCollective.Blazor.Observability.SigNoz` NuGet; core backend-neutral; Grafana-ready pattern | csproj + 13 tests | Plan §5 v1.1 |
+| HR-188 | P1 | open | Publish v1.0.0 | Both packages on nuget.org | Tags on main | Plan §10 |
+| HR-189 | P2 | open | SessionMonitor embed | Optional quick bar when SessionMonitor registered | Dashboard slot | Plan §12 |
+| HR-190 | P2 | open | In-process backend | Runtime/GC metrics without SigNoz | `InProcessObservabilityBackend` | Plan §3.5 |
+
+**Cross-repo:** Nerd Consent **NC-512** (dogfood) tracks HR-187 in Consent backlog.
+
+---
+
 ## Open — Cross-framework adapters (HR-115–HR-118)
 
 | ID | P | Status | Task | DoD (verifiable) | Evidence | Source |
@@ -359,17 +402,20 @@ Licence gate, pricing, hosted Studio, multi-framework adapters (**HR-111–HR-11
 
 | Status | Count |
 |--------|------:|
-| **open** | **18** |
+| **open** | **22** |
 | **in_progress** | **0** |
 | **partial** | **0** |
-| **done** | **117** |
+| **done** | **128** |
 | **parked** | **1** |
-| **Total** | **136** |
+| **Total** | **151** |
 
 ### Recommended next slices (MVP)
 
 **Product (OSS):**
-1. **HR-157–163** — Fase 1: Theme Provider First; slet CSS palette-duplikat + bulk rules
+1. **HR-176–181** — Observability Dashboard fase 1: core + SigNoz adapter ([plan](00-backlogs/00-observability-dashboard-plan.md))
+2. **HR-182–184** — MudBlazor dashboard UI
+3. **HR-187** — Dogfood in Nerd Consent `/admin/ops`
+4. **HR-157–163** — Fase 1: Theme Provider First; slet CSS palette-duplikat + bulk rules
 2. **HR-164–165, HR-167–169** + **HR-170 spike** — Fase 2: PseudoCss via single `GenerateTheme` (HR-166 parked)
 3. **HR-171–175** — Fase 3: fuld `NerdMudThemeProvider` + polish
 4. **TS-064–072** — Host + E2E (nerd-token-studio backlog)

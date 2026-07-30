@@ -1,0 +1,49 @@
+@using MudBlazor
+@using TheNerdCollective.Blazor.Observability
+
+<MudChip T="string"
+         Color="@ChipColor"
+         Variant="Variant.Filled"
+         Size="Size.Small"
+         Icon="@ChipIcon"
+         data-testid="@DataTestId">
+    @Label
+</MudChip>
+
+@code {
+    /// <summary>Health status to display.</summary>
+    [Parameter]
+    public ObservabilityHealthStatus Status { get; set; } = ObservabilityHealthStatus.Unknown;
+
+    /// <summary>Optional override for chip label.</summary>
+    [Parameter]
+    public string? LabelOverride { get; set; }
+
+    /// <summary>Playwright / test hook.</summary>
+    [Parameter]
+    public string? DataTestId { get; set; } = "observability-health-badge";
+
+    private string Label => LabelOverride ?? Status switch
+    {
+        ObservabilityHealthStatus.Healthy => "Healthy",
+        ObservabilityHealthStatus.Degraded => "Degraded",
+        ObservabilityHealthStatus.Unhealthy => "Unhealthy",
+        _ => "Unknown"
+    };
+
+    private Color ChipColor => Status switch
+    {
+        ObservabilityHealthStatus.Healthy => Color.Success,
+        ObservabilityHealthStatus.Degraded => Color.Warning,
+        ObservabilityHealthStatus.Unhealthy => Color.Error,
+        _ => Color.Default
+    };
+
+    private string ChipIcon => Status switch
+    {
+        ObservabilityHealthStatus.Healthy => Icons.Material.Filled.CheckCircle,
+        ObservabilityHealthStatus.Degraded => Icons.Material.Filled.Warning,
+        ObservabilityHealthStatus.Unhealthy => Icons.Material.Filled.Error,
+        _ => Icons.Material.Filled.HelpOutline
+    };
+}

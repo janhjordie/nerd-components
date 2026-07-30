@@ -1,0 +1,18 @@
+{
+  "data": [
+    {
+      "serviceName": "nerd-consent-host",
+      "deploymentEnvironment": "production",
+      "callRate": 3.2,
+      "p99": 120,
+      "errorRate": 0.01
+    },
+    {
+      "serviceName": "signoz",
+      "deploymentEnvironment": "production",
+      "callRate": 0.5,
+      "p99": 45,
+      "errorRate": 0
+    }
+  ]
+}

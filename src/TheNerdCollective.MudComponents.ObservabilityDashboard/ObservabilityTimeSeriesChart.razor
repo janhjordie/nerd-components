@@ -1,0 +1,44 @@
+@using MudBlazor
+@using TheNerdCollective.Blazor.Observability
+
+<MudPaper Class="pa-4" Elevation="1" data-testid="@DataTestId">
+    <MudStack Spacing="2">
+        <MudText Typo="Typo.subtitle1">@Title</MudText>
+
+        @if (HasData)
+        {
+            <MudChart ChartType="ChartType.Line"
+                      ChartSeries="@ChartSeries"
+                      Height="@Height" />
+        }
+        else
+        {
+            <MudAlert Severity="Severity.Info">No time series data for this period.</MudAlert>
+        }
+    </MudStack>
+</MudPaper>
+
+@code {
+    [Parameter]
+    public string Title { get; set; } = string.Empty;
+
+    [Parameter]
+    public ObservabilityTimeSeriesResult? Series { get; set; }
+
+    [Parameter]
+    public string Height { get; set; } = "240px";
+
+    [Parameter]
+    public string? DataTestId { get; set; }
+
+    private bool HasData => Series?.Points.Count > 0;
+
+    private List<ChartSeries<double>> ChartSeries =>
+    [
+        new()
+        {
+            Name = Series?.Legend ?? "Series",
+            Data = new ChartData<double>(Series?.Points.Select(point => point.Value).ToArray() ?? [])
+        }
+    ];
+}
