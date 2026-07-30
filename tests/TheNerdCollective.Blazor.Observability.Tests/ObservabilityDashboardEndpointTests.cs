@@ -91,10 +91,18 @@ public sealed class ObservabilityDashboardEndpointTests
             CancellationToken cancellationToken = default)
         {
             var definition = ObservabilityPanelCatalog.GetDefinition(query.PanelId);
+            var value = query.PanelId switch
+            {
+                ObservabilityPanelId.RequestRate => 3.5,
+                ObservabilityPanelId.P95Latency => 120,
+                ObservabilityPanelId.ErrorRate5xx => 0,
+                ObservabilityPanelId.ErrorPercentage => 0.01,
+                _ => 3.5
+            };
             return Task.FromResult(new ObservabilityTimeSeriesResult(
                 definition.Legend,
                 definition.Unit,
-                [new ObservabilityTimeSeriesPoint(DateTimeOffset.UtcNow, 3.5)]));
+                [new ObservabilityTimeSeriesPoint(DateTimeOffset.UtcNow, value)]));
         }
 
         public async Task<ObservabilityScalarResult> QueryScalarAsync(

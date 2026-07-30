@@ -101,9 +101,16 @@ public sealed class ObservabilityDashboardService : IObservabilityDashboardServi
     {
         try
         {
-            return await _backend.QueryScalarAsync(
+            var series = await _backend.QueryTimeSeriesAsync(
                 new ObservabilityPanelQuery(panelId, serviceName, timeRange),
                 cancellationToken).ConfigureAwait(false);
+            if (series.Points.Count == 0)
+            {
+                return null;
+            }
+
+            var definition = ObservabilityPanelCatalog.GetDefinition(panelId);
+            return new ObservabilityScalarResult(series.Points[^1].Value, definition.Unit, definition.Title);
         }
         catch
         {

@@ -76,7 +76,7 @@ public static class SigNozQueryBuilder
                 stepIntervalSeconds,
                 metricName: "system.cpu.utilization",
                 timeAggregation: "avg",
-                spaceAggregation: "avg",
+                spaceAggregation: "sum",
                 legend: "cpu",
                 filter: "state != 'idle'"),
 

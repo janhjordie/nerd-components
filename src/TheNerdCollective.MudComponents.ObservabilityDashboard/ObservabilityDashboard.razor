@@ -286,9 +286,9 @@
         Overview?.RequestRate is null
         && (RequestRateSeries?.Points.Count ?? 0) == 0
         && HostCards.Count > 0
-        && HostCards.All(card => card.Value?.Value == 0);
+        && HostCards.All(card => card.Value is null);
 
-    private async Task<ObservabilityScalarResult> SafeScalarAsync(
+    private async Task<ObservabilityScalarResult?> SafeScalarAsync(
         ObservabilityPanelId panelId,
         ObservabilityTimeRange timeRange)
     {
@@ -298,8 +298,7 @@
         }
         catch
         {
-            var definition = ObservabilityPanelCatalog.GetDefinition(panelId);
-            return new ObservabilityScalarResult(0, definition.Unit, definition.Title);
+            return null;
         }
     }
 
