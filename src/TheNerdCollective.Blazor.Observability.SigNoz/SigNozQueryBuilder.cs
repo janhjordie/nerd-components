@@ -30,7 +30,7 @@ public static class SigNozQueryBuilder
     {
         return panelId switch
         {
-            ObservabilityPanelId.RequestRate => SingleMetricQuery(
+            ObservabilityPanelId.RequestRate => ServiceMetricQuery(
                 stepIntervalSeconds,
                 serviceName,
                 metricName: "signoz_latency.count",
@@ -38,7 +38,7 @@ public static class SigNozQueryBuilder
                 spaceAggregation: "sum",
                 legend: "rps"),
 
-            ObservabilityPanelId.P95Latency => SingleMetricQuery(
+            ObservabilityPanelId.P95Latency => ServiceMetricQuery(
                 stepIntervalSeconds,
                 serviceName,
                 metricName: "signoz_latency.bucket",
@@ -46,7 +46,7 @@ public static class SigNozQueryBuilder
                 spaceAggregation: "p95",
                 legend: "p95"),
 
-            ObservabilityPanelId.ErrorRate5xx => SingleMetricQuery(
+            ObservabilityPanelId.ErrorRate5xx => ServiceMetricQuery(
                 stepIntervalSeconds,
                 serviceName,
                 metricName: "signoz_calls_total",
@@ -57,7 +57,83 @@ public static class SigNozQueryBuilder
 
             ObservabilityPanelId.ErrorPercentage => ErrorPercentageQuery(stepIntervalSeconds, serviceName),
 
-            _ => SingleMetricQuery(
+            ObservabilityPanelId.RuntimeGcHeap => ServiceMetricQuery(
+                stepIntervalSeconds,
+                serviceName,
+                metricName: "process.runtime.dotnet.gc.heap.size",
+                timeAggregation: "avg",
+                spaceAggregation: "sum",
+                legend: "gc heap"),
+
+            ObservabilityPanelId.RuntimeProcessMemory => ServiceMetricQuery(
+                stepIntervalSeconds,
+                serviceName,
+                metricName: "process.runtime.dotnet.gc.memory.committed",
+                timeAggregation: "avg",
+                spaceAggregation: "sum",
+                legend: "memory"),
+
+            ObservabilityPanelId.HostCpuUtilization => HostMetricQuery(
+                stepIntervalSeconds,
+                metricName: "system.cpu.utilization",
+                timeAggregation: "avg",
+                spaceAggregation: "avg",
+                legend: "cpu",
+                filter: "state != 'idle'"),
+
+            ObservabilityPanelId.HostMemoryUtilization => HostMetricQuery(
+                stepIntervalSeconds,
+                metricName: "system.memory.utilization",
+                timeAggregation: "avg",
+                spaceAggregation: "avg",
+                legend: "ram",
+                filter: "state = 'used'"),
+
+            ObservabilityPanelId.HostDiskUtilization => HostMetricQuery(
+                stepIntervalSeconds,
+                metricName: "system.filesystem.utilization",
+                timeAggregation: "max",
+                spaceAggregation: "max",
+                legend: "disk",
+                filter: "mountpoint = '/' AND state != 'free'"),
+
+            ObservabilityPanelId.DbQueryRate => ServiceMetricQuery(
+                stepIntervalSeconds,
+                serviceName,
+                metricName: "signoz_latency.count",
+                timeAggregation: "rate",
+                spaceAggregation: "sum",
+                legend: "db/s",
+                extraFilter: "db.system EXISTS"),
+
+            ObservabilityPanelId.DbQueryP95 => ServiceMetricQuery(
+                stepIntervalSeconds,
+                serviceName,
+                metricName: "signoz_latency.bucket",
+                timeAggregation: "p95",
+                spaceAggregation: "p95",
+                legend: "db p95",
+                extraFilter: "db.system EXISTS"),
+
+            ObservabilityPanelId.HttpClientRate => ServiceMetricQuery(
+                stepIntervalSeconds,
+                serviceName,
+                metricName: "signoz_latency.count",
+                timeAggregation: "rate",
+                spaceAggregation: "sum",
+                legend: "http/s",
+                extraFilter: "span_kind = 'SPAN_KIND_CLIENT'"),
+
+            ObservabilityPanelId.HttpClientP95 => ServiceMetricQuery(
+                stepIntervalSeconds,
+                serviceName,
+                metricName: "signoz_latency.bucket",
+                timeAggregation: "p95",
+                spaceAggregation: "p95",
+                legend: "http p95",
+                extraFilter: "span_kind = 'SPAN_KIND_CLIENT'"),
+
+            _ => ServiceMetricQuery(
                 stepIntervalSeconds,
                 serviceName,
                 metricName: "signoz_calls_total",
@@ -67,7 +143,7 @@ public static class SigNozQueryBuilder
         };
     }
 
-    private static JsonObject SingleMetricQuery(
+    private static JsonObject ServiceMetricQuery(
         int stepIntervalSeconds,
         string serviceName,
         string metricName,
@@ -77,7 +153,26 @@ public static class SigNozQueryBuilder
         string? extraFilter = null)
     {
         var filter = BuildServiceFilter(serviceName, extraFilter);
+        return MetricQuery(stepIntervalSeconds, metricName, timeAggregation, spaceAggregation, legend, filter);
+    }
 
+    private static JsonObject HostMetricQuery(
+        int stepIntervalSeconds,
+        string metricName,
+        string timeAggregation,
+        string spaceAggregation,
+        string legend,
+        string filter)
+        => MetricQuery(stepIntervalSeconds, metricName, timeAggregation, spaceAggregation, legend, filter);
+
+    private static JsonObject MetricQuery(
+        int stepIntervalSeconds,
+        string metricName,
+        string timeAggregation,
+        string spaceAggregation,
+        string legend,
+        string filterExpression)
+    {
         return new JsonObject
         {
             ["queryType"] = "builder",
@@ -101,7 +196,7 @@ public static class SigNozQueryBuilder
                                 ["spaceAggregation"] = spaceAggregation
                             }
                         },
-                        ["filter"] = new JsonObject { ["expression"] = filter },
+                        ["filter"] = new JsonObject { ["expression"] = filterExpression },
                         ["legend"] = legend
                     }
                 }

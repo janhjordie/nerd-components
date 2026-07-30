@@ -5,37 +5,39 @@
 
 <MudContainer MaxWidth="MaxWidth.Large" Class="py-4" data-testid="observability-dashboard">
     <MudStack Spacing="3">
-        <MudStack Row="true" Class="align-center">
-            <MudStack Spacing="0">
-                <MudText Typo="Typo.h4">Observability</MudText>
-                <MudText Typo="Typo.caption" Color="Color.Secondary">@ResolvedServiceName</MudText>
+        <MudStack Spacing="2" Class="observability-dashboard-header">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Spacing="2">
+                <MudStack Spacing="0" Style="flex: 1 1 12rem; min-width: 0;">
+                    <MudText Typo="Typo.h4">Observability</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@ResolvedServiceName</MudText>
+                </MudStack>
+
+                @if (Overview is not null)
+                {
+                    <ObservabilityHealthBadge Status="@Overview.Health" />
+                }
             </MudStack>
 
-            <MudSpacer />
+            <div class="observability-dashboard-actions">
+                @if (ShowExternalLink && ExternalUrl is not null)
+                {
+                    <MudButton Variant="Variant.Outlined"
+                               Size="Size.Small"
+                               Href="@ExternalUrl.ToString()"
+                               Target="_blank"
+                               StartIcon="@Icons.Material.Filled.OpenInNew">
+                        @ExternalLinkText
+                    </MudButton>
+                }
 
-            @if (Overview is not null)
-            {
-                <ObservabilityHealthBadge Status="@Overview.Health" />
-            }
-
-            @if (ShowExternalLink && ExternalUrl is not null)
-            {
                 <MudButton Variant="Variant.Outlined"
                            Size="Size.Small"
-                           Href="@ExternalUrl.ToString()"
-                           Target="_blank"
-                           StartIcon="@Icons.Material.Filled.OpenInNew">
-                    @ExternalLinkText
+                           StartIcon="@Icons.Material.Filled.Refresh"
+                           Disabled="@IsLoading"
+                           OnClick="RefreshAsync">
+                    Refresh
                 </MudButton>
-            }
-
-            <MudButton Variant="Variant.Outlined"
-                       Size="Size.Small"
-                       StartIcon="@Icons.Material.Filled.Refresh"
-                       Disabled="@IsLoading"
-                       OnClick="RefreshAsync">
-                Refresh
-            </MudButton>
+            </div>
         </MudStack>
 
         @if (!string.IsNullOrWhiteSpace(ErrorMessage))
@@ -45,6 +47,7 @@
 
         @if (Overview is not null)
         {
+            <MudText Typo="Typo.subtitle1">Applikation</MudText>
             <ObservabilityOverviewCards Snapshot="@Overview" />
         }
 
@@ -61,6 +64,68 @@
                                               DataTestId="observability-chart-p95-latency" />
             </MudItem>
         </MudGrid>
+
+        @if (ShowExtendedPanels)
+        {
+            <ObservabilityMetricCardRow Title="Host (VM)"
+                                        ColumnWidth="4"
+                                        Cards="@HostCards" />
+
+            <MudGrid>
+                <MudItem xs="12" md="4">
+                    <ObservabilityTimeSeriesChart Title="CPU"
+                                                  Series="@HostCpuSeries"
+                                                  DataTestId="observability-chart-host-cpu" />
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <ObservabilityTimeSeriesChart Title="RAM"
+                                                  Series="@HostMemorySeries"
+                                                  DataTestId="observability-chart-host-memory" />
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <ObservabilityTimeSeriesChart Title="Disk"
+                                                  Series="@HostDiskSeries"
+                                                  DataTestId="observability-chart-host-disk" />
+                </MudItem>
+            </MudGrid>
+
+            <ObservabilityMetricCardRow Title="Runtime (.NET)"
+                                        Cards="@RuntimeCards" />
+
+            <ObservabilityMetricCardRow Title="Database"
+                                        ColumnWidth="6"
+                                        Cards="@DatabaseCards" />
+
+            <MudGrid>
+                <MudItem xs="12" md="6">
+                    <ObservabilityTimeSeriesChart Title="DB query rate"
+                                                  Series="@DbQueryRateSeries"
+                                                  DataTestId="observability-chart-db-rate" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <ObservabilityTimeSeriesChart Title="DB P95 latency"
+                                                  Series="@DbQueryP95Series"
+                                                  DataTestId="observability-chart-db-p95" />
+                </MudItem>
+            </MudGrid>
+
+            <ObservabilityMetricCardRow Title="HTTP (udgående kald)"
+                                        ColumnWidth="6"
+                                        Cards="@HttpCards" />
+
+            <MudGrid>
+                <MudItem xs="12" md="6">
+                    <ObservabilityTimeSeriesChart Title="HTTP client rate"
+                                                  Series="@HttpClientRateSeries"
+                                                  DataTestId="observability-chart-http-rate" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <ObservabilityTimeSeriesChart Title="HTTP client P95"
+                                                  Series="@HttpClientP95Series"
+                                                  DataTestId="observability-chart-http-p95" />
+                </MudItem>
+            </MudGrid>
+        }
 
         <MudText Typo="Typo.caption" Color="Color.Secondary" Class="text-center">
             Last updated: @(Overview?.QueriedAtUtc.ToLocalTime().ToString("g") ?? "—")
@@ -80,7 +145,10 @@
     public bool ShowExternalLink { get; set; } = true;
 
     [Parameter]
-    public string ExternalLinkText { get; set; } = "Open full observability";
+    public string ExternalLinkText { get; set; } = "SigNoz";
+
+    [Parameter]
+    public bool ShowExtendedPanels { get; set; } = true;
 
     [Parameter]
     public int AutoRefreshSeconds { get; set; }
@@ -88,6 +156,17 @@
     private ObservabilityOverviewSnapshot? Overview;
     private ObservabilityTimeSeriesResult? RequestRateSeries;
     private ObservabilityTimeSeriesResult? P95Series;
+    private ObservabilityTimeSeriesResult? HostCpuSeries;
+    private ObservabilityTimeSeriesResult? HostMemorySeries;
+    private ObservabilityTimeSeriesResult? HostDiskSeries;
+    private ObservabilityTimeSeriesResult? DbQueryRateSeries;
+    private ObservabilityTimeSeriesResult? DbQueryP95Series;
+    private ObservabilityTimeSeriesResult? HttpClientRateSeries;
+    private ObservabilityTimeSeriesResult? HttpClientP95Series;
+    private IReadOnlyList<ObservabilityMetricCardModel> HostCards = [];
+    private IReadOnlyList<ObservabilityMetricCardModel> RuntimeCards = [];
+    private IReadOnlyList<ObservabilityMetricCardModel> DatabaseCards = [];
+    private IReadOnlyList<ObservabilityMetricCardModel> HttpCards = [];
     private Uri? ExternalUrl;
     private string? ErrorMessage;
     private bool IsLoading;
@@ -136,6 +215,11 @@
                 ObservabilityPanelId.P95Latency,
                 ResolvedServiceName,
                 timeRange);
+
+            if (ShowExtendedPanels)
+            {
+                await LoadExtendedPanelsAsync(timeRange);
+            }
         }
         catch (Exception ex)
         {
@@ -145,6 +229,52 @@
         {
             IsLoading = false;
         }
+    }
+
+    private async Task LoadExtendedPanelsAsync(ObservabilityTimeRange timeRange)
+    {
+        var hostCpu = await DashboardService.GetScalarAsync(ObservabilityPanelId.HostCpuUtilization, ResolvedServiceName, timeRange);
+        var hostMemory = await DashboardService.GetScalarAsync(ObservabilityPanelId.HostMemoryUtilization, ResolvedServiceName, timeRange);
+        var hostDisk = await DashboardService.GetScalarAsync(ObservabilityPanelId.HostDiskUtilization, ResolvedServiceName, timeRange);
+        var gcHeap = await DashboardService.GetScalarAsync(ObservabilityPanelId.RuntimeGcHeap, ResolvedServiceName, timeRange);
+        var processMemory = await DashboardService.GetScalarAsync(ObservabilityPanelId.RuntimeProcessMemory, ResolvedServiceName, timeRange);
+        var dbRate = await DashboardService.GetScalarAsync(ObservabilityPanelId.DbQueryRate, ResolvedServiceName, timeRange);
+        var dbP95 = await DashboardService.GetScalarAsync(ObservabilityPanelId.DbQueryP95, ResolvedServiceName, timeRange);
+        var httpRate = await DashboardService.GetScalarAsync(ObservabilityPanelId.HttpClientRate, ResolvedServiceName, timeRange);
+        var httpP95 = await DashboardService.GetScalarAsync(ObservabilityPanelId.HttpClientP95, ResolvedServiceName, timeRange);
+
+        HostCards =
+        [
+            new("CPU", hostCpu, Color.Primary, Icons.Material.Filled.Memory, "observability-metric-host-cpu"),
+            new("RAM", hostMemory, Color.Info, Icons.Material.Filled.Storage, "observability-metric-host-memory"),
+            new("Disk", hostDisk, Color.Warning, Icons.Material.Filled.SdStorage, "observability-metric-host-disk")
+        ];
+
+        RuntimeCards =
+        [
+            new("GC heap", gcHeap, Color.Secondary, Icons.Material.Filled.Recycling, "observability-metric-runtime-gc"),
+            new("Process memory", processMemory, Color.Secondary, Icons.Material.Filled.DataUsage, "observability-metric-runtime-memory")
+        ];
+
+        DatabaseCards =
+        [
+            new("Query rate", dbRate, Color.Tertiary, Icons.Material.Filled.TableChart, "observability-metric-db-rate"),
+            new("P95 latency", dbP95, Color.Tertiary, Icons.Material.Filled.QueryStats, "observability-metric-db-p95")
+        ];
+
+        HttpCards =
+        [
+            new("Outbound rate", httpRate, Color.Success, Icons.Material.Filled.CloudUpload, "observability-metric-http-rate"),
+            new("P95 latency", httpP95, Color.Success, Icons.Material.Filled.NetworkCheck, "observability-metric-http-p95")
+        ];
+
+        HostCpuSeries = await DashboardService.GetPanelAsync(ObservabilityPanelId.HostCpuUtilization, ResolvedServiceName, timeRange);
+        HostMemorySeries = await DashboardService.GetPanelAsync(ObservabilityPanelId.HostMemoryUtilization, ResolvedServiceName, timeRange);
+        HostDiskSeries = await DashboardService.GetPanelAsync(ObservabilityPanelId.HostDiskUtilization, ResolvedServiceName, timeRange);
+        DbQueryRateSeries = await DashboardService.GetPanelAsync(ObservabilityPanelId.DbQueryRate, ResolvedServiceName, timeRange);
+        DbQueryP95Series = await DashboardService.GetPanelAsync(ObservabilityPanelId.DbQueryP95, ResolvedServiceName, timeRange);
+        HttpClientRateSeries = await DashboardService.GetPanelAsync(ObservabilityPanelId.HttpClientRate, ResolvedServiceName, timeRange);
+        HttpClientP95Series = await DashboardService.GetPanelAsync(ObservabilityPanelId.HttpClientP95, ResolvedServiceName, timeRange);
     }
 
     public void Dispose()

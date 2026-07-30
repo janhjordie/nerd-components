@@ -66,6 +66,17 @@ public sealed class ObservabilityDashboardService : IObservabilityDashboardServi
     }
 
     /// <inheritdoc />
+    public Task<ObservabilityScalarResult?> GetScalarAsync(
+        ObservabilityPanelId panelId,
+        string serviceName,
+        ObservabilityTimeRange? timeRange = null,
+        CancellationToken cancellationToken = default)
+    {
+        var resolvedRange = timeRange ?? _options.GetDefaultTimeRange();
+        return QueryScalarPanelAsync(panelId, serviceName, resolvedRange, cancellationToken);
+    }
+
+    /// <inheritdoc />
     public Uri? GetExternalDashboardUrl(string? serviceName = null)
     {
         if (string.IsNullOrWhiteSpace(_options.ExternalDashboardBaseUrl))

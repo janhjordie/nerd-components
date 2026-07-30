@@ -128,6 +128,30 @@ public sealed class ObservabilityDashboardTests : ObservabilityComponentTestCont
                  new ObservabilityTimeSeriesPoint(DateTimeOffset.UtcNow, 3.5)]));
         }
 
+        public Task<ObservabilityScalarResult?> GetScalarAsync(
+            ObservabilityPanelId panelId,
+            string serviceName,
+            ObservabilityTimeRange? timeRange = null,
+            CancellationToken cancellationToken = default)
+        {
+            var definition = ObservabilityPanelCatalog.GetDefinition(panelId);
+            var value = panelId switch
+            {
+                ObservabilityPanelId.HostCpuUtilization => 0.42,
+                ObservabilityPanelId.HostMemoryUtilization => 0.61,
+                ObservabilityPanelId.HostDiskUtilization => 0.35,
+                ObservabilityPanelId.RuntimeGcHeap => 52_428_800,
+                ObservabilityPanelId.RuntimeProcessMemory => 104_857_600,
+                ObservabilityPanelId.DbQueryRate => 12.5,
+                ObservabilityPanelId.DbQueryP95 => 45,
+                ObservabilityPanelId.HttpClientRate => 2.1,
+                ObservabilityPanelId.HttpClientP95 => 180,
+                _ => 1.0
+            };
+            return Task.FromResult<ObservabilityScalarResult?>(
+                new ObservabilityScalarResult(value, definition.Unit, definition.Title));
+        }
+
         public Uri? GetExternalDashboardUrl(string? serviceName = null) => null;
     }
 }
