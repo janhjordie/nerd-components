@@ -345,12 +345,12 @@ Public MudBlazor ops dashboard reading OpenTelemetry backends (SigNoz v1). Does 
 
 | ID | P | Status | Task | DoD (verifiable) | Evidence | Source |
 |----|---|--------|------|------------------|----------|--------|
-| HR-176 | P0 | open | Scaffold packages | `Blazor.Observability` + `MudComponents.ObservabilityDashboard` in sln; `publish-packages.yml`; README stubs; net10.0 Apache-2.0 | csproj + sln + workflow | Observability plan §5–6 |
-| HR-177 | P0 | open | Core abstractions | `IObservabilityBackend`, `IObservabilityDashboardService`, DTOs per spec §3.2 | Public API + XML docs | Plan §3.1–3.2 |
-| HR-178 | P0 | open | SigNoz query builder | 4 preset panels match Consent `consent-host-overview.json`; golden JSON unit tests | `SigNozQueryBuilderTests` | Plan §3.4 |
-| HR-179 | P0 | open | SigNoz backend | Mocked HTTP parses v4 `query_range`; Bearer auth from options | `SigNozObservabilityBackendTests` | Plan §3.4 |
-| HR-180 | P0 | open | DI + dashboard service | `AddObservabilityDashboard()`; options bind; overview snapshot | Extension + service tests | Plan §3.3 |
-| HR-181 | P0 | open | Minimal API endpoints | `/api/observability/*` routes; README documents host `[Authorize]` | Endpoint tests | Plan §3.3 |
+| HR-176 | P0 | done | Scaffold packages | `Blazor.Observability` + `MudComponents.ObservabilityDashboard` in sln; `publish-packages.yml`; README stubs; net10.0 Apache-2.0 | csproj + sln + workflow | Observability plan §5–6 |
+| HR-177 | P0 | done | Core abstractions | `IObservabilityBackend`, `IObservabilityDashboardService`, DTOs per spec §3.2 | Public API + XML docs | Plan §3.1–3.2 |
+| HR-178 | P0 | done | SigNoz query builder | 4 preset panels match Consent `consent-host-overview.json`; golden JSON unit tests | `SigNozQueryBuilderTests` | Plan §3.4 |
+| HR-179 | P0 | done | SigNoz backend | Mocked HTTP parses v4 `query_range`; Bearer auth from options | `SigNozObservabilityBackendTests` | Plan §3.4 |
+| HR-180 | P0 | done | DI + dashboard service | `AddObservabilityDashboard()`; options bind; overview snapshot | Extension + service tests | Plan §3.3 |
+| HR-181 | P0 | done | Minimal API endpoints | `/api/observability/*` routes; README documents host `[Authorize]` | Endpoint tests | Plan §3.3 |
 
 ### Fase 2 — MudBlazor UI
 
@@ -401,10 +401,10 @@ Licence gate, pricing, hosted Studio, multi-framework adapters (**HR-111–HR-11
 
 | Status | Count |
 |--------|------:|
-| **open** | **33** |
+| **open** | **27** |
 | **in_progress** | **0** |
 | **partial** | **0** |
-| **done** | **117** |
+| **done** | **123** |
 | **parked** | **1** |
 | **Total** | **151** |
 
