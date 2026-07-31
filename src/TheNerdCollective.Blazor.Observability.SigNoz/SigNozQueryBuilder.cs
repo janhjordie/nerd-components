@@ -7,19 +7,30 @@ namespace TheNerdCollective.Blazor.Observability.SigNoz;
 public static class SigNozQueryBuilder
 {
     /// <summary>Builds a SigNoz <c>/api/v5/query_range</c> request body.</summary>
-    public static JsonObject BuildQueryRangeRequest(ObservabilityPanelQuery query)
+    /// <param name="schemaVersion">Optional schema version (<c>v1</c>, <c>v2</c>). Omit for forward-compatible payloads.</param>
+    public static JsonObject BuildQueryRangeRequest(ObservabilityPanelQuery query, string? schemaVersion = null)
     {
         var stepSeconds = Math.Max(1, (int)query.TimeRange.Step.TotalSeconds);
-        var startMs = query.TimeRange.Start.ToUnixTimeMilliseconds();
-        var endMs = query.TimeRange.End.ToUnixTimeMilliseconds();
-
-        return new JsonObject
+        var body = new JsonObject
         {
-            ["start"] = startMs,
-            ["end"] = endMs,
+            ["start"] = query.TimeRange.Start.ToUnixTimeMilliseconds(),
+            ["end"] = query.TimeRange.End.ToUnixTimeMilliseconds(),
             ["requestType"] = "time_series",
             ["compositeQuery"] = BuildCompositeQuery(query.PanelId, query.ServiceName, stepSeconds)
         };
+
+        ApplySchemaVersion(body, schemaVersion);
+        return body;
+    }
+
+    /// <summary>Sets or removes <c>schemaVersion</c> on a query_range body.</summary>
+    public static void ApplySchemaVersion(JsonObject body, string? schemaVersion)
+    {
+        body.Remove("schemaVersion");
+        if (!string.IsNullOrWhiteSpace(schemaVersion))
+        {
+            body["schemaVersion"] = schemaVersion;
+        }
     }
 
     internal static JsonObject BuildCompositeQuery(

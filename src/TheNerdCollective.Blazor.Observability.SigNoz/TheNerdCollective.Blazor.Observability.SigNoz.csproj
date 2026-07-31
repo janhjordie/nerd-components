@@ -7,7 +7,7 @@
     <RootNamespace>TheNerdCollective.Blazor.Observability.SigNoz</RootNamespace>
     <AssemblyName>TheNerdCollective.Blazor.Observability.SigNoz</AssemblyName>
     <PackageId>TheNerdCollective.Blazor.Observability.SigNoz</PackageId>
-    <Version>1.1.2</Version>
+    <Version>1.1.3</Version>
     <Authors>The Nerd Collective</Authors>
     <Description>SigNoz query adapter for TheNerdCollective.Blazor.Observability. Maps preset panels to SigNoz v4 APIs.</Description>
     <PackageTags>blazor;observability;opentelemetry;signoz;adapter</PackageTags>

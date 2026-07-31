@@ -21,6 +21,10 @@ public static class SigNozResponseParser
         var definition = ObservabilityPanelCatalog.GetDefinition(panelId);
         var root = JsonNode.Parse(json) as JsonObject;
         var points = ExtractPoints(root);
+        if (points.Count == 0)
+        {
+            points = ExtractPointsDeep(root);
+        }
 
         return new ObservabilityTimeSeriesResult(definition.Legend, definition.Unit, points);
     }
@@ -107,6 +111,46 @@ public static class SigNozResponseParser
 
         points.Sort(static (a, b) => a.Timestamp.CompareTo(b.Timestamp));
         return points;
+    }
+
+    /// <summary>Deep fallback when v5 shape differs from expected (mirrors probe jq walk).</summary>
+    private static List<ObservabilityTimeSeriesPoint> ExtractPointsDeep(JsonObject? root)
+    {
+        var points = new List<ObservabilityTimeSeriesPoint>();
+        if (root is null)
+        {
+            return points;
+        }
+
+        WalkNode(root, points);
+        points.Sort(static (a, b) => a.Timestamp.CompareTo(b.Timestamp));
+        return points;
+    }
+
+    private static void WalkNode(JsonNode? node, List<ObservabilityTimeSeriesPoint> points)
+    {
+        switch (node)
+        {
+            case JsonObject obj:
+                if (obj.ContainsKey("values"))
+                {
+                    AppendValuesArray(obj["values"], points);
+                }
+
+                foreach (var child in obj)
+                {
+                    WalkNode(child.Value, points);
+                }
+
+                break;
+            case JsonArray array:
+                foreach (var item in array)
+                {
+                    WalkNode(item, points);
+                }
+
+                break;
+        }
     }
 
     private static void AppendV5Aggregations(JsonNode? aggregationsNode, List<ObservabilityTimeSeriesPoint> points)

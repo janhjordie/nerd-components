@@ -13,6 +13,7 @@ public sealed class SigNozQueryBuilderTests
         var body = SigNozQueryBuilder.BuildQueryRangeRequest(query);
 
         Assert.Equal("time_series", body["requestType"]?.GetValue<string>());
+        Assert.Null(body["schemaVersion"]);
         var spec = body["compositeQuery"]?["queries"]?[0]?["spec"] as JsonObject;
         Assert.NotNull(spec);
         Assert.Equal("signoz_latency.count", spec["aggregations"]?[0]?["metricName"]?.GetValue<string>());
@@ -94,6 +95,24 @@ public sealed class SigNozQueryBuilderTests
 
         Assert.Equal("system.filesystem.utilization", spec?["aggregations"]?[0]?["metricName"]?.GetValue<string>());
         Assert.Contains("mountpoint = '/'", spec?["filter"]?["expression"]?.GetValue<string>());
+    }
+
+    [Fact]
+    public void BuildQueryRangeRequest_with_schemaVersion_includes_field()
+    {
+        var query = CreateQuery(ObservabilityPanelId.RequestRate);
+        var body = SigNozQueryBuilder.BuildQueryRangeRequest(query, "v1");
+
+        Assert.Equal("v1", body["schemaVersion"]?.GetValue<string>());
+    }
+
+    [Fact]
+    public void ApplySchemaVersion_removes_field_when_null()
+    {
+        var body = SigNozQueryBuilder.BuildQueryRangeRequest(CreateQuery(ObservabilityPanelId.RequestRate), "v2");
+        SigNozQueryBuilder.ApplySchemaVersion(body, null);
+
+        Assert.Null(body["schemaVersion"]);
     }
 
     [Fact]
