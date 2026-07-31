@@ -99,9 +99,11 @@ public sealed class SigNozObservabilityBackendTests
     private static SigNozObservabilityBackend CreateBackend(
         HttpMessageHandler handler,
         string? apiToken = null,
-        double unhealthyErrorPercentage = 0.05)
+        double unhealthyErrorPercentage = 0.05,
+        IEnumerable<ISigNozQueryMutator>? mutators = null)
     {
         var client = new HttpClient(handler) { BaseAddress = new Uri("http://signoz.test") };
+        var factory = new TestHttpClientFactory(client);
         var options = Options.Create(new ObservabilityDashboardOptions
         {
             UnhealthyErrorPercentage = unhealthyErrorPercentage
@@ -112,7 +114,16 @@ public sealed class SigNozObservabilityBackendTests
             ApiToken = apiToken
         });
 
-        return new SigNozObservabilityBackend(new TestHttpClientFactory(client), signoz, options);
+        var parsers = new ISigNozResponseParser[]
+        {
+            new BuiltInSigNozResponseParser(),
+            new DeepWalkSigNozResponseParser()
+        };
+        var coordinator = new SigNozResponseParserCoordinator(parsers);
+        var profileProvider = new SigNozRuntimeProfileProvider(signoz);
+        var queryClient = new SigNozQueryClient(factory, signoz, profileProvider, coordinator, mutators ?? []);
+
+        return new SigNozObservabilityBackend(factory, signoz, options, queryClient, coordinator);
     }
 
     private static HttpResponseMessage JsonResponse(string json) =>

@@ -1,29 +1,21 @@
 using System.Net.Http.Json;
-using System.Text;
-using System.Text.Json.Nodes;
 using Microsoft.Extensions.Options;
 using TheNerdCollective.Blazor.Observability;
 
 namespace TheNerdCollective.Blazor.Observability.SigNoz;
 
 /// <summary>SigNoz-backed observability queries via HTTP API.</summary>
-public sealed class SigNozObservabilityBackend : IObservabilityBackend
+public sealed class SigNozObservabilityBackend(
+    IHttpClientFactory httpClientFactory,
+    IOptions<SigNozBackendOptions> signozOptions,
+    IOptions<ObservabilityDashboardOptions> dashboardOptions,
+    ISigNozQueryClient queryClient,
+    SigNozResponseParserCoordinator parserCoordinator) : IObservabilityBackend
 {
     public const string HttpClientName = "TheNerdCollective.Blazor.Observability.SigNoz";
 
-    private readonly HttpClient _httpClient;
-    private readonly SigNozBackendOptions _signozOptions;
-    private readonly ObservabilityDashboardOptions _dashboardOptions;
-
-    public SigNozObservabilityBackend(
-        IHttpClientFactory httpClientFactory,
-        IOptions<SigNozBackendOptions> signozOptions,
-        IOptions<ObservabilityDashboardOptions> dashboardOptions)
-    {
-        _httpClient = httpClientFactory.CreateClient(HttpClientName);
-        _signozOptions = signozOptions.Value;
-        _dashboardOptions = dashboardOptions.Value;
-    }
+    private readonly SigNozBackendOptions _signozOptions = signozOptions.Value;
+    private readonly ObservabilityDashboardOptions _dashboardOptions = dashboardOptions.Value;
 
     /// <inheritdoc />
     public string BackendId => "signoz";
@@ -40,27 +32,25 @@ public sealed class SigNozObservabilityBackend : IObservabilityBackend
             tags = Array.Empty<object>()
         };
 
-        using var request = CreateRequest(HttpMethod.Post, "/api/v1/services", payload);
-        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        var client = httpClientFactory.CreateClient(HttpClientName);
+        using var request = CreateRequest(client, HttpMethod.Post, "/api/v1/services", payload);
+        using var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
 
         var json = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-        return SigNozResponseParser.ParseServices(json);
+        var parseContext = new SigNozParseContext(
+            ObservabilityPanelId.RequestRate,
+            _signozOptions.QueryRangePath ?? SigNozBackendOptions.DefaultQueryRangePath,
+            _signozOptions.SchemaVersion,
+            (int)response.StatusCode);
+        return parserCoordinator.ParseServices(json, parseContext);
     }
 
     /// <inheritdoc />
-    public async Task<ObservabilityTimeSeriesResult> QueryTimeSeriesAsync(
+    public Task<ObservabilityTimeSeriesResult> QueryTimeSeriesAsync(
         ObservabilityPanelQuery query,
-        CancellationToken cancellationToken = default)
-    {
-        var body = SigNozQueryBuilder.BuildQueryRangeRequest(query);
-        using var request = CreateJsonRequest(HttpMethod.Post, "/api/v5/query_range", body);
-        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
-
-        var json = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-        return SigNozResponseParser.ParseTimeSeries(json, query.PanelId);
-    }
+        CancellationToken cancellationToken = default) =>
+        queryClient.QueryTimeSeriesAsync(query, overrides: null, cancellationToken);
 
     /// <inheritdoc />
     public async Task<ObservabilityScalarResult> QueryScalarAsync(
@@ -108,39 +98,19 @@ public sealed class SigNozObservabilityBackend : IObservabilityBackend
         return new ObservabilityHealthSummary(serviceName, status, message, DateTimeOffset.UtcNow);
     }
 
-    private HttpRequestMessage CreateRequest(HttpMethod method, string path, object payload)
+    private HttpRequestMessage CreateRequest(HttpClient client, HttpMethod method, string path, object payload)
     {
-        var request = new HttpRequestMessage(method, BuildUri(path))
+        var request = new HttpRequestMessage(method, $"{_signozOptions.BaseUrl.TrimEnd('/')}{path}")
         {
             Content = JsonContent.Create(payload)
         };
-        ApplyAuth(request);
-        return request;
-    }
 
-    private HttpRequestMessage CreateJsonRequest(HttpMethod method, string path, JsonNode payload)
-    {
-        var json = payload.ToJsonString();
-        var request = new HttpRequestMessage(method, BuildUri(path))
-        {
-            Content = new StringContent(json, Encoding.UTF8, "application/json")
-        };
-        ApplyAuth(request);
-        return request;
-    }
-
-    private void ApplyAuth(HttpRequestMessage request)
-    {
         if (!string.IsNullOrWhiteSpace(_signozOptions.ApiToken))
         {
             request.Headers.TryAddWithoutValidation("SIGNOZ-API-KEY", _signozOptions.ApiToken);
         }
-    }
 
-    private Uri BuildUri(string path)
-    {
-        var baseUrl = _signozOptions.BaseUrl.TrimEnd('/');
-        return new Uri($"{baseUrl}{path}");
+        return request;
     }
 
     private static string FormatRelativeTime(DateTimeOffset timestamp)

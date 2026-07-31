@@ -7,7 +7,7 @@
     <RootNamespace>TheNerdCollective.Blazor.Observability</RootNamespace>
     <AssemblyName>TheNerdCollective.Blazor.Observability</AssemblyName>
     <PackageId>TheNerdCollective.Blazor.Observability</PackageId>
-    <Version>1.1.3</Version>
+    <Version>1.2.0</Version>
     <Authors>The Nerd Collective</Authors>
     <Description>Backend-agnostic observability dashboard services for Blazor Server apps. IObservabilityBackend abstraction, minimal API endpoints, and OpenTelemetry-friendly panel presets.</Description>
     <PackageTags>blazor;observability;opentelemetry;signoz;metrics;dashboard</PackageTags>
