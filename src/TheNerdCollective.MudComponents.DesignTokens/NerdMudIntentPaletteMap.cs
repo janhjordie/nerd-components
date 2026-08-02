@@ -30,7 +30,7 @@ public static class NerdMudIntentPaletteMap
         }
 
         var bundle = NerdMudBrandPaletteMap.ResolveAliasBundle(options, alias, mode);
-        var map = ApplyIntentOverrides(brand, alias, bundle);
+        var map = ApplyIntentOverrides(brand, options, mode, alias, bundle);
         return ApplyBrandChromeInputPaletteOverrides(options, alias, map, mode);
     }
 
@@ -160,9 +160,7 @@ public static class NerdMudIntentPaletteMap
 
         if (string.Equals(aliasName, NerdDesignSystemUi.PageSurface, StringComparison.OrdinalIgnoreCase))
         {
-            css.AppendLine($"  --mud-palette-surface: var({variable}){importantSuffix};");
-            css.AppendLine($"  --mud-palette-background: var({variable}){importantSuffix};");
-            css.AppendLine($"  --mud-palette-text-primary: var({contentVariable}){importantSuffix};");
+            AppendPageSurfacePaletteOverrides(css, variable, contentVariable, importantSuffix);
             return;
         }
 
@@ -209,6 +207,8 @@ public static class NerdMudIntentPaletteMap
 
     private static NerdMudBrandPaletteMap ApplyIntentOverrides(
         NerdMudBrandPaletteMap brand,
+        NerdDesignTokenOptions options,
+        NerdMudPaletteMode mode,
         string alias,
         NerdMudAliasColorBundle bundle)
     {
@@ -284,12 +284,7 @@ public static class NerdMudIntentPaletteMap
 
         if (string.Equals(alias, NerdDesignSystemUi.PageSurface, StringComparison.OrdinalIgnoreCase))
         {
-            return brand with
-            {
-                Surface = bundle.Surface,
-                Background = bundle.Surface,
-                TextPrimary = bundle.Content
-            };
+            return ApplyPageSurfacePaletteOverrides(brand, options, bundle, mode);
         }
 
         if (string.Equals(alias, NerdDesignSystemUi.BrandChrome, StringComparison.OrdinalIgnoreCase))
@@ -327,6 +322,67 @@ public static class NerdMudIntentPaletteMap
             LinesDefault = bundle.Border,
             LinesInputs = bundle.Border
         };
+    }
+
+    private static NerdMudBrandPaletteMap ApplyPageSurfacePaletteOverrides(
+        NerdMudBrandPaletteMap brand,
+        NerdDesignTokenOptions options,
+        NerdMudAliasColorBundle bundle,
+        NerdMudPaletteMode mode)
+    {
+        var secondary = NerdMudBrandPaletteMap.ResolveAliasBundle(options, NerdDesignSystemUi.SecondaryAction, mode);
+        var muted = NerdMudBrandPaletteMap.ResolveAliasBundle(options, NerdDesignSystemUi.MutedContent, mode);
+        return brand with
+        {
+            Surface = bundle.Surface,
+            Background = bundle.Surface,
+            TextPrimary = bundle.Content,
+            TextSecondary = muted.Color,
+            Primary = secondary.Color,
+            PrimaryText = secondary.Text,
+            PrimaryHover = secondary.Hover,
+            Secondary = secondary.Color,
+            SecondaryText = secondary.Text,
+            ActionDefault = muted.Color,
+            Info = secondary.Color,
+            InfoText = bundle.Content,
+            Success = secondary.Color,
+            SuccessText = bundle.Content,
+            LinesDefault = secondary.Border,
+            LinesInputs = secondary.Border
+        };
+    }
+
+    private static void AppendPageSurfacePaletteOverrides(
+        StringBuilder css,
+        string surfaceVariable,
+        string contentVariable,
+        string importantSuffix)
+    {
+        var prefixEnd = surfaceVariable.IndexOf("-color-", StringComparison.Ordinal);
+        var prefix = prefixEnd > 2 ? surfaceVariable[2..prefixEnd] : "nerd";
+        var secondaryVariable = $"--{prefix}-color-{NerdDesignSystemUi.SecondaryAction}";
+        var secondaryTextVariable = $"{secondaryVariable}-text";
+        var secondaryHoverVariable = $"{secondaryVariable}-hover";
+        var secondaryBorderVariable = $"{secondaryVariable}-border";
+        var mutedVariable = $"--{prefix}-color-{NerdDesignSystemUi.MutedContent}";
+
+        css.AppendLine($"  --mud-palette-surface: var({surfaceVariable}){importantSuffix};");
+        css.AppendLine($"  --mud-palette-background: var({surfaceVariable}){importantSuffix};");
+        css.AppendLine($"  --mud-palette-text-primary: var({contentVariable}){importantSuffix};");
+        css.AppendLine($"  --mud-palette-text-secondary: var({mutedVariable}){importantSuffix};");
+        css.AppendLine($"  --mud-palette-primary: var({secondaryVariable}){importantSuffix};");
+        css.AppendLine($"  --mud-palette-primary-text: var({secondaryTextVariable}){importantSuffix};");
+        css.AppendLine($"  --mud-palette-primary-hover: var({secondaryHoverVariable}){importantSuffix};");
+        css.AppendLine($"  --mud-palette-secondary: var({secondaryVariable}){importantSuffix};");
+        css.AppendLine($"  --mud-palette-secondary-text: var({secondaryTextVariable}){importantSuffix};");
+        css.AppendLine($"  --mud-palette-action-default: var({mutedVariable}){importantSuffix};");
+        css.AppendLine($"  --mud-palette-info: var({secondaryVariable}){importantSuffix};");
+        css.AppendLine($"  --mud-palette-info-text: var({contentVariable}){importantSuffix};");
+        css.AppendLine($"  --mud-palette-success: var({secondaryVariable}){importantSuffix};");
+        css.AppendLine($"  --mud-palette-success-text: var({contentVariable}){importantSuffix};");
+        css.AppendLine($"  --mud-palette-lines-default: var({secondaryBorderVariable}, var({secondaryVariable})){importantSuffix};");
+        css.AppendLine($"  --mud-palette-lines-inputs: var({secondaryBorderVariable}, var({secondaryVariable})){importantSuffix};");
     }
 
     private static bool IsPaletteFirstIntentAlias(string aliasName) =>

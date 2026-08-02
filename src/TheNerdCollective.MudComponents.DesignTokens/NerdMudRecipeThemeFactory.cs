@@ -1,4 +1,5 @@
 using MudBlazor;
+using TheNerdCollective.MudComponents.Shared;
 
 namespace TheNerdCollective.MudComponents.DesignTokens;
 
@@ -46,6 +47,19 @@ public static class NerdMudRecipeThemeFactory
             LinesDefault = border,
             LinesInputs = border
         };
+
+        if (NerdColorParser.ContrastRatio(surface, content) >= 4.5 && !NerdColorParser.IsLight(content))
+        {
+            map = map with
+            {
+                TextSecondary = content,
+                ActionDefault = content,
+                Info = content,
+                InfoText = content,
+                Success = content,
+                SuccessText = content
+            };
+        }
 
         return new MudTheme
         {
