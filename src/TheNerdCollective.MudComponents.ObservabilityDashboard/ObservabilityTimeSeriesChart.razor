@@ -38,7 +38,7 @@
         new()
         {
             Name = Series?.Legend ?? "Series",
-            Data = new ChartData<double>(Series?.Points.Select(point => point.Value).ToArray() ?? [])
+            Data = new ChartData<double>(Series?.Points.Select(point => ObservabilityValueFormatter.ToChartValue(point.Value, Series?.Unit ?? string.Empty)).ToArray() ?? [])
         }
     ];
 }

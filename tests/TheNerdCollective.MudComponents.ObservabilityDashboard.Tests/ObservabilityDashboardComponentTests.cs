@@ -69,6 +69,14 @@ public sealed class ObservabilityTimeSeriesChartTests : ObservabilityComponentTe
 
         Assert.Contains("No time series data", cut.Markup);
     }
+
+    [Fact]
+    public void ToChartValue_scales_percentunit_values_for_display()
+    {
+        Assert.Equal(12, ObservabilityValueFormatter.ToChartValue(0.12, "percentunit"));
+        Assert.Equal(42, ObservabilityValueFormatter.ToChartValue(0.42, "percentunit"));
+        Assert.Equal(3.5, ObservabilityValueFormatter.ToChartValue(3.5, "reqps"));
+    }
 }
 
 public sealed class ObservabilityDashboardTests : ObservabilityComponentTestContext

@@ -110,12 +110,31 @@ public sealed class ObservabilityDashboardService : IObservabilityDashboardServi
             }
 
             var definition = ObservabilityPanelCatalog.GetDefinition(panelId);
-            return new ObservabilityScalarResult(series.Points[^1].Value, definition.Unit, definition.Title);
+            var value = ResolveScalarValue(panelId, series.Points);
+            return new ObservabilityScalarResult(value, definition.Unit, definition.Title);
         }
         catch
         {
             return null;
         }
+    }
+
+    private static double ResolveScalarValue(
+        ObservabilityPanelId panelId,
+        IReadOnlyList<ObservabilityTimeSeriesPoint> points)
+    {
+        if (points.Count == 0)
+        {
+            return 0;
+        }
+
+        return panelId switch
+        {
+            ObservabilityPanelId.HostCpuUtilization
+                or ObservabilityPanelId.HostMemoryUtilization
+                or ObservabilityPanelId.HostDiskUtilization => points.Max(point => point.Value),
+            _ => points[^1].Value
+        };
     }
 
     private ObservabilityHealthStatus ResolveHealth(

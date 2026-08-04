@@ -9,4 +9,5 @@ public sealed record ObservabilityMetricCardModel(
     ObservabilityScalarResult? Value,
     Color Color,
     string Icon,
-    string DataTestId);
+    string DataTestId,
+    string? Subtitle = null);

@@ -29,6 +29,12 @@ public static class ObservabilityValueFormatter
             _ => value.ToString("F2", CultureInfo.InvariantCulture)
         };
 
+    /// <summary>Converts a stored metric value to the scale used by MudBlazor charts.</summary>
+    public static double ToChartValue(double value, string unit) =>
+        string.Equals(unit, "percentunit", StringComparison.Ordinal)
+            ? value * 100
+            : value;
+
     private static string FormatBytes(double bytes)
     {
         if (bytes >= 1_073_741_824)

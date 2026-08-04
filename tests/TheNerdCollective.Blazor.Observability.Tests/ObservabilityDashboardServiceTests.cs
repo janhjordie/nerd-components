@@ -28,6 +28,22 @@ public sealed class ObservabilityDashboardServiceTests
     }
 
     [Fact]
+    public async Task GetScalarAsync_host_cpu_uses_max_over_window()
+    {
+        var backend = new HostScalarBackend();
+        var service = new ObservabilityDashboardService(
+            backend,
+            Options.Create(new ObservabilityDashboardOptions { DefaultServiceName = "nerd-consent-host" }));
+        var timeRange = ObservabilityTimeRange.LastMinutes(15);
+
+        var cpu = await service.GetScalarAsync(ObservabilityPanelId.HostCpuUtilization, "nerd-consent-host", timeRange);
+        var requestRate = await service.GetScalarAsync(ObservabilityPanelId.RequestRate, "nerd-consent-host", timeRange);
+
+        Assert.Equal(0.42, cpu?.Value);
+        Assert.Equal(1.5, requestRate?.Value);
+    }
+
+    [Fact]
     public void GetExternalDashboardUrl_appends_service_query_when_configured()
     {
         var service = new ObservabilityDashboardService(
@@ -111,5 +127,54 @@ public sealed class ObservabilityDashboardServiceTests
                 ObservabilityPanelId.ErrorPercentage => 0.01,
                 _ => 0
             };
+    }
+
+    private sealed class HostScalarBackend : IObservabilityBackend
+    {
+        public string BackendId => "host-scalar";
+
+        public Task<IReadOnlyList<ObservabilityServiceInfo>> ListServicesAsync(
+            ObservabilityQueryContext context,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<ObservabilityServiceInfo>>([]);
+
+        public Task<ObservabilityTimeSeriesResult> QueryTimeSeriesAsync(
+            ObservabilityPanelQuery query,
+            CancellationToken cancellationToken = default)
+        {
+            var points = query.PanelId switch
+            {
+                ObservabilityPanelId.HostCpuUtilization =>
+                [
+                    new ObservabilityTimeSeriesPoint(DateTimeOffset.UtcNow.AddMinutes(-5), 0.12),
+                    new ObservabilityTimeSeriesPoint(DateTimeOffset.UtcNow.AddMinutes(-1), 0.42),
+                    new ObservabilityTimeSeriesPoint(DateTimeOffset.UtcNow, 0.18)
+                ],
+                ObservabilityPanelId.RequestRate =>
+                [
+                    new ObservabilityTimeSeriesPoint(DateTimeOffset.UtcNow.AddMinutes(-1), 2.0),
+                    new ObservabilityTimeSeriesPoint(DateTimeOffset.UtcNow, 1.5)
+                ],
+                _ => Array.Empty<ObservabilityTimeSeriesPoint>()
+            };
+
+            var definition = ObservabilityPanelCatalog.GetDefinition(query.PanelId);
+            return Task.FromResult(new ObservabilityTimeSeriesResult(definition.Legend, definition.Unit, points));
+        }
+
+        public Task<ObservabilityScalarResult> QueryScalarAsync(
+            ObservabilityPanelQuery query,
+            CancellationToken cancellationToken = default) =>
+            throw new NotSupportedException();
+
+        public Task<ObservabilityHealthSummary> GetHealthSummaryAsync(
+            string serviceName,
+            ObservabilityQueryContext context,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult(new ObservabilityHealthSummary(
+                serviceName,
+                ObservabilityHealthStatus.Healthy,
+                null,
+                DateTimeOffset.UtcNow));
     }
 }

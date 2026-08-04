@@ -75,14 +75,14 @@ public sealed class SigNozQueryBuilderTests
     }
 
     [Fact]
-    public void BuildQueryRangeRequest_host_cpu_sums_non_idle_states()
+    public void BuildQueryRangeRequest_host_cpu_averages_non_idle_states()
     {
         var query = CreateQuery(ObservabilityPanelId.HostCpuUtilization);
         var body = SigNozQueryBuilder.BuildQueryRangeRequest(query);
         var spec = body["compositeQuery"]?["queries"]?[0]?["spec"] as JsonObject;
 
         Assert.Equal("system.cpu.utilization", spec?["aggregations"]?[0]?["metricName"]?.GetValue<string>());
-        Assert.Equal("sum", spec?["aggregations"]?[0]?["spaceAggregation"]?.GetValue<string>());
+        Assert.Equal("avg", spec?["aggregations"]?[0]?["spaceAggregation"]?.GetValue<string>());
         Assert.Contains("state != 'idle'", spec?["filter"]?["expression"]?.GetValue<string>());
     }
 
