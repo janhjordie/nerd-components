@@ -267,9 +267,10 @@ public sealed record NerdMudBrandPaletteMap
             var light = useDark
                 ? token.Dark ?? token.Light ?? token.Value
                 : token.Light ?? token.Value;
-            return token.Border
-                   ?? token.Content
-                   ?? NerdColorParser.ContentText(light, token.ContrastText ?? NerdColorValue.ContrastText(light));
+            // Border outlines with the token color. Do not fall back to token.Content —
+            // Content is foreground text painted ON the token (e.g. cream on skov),
+            // which makes Mud LinesInputs invisible on cream page surfaces.
+            return token.Border ?? light;
         }
 
         return "rgba(0,0,0,0.12)";

@@ -15,32 +15,34 @@
     else if (_challenge is not null)
     {
         <div class="nerd-recaptcha-simple" data-testid="nerd-recaptcha-simple">
-            <label for="@_answerInputId">@_challenge.Prompt</label>
-            <input id="@_answerInputId"
-                   type="number"
-                   inputmode="numeric"
-                   @bind="_answerText"
-                   @bind:event="oninput"
-                   @bind:after="OnAnswerChangedAsync"
-                   aria-describedby="@_hintId"
-                   data-testid="nerd-recaptcha-simple-answer" />
-            <button type="button"
-                    class="nerd-recaptcha-refresh"
-                    @onclick="RefreshSimpleChallengeAsync"
-                    data-testid="nerd-recaptcha-simple-refresh">
+            <MudTextField @bind-Value="_answerText"
+                          @bind-Value:after="OnAnswerChangedAsync"
+                          Label="@_challenge.Prompt"
+                          Variant="Variant.Outlined"
+                          InputType="InputType.Number"
+                          Immediate="true"
+                          Margin="Margin.Dense"
+                          Class="mb-2"
+                          UserAttributes="@(new Dictionary<string, object> { ["data-testid"] = "nerd-recaptcha-simple-answer", ["inputmode"] = "numeric", ["aria-describedby"] = _hintId })" />
+            <MudButton Variant="Variant.Text"
+                       Color="Color.Primary"
+                       Size="MudBlazor.Size.Small"
+                       OnClick="RefreshSimpleChallengeAsync"
+                       data-testid="nerd-recaptcha-simple-refresh">
                 New challenge
-            </button>
-            <p id="@_hintId" class="nerd-recaptcha-hint">Simple challenge — Google reCAPTCHA is not configured.</p>
+            </MudButton>
+            <MudText Typo="Typo.caption" Class="mud-text-secondary d-block mt-1" id="@_hintId">
+                Simple challenge — Google reCAPTCHA is not configured.
+            </MudText>
             @if (!string.IsNullOrWhiteSpace(ErrorMessage))
             {
-                <p class="nerd-recaptcha-error" role="alert">@ErrorMessage</p>
+                <MudAlert Severity="Severity.Error" Dense="true" Class="mt-2">@ErrorMessage</MudAlert>
             }
         </div>
     }
 </div>
 
 @code {
-    private readonly string _answerInputId = $"nerd-recaptcha-answer-{Guid.NewGuid():N}";
     private readonly string _hintId = $"nerd-recaptcha-hint-{Guid.NewGuid():N}";
     private ElementReference _widgetHost;
     private IJSObjectReference? _module;
