@@ -26,7 +26,10 @@
                         </MudAvatar>
                         <MudStack Spacing="0">
                             <MudText Typo="Typo.subtitle1">@SimpleTitle</MudText>
-                            <MudText Typo="Typo.caption" Class="mud-text-secondary">@HintLabel</MudText>
+                            @if (!string.IsNullOrWhiteSpace(HintLabel))
+                            {
+                                <MudText Typo="Typo.caption" Class="mud-text-secondary">@HintLabel</MudText>
+                            }
                         </MudStack>
                     </MudStack>
                     <MudButton Variant="Variant.Text"
@@ -99,7 +102,7 @@
     public string RefreshLabel { get; set; } = "New challenge";
 
     [Parameter]
-    public string HintLabel { get; set; } = "Simple challenge — Google reCAPTCHA is not configured.";
+    public string HintLabel { get; set; } = "";
 
     [Parameter]
     public string ChallengeLabel { get; set; } = "Solve this to continue";
