@@ -2,6 +2,7 @@
 @using TheNerdCollective.Blazor.FeatureFeedback
 @inject IFeatureFeedbackStore Store
 @inject ISnackbar Snackbar
+@inject IDialogService DialogService
 
 <section class="nerd-feature-ideas-admin" data-testid="nerd-feature-ideas-admin">
     <MudText Typo="Typo.h4" Class="mb-2" data-testid="nerd-feature-ideas-admin-title">@Title</MudText>
@@ -39,22 +40,37 @@
             <RowTemplate>
                 <MudTd DataLabel="Votes">@context.VoteCount</MudTd>
                 <MudTd DataLabel="Idea">
-                    <MudText Typo="Typo.subtitle2">@context.Title</MudText>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-1">
+                        <MudText Typo="Typo.subtitle2">@context.Title</MudText>
+                        @if (context.Status == FeatureIdeaStatus.Deleted)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">
+                                Deleted
+                            </MudChip>
+                        }
+                    </MudStack>
                     <MudText Typo="Typo.caption" Class="mud-text-secondary">@context.AuthorDisplayName · @context.CreatedAtUtc.ToLocalTime().ToString("g")</MudText>
                     <MudText Typo="Typo.body2" Class="mt-1">@context.Description</MudText>
                 </MudTd>
                 <MudTd DataLabel="Status">
-                    <MudSelect T="FeatureIdeaStatus"
-                               Value="@context.Status"
-                               ValueChanged="status => OnStatusChangedAsync(context, status)"
-                               Dense="true"
-                               Variant="Variant.Outlined"
-                               data-testid="nerd-feature-ideas-admin-status">
-                        @foreach (var status in Enum.GetValues<FeatureIdeaStatus>())
-                        {
-                            <MudSelectItem Value="@status">@status</MudSelectItem>
-                        }
-                    </MudSelect>
+                    @if (context.Status == FeatureIdeaStatus.Deleted)
+                    {
+                        <MudText Typo="Typo.body2">Deleted</MudText>
+                    }
+                    else
+                    {
+                        <MudSelect T="FeatureIdeaStatus"
+                                   Value="@context.Status"
+                                   ValueChanged="status => OnStatusChangedAsync(context, status)"
+                                   Dense="true"
+                                   Variant="Variant.Outlined"
+                                   data-testid="nerd-feature-ideas-admin-status">
+                            @foreach (var status in ActiveStatuses)
+                            {
+                                <MudSelectItem Value="@status">@status</MudSelectItem>
+                            }
+                        </MudSelect>
+                    }
                 </MudTd>
                 <MudTd DataLabel="Planned release">
                     <MudDatePicker Date="@ToDateTime(context.PlannedReleaseDate)"
@@ -62,16 +78,53 @@
                                    Label="Release"
                                    Variant="Variant.Outlined"
                                    Editable="true"
+                                   Disabled="@(context.Status == FeatureIdeaStatus.Deleted)"
                                    data-testid="nerd-feature-ideas-admin-planned" />
                 </MudTd>
                 <MudTd>
-                    <MudButton Size="Size.Small"
-                               Variant="Variant.Text"
-                               Color="Color.Primary"
-                               OnClick="() => MarkDoneAsync(context)"
-                               data-testid="nerd-feature-ideas-admin-done">
-                        Mark done
-                    </MudButton>
+                    <MudStack Row="true" Spacing="1" Class="flex-wrap">
+                        @if (context.Status == FeatureIdeaStatus.Deleted)
+                        {
+                            <MudButton Size="Size.Small"
+                                       Variant="Variant.Outlined"
+                                       Color="Color.Primary"
+                                       OnClick="() => RestoreAsync(context)"
+                                       data-testid="nerd-feature-ideas-admin-restore">
+                                Restore
+                            </MudButton>
+                            <MudButton Size="Size.Small"
+                                       Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       OnClick="() => HardDeleteAsync(context)"
+                                       data-testid="nerd-feature-ideas-admin-hard-delete">
+                                Hard delete
+                            </MudButton>
+                        }
+                        else
+                        {
+                            <MudButton Size="Size.Small"
+                                       Variant="Variant.Text"
+                                       Color="Color.Primary"
+                                       OnClick="() => MarkDoneAsync(context)"
+                                       data-testid="nerd-feature-ideas-admin-done">
+                                Mark done
+                            </MudButton>
+                            <MudButton Size="Size.Small"
+                                       Variant="Variant.Outlined"
+                                       Color="Color.Primary"
+                                       OnClick="() => SoftDeleteAsync(context)"
+                                       data-testid="nerd-feature-ideas-admin-soft-delete">
+                                Soft delete
+                            </MudButton>
+                            <MudButton Size="Size.Small"
+                                       Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       OnClick="() => HardDeleteAsync(context)"
+                                       data-testid="nerd-feature-ideas-admin-hard-delete">
+                                Hard delete
+                            </MudButton>
+                        }
+                    </MudStack>
                 </MudTd>
             </RowTemplate>
         </MudTable>
@@ -79,6 +132,15 @@
 </section>
 
 @code {
+    private static readonly FeatureIdeaStatus[] ActiveStatuses =
+    [
+        FeatureIdeaStatus.Open,
+        FeatureIdeaStatus.Planned,
+        FeatureIdeaStatus.InProgress,
+        FeatureIdeaStatus.Done,
+        FeatureIdeaStatus.Declined
+    ];
+
     private IReadOnlyList<FeatureIdeaDto> _ideas = [];
     private string _search = "";
     private bool _loading = true;
@@ -87,6 +149,10 @@
     [Parameter] public string? Lead { get; set; } = "Update status and planned release dates.";
     [Parameter] public string SearchLabel { get; set; } = "Search";
     [Parameter] public string EmptyLabel { get; set; } = "No ideas yet.";
+    [Parameter] public string SoftDeleteConfirmTitle { get; set; } = "Soft delete idea?";
+    [Parameter] public string SoftDeleteConfirmMessage { get; set; } = "The idea will be hidden from the public board but can be restored.";
+    [Parameter] public string HardDeleteConfirmTitle { get; set; } = "Permanently delete idea?";
+    [Parameter] public string HardDeleteConfirmMessage { get; set; } = "This permanently removes the idea and its votes. This cannot be undone.";
 
     protected override async Task OnInitializedAsync() => await ReloadAsync();
 
@@ -97,7 +163,8 @@
         {
             _ideas = await Store.ListAsync(
                 FeatureIdeaSort.MostVoted,
-                string.IsNullOrWhiteSpace(_search) ? null : _search.Trim());
+                string.IsNullOrWhiteSpace(_search) ? null : _search.Trim(),
+                includeDeleted: true);
         }
         finally
         {
@@ -110,6 +177,12 @@
 
     private async Task OnStatusChangedAsync(FeatureIdeaDto idea, FeatureIdeaStatus status)
     {
+        if (status == FeatureIdeaStatus.Deleted)
+        {
+            await SoftDeleteAsync(idea);
+            return;
+        }
+
         var result = await Store.UpdateAsync(idea.Id, new UpdateFeatureIdeaRequest(status, idea.PlannedReleaseDate));
         if (!result.Success)
         {
@@ -122,6 +195,11 @@
 
     private async Task OnPlannedDateChangedAsync(FeatureIdeaDto idea, DateTime? date)
     {
+        if (idea.Status == FeatureIdeaStatus.Deleted)
+        {
+            return;
+        }
+
         DateOnly? planned = date is null ? null : DateOnly.FromDateTime(DateTime.SpecifyKind(date.Value, DateTimeKind.Unspecified));
         var status = idea.Status;
         if (planned is not null && status == FeatureIdeaStatus.Open)
@@ -151,6 +229,65 @@
         }
 
         Snackbar.Add("Marked as done.", Severity.Success);
+        await ReloadAsync();
+    }
+
+    private async Task SoftDeleteAsync(FeatureIdeaDto idea)
+    {
+        var confirmed = await DialogService.ShowMessageBoxAsync(
+            SoftDeleteConfirmTitle,
+            $"{SoftDeleteConfirmMessage}\n\n“{idea.Title}”",
+            yesText: "Soft delete",
+            cancelText: "Cancel");
+        if (confirmed != true)
+        {
+            return;
+        }
+
+        var result = await Store.SoftDeleteAsync(idea.Id);
+        if (!result.Success)
+        {
+            Snackbar.Add(result.ErrorCode ?? "Soft delete failed", Severity.Error);
+            return;
+        }
+
+        Snackbar.Add("Idea soft-deleted.", Severity.Success);
+        await ReloadAsync();
+    }
+
+    private async Task HardDeleteAsync(FeatureIdeaDto idea)
+    {
+        var confirmed = await DialogService.ShowMessageBoxAsync(
+            HardDeleteConfirmTitle,
+            $"{HardDeleteConfirmMessage}\n\n“{idea.Title}”",
+            yesText: "Hard delete",
+            cancelText: "Cancel");
+        if (confirmed != true)
+        {
+            return;
+        }
+
+        var result = await Store.HardDeleteAsync(idea.Id);
+        if (!result.Success)
+        {
+            Snackbar.Add(result.ErrorCode ?? "Hard delete failed", Severity.Error);
+            return;
+        }
+
+        Snackbar.Add("Idea permanently deleted.", Severity.Success);
+        await ReloadAsync();
+    }
+
+    private async Task RestoreAsync(FeatureIdeaDto idea)
+    {
+        var result = await Store.RestoreAsync(idea.Id);
+        if (!result.Success)
+        {
+            Snackbar.Add(result.ErrorCode ?? "Restore failed", Severity.Error);
+            return;
+        }
+
+        Snackbar.Add("Idea restored.", Severity.Success);
         await ReloadAsync();
     }
 }

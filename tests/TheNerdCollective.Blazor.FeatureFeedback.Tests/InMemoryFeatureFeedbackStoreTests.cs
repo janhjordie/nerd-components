@@ -65,4 +65,44 @@ public sealed class InMemoryFeatureFeedbackStoreTests
         Assert.Equal(FeatureIdeaStatus.Planned, updated.Idea!.Status);
         Assert.Equal(new DateOnly(2026, 9, 1), updated.Idea.PlannedReleaseDate);
     }
+
+    [Fact]
+    public async Task Soft_delete_hides_from_public_list_and_restore_works()
+    {
+        var store = new InMemoryFeatureFeedbackStore();
+        var created = await store.CreateAsync(
+            new CreateFeatureIdeaRequest("Idea Dxx", "Description for D here", "D"),
+            "u1");
+
+        var soft = await store.SoftDeleteAsync(created.Idea!.Id);
+        Assert.True(soft.Success);
+        Assert.Equal(FeatureIdeaStatus.Deleted, soft.Idea!.Status);
+
+        var publicList = await store.ListAsync();
+        Assert.DoesNotContain(publicList, idea => idea.Id == created.Idea.Id);
+
+        var adminList = await store.ListAsync(includeDeleted: true);
+        Assert.Contains(adminList, idea => idea.Id == created.Idea.Id && idea.Status == FeatureIdeaStatus.Deleted);
+
+        var restored = await store.RestoreAsync(created.Idea.Id);
+        Assert.True(restored.Success);
+        Assert.Equal(FeatureIdeaStatus.Open, restored.Idea!.Status);
+        Assert.Contains(await store.ListAsync(), idea => idea.Id == created.Idea.Id);
+    }
+
+    [Fact]
+    public async Task Hard_delete_removes_permanently()
+    {
+        var store = new InMemoryFeatureFeedbackStore();
+        var created = await store.CreateAsync(
+            new CreateFeatureIdeaRequest("Idea Exx", "Description for E here", "E"),
+            "u1");
+
+        var hard = await store.HardDeleteAsync(created.Idea!.Id);
+        Assert.True(hard.Success);
+
+        var adminList = await store.ListAsync(includeDeleted: true);
+        Assert.DoesNotContain(adminList, idea => idea.Id == created.Idea.Id);
+        Assert.False((await store.HardDeleteAsync(created.Idea.Id)).Success);
+    }
 }

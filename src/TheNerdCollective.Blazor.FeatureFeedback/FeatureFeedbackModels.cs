@@ -12,7 +12,9 @@ public enum FeatureIdeaStatus
     Planned,
     InProgress,
     Done,
-    Declined
+    Declined,
+    /// <summary>Soft-deleted — hidden from the public board, retained for admin restore/hard-delete.</summary>
+    Deleted
 }
 
 public sealed record FeatureIdeaDto(
@@ -46,6 +48,7 @@ public interface IFeatureFeedbackStore
         FeatureIdeaSort sort = FeatureIdeaSort.MostVoted,
         string? search = null,
         string? currentUserId = null,
+        bool includeDeleted = false,
         CancellationToken cancellationToken = default);
 
     Task<FeatureIdeaMutationResult> CreateAsync(
@@ -61,6 +64,21 @@ public interface IFeatureFeedbackStore
     Task<FeatureIdeaMutationResult> UpdateAsync(
         Guid ideaId,
         UpdateFeatureIdeaRequest request,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Marks the idea as <see cref="FeatureIdeaStatus.Deleted"/> (hidden from public lists).</summary>
+    Task<FeatureIdeaMutationResult> SoftDeleteAsync(
+        Guid ideaId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Permanently removes the idea and its votes.</summary>
+    Task<FeatureIdeaMutationResult> HardDeleteAsync(
+        Guid ideaId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Restores a soft-deleted idea to <see cref="FeatureIdeaStatus.Open"/>.</summary>
+    Task<FeatureIdeaMutationResult> RestoreAsync(
+        Guid ideaId,
         CancellationToken cancellationToken = default);
 }
 

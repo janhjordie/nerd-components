@@ -13,11 +13,17 @@ public sealed class InMemoryFeatureFeedbackStore : IFeatureFeedbackStore
         FeatureIdeaSort sort = FeatureIdeaSort.MostVoted,
         string? search = null,
         string? currentUserId = null,
+        bool includeDeleted = false,
         CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
         IEnumerable<IdeaState> query = _ideas.Values;
+        if (!includeDeleted)
+        {
+            query = query.Where(idea => idea.Status != FeatureIdeaStatus.Deleted);
+        }
+
         if (!string.IsNullOrWhiteSpace(search))
         {
             query = query.Where(idea =>
@@ -97,6 +103,11 @@ public sealed class InMemoryFeatureFeedbackStore : IFeatureFeedbackStore
             return Task.FromResult(new FeatureIdeaMutationResult(false, ErrorCode: "not-found"));
         }
 
+        if (state.Status == FeatureIdeaStatus.Deleted)
+        {
+            return Task.FromResult(new FeatureIdeaMutationResult(false, ErrorCode: "deleted"));
+        }
+
         if (!state.Votes.TryRemove(userId, out _))
         {
             state.Votes[userId] = 0;
@@ -117,8 +128,62 @@ public sealed class InMemoryFeatureFeedbackStore : IFeatureFeedbackStore
             return Task.FromResult(new FeatureIdeaMutationResult(false, ErrorCode: "not-found"));
         }
 
+        if (state.Status == FeatureIdeaStatus.Deleted && request.Status != FeatureIdeaStatus.Deleted)
+        {
+            // Prefer RestoreAsync for clarity, but allow Update to reopen.
+        }
+
         state.Status = request.Status;
         state.PlannedReleaseDate = request.PlannedReleaseDate;
+        return Task.FromResult(new FeatureIdeaMutationResult(true, ToDto(state, null)));
+    }
+
+    public Task<FeatureIdeaMutationResult> SoftDeleteAsync(
+        Guid ideaId,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (!_ideas.TryGetValue(ideaId, out var state))
+        {
+            return Task.FromResult(new FeatureIdeaMutationResult(false, ErrorCode: "not-found"));
+        }
+
+        state.Status = FeatureIdeaStatus.Deleted;
+        return Task.FromResult(new FeatureIdeaMutationResult(true, ToDto(state, null)));
+    }
+
+    public Task<FeatureIdeaMutationResult> HardDeleteAsync(
+        Guid ideaId,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (!_ideas.TryRemove(ideaId, out var state))
+        {
+            return Task.FromResult(new FeatureIdeaMutationResult(false, ErrorCode: "not-found"));
+        }
+
+        return Task.FromResult(new FeatureIdeaMutationResult(true, ToDto(state, null)));
+    }
+
+    public Task<FeatureIdeaMutationResult> RestoreAsync(
+        Guid ideaId,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (!_ideas.TryGetValue(ideaId, out var state))
+        {
+            return Task.FromResult(new FeatureIdeaMutationResult(false, ErrorCode: "not-found"));
+        }
+
+        if (state.Status != FeatureIdeaStatus.Deleted)
+        {
+            return Task.FromResult(new FeatureIdeaMutationResult(false, ErrorCode: "not-deleted"));
+        }
+
+        state.Status = FeatureIdeaStatus.Open;
         return Task.FromResult(new FeatureIdeaMutationResult(true, ToDto(state, null)));
     }
 
