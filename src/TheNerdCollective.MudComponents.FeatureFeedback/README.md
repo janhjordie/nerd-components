@@ -1,8 +1,8 @@
 # TheNerdCollective.MudComponents.FeatureFeedback
 
-MudBlazor **feature ideas board** with suggest + upvote (PollUnit-style).
+MudBlazor **feature ideas board** with suggest + upvote, optional reCAPTCHA, and injectable public/admin pages.
 
-Depends on `TheNerdCollective.Blazor.FeatureFeedback`.
+Depends on `TheNerdCollective.Blazor.FeatureFeedback` (+ `TheNerdCollective.Blazor.ReCaptcha` when captcha is registered).
 
 ## Install
 
@@ -10,22 +10,22 @@ Depends on `TheNerdCollective.Blazor.FeatureFeedback`.
 dotnet add package TheNerdCollective.MudComponents.FeatureFeedback
 ```
 
-## Usage
+## Host setup
 
 ```csharp
-builder.Services.AddFeatureFeedbackStore<MyEfStore>();
-// or AddInMemoryFeatureFeedback() for demos
+builder.Services.AddNerdReCaptcha(builder.Configuration); // optional — falls back to simple challenge
+builder.Services.AddNerdFeatureFeedback<MyEfStore, MyAdminAccess>();
+
+app.MapRazorComponents<App>()
+    .AddInteractiveServerRenderMode()
+    .AddNerdFeatureFeedbackPages(); // adds /feature-ideas + /admin/feature-ideas
+
+// Also add the package assembly to <Router AdditionalAssemblies=...> in Routes.razor
 ```
 
-```razor
-@using TheNerdCollective.MudComponents.FeatureFeedback
+Implement:
 
-<NerdFeatureIdeasBoard Title="Vi lytter til vores kunder"
-                       Lead="Foreslå funktioner og stem på det, der betyder mest."
-                       CurrentUserId="@_userId"
-                       CurrentUserDisplayName="@_displayName"
-                       LoginUrl="/account/login?ReturnUrl=%2Fideas"
-                       OnRequireLogin="GoLogin" />
-```
+- `IFeatureFeedbackStore` — persistence (EF in your host)
+- `IFeatureFeedbackAdminAccess` — who may open `/admin/feature-ideas`
 
-Unauthenticated users can browse ideas. Suggest and upvote require a non-empty `CurrentUserId`.
+Create + upvote require a non-empty `CurrentUserId` (signed-in user). Suggest form verifies reCAPTCHA when `INerdReCaptchaVerifier` is registered.

@@ -1,0 +1,35 @@
+@page "/feature-ideas"
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@using TheNerdCollective.MudComponents.FeatureFeedback
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+
+<div class="pa-4" data-testid="nerd-feature-ideas-public-page">
+    <NerdFeatureIdeasBoard CurrentUserId="@_userId"
+                           CurrentUserDisplayName="@_displayName"
+                           LoginUrl="@_loginUrl"
+                           OnRequireLogin="GoLogin" />
+</div>
+
+@code {
+    private string? _userId;
+    private string? _displayName;
+    private string _loginUrl = "/account/login?ReturnUrl=%2Ffeature-ideas";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var auth = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = auth.User;
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            _userId = user.FindFirstValue(ClaimTypes.NameIdentifier) ?? user.FindFirstValue("sub");
+            _displayName = user.Identity.Name
+                ?? user.FindFirstValue(ClaimTypes.Email)
+                ?? user.FindFirstValue("email")
+                ?? "Customer";
+        }
+    }
+
+    private void GoLogin() => Navigation.NavigateTo(_loginUrl, forceLoad: true);
+}

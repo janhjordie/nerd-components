@@ -61,15 +61,18 @@ public sealed class InMemoryFeatureFeedbackStore : IFeatureFeedbackStore
         }
 
         var id = Guid.NewGuid();
-        var state = new IdeaState(
-            id,
-            title,
-            description,
-            string.IsNullOrWhiteSpace(request.AuthorDisplayName) ? "Customer" : request.AuthorDisplayName.Trim(),
-            userId,
-            DateTimeOffset.UtcNow,
-            FeatureIdeaStatus.Open,
-            new ConcurrentDictionary<string, byte>());
+        var state = new IdeaState
+        {
+            Id = id,
+            Title = title,
+            Description = description,
+            AuthorDisplayName = string.IsNullOrWhiteSpace(request.AuthorDisplayName)
+                ? "Customer"
+                : request.AuthorDisplayName.Trim(),
+            AuthorUserId = userId,
+            CreatedAtUtc = DateTimeOffset.UtcNow,
+            Status = FeatureIdeaStatus.Open
+        };
 
         state.Votes[userId] = 0;
         _ideas[id] = state;
@@ -102,6 +105,23 @@ public sealed class InMemoryFeatureFeedbackStore : IFeatureFeedbackStore
         return Task.FromResult(new FeatureIdeaMutationResult(true, ToDto(state, userId)));
     }
 
+    public Task<FeatureIdeaMutationResult> UpdateAsync(
+        Guid ideaId,
+        UpdateFeatureIdeaRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (!_ideas.TryGetValue(ideaId, out var state))
+        {
+            return Task.FromResult(new FeatureIdeaMutationResult(false, ErrorCode: "not-found"));
+        }
+
+        state.Status = request.Status;
+        state.PlannedReleaseDate = request.PlannedReleaseDate;
+        return Task.FromResult(new FeatureIdeaMutationResult(true, ToDto(state, null)));
+    }
+
     private static FeatureIdeaDto ToDto(IdeaState state, string? currentUserId) =>
         new(
             state.Id,
@@ -111,15 +131,19 @@ public sealed class InMemoryFeatureFeedbackStore : IFeatureFeedbackStore
             currentUserId is not null && state.Votes.ContainsKey(currentUserId),
             state.AuthorDisplayName,
             state.CreatedAtUtc,
-            state.Status);
+            state.Status,
+            state.PlannedReleaseDate);
 
-    private sealed record IdeaState(
-        Guid Id,
-        string Title,
-        string Description,
-        string AuthorDisplayName,
-        string AuthorUserId,
-        DateTimeOffset CreatedAtUtc,
-        FeatureIdeaStatus Status,
-        ConcurrentDictionary<string, byte> Votes);
+    private sealed class IdeaState
+    {
+        public Guid Id { get; init; }
+        public string Title { get; init; } = "";
+        public string Description { get; init; } = "";
+        public string AuthorDisplayName { get; init; } = "";
+        public string AuthorUserId { get; init; } = "";
+        public DateTimeOffset CreatedAtUtc { get; init; }
+        public FeatureIdeaStatus Status { get; set; }
+        public DateOnly? PlannedReleaseDate { get; set; }
+        public ConcurrentDictionary<string, byte> Votes { get; } = new();
+    }
 }

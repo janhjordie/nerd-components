@@ -1,0 +1,156 @@
+@namespace TheNerdCollective.MudComponents.FeatureFeedback
+@using TheNerdCollective.Blazor.FeatureFeedback
+@inject IFeatureFeedbackStore Store
+@inject ISnackbar Snackbar
+
+<section class="nerd-feature-ideas-admin" data-testid="nerd-feature-ideas-admin">
+    <MudText Typo="Typo.h4" Class="mb-2" data-testid="nerd-feature-ideas-admin-title">@Title</MudText>
+    @if (!string.IsNullOrWhiteSpace(Lead))
+    {
+        <MudText Typo="Typo.body2" Class="mb-4 mud-text-secondary">@Lead</MudText>
+    }
+
+    <MudTextField @bind-Value="_search"
+                  @bind-Value:after="ReloadAsync"
+                  Label="@SearchLabel"
+                  Variant="Variant.Outlined"
+                  Class="mb-4"
+                  Immediate="true"
+                  data-testid="nerd-feature-ideas-admin-search" />
+
+    @if (_loading)
+    {
+        <MudProgressLinear Indeterminate="true" />
+    }
+    else if (_ideas.Count == 0)
+    {
+        <MudText Typo="Typo.body2">@EmptyLabel</MudText>
+    }
+    else
+    {
+        <MudTable Items="_ideas" Hover="true" Dense="true" Breakpoint="Breakpoint.Sm" data-testid="nerd-feature-ideas-admin-table">
+            <HeaderContent>
+                <MudTh>Votes</MudTh>
+                <MudTh>Idea</MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh>Planned release</MudTh>
+                <MudTh></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Votes">@context.VoteCount</MudTd>
+                <MudTd DataLabel="Idea">
+                    <MudText Typo="Typo.subtitle2">@context.Title</MudText>
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">@context.AuthorDisplayName · @context.CreatedAtUtc.ToLocalTime().ToString("g")</MudText>
+                    <MudText Typo="Typo.body2" Class="mt-1">@context.Description</MudText>
+                </MudTd>
+                <MudTd DataLabel="Status">
+                    <MudSelect T="FeatureIdeaStatus"
+                               Value="@context.Status"
+                               ValueChanged="status => OnStatusChangedAsync(context, status)"
+                               Dense="true"
+                               Variant="Variant.Outlined"
+                               data-testid="nerd-feature-ideas-admin-status">
+                        @foreach (var status in Enum.GetValues<FeatureIdeaStatus>())
+                        {
+                            <MudSelectItem Value="@status">@status</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudTd>
+                <MudTd DataLabel="Planned release">
+                    <MudDatePicker Date="@ToDateTime(context.PlannedReleaseDate)"
+                                   DateChanged="date => OnPlannedDateChangedAsync(context, date)"
+                                   Label="Release"
+                                   Variant="Variant.Outlined"
+                                   Editable="true"
+                                   data-testid="nerd-feature-ideas-admin-planned" />
+                </MudTd>
+                <MudTd>
+                    <MudButton Size="Size.Small"
+                               Variant="Variant.Text"
+                               Color="Color.Primary"
+                               OnClick="() => MarkDoneAsync(context)"
+                               data-testid="nerd-feature-ideas-admin-done">
+                        Mark done
+                    </MudButton>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    }
+</section>
+
+@code {
+    private IReadOnlyList<FeatureIdeaDto> _ideas = [];
+    private string _search = "";
+    private bool _loading = true;
+
+    [Parameter] public string Title { get; set; } = "Feature ideas admin";
+    [Parameter] public string? Lead { get; set; } = "Update status and planned release dates.";
+    [Parameter] public string SearchLabel { get; set; } = "Search";
+    [Parameter] public string EmptyLabel { get; set; } = "No ideas yet.";
+
+    protected override async Task OnInitializedAsync() => await ReloadAsync();
+
+    private async Task ReloadAsync()
+    {
+        _loading = true;
+        try
+        {
+            _ideas = await Store.ListAsync(
+                FeatureIdeaSort.MostVoted,
+                string.IsNullOrWhiteSpace(_search) ? null : _search.Trim());
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private static DateTime? ToDateTime(DateOnly? date) =>
+        date?.ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified);
+
+    private async Task OnStatusChangedAsync(FeatureIdeaDto idea, FeatureIdeaStatus status)
+    {
+        var result = await Store.UpdateAsync(idea.Id, new UpdateFeatureIdeaRequest(status, idea.PlannedReleaseDate));
+        if (!result.Success)
+        {
+            Snackbar.Add(result.ErrorCode ?? "Update failed", Severity.Error);
+            return;
+        }
+
+        await ReloadAsync();
+    }
+
+    private async Task OnPlannedDateChangedAsync(FeatureIdeaDto idea, DateTime? date)
+    {
+        DateOnly? planned = date is null ? null : DateOnly.FromDateTime(DateTime.SpecifyKind(date.Value, DateTimeKind.Unspecified));
+        var status = idea.Status;
+        if (planned is not null && status == FeatureIdeaStatus.Open)
+        {
+            status = FeatureIdeaStatus.Planned;
+        }
+
+        var result = await Store.UpdateAsync(idea.Id, new UpdateFeatureIdeaRequest(status, planned));
+        if (!result.Success)
+        {
+            Snackbar.Add(result.ErrorCode ?? "Update failed", Severity.Error);
+            return;
+        }
+
+        await ReloadAsync();
+    }
+
+    private async Task MarkDoneAsync(FeatureIdeaDto idea)
+    {
+        var result = await Store.UpdateAsync(
+            idea.Id,
+            new UpdateFeatureIdeaRequest(FeatureIdeaStatus.Done, idea.PlannedReleaseDate));
+        if (!result.Success)
+        {
+            Snackbar.Add(result.ErrorCode ?? "Update failed", Severity.Error);
+            return;
+        }
+
+        Snackbar.Add("Marked as done.", Severity.Success);
+        await ReloadAsync();
+    }
+}

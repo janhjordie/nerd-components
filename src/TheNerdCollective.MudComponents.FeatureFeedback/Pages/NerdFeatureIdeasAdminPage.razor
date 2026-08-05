@@ -1,0 +1,37 @@
+@page "/admin/feature-ideas"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@using TheNerdCollective.Blazor.FeatureFeedback
+@using TheNerdCollective.MudComponents.FeatureFeedback
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IFeatureFeedbackAdminAccess AdminAccess
+
+<div class="pa-4" data-testid="nerd-feature-ideas-admin-page">
+    @if (_loading)
+    {
+        <MudProgressLinear Indeterminate="true" />
+    }
+    else if (!_allowed)
+    {
+        <MudAlert Severity="Severity.Error" data-testid="nerd-feature-ideas-admin-forbidden">
+            You do not have permission to administer feature ideas.
+        </MudAlert>
+    }
+    else
+    {
+        <NerdFeatureIdeasAdminBoard />
+    }
+</div>
+
+@code {
+    private bool _loading = true;
+    private bool _allowed;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var auth = await AuthStateProvider.GetAuthenticationStateAsync();
+        _allowed = await AdminAccess.CanAdministerAsync(auth.User);
+        _loading = false;
+    }
+}

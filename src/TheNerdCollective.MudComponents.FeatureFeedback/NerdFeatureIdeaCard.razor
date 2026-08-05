@@ -10,6 +10,7 @@
                        Color="@(Idea.VotedByCurrentUser ? Color.Primary : Color.Default)"
                        title="@VoteLabel"
                        aria-label="@VoteLabel"
+                       Disabled="@DisableVoting"
                        OnClick="() => OnToggleVote.InvokeAsync(Idea)"
                        data-testid="nerd-feature-idea-vote" />
         <MudText Typo="Typo.subtitle1" data-testid="nerd-feature-idea-votes">@Idea.VoteCount</MudText>
@@ -17,7 +18,13 @@
     <div class="flex-grow-1">
         <div class="d-flex flex-wrap gap-2 align-center mb-1">
             <MudText Typo="Typo.h6" data-testid="nerd-feature-idea-title">@Idea.Title</MudText>
-            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@Idea.Status</MudChip>
+            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" data-testid="nerd-feature-idea-status">@Idea.Status</MudChip>
+            @if (Idea.PlannedReleaseDate is { } planned)
+            {
+                <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Filled" data-testid="nerd-feature-idea-planned">
+                    @PlannedLabel @planned.ToString("yyyy-MM-dd")
+                </MudChip>
+            }
         </div>
         <MudText Typo="Typo.body2" data-testid="nerd-feature-idea-description">@Idea.Description</MudText>
         <MudText Typo="Typo.caption" Class="mt-2 mud-text-secondary">
@@ -32,6 +39,12 @@
 
     [Parameter]
     public string VoteLabel { get; set; } = "Upvote";
+
+    [Parameter]
+    public string PlannedLabel { get; set; } = "Planned";
+
+    [Parameter]
+    public bool DisableVoting { get; set; }
 
     [Parameter]
     public EventCallback<FeatureIdeaDto> OnToggleVote { get; set; }

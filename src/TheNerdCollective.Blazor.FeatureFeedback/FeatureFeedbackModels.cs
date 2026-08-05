@@ -23,12 +23,17 @@ public sealed record FeatureIdeaDto(
     bool VotedByCurrentUser,
     string AuthorDisplayName,
     DateTimeOffset CreatedAtUtc,
-    FeatureIdeaStatus Status);
+    FeatureIdeaStatus Status,
+    DateOnly? PlannedReleaseDate = null);
 
 public sealed record CreateFeatureIdeaRequest(
     string Title,
     string Description,
     string AuthorDisplayName);
+
+public sealed record UpdateFeatureIdeaRequest(
+    FeatureIdeaStatus Status,
+    DateOnly? PlannedReleaseDate);
 
 public sealed record FeatureIdeaMutationResult(
     bool Success,
@@ -51,5 +56,20 @@ public interface IFeatureFeedbackStore
     Task<FeatureIdeaMutationResult> ToggleVoteAsync(
         Guid ideaId,
         string userId,
+        CancellationToken cancellationToken = default);
+
+    Task<FeatureIdeaMutationResult> UpdateAsync(
+        Guid ideaId,
+        UpdateFeatureIdeaRequest request,
+        CancellationToken cancellationToken = default);
+}
+
+/// <summary>
+/// Host implements this to decide who may open the Feature Feedback admin UI.
+/// </summary>
+public interface IFeatureFeedbackAdminAccess
+{
+    Task<bool> CanAdministerAsync(
+        System.Security.Claims.ClaimsPrincipal user,
         CancellationToken cancellationToken = default);
 }

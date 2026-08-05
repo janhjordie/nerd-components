@@ -48,4 +48,21 @@ public sealed class InMemoryFeatureFeedbackStoreTests
         Assert.Equal(b.Idea.Id, list[0].Id);
         Assert.Equal(a.Idea!.Id, list[1].Id);
     }
+
+    [Fact]
+    public async Task Update_sets_status_and_planned_release()
+    {
+        var store = new InMemoryFeatureFeedbackStore();
+        var created = await store.CreateAsync(
+            new CreateFeatureIdeaRequest("Idea Cxx", "Description for C here", "C"),
+            "u1");
+
+        var updated = await store.UpdateAsync(
+            created.Idea!.Id,
+            new UpdateFeatureIdeaRequest(FeatureIdeaStatus.Planned, new DateOnly(2026, 9, 1)));
+
+        Assert.True(updated.Success);
+        Assert.Equal(FeatureIdeaStatus.Planned, updated.Idea!.Status);
+        Assert.Equal(new DateOnly(2026, 9, 1), updated.Idea.PlannedReleaseDate);
+    }
 }
