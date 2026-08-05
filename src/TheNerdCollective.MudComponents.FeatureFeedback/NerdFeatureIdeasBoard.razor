@@ -59,25 +59,33 @@
     {
         <MudPaper Class="pa-4 mb-4" Outlined="true" data-testid="nerd-feature-ideas-submit">
             <MudText Typo="Typo.h6" Class="mb-2">@SuggestLabel</MudText>
-            <MudTextField @bind-Value="_newTitle"
-                          @bind-Value:after="ClearSubmitError"
-                          Label="@TitleFieldLabel"
-                          HelperText="@TitleHelperText"
-                          Variant="Variant.Outlined"
-                          Required="true"
-                          Immediate="true"
-                          Class="mb-2"
-                          data-testid="nerd-feature-ideas-title-input" />
-            <MudTextField @bind-Value="_newDescription"
-                          @bind-Value:after="ClearSubmitError"
-                          Label="@DescriptionFieldLabel"
-                          HelperText="@DescriptionHelperText"
-                          Variant="Variant.Outlined"
-                          Lines="4"
-                          Required="true"
-                          Immediate="true"
-                          Class="mb-3"
-                          data-testid="nerd-feature-ideas-description-input" />
+            <MudForm @ref="_form" @bind-IsValid="_formValid">
+                <MudTextField T="string"
+                              @bind-Value="_newTitle"
+                              @bind-Value:after="OnTitleChanged"
+                              Label="@TitleFieldLabel"
+                              HelperText="@TitleHelperText"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              RequiredError="@InvalidTitleMessage"
+                              Immediate="true"
+                              Validation="@(new Func<string, string?>(ValidateTitle))"
+                              Class="mb-2"
+                              data-testid="nerd-feature-ideas-title-input" />
+                <MudTextField T="string"
+                              @bind-Value="_newDescription"
+                              @bind-Value:after="OnDescriptionChanged"
+                              Label="@DescriptionFieldLabel"
+                              HelperText="@DescriptionHelperText"
+                              Variant="Variant.Outlined"
+                              Lines="4"
+                              Required="true"
+                              RequiredError="@InvalidDescriptionMessage"
+                              Immediate="true"
+                              Validation="@(new Func<string, string?>(ValidateDescription))"
+                              Class="mb-3"
+                              data-testid="nerd-feature-ideas-description-input" />
+            </MudForm>
             @if (_captchaEnabled)
             {
                 <div class="mb-3">
@@ -152,6 +160,8 @@
     private bool _showSubmit;
     private bool _isAuthenticated;
     private bool _captchaEnabled;
+    private bool _formValid;
+    private MudForm? _form;
     private INerdReCaptchaVerifier? _captcha;
     private string? _listedForUserId;
     private bool _listLoaded;
@@ -191,8 +201,7 @@
 
     private bool CanSubmit =>
         !_busy
-        && _newTitle.Trim().Length is >= MinTitleLength and <= MaxTitleLength
-        && _newDescription.Trim().Length is >= MinDescriptionLength and <= MaxDescriptionLength
+        && _formValid
         && (!_captchaEnabled || !string.IsNullOrWhiteSpace(_captchaToken));
 
     protected override void OnInitialized()
@@ -245,15 +254,21 @@
         _showSubmit = true;
         _captchaToken = null;
         _submitError = null;
+        _formValid = false;
+        _newTitle = "";
+        _newDescription = "";
     }
 
     private void CancelSubmit()
     {
         _showSubmit = false;
         _submitError = null;
+        _formValid = false;
     }
 
-    private void ClearSubmitError() => _submitError = null;
+    private void OnTitleChanged() => _submitError = null;
+
+    private void OnDescriptionChanged() => _submitError = null;
 
     private Task OnCaptchaTokenChangedAsync(string? token)
     {
@@ -262,12 +277,33 @@
         return Task.CompletedTask;
     }
 
+    private string? ValidateTitle(string value)
+    {
+        var length = value?.Trim().Length ?? 0;
+        return length is >= MinTitleLength and <= MaxTitleLength
+            ? null
+            : InvalidTitleMessage;
+    }
+
+    private string? ValidateDescription(string value)
+    {
+        var length = value?.Trim().Length ?? 0;
+        return length is >= MinDescriptionLength and <= MaxDescriptionLength
+            ? null
+            : InvalidDescriptionMessage;
+    }
+
     private async Task SubmitIdeaAsync()
     {
         if (!_isAuthenticated || string.IsNullOrWhiteSpace(CurrentUserId))
         {
             await OnSuggestClickedAsync();
             return;
+        }
+
+        if (_form is not null)
+        {
+            await _form.ValidateAsync();
         }
 
         if (!CanSubmit)
