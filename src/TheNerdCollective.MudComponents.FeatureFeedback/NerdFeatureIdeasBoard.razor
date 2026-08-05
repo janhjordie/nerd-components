@@ -78,7 +78,9 @@
                     <NerdReCaptcha @bind-Token="_captchaToken"
                                    SimpleTitle="@CaptchaTitle"
                                    RefreshLabel="@CaptchaRefreshLabel"
-                                   HintLabel="@CaptchaHintLabel" />
+                                   HintLabel="@CaptchaHintLabel"
+                                   ChallengeLabel="@CaptchaChallengeLabel"
+                                   AnswerLabel="@CaptchaAnswerLabel" />
                 </div>
             }
             <div class="d-flex gap-2">
@@ -152,6 +154,8 @@
     [Parameter] public string CaptchaTitle { get; set; } = "Quick verification";
     [Parameter] public string CaptchaRefreshLabel { get; set; } = "New challenge";
     [Parameter] public string CaptchaHintLabel { get; set; } = "Simple challenge — Google reCAPTCHA is not configured.";
+    [Parameter] public string CaptchaChallengeLabel { get; set; } = "Solve this to continue";
+    [Parameter] public string CaptchaAnswerLabel { get; set; } = "Your answer";
     [Parameter] public bool RequireCaptchaWhenAvailable { get; set; } = true;
     [Parameter] public EventCallback OnRequireLogin { get; set; }
 

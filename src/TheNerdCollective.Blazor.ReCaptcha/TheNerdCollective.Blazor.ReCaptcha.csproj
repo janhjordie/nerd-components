@@ -7,7 +7,7 @@
     <RootNamespace>TheNerdCollective.Blazor.ReCaptcha</RootNamespace>
     <AssemblyName>TheNerdCollective.Blazor.ReCaptcha</AssemblyName>
     <PackageId>TheNerdCollective.Blazor.ReCaptcha</PackageId>
-    <Version>1.0.3</Version>
+    <Version>1.0.4</Version>
     <Authors>The Nerd Collective</Authors>
     <Description>Google reCAPTCHA v2 checkbox for Blazor with automatic simple math-challenge fallback when site/secret keys are not configured.</Description>
     <PackageTags>blazor;recaptcha;captcha;security;google;components</PackageTags>
