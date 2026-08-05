@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>TheNerdCollective.Blazor.ReCaptcha</RootNamespace>
+    <AssemblyName>TheNerdCollective.Blazor.ReCaptcha</AssemblyName>
+    <PackageId>TheNerdCollective.Blazor.ReCaptcha</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>The Nerd Collective</Authors>
+    <Description>Google reCAPTCHA v2 checkbox for Blazor with automatic simple math-challenge fallback when site/secret keys are not configured.</Description>
+    <PackageTags>blazor;recaptcha;captcha;security;google;components</PackageTags>
+    <License>Apache-2.0</License>
+    <LicenseExpression>Apache-2.0</LicenseExpression>
+    <RepositoryUrl>https://github.com/janhjordie/TheNerdCollective.Components</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+</Project>

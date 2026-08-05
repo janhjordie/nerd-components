@@ -1,0 +1,266 @@
+@namespace TheNerdCollective.MudComponents.FeatureFeedback
+@using TheNerdCollective.Blazor.FeatureFeedback
+@inject IFeatureFeedbackStore Store
+@inject ISnackbar Snackbar
+
+<section class="nerd-feature-ideas" data-testid="nerd-feature-ideas-board">
+    <header class="nerd-feature-ideas__header mb-4">
+        <MudText Typo="Typo.h4" data-testid="nerd-feature-ideas-title">@Title</MudText>
+        @if (!string.IsNullOrWhiteSpace(Lead))
+        {
+            <MudText Typo="Typo.body1" Class="mt-1" data-testid="nerd-feature-ideas-lead">@Lead</MudText>
+        }
+    </header>
+
+    <div class="d-flex flex-wrap gap-3 align-center mb-4">
+        <MudTextField @bind-Value="_search"
+                      @bind-Value:after="ReloadAsync"
+                      Label="@SearchLabel"
+                      Variant="Variant.Outlined"
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      Immediate="true"
+                      Class="flex-grow-1"
+                      data-testid="nerd-feature-ideas-search" />
+        <MudSelect T="FeatureIdeaSort"
+                   @bind-Value="_sort"
+                   @bind-Value:after="ReloadAsync"
+                   Label="@SortLabel"
+                   Variant="Variant.Outlined"
+                   Style="min-width: 12rem;"
+                   data-testid="nerd-feature-ideas-sort">
+            <MudSelectItem Value="FeatureIdeaSort.MostVoted">@MostVotedLabel</MudSelectItem>
+            <MudSelectItem Value="FeatureIdeaSort.Newest">@NewestLabel</MudSelectItem>
+        </MudSelect>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Lightbulb"
+                   OnClick="OnSuggestClickedAsync"
+                   data-testid="nerd-feature-ideas-suggest">
+            @SuggestLabel
+        </MudButton>
+    </div>
+
+    @if (!_isAuthenticated && !string.IsNullOrWhiteSpace(LoginHint))
+    {
+        <MudAlert Severity="Severity.Info" Dense="true" Class="mb-4" data-testid="nerd-feature-ideas-login-hint">
+            @LoginHint
+            @if (!string.IsNullOrWhiteSpace(LoginUrl))
+            {
+                <MudLink Href="@LoginUrl" Class="ms-1">@LoginLinkLabel</MudLink>
+            }
+        </MudAlert>
+    }
+
+    @if (_showSubmit)
+    {
+        <MudPaper Class="pa-4 mb-4" Outlined="true" data-testid="nerd-feature-ideas-submit">
+            <MudText Typo="Typo.h6" Class="mb-2">@SuggestLabel</MudText>
+            <MudTextField @bind-Value="_newTitle"
+                          Label="@TitleFieldLabel"
+                          Variant="Variant.Outlined"
+                          Required="true"
+                          Class="mb-2"
+                          data-testid="nerd-feature-ideas-title-input" />
+            <MudTextField @bind-Value="_newDescription"
+                          Label="@DescriptionFieldLabel"
+                          Variant="Variant.Outlined"
+                          Lines="4"
+                          Required="true"
+                          Class="mb-3"
+                          data-testid="nerd-feature-ideas-description-input" />
+            <div class="d-flex gap-2">
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           Disabled="_busy"
+                           OnClick="SubmitIdeaAsync"
+                           data-testid="nerd-feature-ideas-submit-button">
+                    @SubmitLabel
+                </MudButton>
+                <MudButton Variant="Variant.Text" OnClick="() => _showSubmit = false">@CancelLabel</MudButton>
+            </div>
+        </MudPaper>
+    }
+
+    @if (_loading)
+    {
+        <MudProgressLinear Indeterminate="true" Class="mb-4" data-testid="nerd-feature-ideas-loading" />
+    }
+    else if (_ideas.Count == 0)
+    {
+        <MudText Typo="Typo.body2" data-testid="nerd-feature-ideas-empty">@EmptyLabel</MudText>
+    }
+    else
+    {
+        <MudStack Spacing="2" data-testid="nerd-feature-ideas-list">
+            @foreach (var idea in _ideas)
+            {
+                <NerdFeatureIdeaCard Idea="idea"
+                                     VoteLabel="@VoteLabel"
+                                     OnToggleVote="ToggleVoteAsync" />
+            }
+        </MudStack>
+    }
+</section>
+
+@code {
+    private IReadOnlyList<FeatureIdeaDto> _ideas = [];
+    private FeatureIdeaSort _sort = FeatureIdeaSort.MostVoted;
+    private string _search = "";
+    private string _newTitle = "";
+    private string _newDescription = "";
+    private bool _loading = true;
+    private bool _busy;
+    private bool _showSubmit;
+    private bool _isAuthenticated;
+
+    [Parameter]
+    public string Title { get; set; } = "Feature ideas";
+
+    [Parameter]
+    public string? Lead { get; set; } = "We listen to our customers — suggest ideas and upvote what matters.";
+
+    [Parameter]
+    public string? CurrentUserId { get; set; }
+
+    [Parameter]
+    public string? CurrentUserDisplayName { get; set; }
+
+    [Parameter]
+    public string? LoginUrl { get; set; } = "/account/login";
+
+    [Parameter]
+    public string LoginHint { get; set; } = "Sign in to suggest a feature or cast a vote.";
+
+    [Parameter]
+    public string LoginLinkLabel { get; set; } = "Sign in";
+
+    [Parameter]
+    public string SearchLabel { get; set; } = "Search ideas";
+
+    [Parameter]
+    public string SortLabel { get; set; } = "Sort";
+
+    [Parameter]
+    public string MostVotedLabel { get; set; } = "Most voted";
+
+    [Parameter]
+    public string NewestLabel { get; set; } = "Newest";
+
+    [Parameter]
+    public string SuggestLabel { get; set; } = "Suggest a feature";
+
+    [Parameter]
+    public string TitleFieldLabel { get; set; } = "Title";
+
+    [Parameter]
+    public string DescriptionFieldLabel { get; set; } = "Describe the problem or idea";
+
+    [Parameter]
+    public string SubmitLabel { get; set; } = "Submit idea";
+
+    [Parameter]
+    public string CancelLabel { get; set; } = "Cancel";
+
+    [Parameter]
+    public string EmptyLabel { get; set; } = "No ideas yet — be the first to suggest one.";
+
+    [Parameter]
+    public string VoteLabel { get; set; } = "Upvote";
+
+    [Parameter]
+    public EventCallback OnRequireLogin { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _isAuthenticated = !string.IsNullOrWhiteSpace(CurrentUserId);
+        await ReloadAsync();
+    }
+
+    private async Task ReloadAsync()
+    {
+        _loading = true;
+        try
+        {
+            _ideas = await Store.ListAsync(_sort, string.IsNullOrWhiteSpace(_search) ? null : _search.Trim(), CurrentUserId);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task OnSuggestClickedAsync()
+    {
+        if (!_isAuthenticated)
+        {
+            if (OnRequireLogin.HasDelegate)
+            {
+                await OnRequireLogin.InvokeAsync();
+            }
+            else if (!string.IsNullOrWhiteSpace(LoginUrl))
+            {
+                // Host should wire OnRequireLogin / Navigation; hint is already visible.
+                Snackbar.Add(LoginHint, Severity.Info);
+            }
+
+            return;
+        }
+
+        _showSubmit = true;
+    }
+
+    private async Task SubmitIdeaAsync()
+    {
+        if (!_isAuthenticated || string.IsNullOrWhiteSpace(CurrentUserId))
+        {
+            await OnSuggestClickedAsync();
+            return;
+        }
+
+        _busy = true;
+        try
+        {
+            var result = await Store.CreateAsync(
+                new CreateFeatureIdeaRequest(
+                    _newTitle,
+                    _newDescription,
+                    CurrentUserDisplayName ?? "Customer"),
+                CurrentUserId);
+
+            if (!result.Success)
+            {
+                Snackbar.Add(result.ErrorCode ?? "Could not create idea", Severity.Error);
+                return;
+            }
+
+            _newTitle = "";
+            _newDescription = "";
+            _showSubmit = false;
+            Snackbar.Add("Thanks — your idea was added.", Severity.Success);
+            await ReloadAsync();
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task ToggleVoteAsync(FeatureIdeaDto idea)
+    {
+        if (!_isAuthenticated || string.IsNullOrWhiteSpace(CurrentUserId))
+        {
+            await OnSuggestClickedAsync();
+            return;
+        }
+
+        var result = await Store.ToggleVoteAsync(idea.Id, CurrentUserId);
+        if (!result.Success)
+        {
+            Snackbar.Add(result.ErrorCode ?? "Could not update vote", Severity.Error);
+            return;
+        }
+
+        await ReloadAsync();
+    }
+}

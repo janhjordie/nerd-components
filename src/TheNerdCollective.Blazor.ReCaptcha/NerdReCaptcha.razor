@@ -1,0 +1,153 @@
+@namespace TheNerdCollective.Blazor.ReCaptcha
+@inject INerdReCaptchaVerifier Verifier
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+<div class="nerd-recaptcha" data-testid="nerd-recaptcha" data-mode="@Mode.ToString().ToLowerInvariant()">
+    @if (Mode == NerdReCaptchaMode.GoogleV2)
+    {
+        <div @ref="_widgetHost" class="nerd-recaptcha-google" data-testid="nerd-recaptcha-google"></div>
+        @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+        {
+            <p class="nerd-recaptcha-error" role="alert">@ErrorMessage</p>
+        }
+    }
+    else if (_challenge is not null)
+    {
+        <div class="nerd-recaptcha-simple" data-testid="nerd-recaptcha-simple">
+            <label for="@_answerInputId">@_challenge.Prompt</label>
+            <input id="@_answerInputId"
+                   type="number"
+                   inputmode="numeric"
+                   @bind="_answerText"
+                   @bind:event="oninput"
+                   @bind:after="OnAnswerChangedAsync"
+                   aria-describedby="@_hintId"
+                   data-testid="nerd-recaptcha-simple-answer" />
+            <button type="button"
+                    class="nerd-recaptcha-refresh"
+                    @onclick="RefreshSimpleChallengeAsync"
+                    data-testid="nerd-recaptcha-simple-refresh">
+                New challenge
+            </button>
+            <p id="@_hintId" class="nerd-recaptcha-hint">Simple challenge — Google reCAPTCHA is not configured.</p>
+            @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+            {
+                <p class="nerd-recaptcha-error" role="alert">@ErrorMessage</p>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private readonly string _answerInputId = $"nerd-recaptcha-answer-{Guid.NewGuid():N}";
+    private readonly string _hintId = $"nerd-recaptcha-hint-{Guid.NewGuid():N}";
+    private ElementReference _widgetHost;
+    private IJSObjectReference? _module;
+    private DotNetObjectReference<NerdReCaptcha>? _dotNetRef;
+    private SimpleChallenge? _challenge;
+    private string _answerText = "";
+    private bool _googleRendered;
+
+    [Parameter]
+    public string? Token { get; set; }
+
+    [Parameter]
+    public EventCallback<string?> TokenChanged { get; set; }
+
+    [Parameter]
+    public string? ErrorMessage { get; set; }
+
+    [Parameter]
+    public string Theme { get; set; } = "light";
+
+    [Parameter]
+    public string Size { get; set; } = "normal";
+
+    private NerdReCaptchaMode Mode => Verifier.Mode;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Mode == NerdReCaptchaMode.Simple)
+        {
+            await RefreshSimpleChallengeAsync();
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (Mode != NerdReCaptchaMode.GoogleV2 || _googleRendered)
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(Verifier.SiteKey))
+        {
+            return;
+        }
+
+        _module ??= await JS.InvokeAsync<IJSObjectReference>(
+            "import",
+            "./_content/TheNerdCollective.Blazor.ReCaptcha/js/nerd-recaptcha.js");
+        _dotNetRef ??= DotNetObjectReference.Create(this);
+        await _module.InvokeVoidAsync(
+            "render",
+            _widgetHost,
+            Verifier.SiteKey,
+            Theme,
+            Size,
+            _dotNetRef);
+        _googleRendered = true;
+    }
+
+    [JSInvokable]
+    public async Task OnGoogleTokenAsync(string token)
+    {
+        Token = token;
+        await TokenChanged.InvokeAsync(token);
+    }
+
+    [JSInvokable]
+    public async Task OnGoogleExpiredAsync()
+    {
+        Token = null;
+        await TokenChanged.InvokeAsync(null);
+    }
+
+    private async Task RefreshSimpleChallengeAsync()
+    {
+        _challenge = await Verifier.CreateSimpleChallengeAsync();
+        _answerText = "";
+        Token = null;
+        await TokenChanged.InvokeAsync(null);
+    }
+
+    private async Task OnAnswerChangedAsync()
+    {
+        if (_challenge is null || string.IsNullOrWhiteSpace(_answerText))
+        {
+            Token = null;
+            await TokenChanged.InvokeAsync(null);
+            return;
+        }
+
+        Token = $"simple:{_challenge.ChallengeId}:{_answerText.Trim()}";
+        await TokenChanged.InvokeAsync(Token);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        _dotNetRef?.Dispose();
+        if (_module is not null)
+        {
+            try
+            {
+                await _module.DisposeAsync();
+            }
+            catch (JSDisconnectedException)
+            {
+                // Circuit gone — ignore.
+            }
+        }
+    }
+}
