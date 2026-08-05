@@ -48,11 +48,12 @@
                 <MudStack Spacing="2">
                     <MudText Typo="Typo.body2" Class="mud-text-secondary">@ChallengeLabel</MudText>
                     <MudText Typo="Typo.h5" data-testid="nerd-recaptcha-simple-prompt">@_challenge.Prompt</MudText>
-                    <MudTextField @bind-Value="_answerText"
-                                  @bind-Value:after="OnAnswerChangedAsync"
+                    <MudTextField T="string"
+                                  Value="_answerText"
+                                  ValueChanged="OnAnswerTextChangedAsync"
                                   Label="@AnswerLabel"
                                   Variant="Variant.Outlined"
-                                  InputType="InputType.Number"
+                                  InputType="InputType.Text"
                                   InputMode="InputMode.numeric"
                                   Immediate="true"
                                   FullWidth="true"
@@ -147,38 +148,43 @@
     }
 
     [JSInvokable]
-    public async Task OnGoogleTokenAsync(string token)
-    {
-        Token = token;
-        await TokenChanged.InvokeAsync(token);
-    }
+    public Task OnGoogleTokenAsync(string token) => SetTokenAsync(token);
 
     [JSInvokable]
-    public async Task OnGoogleExpiredAsync()
-    {
-        Token = null;
-        await TokenChanged.InvokeAsync(null);
-    }
+    public Task OnGoogleExpiredAsync() => SetTokenAsync(null);
 
     private async Task RefreshSimpleChallengeAsync()
     {
         _challenge = await Verifier.CreateSimpleChallengeAsync();
         _answerText = "";
-        Token = null;
-        await TokenChanged.InvokeAsync(null);
+        await SetTokenAsync(null);
     }
 
-    private async Task OnAnswerChangedAsync()
+    private Task OnAnswerTextChangedAsync(string value)
+    {
+        _answerText = value ?? "";
+        return PublishAnswerTokenAsync();
+    }
+
+    private Task PublishAnswerTokenAsync()
     {
         if (_challenge is null || string.IsNullOrWhiteSpace(_answerText))
         {
-            Token = null;
-            await TokenChanged.InvokeAsync(null);
+            return SetTokenAsync(null);
+        }
+
+        return SetTokenAsync($"simple:{_challenge.ChallengeId}:{_answerText.Trim()}");
+    }
+
+    private async Task SetTokenAsync(string? token)
+    {
+        if (Token == token)
+        {
             return;
         }
 
-        Token = $"simple:{_challenge.ChallengeId}:{_answerText.Trim()}";
-        await TokenChanged.InvokeAsync(Token);
+        Token = token;
+        await TokenChanged.InvokeAsync(token);
     }
 
     public async ValueTask DisposeAsync()

@@ -7,7 +7,7 @@
     <RootNamespace>TheNerdCollective.MudComponents.FeatureFeedback</RootNamespace>
     <AssemblyName>TheNerdCollective.MudComponents.FeatureFeedback</AssemblyName>
     <PackageId>TheNerdCollective.MudComponents.FeatureFeedback</PackageId>
-    <Version>1.1.5</Version>
+    <Version>1.1.6</Version>
     <Authors>The Nerd Collective</Authors>
     <Description>MudBlazor feature ideas board with suggest + upvote UI, injectable public/admin pages, and optional reCAPTCHA on submit. Requires TheNerdCollective.Blazor.FeatureFeedback.</Description>
     <PackageTags>mudblazor;blazor;feature-feedback;upvote;ideas;roadmap;components</PackageTags>

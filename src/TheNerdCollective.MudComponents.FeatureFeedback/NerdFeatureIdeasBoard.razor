@@ -81,8 +81,8 @@
             @if (_captchaEnabled)
             {
                 <div class="mb-3">
-                    <NerdReCaptcha @bind-Token="_captchaToken"
-                                   @bind-Token:after="ClearSubmitError"
+                    <NerdReCaptcha Token="_captchaToken"
+                                   TokenChanged="OnCaptchaTokenChangedAsync"
                                    SimpleTitle="@CaptchaTitle"
                                    RefreshLabel="@CaptchaRefreshLabel"
                                    HintLabel="@CaptchaHintLabel"
@@ -153,6 +153,8 @@
     private bool _isAuthenticated;
     private bool _captchaEnabled;
     private INerdReCaptchaVerifier? _captcha;
+    private string? _listedForUserId;
+    private bool _listLoaded;
 
     [Parameter] public string Title { get; set; } = "Feature ideas";
     [Parameter] public string? Lead { get; set; } = "We listen to our customers — suggest ideas and upvote what matters.";
@@ -202,7 +204,13 @@
     protected override async Task OnParametersSetAsync()
     {
         _isAuthenticated = !string.IsNullOrWhiteSpace(CurrentUserId);
-        await ReloadAsync();
+        // Avoid reloading on every parent render — that races captcha TokenChanged.
+        if (!_listLoaded || !string.Equals(_listedForUserId, CurrentUserId, StringComparison.Ordinal))
+        {
+            _listedForUserId = CurrentUserId;
+            _listLoaded = true;
+            await ReloadAsync();
+        }
     }
 
     private async Task ReloadAsync()
@@ -246,6 +254,13 @@
     }
 
     private void ClearSubmitError() => _submitError = null;
+
+    private Task OnCaptchaTokenChangedAsync(string? token)
+    {
+        _captchaToken = token;
+        _submitError = null;
+        return Task.CompletedTask;
+    }
 
     private async Task SubmitIdeaAsync()
     {
