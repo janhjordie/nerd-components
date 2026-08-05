@@ -60,22 +60,29 @@
         <MudPaper Class="pa-4 mb-4" Outlined="true" data-testid="nerd-feature-ideas-submit">
             <MudText Typo="Typo.h6" Class="mb-2">@SuggestLabel</MudText>
             <MudTextField @bind-Value="_newTitle"
+                          @bind-Value:after="ClearSubmitError"
                           Label="@TitleFieldLabel"
+                          HelperText="@TitleHelperText"
                           Variant="Variant.Outlined"
                           Required="true"
+                          Immediate="true"
                           Class="mb-2"
                           data-testid="nerd-feature-ideas-title-input" />
             <MudTextField @bind-Value="_newDescription"
+                          @bind-Value:after="ClearSubmitError"
                           Label="@DescriptionFieldLabel"
+                          HelperText="@DescriptionHelperText"
                           Variant="Variant.Outlined"
                           Lines="4"
                           Required="true"
+                          Immediate="true"
                           Class="mb-3"
                           data-testid="nerd-feature-ideas-description-input" />
             @if (_captchaEnabled)
             {
                 <div class="mb-3">
                     <NerdReCaptcha @bind-Token="_captchaToken"
+                                   @bind-Token:after="ClearSubmitError"
                                    SimpleTitle="@CaptchaTitle"
                                    RefreshLabel="@CaptchaRefreshLabel"
                                    HintLabel="@CaptchaHintLabel"
@@ -83,15 +90,24 @@
                                    AnswerLabel="@CaptchaAnswerLabel" />
                 </div>
             }
+            @if (!string.IsNullOrWhiteSpace(_submitError))
+            {
+                <MudAlert Severity="Severity.Warning"
+                          Dense="true"
+                          Class="mb-3"
+                          data-testid="nerd-feature-ideas-submit-error">
+                    @_submitError
+                </MudAlert>
+            }
             <div class="d-flex gap-2">
                 <MudButton Variant="Variant.Filled"
                            Color="Color.Primary"
-                           Disabled="_busy"
+                           Disabled="@(!CanSubmit)"
                            OnClick="SubmitIdeaAsync"
                            data-testid="nerd-feature-ideas-submit-button">
                     @SubmitLabel
                 </MudButton>
-                <MudButton Variant="Variant.Text" OnClick="() => _showSubmit = false">@CancelLabel</MudButton>
+                <MudButton Variant="Variant.Text" OnClick="CancelSubmit">@CancelLabel</MudButton>
             </div>
         </MudPaper>
     }
@@ -119,12 +135,18 @@
 </section>
 
 @code {
+    private const int MinTitleLength = 3;
+    private const int MaxTitleLength = 120;
+    private const int MinDescriptionLength = 10;
+    private const int MaxDescriptionLength = 2000;
+
     private IReadOnlyList<FeatureIdeaDto> _ideas = [];
     private FeatureIdeaSort _sort = FeatureIdeaSort.MostVoted;
     private string _search = "";
     private string _newTitle = "";
     private string _newDescription = "";
     private string? _captchaToken;
+    private string? _submitError;
     private bool _loading = true;
     private bool _busy;
     private bool _showSubmit;
@@ -146,6 +168,8 @@
     [Parameter] public string SuggestLabel { get; set; } = "Suggest a feature";
     [Parameter] public string TitleFieldLabel { get; set; } = "Title";
     [Parameter] public string DescriptionFieldLabel { get; set; } = "Describe the problem or idea";
+    [Parameter] public string TitleHelperText { get; set; } = "At least 3 characters.";
+    [Parameter] public string DescriptionHelperText { get; set; } = "At least 10 characters.";
     [Parameter] public string SubmitLabel { get; set; } = "Submit idea";
     [Parameter] public string CancelLabel { get; set; } = "Cancel";
     [Parameter] public string EmptyLabel { get; set; } = "No ideas yet — be the first to suggest one.";
@@ -156,8 +180,18 @@
     [Parameter] public string CaptchaHintLabel { get; set; } = "";
     [Parameter] public string CaptchaChallengeLabel { get; set; } = "Solve this to continue";
     [Parameter] public string CaptchaAnswerLabel { get; set; } = "Your answer";
+    [Parameter] public string CaptchaFailedMessage { get; set; } = "Please complete the verification challenge.";
+    [Parameter] public string InvalidTitleMessage { get; set; } = "Title must be 3–120 characters.";
+    [Parameter] public string InvalidDescriptionMessage { get; set; } = "Description must be at least 10 characters.";
+    [Parameter] public string SubmitSuccessMessage { get; set; } = "Thanks — your idea was added.";
     [Parameter] public bool RequireCaptchaWhenAvailable { get; set; } = true;
     [Parameter] public EventCallback OnRequireLogin { get; set; }
+
+    private bool CanSubmit =>
+        !_busy
+        && _newTitle.Trim().Length is >= MinTitleLength and <= MaxTitleLength
+        && _newDescription.Trim().Length is >= MinDescriptionLength and <= MaxDescriptionLength
+        && (!_captchaEnabled || !string.IsNullOrWhiteSpace(_captchaToken));
 
     protected override void OnInitialized()
     {
@@ -202,7 +236,16 @@
 
         _showSubmit = true;
         _captchaToken = null;
+        _submitError = null;
     }
+
+    private void CancelSubmit()
+    {
+        _showSubmit = false;
+        _submitError = null;
+    }
+
+    private void ClearSubmitError() => _submitError = null;
 
     private async Task SubmitIdeaAsync()
     {
@@ -212,7 +255,14 @@
             return;
         }
 
+        if (!CanSubmit)
+        {
+            _submitError = ResolveValidationMessage();
+            return;
+        }
+
         _busy = true;
+        _submitError = null;
         try
         {
             if (_captchaEnabled && _captcha is not null)
@@ -220,7 +270,7 @@
                 var captcha = await _captcha.VerifyAsync(_captchaToken);
                 if (!captcha.Success)
                 {
-                    Snackbar.Add(captcha.ErrorCode ?? "Captcha failed", Severity.Warning);
+                    ShowError(CaptchaFailedMessage);
                     return;
                 }
             }
@@ -234,7 +284,7 @@
 
             if (!result.Success)
             {
-                Snackbar.Add(result.ErrorCode ?? "Could not create idea", Severity.Error);
+                ShowError(MapError(result.ErrorCode));
                 return;
             }
 
@@ -242,7 +292,7 @@
             _newDescription = "";
             _captchaToken = null;
             _showSubmit = false;
-            Snackbar.Add("Thanks — your idea was added.", Severity.Success);
+            Snackbar.Add(SubmitSuccessMessage, Severity.Success);
             await ReloadAsync();
         }
         finally
@@ -262,10 +312,46 @@
         var result = await Store.ToggleVoteAsync(idea.Id, CurrentUserId);
         if (!result.Success)
         {
-            Snackbar.Add(result.ErrorCode ?? "Could not update vote", Severity.Error);
+            ShowError(MapError(result.ErrorCode));
             return;
         }
 
         await ReloadAsync();
     }
+
+    private void ShowError(string message)
+    {
+        _submitError = message;
+        Snackbar.Add(message, Severity.Warning);
+    }
+
+    private string ResolveValidationMessage()
+    {
+        if (_newTitle.Trim().Length is < MinTitleLength or > MaxTitleLength)
+        {
+            return InvalidTitleMessage;
+        }
+
+        if (_newDescription.Trim().Length is < MinDescriptionLength or > MaxDescriptionLength)
+        {
+            return InvalidDescriptionMessage;
+        }
+
+        if (_captchaEnabled && string.IsNullOrWhiteSpace(_captchaToken))
+        {
+            return CaptchaFailedMessage;
+        }
+
+        return InvalidDescriptionMessage;
+    }
+
+    private string MapError(string? errorCode) => errorCode switch
+    {
+        "invalid-title" => InvalidTitleMessage,
+        "invalid-description" => InvalidDescriptionMessage,
+        "unauthenticated" => LoginHint,
+        "missing-input-response" or "challenge-not-found" or "challenge-expired" or "incorrect-answer"
+            or "invalid-simple-token" => CaptchaFailedMessage,
+        _ => errorCode ?? "Could not save idea"
+    };
 }
