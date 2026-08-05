@@ -45,7 +45,7 @@
         </MudButton>
     </div>
 
-    @if (!_isAuthenticated && !string.IsNullOrWhiteSpace(LoginHint))
+    @if (_isAuthenticated && !string.IsNullOrWhiteSpace(LoginHint))
     {
         <MudAlert Severity="Severity.Info" Dense="true" Class="mb-4" data-testid="nerd-feature-ideas-login-hint">
             @LoginHint
@@ -54,6 +54,26 @@
                 <MudLink Href="@LoginUrl" Class="ms-1">@LoginLinkLabel</MudLink>
             }
         </MudAlert>
+    }
+
+    @if (_isAuthenticated && MaxVotesPerUser is int maxVotes)
+    {
+        <MudAlert Severity="Severity.Info" Dense="true" Class="mb-4" data-testid="nerd-feature-ideas-vote-budget">
+            @FormatVotesBudget(_votesUsed, maxVotes)
+        </MudAlert>
+    }
+
+    @if (_isAuthenticated && ShowMyVotesFilter)
+    {
+        <MudChipSet T="string"
+                    Class="mb-4"
+                    SelectionMode="SelectionMode.SingleSelection"
+                    SelectedValue="@_filterMode"
+                    SelectedValueChanged="OnFilterModeChanged"
+                    data-testid="nerd-feature-ideas-filter">
+            <MudChip T="string" Value="@FilterAll">@AllIdeasFilterLabel</MudChip>
+            <MudChip T="string" Value="@FilterMyVotes">@MyVotesFilterLabel</MudChip>
+        </MudChipSet>
     }
 
     @if (_showSubmit)
@@ -125,18 +145,23 @@
     {
         <MudProgressLinear Indeterminate="true" Class="mb-4" data-testid="nerd-feature-ideas-loading" />
     }
-    else if (_ideas.Count == 0)
+    else if (!DisplayedIdeas.Any())
     {
-        <MudText Typo="Typo.body2" data-testid="nerd-feature-ideas-empty">@EmptyLabel</MudText>
+        <MudText Typo="Typo.body2" data-testid="nerd-feature-ideas-empty">
+            @_showOnlyMyVotes ? MyVotesEmptyLabel : EmptyLabel
+        </MudText>
     }
     else
     {
         <MudStack Spacing="2" data-testid="nerd-feature-ideas-list">
-            @foreach (var idea in _ideas)
+            @foreach (var idea in DisplayedIdeas)
             {
                 <NerdFeatureIdeaCard Idea="idea"
                                      VoteLabel="@VoteLabel"
+                                     WithdrawVoteLabel="@WithdrawVoteLabel"
+                                     VotedBadgeLabel="@VotedBadgeLabel"
                                      PlannedLabel="@PlannedLabel"
+                                     DisableVoting="@IsVoteDisabled(idea)"
                                      OnToggleVote="ToggleVoteAsync" />
             }
         </MudStack>
@@ -149,9 +174,14 @@
     private const int MinDescriptionLength = 10;
     private const int MaxDescriptionLength = 2000;
 
+    private const string FilterAll = "all";
+    private const string FilterMyVotes = "my-votes";
+
     private IReadOnlyList<FeatureIdeaDto> _ideas = [];
     private FeatureIdeaSort _sort = FeatureIdeaSort.MostVoted;
     private string _search = "";
+    private string _filterMode = FilterAll;
+    private int _votesUsed;
     private string _newTitle = "";
     private string _newDescription = "";
     private string? _captchaToken;
@@ -187,7 +217,19 @@
     [Parameter] public string CancelLabel { get; set; } = "Cancel";
     [Parameter] public string EmptyLabel { get; set; } = "No ideas yet — be the first to suggest one.";
     [Parameter] public string VoteLabel { get; set; } = "Upvote";
+    [Parameter] public string WithdrawVoteLabel { get; set; } = "Remove vote";
+    [Parameter] public string VotedBadgeLabel { get; set; } = "Your vote";
     [Parameter] public string PlannedLabel { get; set; } = "Planned";
+    /// <summary>Max ideas a user may vote for (null = unlimited).</summary>
+    [Parameter] public int? MaxVotesPerUser { get; set; } = 5;
+    [Parameter] public bool AllowWithdrawVote { get; set; } = true;
+    [Parameter] public bool ShowMyVotesFilter { get; set; } = true;
+    [Parameter] public string AllIdeasFilterLabel { get; set; } = "All ideas";
+    [Parameter] public string MyVotesFilterLabel { get; set; } = "My votes";
+    [Parameter] public string MyVotesEmptyLabel { get; set; } = "You have not voted on any ideas yet.";
+    [Parameter] public string VotesBudgetLabel { get; set; } = "votes used";
+    [Parameter] public string VoteLimitReachedMessage { get; set; } = "You have used all your votes.";
+    [Parameter] public string WithdrawDisabledMessage { get; set; } = "You cannot withdraw votes.";
     [Parameter] public string CaptchaTitle { get; set; } = "Quick verification";
     [Parameter] public string CaptchaRefreshLabel { get; set; } = "New challenge";
     [Parameter] public string CaptchaHintLabel { get; set; } = "";
@@ -199,6 +241,25 @@
     [Parameter] public string SubmitSuccessMessage { get; set; } = "Thanks — your idea was added.";
     [Parameter] public bool RequireCaptchaWhenAvailable { get; set; } = true;
     [Parameter] public EventCallback OnRequireLogin { get; set; }
+
+    private bool _showOnlyMyVotes => _filterMode == FilterMyVotes;
+
+    private IEnumerable<FeatureIdeaDto> DisplayedIdeas =>
+        _showOnlyMyVotes ? _ideas.Where(idea => idea.VotedByCurrentUser) : _ideas;
+
+    private bool CanAddVote =>
+        MaxVotesPerUser is null || _votesUsed < MaxVotesPerUser.Value;
+
+    private bool IsVoteDisabled(FeatureIdeaDto idea) =>
+        !idea.VotedByCurrentUser && !CanAddVote;
+
+    private string FormatVotesBudget(int used, int max) => $"{used} / {max} {VotesBudgetLabel}";
+
+    private Task OnFilterModeChanged(string? mode)
+    {
+        _filterMode = string.IsNullOrWhiteSpace(mode) ? FilterAll : mode;
+        return Task.CompletedTask;
+    }
 
     private bool CanSubmit =>
         !_busy
@@ -229,11 +290,24 @@
         try
         {
             _ideas = await Store.ListAsync(_sort, string.IsNullOrWhiteSpace(_search) ? null : _search.Trim(), CurrentUserId);
+            await RefreshVoteBudgetAsync();
         }
         finally
         {
             _loading = false;
         }
+    }
+
+    private async Task RefreshVoteBudgetAsync()
+    {
+        if (!_isAuthenticated || string.IsNullOrWhiteSpace(CurrentUserId) || MaxVotesPerUser is null)
+        {
+            _votesUsed = 0;
+            return;
+        }
+
+        var allIdeas = await Store.ListAsync(_sort, search: null, currentUserId: CurrentUserId);
+        _votesUsed = allIdeas.Count(idea => idea.VotedByCurrentUser);
     }
 
     private async Task OnSuggestClickedAsync()
@@ -361,7 +435,17 @@
             return;
         }
 
-        var result = await Store.ToggleVoteAsync(idea.Id, CurrentUserId);
+        if (!AllowWithdrawVote && idea.VotedByCurrentUser)
+        {
+            ShowError(WithdrawDisabledMessage);
+            return;
+        }
+
+        var result = await Store.ToggleVoteAsync(
+            idea.Id,
+            CurrentUserId,
+            MaxVotesPerUser,
+            AllowWithdrawVote);
         if (!result.Success)
         {
             ShowError(MapError(result.ErrorCode));
@@ -402,6 +486,8 @@
         "invalid-title" => InvalidTitleMessage,
         "invalid-description" => InvalidDescriptionMessage,
         "unauthenticated" => LoginHint,
+        "vote-limit-reached" => VoteLimitReachedMessage,
+        "withdraw-disabled" => WithdrawDisabledMessage,
         "missing-input-response" or "challenge-not-found" or "challenge-expired" or "incorrect-answer"
             or "invalid-simple-token" => CaptchaFailedMessage,
         _ => errorCode ?? "Could not save idea"

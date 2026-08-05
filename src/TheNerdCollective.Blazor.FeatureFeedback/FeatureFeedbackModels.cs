@@ -56,9 +56,11 @@ public interface IFeatureFeedbackStore
         string userId,
         CancellationToken cancellationToken = default);
 
-    Task<FeatureIdeaMutationResult> ToggleVoteAsync(
+  Task<FeatureIdeaMutationResult> ToggleVoteAsync(
         Guid ideaId,
         string userId,
+        int? maxVotesPerUser = null,
+        bool allowWithdraw = true,
         CancellationToken cancellationToken = default);
 
     Task<FeatureIdeaMutationResult> UpdateAsync(

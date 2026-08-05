@@ -89,6 +89,8 @@ public sealed class InMemoryFeatureFeedbackStore : IFeatureFeedbackStore
     public Task<FeatureIdeaMutationResult> ToggleVoteAsync(
         Guid ideaId,
         string userId,
+        int? maxVotesPerUser = null,
+        bool allowWithdraw = true,
         CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -108,13 +110,30 @@ public sealed class InMemoryFeatureFeedbackStore : IFeatureFeedbackStore
             return Task.FromResult(new FeatureIdeaMutationResult(false, ErrorCode: "deleted"));
         }
 
-        if (!state.Votes.TryRemove(userId, out _))
+        if (state.Votes.ContainsKey(userId))
         {
+            if (!allowWithdraw)
+            {
+                return Task.FromResult(new FeatureIdeaMutationResult(false, ErrorCode: "withdraw-disabled"));
+            }
+
+            state.Votes.TryRemove(userId, out _);
+        }
+        else
+        {
+            if (maxVotesPerUser is int max && CountUserVotes(userId) >= max)
+            {
+                return Task.FromResult(new FeatureIdeaMutationResult(false, ErrorCode: "vote-limit-reached"));
+            }
+
             state.Votes[userId] = 0;
         }
 
         return Task.FromResult(new FeatureIdeaMutationResult(true, ToDto(state, userId)));
     }
+
+    private int CountUserVotes(string userId) =>
+        _ideas.Values.Count(idea => idea.Votes.ContainsKey(userId));
 
     public Task<FeatureIdeaMutationResult> UpdateAsync(
         Guid ideaId,

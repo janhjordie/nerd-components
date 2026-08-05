@@ -105,4 +105,30 @@ public sealed class InMemoryFeatureFeedbackStoreTests
         Assert.DoesNotContain(adminList, idea => idea.Id == created.Idea.Id);
         Assert.False((await store.HardDeleteAsync(created.Idea.Id)).Success);
     }
+
+    [Fact]
+    public async Task Toggle_vote_enforces_max_votes_per_user()
+    {
+        var store = new InMemoryFeatureFeedbackStore();
+        var first = await store.CreateAsync(new CreateFeatureIdeaRequest("Idea F1", "Description for F1 here", "F"), "u1");
+        var second = await store.CreateAsync(new CreateFeatureIdeaRequest("Idea F2", "Description for F2 here", "F"), "u2");
+
+        var firstVote = await store.ToggleVoteAsync(first.Idea!.Id, "u3", maxVotesPerUser: 1);
+        Assert.True(firstVote.Success);
+
+        var blocked = await store.ToggleVoteAsync(second.Idea!.Id, "u3", maxVotesPerUser: 1);
+        Assert.False(blocked.Success);
+        Assert.Equal("vote-limit-reached", blocked.ErrorCode);
+    }
+
+    [Fact]
+    public async Task Toggle_vote_can_block_withdraw()
+    {
+        var store = new InMemoryFeatureFeedbackStore();
+        var created = await store.CreateAsync(new CreateFeatureIdeaRequest("Idea G1", "Description for G1 here", "G"), "u1");
+
+        var blocked = await store.ToggleVoteAsync(created.Idea!.Id, "u1", allowWithdraw: false);
+        Assert.False(blocked.Success);
+        Assert.Equal("withdraw-disabled", blocked.ErrorCode);
+    }
 }
