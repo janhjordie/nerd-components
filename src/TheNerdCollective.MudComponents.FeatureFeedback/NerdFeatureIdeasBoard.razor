@@ -25,16 +25,17 @@
                       Immediate="true"
                       Class="flex-grow-1"
                       data-testid="nerd-feature-ideas-search" />
-        <MudSelect T="FeatureIdeaSort"
-                   @bind-Value="_sort"
-                   @bind-Value:after="ReloadAsync"
-                   Label="@SortLabel"
-                   Variant="Variant.Outlined"
-                   Style="min-width: 12rem;"
-                   data-testid="nerd-feature-ideas-sort">
-            <MudSelectItem Value="FeatureIdeaSort.MostVoted">@MostVotedLabel</MudSelectItem>
-            <MudSelectItem Value="FeatureIdeaSort.Newest">@NewestLabel</MudSelectItem>
-        </MudSelect>
+        <div data-testid="nerd-feature-ideas-sort">
+            <MudSelect T="FeatureIdeaSort"
+                       @bind-Value="_sort"
+                       @bind-Value:after="ReloadAsync"
+                       Label="@SortLabel"
+                       Variant="Variant.Outlined"
+                       Style="min-width: 12rem;">
+                <MudSelectItem Value="FeatureIdeaSort.MostVoted">@MostVotedLabel</MudSelectItem>
+                <MudSelectItem Value="FeatureIdeaSort.Newest">@NewestLabel</MudSelectItem>
+            </MudSelect>
+        </div>
         <MudButton Variant="Variant.Filled"
                    Color="Color.Primary"
                    StartIcon="@Icons.Material.Filled.Lightbulb"
