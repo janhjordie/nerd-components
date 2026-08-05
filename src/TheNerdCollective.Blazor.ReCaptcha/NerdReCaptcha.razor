@@ -39,13 +39,13 @@
                               Label="@_challenge.Prompt"
                               Variant="Variant.Outlined"
                               InputType="InputType.Number"
+                              InputMode="InputMode.numeric"
                               Immediate="true"
                               FullWidth="true"
                               Adornment="Adornment.Start"
                               AdornmentIcon="@Icons.Material.Outlined.Calculate"
                               HelperText="@HintLabel"
-                              data-testid="nerd-recaptcha-simple-answer"
-                              UserAttributes="@(new Dictionary<string, object> { ["inputmode"] = "numeric" })" />
+                              data-testid="nerd-recaptcha-simple-answer" />
 
                 @if (!string.IsNullOrWhiteSpace(ErrorMessage))
                 {
