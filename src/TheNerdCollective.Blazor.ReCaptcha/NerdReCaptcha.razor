@@ -9,41 +9,54 @@
         <div @ref="_widgetHost" class="nerd-recaptcha-google" data-testid="nerd-recaptcha-google"></div>
         @if (!string.IsNullOrWhiteSpace(ErrorMessage))
         {
-            <p class="nerd-recaptcha-error" role="alert">@ErrorMessage</p>
+            <MudAlert Severity="Severity.Error" Dense="true" Class="mt-2" data-testid="nerd-recaptcha-error">@ErrorMessage</MudAlert>
         }
     }
     else if (_challenge is not null)
     {
-        <div class="nerd-recaptcha-simple" data-testid="nerd-recaptcha-simple">
-            <MudTextField @bind-Value="_answerText"
-                          @bind-Value:after="OnAnswerChangedAsync"
-                          Label="@_challenge.Prompt"
-                          Variant="Variant.Outlined"
-                          InputType="InputType.Number"
-                          Immediate="true"
-                          Margin="Margin.Dense"
-                          Class="mb-2"
-                          UserAttributes="@(new Dictionary<string, object> { ["data-testid"] = "nerd-recaptcha-simple-answer", ["inputmode"] = "numeric", ["aria-describedby"] = _hintId })" />
-            <MudButton Variant="Variant.Text"
-                       Color="Color.Primary"
-                       Size="MudBlazor.Size.Small"
-                       OnClick="RefreshSimpleChallengeAsync"
-                       data-testid="nerd-recaptcha-simple-refresh">
-                New challenge
-            </MudButton>
-            <MudText Typo="Typo.caption" Class="mud-text-secondary d-block mt-1" id="@_hintId">
-                Simple challenge — Google reCAPTCHA is not configured.
-            </MudText>
-            @if (!string.IsNullOrWhiteSpace(ErrorMessage))
-            {
-                <MudAlert Severity="Severity.Error" Dense="true" Class="mt-2">@ErrorMessage</MudAlert>
-            }
-        </div>
+        <MudPaper Outlined="true"
+                  Elevation="0"
+                  Class="pa-3 nerd-recaptcha-simple"
+                  data-testid="nerd-recaptcha-simple">
+            <MudStack Spacing="2">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="1">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudIcon Icon="@Icons.Material.Outlined.VerifiedUser" Color="Color.Primary" />
+                        <MudText Typo="Typo.subtitle2">@SimpleTitle</MudText>
+                    </MudStack>
+                    <MudTooltip Text="@RefreshLabel">
+                        <MudIconButton Icon="@Icons.Material.Outlined.Refresh"
+                                       Color="Color.Primary"
+                                       Size="MudBlazor.Size.Small"
+                                       aria-label="@RefreshLabel"
+                                       OnClick="RefreshSimpleChallengeAsync"
+                                       data-testid="nerd-recaptcha-simple-refresh" />
+                    </MudTooltip>
+                </MudStack>
+
+                <MudTextField @bind-Value="_answerText"
+                              @bind-Value:after="OnAnswerChangedAsync"
+                              Label="@_challenge.Prompt"
+                              Variant="Variant.Outlined"
+                              InputType="InputType.Number"
+                              Immediate="true"
+                              FullWidth="true"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Outlined.Calculate"
+                              HelperText="@HintLabel"
+                              data-testid="nerd-recaptcha-simple-answer"
+                              UserAttributes="@(new Dictionary<string, object> { ["inputmode"] = "numeric" })" />
+
+                @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+                {
+                    <MudAlert Severity="Severity.Error" Dense="true" data-testid="nerd-recaptcha-error">@ErrorMessage</MudAlert>
+                }
+            </MudStack>
+        </MudPaper>
     }
 </div>
 
 @code {
-    private readonly string _hintId = $"nerd-recaptcha-hint-{Guid.NewGuid():N}";
     private ElementReference _widgetHost;
     private IJSObjectReference? _module;
     private DotNetObjectReference<NerdReCaptcha>? _dotNetRef;
@@ -63,8 +76,18 @@
     [Parameter]
     public string Theme { get; set; } = "light";
 
+    /// <summary>Google reCAPTCHA widget size (<c>normal</c> or <c>compact</c>).</summary>
     [Parameter]
     public string Size { get; set; } = "normal";
+
+    [Parameter]
+    public string SimpleTitle { get; set; } = "Quick verification";
+
+    [Parameter]
+    public string RefreshLabel { get; set; } = "New challenge";
+
+    [Parameter]
+    public string HintLabel { get; set; } = "Simple challenge — Google reCAPTCHA is not configured.";
 
     private NerdReCaptchaMode Mode => Verifier.Mode;
 
