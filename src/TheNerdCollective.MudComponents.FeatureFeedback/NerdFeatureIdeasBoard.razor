@@ -148,7 +148,7 @@
     else if (!DisplayedIdeas.Any())
     {
         <MudText Typo="Typo.body2" data-testid="nerd-feature-ideas-empty">
-            @_showOnlyMyVotes ? MyVotesEmptyLabel : EmptyLabel
+            @EmptyStateLabel
         </MudText>
     }
     else
@@ -243,6 +243,8 @@
     [Parameter] public EventCallback OnRequireLogin { get; set; }
 
     private bool _showOnlyMyVotes => _filterMode == FilterMyVotes;
+
+    private string EmptyStateLabel => _showOnlyMyVotes ? MyVotesEmptyLabel : EmptyLabel;
 
     private IEnumerable<FeatureIdeaDto> DisplayedIdeas =>
         _showOnlyMyVotes ? _ideas.Where(idea => idea.VotedByCurrentUser) : _ideas;
