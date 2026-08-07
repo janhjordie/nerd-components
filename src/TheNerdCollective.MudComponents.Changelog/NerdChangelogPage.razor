@@ -1,0 +1,30 @@
+@page "/nerd-changelog"
+@using TheNerdCollective.MudComponents.Shared
+@inject NerdChangelogService ChangelogService
+@inject NerdChangelogOptions Options
+
+@*
+  Canonical Blazor route is always /nerd-changelog.
+  Override the public URL via NerdChangelogOptions.ChangelogRoute (hub, auth, AppBar).
+  Host middleware + Router NotFound alias map the configured path onto this page.
+*@
+
+<PageTitle>Changelog</PageTitle>
+
+<NerdCatalogPage>
+    <MudStack Spacing="3">
+        <NerdCatalogPageHeader Title="Changelog"
+                               Current="NerdCatalogSection.Changelog"
+                               Subtitle="@($"Product history from changelog*.json · current {_version ?? "0.0.0"}")" />
+        <NerdChangelog />
+    </MudStack>
+</NerdCatalogPage>
+
+@code {
+    private string? _version;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _version = await ChangelogService.GetLatestVersionAsync();
+    }
+}

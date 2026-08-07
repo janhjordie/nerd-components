@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.8
+
+- `ChangelogRoute` on `NerdDesignSystemOptions` + Changelog link in `NerdCatalogHubNav`.
+
 ## 1.5.7
 
 - WCAG guide CTA uses BrandChrome Filled (not PrimaryAction lime fill as only emphasis).

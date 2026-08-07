@@ -1,0 +1,46 @@
+@namespace TheNerdCollective.MudComponents.Changelog
+@using MudBlazor
+
+@if (_entries is null)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else if (_entries.Count == 0)
+{
+    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true">
+        No changelog entries yet. Agents: run <code>update changelog</code>.
+    </MudAlert>
+}
+else
+{
+    <MudDataGrid T="NerdChangelogEntry" Items="_entries" Hover="true" Dense="true" ReadOnly="true">
+        <Columns>
+            <HierarchyColumn T="NerdChangelogEntry" EnableHeaderToggle="true" InitiallyExpandedFunc="@ShouldInitiallyExpand" />
+            <PropertyColumn Property="x => x.Version" Title="Version">
+                <CellTemplate>
+                    <MudChip T="string" Color="Color.Primary" Size="Size.Small">@context.Item.Version</MudChip>
+                </CellTemplate>
+            </PropertyColumn>
+            <PropertyColumn Property="x => x.ChangeType" Title="Type">
+                <CellTemplate>
+                    <MudChip T="string" Color="@GetChangeTypeColor(context.Item.ChangeType)" Size="Size.Small">
+                        @context.Item.ChangeType
+                    </MudChip>
+                </CellTemplate>
+            </PropertyColumn>
+            <PropertyColumn Property="x => x.Title" Title="Title" />
+            <PropertyColumn Property="x => x.ParsedDateTime" Title="Date" Format="yyyy-MM-dd HH:mm" />
+        </Columns>
+        <ChildRowContent>
+            <MudCard Elevation="0">
+                <MudCardContent>
+                    <MudText Typo="Typo.body2"><strong>Details</strong></MudText>
+                    <MudText Typo="Typo.body2" Class="mt-2">@((MarkupString)context.Item.ProcessedDescription)</MudText>
+                </MudCardContent>
+            </MudCard>
+        </ChildRowContent>
+        <PagerContent>
+            <MudDataGridPager T="NerdChangelogEntry" />
+        </PagerContent>
+    </MudDataGrid>
+}

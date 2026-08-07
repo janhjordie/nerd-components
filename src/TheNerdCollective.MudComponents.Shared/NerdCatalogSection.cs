@@ -11,6 +11,7 @@ public enum NerdCatalogSection
     Recipes,
     Typography,
     PlayBook,
+    Changelog,
     Wcag,
     DesignGuide,
     BrandWorkbook

@@ -61,6 +61,7 @@ jobs:
             ["TheNerdCollective.DesignTokens.Core"]="src/TheNerdCollective.DesignTokens.Core"
             ["TheNerdCollective.MudComponents.ResponsiveTypography"]="src/TheNerdCollective.MudComponents.ResponsiveTypography"
             ["TheNerdCollective.MudComponents.Shared"]="src/TheNerdCollective.MudComponents.Shared"
+            ["TheNerdCollective.MudComponents.Changelog"]="src/TheNerdCollective.MudComponents.Changelog"
             ["TheNerdCollective.MudComponents.PlayBook"]="src/TheNerdCollective.MudComponents.PlayBook"
             ["TheNerdCollective.Brand.Dnf"]="src/TheNerdCollective.Brand.Dnf"
             ["TheNerdCollective.Brand.Tnc"]="src/TheNerdCollective.Brand.Tnc"

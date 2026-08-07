@@ -23,9 +23,11 @@ public sealed class NerdDesignSystemOptions
     /// <summary>Route linked from the hub to the MudBlazor PlayBook.</summary>
     public string PlayBookRoute { get; set; } = "/nerd-playbook";
 
+    /// <summary>Route linked from the hub to the JSON changelog page.</summary>
+    public string ChangelogRoute { get; set; } = "/nerd-changelog";
+
     /// <summary>Route for the guided brand workbook wizard.</summary>
     public string BrandWorkbookRoute { get; set; } = "/nerd-brand-workbook";
-
     /// <summary>Route for the live brand design guide.</summary>
     public string DesignGuideRoute { get; set; } = "/nerd-design-guide";
 
