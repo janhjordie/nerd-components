@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.8
+
+- MudDrawer preview uses nested `MudLayout` so Persistent+Open drawers no longer hijack the host shell (blank left margin / dark drawer strip on PlayBook).
+
 ## 1.2.7
 
 - MudTabs use BrandChrome (not PrimaryAction) so active tab text/slider stay readable on page-surface.

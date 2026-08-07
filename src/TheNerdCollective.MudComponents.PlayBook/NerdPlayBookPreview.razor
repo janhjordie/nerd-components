@@ -209,11 +209,23 @@
         </MudExpansionPanels>
         break;
     case "drawer":
-        <div style="position:relative;height:100px;overflow:hidden">
-            <MudDrawer Open="true" Variant="DrawerVariant.Persistent" Class="@Tc" ClipMode="DrawerClipMode.Never" Style="position:absolute;width:120px">
-                <MudText Typo="Typo.caption" Class="pa-2">Drawer</MudText>
-            </MudDrawer>
-        </div>
+        @* Nested MudLayout required: Persistent+Open drawers register on the nearest MudLayout.
+           Without isolation they hijack the host shell (blank left margin + dark drawer strip). *@
+        <MudPaper Outlined="true" Class="pa-0" Style="height:120px;overflow:hidden;position:relative;width:100%">
+            <MudLayout>
+                <MudDrawer Open="true"
+                           Variant="DrawerVariant.Persistent"
+                           Class="@Tc"
+                           ClipMode="DrawerClipMode.Always"
+                           Elevation="0"
+                           Width="96px">
+                    <MudText Typo="Typo.caption" Class="pa-2">Drawer</MudText>
+                </MudDrawer>
+                <MudMainContent Class="pa-2">
+                    <MudText Typo="Typo.caption">Main</MudText>
+                </MudMainContent>
+            </MudLayout>
+        </MudPaper>
         break;
     case "popover":
         <MudButton Class="@Tc" Variant="Variant.Outlined" Size="Size.Small" OnClick="@(() => _popoverOpen = !_popoverOpen)">
