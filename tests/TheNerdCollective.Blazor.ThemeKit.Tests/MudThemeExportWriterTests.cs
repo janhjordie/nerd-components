@@ -59,7 +59,7 @@ public class MudThemeExportWriterTests
         Assert.Contains("\"id\": \"billetsalg-default\"", manifest);
         Assert.Contains("\"version\": \"1.0.1\"", manifest);
         Assert.Contains("\"displayName\": \"BilletSalg Default\"", manifest);
-        Assert.Contains("\"mudBlazorVersion\": \"9.5\"", manifest);
+        Assert.Contains("\"mudBlazorVersion\": \"9.8\"", manifest);
         Assert.Contains("\"type\": \"custom\"", manifest);
         Assert.Contains("Baseline BilletSalg V2 shell theme", manifest);
         Assert.DoesNotContain("\"updatedAt\"", manifest);
