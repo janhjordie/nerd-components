@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.2
+
+- Route chip `/nerd-playbook` uses `BrandChrome` Outlined instead of `Info` (`flod` cyan) so chrome on page-surface stays WCAG-readable.
+
 ## 1.2.0
 
 - Integrated ThemeKit with `PlaybookMode`, `MudThemeToolbar`, and JSON theme persistence via `FileThemeJsonFilePersistence`.
