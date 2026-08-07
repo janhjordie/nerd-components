@@ -56,6 +56,18 @@ internal sealed class NerdDesignTokenAccessibilityStartupValidator : Microsoft.E
                 _logger.LogWarning(
                     "Design token style guard: BrandChrome outlined MudButton CSS uses OnBrandChrome (ContrastText) — expect white-on-white on page-surface. Use BrandChrome accent for outlined/text.");
             }
+
+            foreach (var warning in NerdStyleGuardTools.ValidateOutlinedStatusIntentWarnings(_options))
+            {
+                _logger.LogWarning(
+                    "Design token style guard NRDT001 risk ({Placement}/{Role}): {ContrastRatio:0.0}:1 < {RequiredRatio:0.0}:1 ({Foreground} on {Background}). Do not use this intent on Outlined/Text — use BrandChrome or Filled.",
+                    warning.Placement,
+                    warning.Role,
+                    warning.ContrastRatio,
+                    warning.RequiredRatio,
+                    warning.Foreground,
+                    warning.Background);
+            }
         }
 
         return Task.CompletedTask;

@@ -78,4 +78,15 @@ public sealed class NerdStyleGuardToolsTests
 
         Assert.Contains(warnings, w => w.Role == "outlined-contrast-text-antipattern");
     }
+
+    [Fact]
+    public void Dnf_info_accent_fails_outlined_status_intent_on_page_surface()
+    {
+        var options = NerdBrandPackTestBootstrap.CreateReferenceOptions("dnf");
+        var warnings = NerdStyleGuardTools.ValidateOutlinedStatusIntentWarnings(options);
+
+        Assert.Contains(warnings, w => w.Role == "outlined-status-intent:info");
+        // Placement compliance must still pass — light Info is valid for Filled, not a hard fail.
+        NerdStyleGuardTools.AssertPlacementCompliance(options);
+    }
 }

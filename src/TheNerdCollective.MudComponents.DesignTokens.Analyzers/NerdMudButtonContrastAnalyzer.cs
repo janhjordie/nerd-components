@@ -23,7 +23,7 @@ public sealed class NerdMudButtonContrastAnalyzer : DiagnosticAnalyzer
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
         description:
-            "Outlined/Text Mud controls must not use filled-button intents (muted-content, primary-action ContrastText, page-surface). Prefer BrandChrome or Filled + PrimaryAction.");
+            "Outlined/Text Mud controls must not use filled/status intents (muted-content, primary-action, page-surface, info, success, highlight). Prefer BrandChrome Outlined or Filled + PrimaryAction/Info.");
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } =
         ImmutableArray.Create(Rule);
@@ -95,9 +95,13 @@ public static class NerdRazorContrastHeuristics
         RegexOptions.CultureInvariant | RegexOptions.Compiled);
 
     private static readonly Regex ClassExpr = new(
-        @"Class\s*=\s*""?@[^""\n>]*(?<c>MutedContent|PrimaryAction|PageSurface|muted-content|primary-action|page-surface)[^""\n>]*""?",
+        @"Class\s*=\s*""?@[^""\n>]*(?<c>MutedContent|PrimaryAction|PageSurface|OnPrimaryAction|Info|Success|Highlight|muted-content|primary-action|page-surface|on-primary-action|info|success|highlight)[^""\n>]*""?",
         RegexOptions.CultureInvariant | RegexOptions.Compiled);
 
+    /// <summary>
+    /// Intents that paint poorly as Outlined/Text on page-surface (light fills, ContrastText, status accents).
+    /// Status aliases (info/success/highlight) are for Filled alerts/chips — not chrome labels.
+    /// </summary>
     private static readonly string[] DangerousIntents =
     [
         "muted-content",
@@ -108,7 +112,14 @@ public static class NerdRazorContrastHeuristics
         "PageSurface",
         "kridt-lys",
         "on-primary-action",
-        "OnPrimaryAction"
+        "OnPrimaryAction",
+        "info",
+        "Info",
+        "success",
+        "Success",
+        "highlight",
+        "Highlight",
+        "flod" // DNF Info accent — light cyan fails WCAG as outlined chrome
     ];
 
     public static IReadOnlyList<NerdRazorContrastHit> FindViolations(string razorSource)

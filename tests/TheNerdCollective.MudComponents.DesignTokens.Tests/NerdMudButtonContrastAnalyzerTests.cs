@@ -52,4 +52,41 @@ public sealed class NerdMudButtonContrastAnalyzerTests
 
         Assert.Empty(hits);
     }
+
+    [Fact]
+    public void Flags_outlined_info_chip_on_page_surface()
+    {
+        const string razor = """
+            <MudChip T="string" Class="@Ui(NerdDesignSystemUi.Info)" Variant="Variant.Outlined">/nerd-playbook</MudChip>
+            """;
+
+        var hits = NerdRazorContrastHeuristics.FindViolations(razor);
+
+        Assert.NotEmpty(hits);
+        Assert.Contains("Info", hits[0].Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Flags_outlined_flod_token_class()
+    {
+        const string razor = """
+            <MudChip T="string" Class="dnf-flod" Variant="Variant.Outlined">route</MudChip>
+            """;
+
+        var hits = NerdRazorContrastHeuristics.FindViolations(razor);
+
+        Assert.NotEmpty(hits);
+    }
+
+    [Fact]
+    public void Allows_filled_info_chip()
+    {
+        const string razor = """
+            <MudChip T="string" Class="@Ui(NerdDesignSystemUi.Info)" Variant="Variant.Filled">OK</MudChip>
+            """;
+
+        var hits = NerdRazorContrastHeuristics.FindViolations(razor);
+
+        Assert.Empty(hits);
+    }
 }

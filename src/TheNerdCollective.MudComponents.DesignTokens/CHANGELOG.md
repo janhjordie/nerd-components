@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.1.9
+
+- **NRDT001:** flag Outlined/Text + `info` / `success` / `highlight` / `flod` (not only muted/primary/page-surface).
+- Style guard: `ValidateOutlinedStatusIntentWarnings` + startup warn; catalog shows `outlined-status-intent:*` (advisory — Filled status still OK).
+
+
 ## 2.1.0
 
 - Brand pack registry: `NerdEmbeddedBrandPack`, `AddNerdDesignTokensFromBrand`, `RegisterBrandPack`.

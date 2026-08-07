@@ -18,6 +18,51 @@ public static class NerdStyleGuardTools
         return violations;
     }
 
+    /// <summary>
+    /// Advisory: status/fill intents whose accent fails UI contrast (≥ 3:1) on page-surface.
+    /// Do not use these as Outlined/Text chrome — NRDT001 flags the markup; this surfaces the token risk in catalog.
+    /// Not included in <see cref="AssertPlacementCompliance"/> (token can stay light for Filled usage).
+    /// </summary>
+    public static IReadOnlyList<NerdStyleGuardViolation> ValidateOutlinedStatusIntentWarnings(
+        NerdDesignTokenOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        if (!options.Aliases.ContainsKey(NerdDesignSystemUi.PageSurface))
+        {
+            return [];
+        }
+
+        var variables = NerdDesignTokenColorVariables.Build(options);
+        var pageSurface = ResolveAliasSurfaceColor(options, NerdDesignSystemUi.PageSurface);
+        var warnings = new List<NerdStyleGuardViolation>();
+        foreach (var alias in OutlinedStatusIntentAliases)
+        {
+            if (!options.Aliases.ContainsKey(alias))
+            {
+                continue;
+            }
+
+            var accent = ResolveAliasAccentColor(options, alias);
+            AddContrastCheck(
+                warnings,
+                NerdDesignSystemUi.CatalogChromePlacement,
+                $"outlined-status-intent:{alias}",
+                accent,
+                pageSurface,
+                UiComponentRatio,
+                variables);
+        }
+
+        return warnings;
+    }
+
+    private static readonly string[] OutlinedStatusIntentAliases =
+    [
+        NerdDesignSystemUi.Info,
+        NerdDesignSystemUi.Success,
+        NerdDesignSystemUi.Highlight
+    ];
+
     public static IReadOnlyList<NerdStyleGuardViolation> ValidateCatalogChromePlacement(
         NerdDesignTokenOptions options)
     {

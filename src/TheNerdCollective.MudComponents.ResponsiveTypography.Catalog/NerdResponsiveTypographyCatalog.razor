@@ -27,9 +27,9 @@ else
                         </MudText>
                     </div>
                     <MudStack Row="true" Spacing="1" Class="flex-wrap">
-                        <MudButton Href="@HubOptions.HubRoute" Variant="Variant.Text">Design system</MudButton>
-                        <MudButton Href="@HubOptions.WcagGuideRoute" Variant="Variant.Text">WCAG guide</MudButton>
-                        <MudChip T="string" Class="@Ui(NerdDesignSystemUi.Info)" Variant="Variant.Outlined">@Options.CatalogRoute</MudChip>
+                        <MudButton Href="@HubOptions.HubRoute" Variant="Variant.Outlined" Class="@Ui(NerdDesignSystemUi.BrandChrome)">Design system</MudButton>
+                        <MudButton Href="@HubOptions.WcagGuideRoute" Variant="Variant.Outlined" Class="@Ui(NerdDesignSystemUi.BrandChrome)">WCAG guide</MudButton>
+                        <MudChip T="string" Class="@Ui(NerdDesignSystemUi.BrandChrome)" Variant="Variant.Outlined">@Options.CatalogRoute</MudChip>
                     </MudStack>
                 </MudStack>
 
@@ -108,7 +108,7 @@ else
                                             <MudStack Row="true" Spacing="1" Class="flex-wrap">
                                                 @if (Options.Typography.ConfiguredRoles.Contains(role.Role))
                                                 {
-                                                    <MudChip T="string" Size="Size.Small" Class="@Ui(NerdDesignSystemUi.PrimaryAction)" Variant="Variant.Outlined">configured</MudChip>
+                                                    <MudChip T="string" Size="Size.Small" Class="@Ui(NerdDesignSystemUi.BrandChrome)" Variant="Variant.Outlined">configured</MudChip>
                                                 }
                                                 <NerdClipboardButton Text="@role.FontSize" Label="Copy CSS" />
                                                 <NerdClipboardButton Text="@BuildRazorSnippet(role)" Label="Copy Razor" />
@@ -118,10 +118,10 @@ else
                                                     <MudChip T="string" Size="Size.Small" Class="@Ui(accessibility.MeetsResizeGuidance ? NerdDesignSystemUi.Success : NerdDesignSystemUi.Danger)" Variant="Variant.Filled">
                                                         WCAG @accessibility.WcagVersion resize @(accessibility.MeetsResizeGuidance ? "pass" : "fail")
                                                     </MudChip>
-                                                    <MudChip T="string" Size="Size.Small" Class="@Ui(accessibility.MeetsMinimumSize ? NerdDesignSystemUi.Success : NerdDesignSystemUi.Highlight)" Variant="Variant.Outlined">
+                                                    <MudChip T="string" Size="Size.Small" Class="@Ui(accessibility.MeetsMinimumSize ? NerdDesignSystemUi.Success : NerdDesignSystemUi.Highlight)" Variant="Variant.Filled">
                                                         Min @(accessibility.MinimumPixels?.ToString("0.#") ?? "?")px
                                                     </MudChip>
-                                                    <MudChip T="string" Size="Size.Small" Class="@Ui(accessibility.MeetsLineHeightGuidance ? NerdDesignSystemUi.Success : NerdDesignSystemUi.Highlight)" Variant="Variant.Outlined">
+                                                    <MudChip T="string" Size="Size.Small" Class="@Ui(accessibility.MeetsLineHeightGuidance ? NerdDesignSystemUi.Success : NerdDesignSystemUi.Highlight)" Variant="Variant.Filled">
                                                         Line-height @(accessibility.MeetsLineHeightGuidance ? "pass" : "fail")
                                                     </MudChip>
                                                 }
@@ -333,20 +333,20 @@ else
                                             <MudSelectItem Value="@packId">@packId</MudSelectItem>
                                         }
                                     </MudSelect>
-                                    <MudButton Variant="Variant.Outlined" Class="@Ui(NerdDesignSystemUi.PrimaryAction)" OnClick="LoadClientPackAsync">
+                                    <MudButton Variant="Variant.Outlined" Class="@Ui(NerdDesignSystemUi.BrandChrome)" OnClick="LoadClientPackAsync">
                                         Indlæs
                                     </MudButton>
                                 }
                                 @if (_saveStatus is not null)
                                 {
-                                    <MudChip T="string" Class="@Ui(NerdDesignSystemUi.Success)" Variant="Variant.Outlined">@_saveStatus</MudChip>
+                                    <MudChip T="string" Class="@Ui(NerdDesignSystemUi.Success)" Variant="Variant.Filled">@_saveStatus</MudChip>
                                 }
                             </MudStack>
                             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="flex-wrap">
-                                <MudButton Variant="Variant.Outlined" Class="@Ui(NerdDesignSystemUi.PrimaryAction)" OnClick="DownloadTokensStudioAsync">
+                                <MudButton Variant="Variant.Outlined" Class="@Ui(NerdDesignSystemUi.BrandChrome)" OnClick="DownloadTokensStudioAsync">
                                     Export Tokens Studio
                                 </MudButton>
-                                <InputFile OnChange="ImportTokensStudioAsync" accept=".json,application/json" class="@($"mud-button-root mud-button mud-button-outlined mud-ripple {Ui(NerdDesignSystemUi.PrimaryAction)}")" style="width:auto;padding:.375rem .75rem;" />
+                                <InputFile OnChange="ImportTokensStudioAsync" accept=".json,application/json" class="@($"mud-button-root mud-button mud-button-outlined mud-ripple {Ui(NerdDesignSystemUi.BrandChrome)}")" style="width:auto;padding:.375rem .75rem;" />
                             </MudStack>
                             <NerdCatalogUpgradePromptSection Show="@(!Entitlements.CanSaveClientPacks())" />
                         </MudStack>

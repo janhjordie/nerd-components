@@ -78,6 +78,7 @@ public partial class NerdDesignTokensCatalog : IDisposable
     private IReadOnlyList<NerdAccessibilityResult> _accessibility = [];
     private IReadOnlyList<NerdAccessibilityWarning> _warnings = [];
     private IReadOnlyList<NerdStyleGuardViolation> _placementWarnings = [];
+    private IReadOnlyList<NerdStyleGuardViolation> _outlinedStatusIntentWarnings = [];
     private bool _outlinedContrastTextPaintBug;
     private string _diffBaseline = string.Empty;
     private IReadOnlyList<NerdTokenPackDiffEntry> _packDiff = [];
@@ -211,6 +212,8 @@ public partial class NerdDesignTokensCatalog : IDisposable
         _accessibility = NerdDesignTokenTools.CheckAccessibility(Options);
         _warnings = NerdDesignTokenTools.GetAccessibilityWarnings(Options);
         _placementWarnings = NerdStyleGuardTools.ValidatePlacements(Options);
+        _outlinedStatusIntentWarnings =
+            NerdStyleGuardTools.ValidateOutlinedStatusIntentWarnings(Options);
         _outlinedContrastTextPaintBug =
             NerdStyleGuardTools.CssPaintsOutlinedBrandChromeWithContrastText(Options);
         HubOptions.DesignTokenCount = Options.Colors.Count;

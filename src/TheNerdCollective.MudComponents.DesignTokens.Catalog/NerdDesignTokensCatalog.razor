@@ -125,7 +125,7 @@ else
                 Title="Client pack save is not enabled"
                 Description="Configure catalog entitlements in your host application to persist client packs to disk." />
 
-            @if (_warnings.Count > 0 || _placementWarnings.Count > 0 || _outlinedContrastTextPaintBug)
+            @if (_warnings.Count > 0 || _placementWarnings.Count > 0 || _outlinedStatusIntentWarnings.Count > 0 || _outlinedContrastTextPaintBug)
             {
                 <MudAlert Class="@Ui(NerdDesignSystemUi.Danger)" Variant="Variant.Filled">
                     <MudText Typo="Typo.subtitle2" Class="mb-2">
@@ -145,6 +145,15 @@ else
                                 <strong>Style guard (@violation.Placement/@violation.Role):</strong>
                                 @FormatRatio(violation.ContrastRatio) &lt; @FormatRatio(violation.RequiredRatio)
                                 (@violation.Foreground on @violation.Background).
+                            </MudText>
+                        }
+                        @foreach (var warning in _outlinedStatusIntentWarnings)
+                        {
+                            <MudText Typo="Typo.body2">
+                                <strong>NRDT001 risk (@warning.Role):</strong>
+                                accent fails outlined UI contrast @FormatRatio(warning.ContrastRatio) &lt; @FormatRatio(warning.RequiredRatio)
+                                (@warning.Foreground on @warning.Background).
+                                Do not use this intent on Outlined/Text MudButton/MudChip — use BrandChrome or Filled.
                             </MudText>
                         }
                         @foreach (var warning in _warnings)
@@ -317,7 +326,7 @@ else
                                         <MudIconButton Icon="@(IsFavorite(pair.Key) ? Icons.Material.Filled.Star : Icons.Material.Outlined.StarBorder)"
                                                        Size="Size.Small"
                                                        Ripple="false"
-                                                       Class="@Ui(IsFavorite(pair.Key) ? NerdDesignSystemUi.Highlight : NerdDesignSystemUi.BrandChrome)"
+                                                       Class="@Ui(NerdDesignSystemUi.BrandChrome)"
                                                        OnClick="@(() => ToggleFavorite(pair.Key))"
                                                        aria-label="Toggle favorite"
                                                        aria-pressed="@IsFavorite(pair.Key)" />
@@ -368,13 +377,13 @@ else
                                                 <MudStack Row="true" Spacing="1" Class="flex-wrap">
                                                     <MudChip T="string"
                                                              Size="Size.Small"
-                                                             Variant="Variant.Outlined"
+                                                             Variant="Variant.Filled"
                                                              Class="@(lightOk ? Ui(NerdDesignSystemUi.Success) : Ui(NerdDesignSystemUi.Danger))">
                                                         Light @FormatRatio(accessibility.Light.ContrastRatio) @(lightOk ? "AA" : "fail")
                                                     </MudChip>
                                                     <MudChip T="string"
                                                              Size="Size.Small"
-                                                             Variant="Variant.Outlined"
+                                                             Variant="Variant.Filled"
                                                              Class="@(darkOk ? Ui(NerdDesignSystemUi.Success) : Ui(NerdDesignSystemUi.Danger))">
                                                         Dark @FormatRatio(accessibility.Dark.ContrastRatio) @(darkOk ? "AA" : "fail")
                                                     </MudChip>
