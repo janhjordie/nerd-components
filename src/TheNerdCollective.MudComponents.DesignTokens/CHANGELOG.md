@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.2.1
+
+- **Style guard:** `CssPaintsOutlinedBrandChromeWithContrastText` scopes to `:root` only so intentional matching-surface `on-brand-chrome` paint under `[data-nerd-token="…-brand-chrome"]` is not a false positive (HttpBridge FailOnAccessibility).
+
 ## 2.2.0
 
 - **NRDT001:** also flags Outlined/Text `Color="Color.Primary"` (and Info/Success/Warning/Secondary/Tertiary) without token Class.

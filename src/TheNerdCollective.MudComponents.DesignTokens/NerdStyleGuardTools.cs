@@ -106,7 +106,10 @@ public static class NerdStyleGuardTools
     }
 
     /// <summary>
-    /// True when generated CSS paints BrandChrome outlined controls with OnBrandChrome (white-on-light).
+    /// True when generated CSS paints BrandChrome outlined controls with OnBrandChrome (white-on-light)
+    /// on the default page surface (<c>:root</c> scope).
+    /// Surface-scoped rules under <c>[data-nerd-token="…-brand-chrome"]</c> intentionally use OnBrandChrome
+    /// for same-intent controls on a filled brand-chrome host — those must not trip this check.
     /// </summary>
     public static bool CssPaintsOutlinedBrandChromeWithContrastText(NerdDesignTokenOptions options)
     {
@@ -119,8 +122,9 @@ public static class NerdStyleGuardTools
 
         var css = MudBlazorDesignTokenCssGenerator.Generate(options);
         var prefix = options.Prefix;
+        // Scope to :root only — matching-surface rules also contain the class needle + OnBrandChrome.
         var outlinedNeedle =
-            $".{prefix}-{NerdDesignSystemUi.BrandChrome}.mud-button-outlined";
+            $":root .{prefix}-{NerdDesignSystemUi.BrandChrome}.mud-button-outlined";
         var contrastVar = $"var(--{prefix}-color-{NerdDesignSystemUi.OnBrandChrome})";
         var accentVar = $"var(--{prefix}-color-{NerdDesignSystemUi.BrandChrome})";
 

@@ -68,6 +68,11 @@ public sealed class NerdStyleGuardToolsTests
         Assert.DoesNotContain(
             ":root .dnf-brand-chrome.mud-button-outlined, :root .dnf-brand-chrome[class*=\"mud-button-outlined\"] {\n  color: var(--dnf-color-on-brand-chrome)",
             css);
+        // Matching-surface rules may use OnBrandChrome — must not trip the :root style guard.
+        Assert.Contains(
+            "[data-nerd-token=\"dnf-brand-chrome\"] .dnf-brand-chrome.mud-button-outlined",
+            css);
+        Assert.Contains("color: var(--dnf-color-on-brand-chrome)", css);
     }
 
     [Fact]
