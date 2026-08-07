@@ -1,7 +1,7 @@
 @using TheNerdCollective.MudComponents.DesignTokens
 @using TheNerdCollective.MudComponents.Shared
 
-<MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mb-3">
+<MudAlert Class="@($"{TokenOptions.Prefix}-info mb-3")" Variant="Variant.Filled" Dense="true">
   <MudText Typo="Typo.subtitle2">Intent inspector</MudText>
   <MudText Typo="Typo.body2">
     @if (string.IsNullOrWhiteSpace(SelectedTokenClass))

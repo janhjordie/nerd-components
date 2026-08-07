@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.7
+
+- MudTabs no longer use BrandChrome Class (avoids painting tab panels).
+
 ## 1.4.6
 
 - MudTabs + chrome buttons use BrandChrome (NRDT001: no PrimaryAction on tabs / Outlined).

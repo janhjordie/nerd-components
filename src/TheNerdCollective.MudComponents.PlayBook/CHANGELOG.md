@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.10
+
+- MudTabs no longer take BrandChrome Class (it painted whole tab panels dark). Default Mud theme tabs like Colors catalog.
+- Tabs matrix preview also omits chrome Class on MudTabs roots.
+- Intent inspector uses token `info` Filled (no bare Severity).
+
 ## 1.2.9
 
 - MudDrawer preview is a static MudPaper mock — real Open/Fixed drawers covered the PlayBook viewport (Playwright confirmed).
