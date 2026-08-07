@@ -26,7 +26,7 @@ else
                     </div>
                     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="flex-wrap" data-nerd-token="@Ui(NerdDesignSystemUi.PageSurface)">
                         <MudSwitch @bind-Value="_previewDark" Label="Preview dark mode" />
-                        <MudButton Href="@HubOptions.HubRoute" Variant="Variant.Text" Class="@Ui(NerdDesignSystemUi.MutedContent)">Design system</MudButton>
+                        <MudButton Href="@HubOptions.HubRoute" Variant="Variant.Text" Class="@Ui(NerdDesignSystemUi.BrandChrome)">Design system</MudButton>
                     </MudStack>
                 </MudStack>
 
@@ -131,7 +131,7 @@ else
                             }
                             <MudButton Variant="Variant.Outlined" OnClick="UndoStudioEditAsync" Disabled="@(!CanUndo)">Undo</MudButton>
                             <MudButton Variant="Variant.Outlined" OnClick="RedoStudioEditAsync" Disabled="@(!CanRedo)">Redo</MudButton>
-                            <MudButton Variant="Variant.Outlined" Size="Size.Small" Class="@Ui(NerdDesignSystemUi.MutedContent)" OnClick="DownloadCssAsync">Export CSS</MudButton>
+                            <MudButton Variant="Variant.Outlined" Size="Size.Small" Class="@Ui(NerdDesignSystemUi.BrandChrome)" OnClick="DownloadCssAsync">Export CSS</MudButton>
                         </MudStack>
                         @if (!string.IsNullOrWhiteSpace(_studioToken))
                         {

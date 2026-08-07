@@ -4,7 +4,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <PackageId>TheNerdCollective.MudComponents.DesignTokens.Catalog</PackageId>
-    <Version>2.0.2</Version>
+    <Version>2.0.3</Version>
     <Authors>The Nerd Collective</Authors>
     <Description>Visual design-token catalog UI for TheNerdCollective.MudComponents.DesignTokens (development tooling).</Description>
     <PackageTags>mudblazor;blazor;design-tokens;catalog;branding</PackageTags>
@@ -27,7 +27,15 @@
     <ProjectReference Include="..\TheNerdCollective.MudComponents.DesignTokens\TheNerdCollective.MudComponents.DesignTokens.csproj" />
     <ProjectReference Include="..\TheNerdCollective.MudComponents.ResponsiveTypography\TheNerdCollective.MudComponents.ResponsiveTypography.csproj" />
     <ProjectReference Include="..\TheNerdCollective.MudComponents.Shared\TheNerdCollective.MudComponents.Shared.csproj" />
+    <ProjectReference Include="..\TheNerdCollective.MudComponents.DesignTokens.Analyzers\TheNerdCollective.MudComponents.DesignTokens.Analyzers.csproj"
+                      ReferenceOutputAssembly="false"
+                      OutputItemType="Analyzer"
+                      SetTargetFramework="TargetFramework=netstandard2.0" />
   </ItemGroup>
+
+  <!-- Run NRDT001 on Catalog Razor during in-repo builds (NuGet consumers get this via DesignTokens props). -->
+  <Import Project="..\TheNerdCollective.MudComponents.DesignTokens\build\TheNerdCollective.MudComponents.DesignTokens.props"
+          Condition="Exists('..\TheNerdCollective.MudComponents.DesignTokens\build\TheNerdCollective.MudComponents.DesignTokens.props')" />
 
   <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="\" />
