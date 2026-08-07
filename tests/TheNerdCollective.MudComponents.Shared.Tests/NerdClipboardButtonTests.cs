@@ -17,7 +17,7 @@ public class NerdClipboardButtonTests : MudComponentTestContext
             .Add(p => p.Label, "Copy class"));
 
         Assert.Contains("Copy class", cut.Markup);
-        Assert.Contains("tnc-primary-action", cut.Markup);
+        Assert.Contains("tnc-brand-chrome", cut.Markup);
 
         cut.Find("button").Click();
 

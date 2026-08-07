@@ -270,7 +270,7 @@ public class MudBlazorDesignTokenCssGeneratorTests
     }
 
     [Fact]
-    public void Generate_brand_chrome_surface_uses_on_brand_chrome_for_outlined_and_text_buttons()
+    public void Generate_brand_chrome_outlined_and_text_use_brand_chrome_accent()
     {
         var options = new NerdDesignTokenOptions { Prefix = "tnc", UseImportantOverrides = false };
         NerdTncDesignTokenPresets.Apply(options);
@@ -282,7 +282,9 @@ public class MudBlazorDesignTokenCssGeneratorTests
         var brandChromeOutlined = css.Substring(
             css.IndexOf(":root .tnc-brand-chrome.mud-button-outlined", StringComparison.Ordinal),
             200);
-        Assert.Contains("color: var(--tnc-color-on-brand-chrome)", brandChromeOutlined);
+        // Outlined/text on page-surface must use BrandChrome accent — not OnBrandChrome ContrastText.
+        Assert.Contains("color: var(--tnc-color-brand-chrome)", brandChromeOutlined);
+        Assert.DoesNotContain("color: var(--tnc-color-on-brand-chrome)", brandChromeOutlined);
         Assert.DoesNotContain(":root .tnc-brand-chrome .mud-button-outlined", css);
         Assert.DoesNotContain(":root .tnc-page-surface .mud-button-outlined", css);
         Assert.Contains(":root .tnc-page-surface.mud-button-outlined", css);
