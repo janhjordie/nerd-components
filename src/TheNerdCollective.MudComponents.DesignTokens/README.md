@@ -1,6 +1,6 @@
 # TheNerdCollective.MudComponents.DesignTokens
 
-Customer-specific CSS design tokens for MudBlazor 9.6. Define meaningful
+Customer-specific CSS design tokens for **MudBlazor 9.7+**. Define meaningful
 colors such as `sand`, `forest`, `sun`, and `sea`, then use the generated
 classes directly on any MudBlazor component. No wrappers, JavaScript, or
 MudBlazor fork is required.
@@ -8,13 +8,123 @@ MudBlazor fork is required.
 See [docs/DESIGN-TOKENS.md](../../docs/DESIGN-TOKENS.md) for architecture,
 design principles, and the brand-token model.
 
+## Host checklist (what you must add)
+
+`AddNerdDesignTokens` alone is **not** enough for a working MudBlazor host.
+Use this table:
+
+| Goal | Packages | DI | Layout / pipeline |
+|------|----------|----|-------------------|
+| **A. Brand CSS + theme only** (product host, e.g. Consent) | `DesignTokens` + one `Brand.*` (or embedded pack) | `AddNerdDnfBrand()` / `AddNerdDesignTokensFromBrand("dnf")` | `NerdDesignTokenStyles` + `NerdMudThemeProvider` |
+| **B. + `/nerd-design-tokens` catalog** | A + `DesignTokens.Catalog` (+ usually `ResponsiveTypography`) | A + `AddNerdDesignTokenCatalog()` + `AddNerdBrandPackIntegration()` (or `AddNerdDnfDesignSystem`) | A + `MapRazorComponents(…).AddNerdDesignTokenCatalog(services)` + theme host cascade |
+| **C. Multi-brand studio** | B + several `Brand.*` | `AddNerdDesignTokenBrandPacks(…)` + controller | B + `INerdMudThemeController` / brand switcher |
+
+### 1. Static web assets (required)
+
+Without this, `_content/MudBlazor/MudBlazor.min.css` / `_framework/blazor.web.js` return **404** and the UI looks like unstyled HTML (not MudBlazor):
+
+```csharp
+var builder = WebApplication.CreateBuilder(args);
+builder.WebHost.UseStaticWebAssets(); // needed for `dotnet run` (esp. Release) with NuGet assets
+
+// …
+var app = builder.Build();
+app.UseStaticFiles();
+app.MapStaticAssets();
+
+app.MapRazorComponents<App>()
+    .AddInteractiveServerRenderMode()
+    .WithStaticAssets(); // .NET 9+/10
+```
+
+Also reference Mud CSS/JS in `App.razor`:
+
+```razor
+<link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
+<script src="_content/MudBlazor/MudBlazor.min.js"></script>
+<script src="_framework/blazor.web.js"></script>
+```
+
+### 2. Theme + styles (recommended host shell)
+
+Prefer `NerdMudThemeProvider` (maps brand aliases → Mud `Color.Primary`…`Error`) and emit token CSS once:
+
+```razor
+@inject NerdDesignTokenOptions TokenOptions
+
+<NerdDesignTokenStyles />
+<CascadingValue Name="@NerdMudThemeHost.CascadingName" Value="true">
+    <NerdMudThemeProvider Theme="@theme" DesignTokenOptions="@TokenOptions" />
+    <MudPopoverProvider />
+    <MudDialogProvider />
+    <MudSnackbarProvider />
+    @Body
+</CascadingValue>
+```
+
+`CascadingValue` / `NerdMudThemeHost.CascadingName` tells the Catalog to reuse the host theme (avoids nested `MudThemeProvider` issues on Mud 9.7).
+
+**Product-only (no live brand switch):** build theme once with `NerdMudThemeFactory.Create(options)` (see Consent / HttpBridge).  
+**Studio:** inject `INerdMudThemeController` and bind `Theme="@ThemeController.CurrentTheme"`.
+
+### 3. Catalog URL is opt-in
+
+`AddNerdDesignTokens` only sets hub **route strings** (`CatalogRoute` default `/nerd-design-tokens`). It does **not** mount pages.
+
+To expose the catalog:
+
+```xml
+<PackageReference Include="TheNerdCollective.MudComponents.DesignTokens" Version="2.1.2" />
+<PackageReference Include="TheNerdCollective.Brand.Dnf" Version="2.0.0" />
+<!-- Catalog: publish to nuget.org when ready; until then pack locally -->
+<PackageReference Include="TheNerdCollective.MudComponents.DesignTokens.Catalog" Version="2.0.0" />
+<PackageReference Include="TheNerdCollective.MudComponents.ResponsiveTypography" Version="1.5.0" />
+<PackageReference Include="MudBlazor" Version="9.7.0" />
+```
+
+```csharp
+using TheNerdCollective.Brand.Dnf;
+using TheNerdCollective.MudComponents.DesignTokens;
+using TheNerdCollective.MudComponents.ResponsiveTypography;
+
+builder.Services.AddMudServices();
+builder.Services.AddNerdDnfDesignSystem(
+    configureTokens: o =>
+    {
+        o.UseIntentPseudoCssThemes = true;
+        o.EnableCatalogPage = true;
+        o.RestrictCatalogToDevelopment = false; // true on customer Production
+    },
+    configureTypography: o => o.RestrictCatalogToDevelopment = false);
+builder.Services.AddNerdBrandPackIntegration(); // registers INerdBrandPackSource for Catalog
+builder.Services.AddNerdDesignTokenCatalog();
+
+app.MapRazorComponents<App>()
+    .AddInteractiveServerRenderMode()
+    .AddNerdDesignTokenCatalog(app.Services)
+    .AddNerdDesignSystemHub(app.Services)
+    .WithStaticAssets();
+```
+
+**Product hosts** (Consent): motor + theme is enough — omit Catalog unless you want an internal design hub.  
+**Auth middleware:** allow `/_content`, `/_framework`, `/_blazor`, and catalog routes as public if the host gates other paths.
+
+### 4. Mud `Color` vs token `Class`
+
+MudBlazor [`Color`](https://mudblazor.com/api/Color#fields) is a closed set of **semantic roles** (`Primary`, `Secondary`, `Error`, …) — not brand names.
+
+- Global chrome after DI palette map → `Color.Primary` etc. is fine  
+- Extra brand / section colors → `Class="dnf-forest"` or recipe/intent classes (`TokenClass` / `RecipeClass`)
+
+---
+
 ## Brand packs (recommended)
 
 Predefined brands ship as separate NuGet packages. **Production apps install one brand only.**
 
 | Package | DI | Prefix |
 |---------|-----|--------|
-| `TheNerdCollective.Brand.Dnf` | `AddNerdDnfBrand()` | `dnf` |
+| `TheNerdCollective.Brand.Dnf` | `AddNerdDnfBrand()` / `AddNerdDnfDesignSystem()` | `dnf` |
 | `TheNerdCollective.Brand.Tnc` | `AddNerdTncBrand()` | `tnc` |
 | `TheNerdCollective.Brand.Acme` | `AddNerdAcmeBrand()` | `acme` |
 | `TheNerdCollective.Brand.Demo` | `AddNerdDemoBrand()` | `demo` |
@@ -23,6 +133,7 @@ Predefined brands ship as separate NuGet packages. **Production apps install one
 using TheNerdCollective.Brand.Dnf;
 
 builder.Services.AddNerdDnfBrand();
+// or full stack (tokens + typography): AddNerdDnfDesignSystem();
 ```
 
 See [docs/BRAND-PACKAGES.md](../../docs/BRAND-PACKAGES.md) for dependency diagram and multi-brand demo setup.
@@ -52,11 +163,11 @@ builder.Services.AddNerdDesignTokens(options =>
 });
 ```
 
-Add the style component once, after `MudThemeProvider`:
+Minimal shell (prefer the checklist layout above):
 
 ```razor
-<MudThemeProvider />
 <NerdDesignTokenStyles />
+<NerdMudThemeProvider Theme="@theme" DesignTokenOptions="@TokenOptions" />
 ```
 
 Use the customer vocabulary in markup:
@@ -68,7 +179,7 @@ Use the customer vocabulary in markup:
 </MudGrid>
 ```
 
-The generator maps all 80 MudBlazor 9.6 `--mud-palette-*` variables per token,
+The generator maps MudBlazor `--mud-palette-*` variables per token,
 so every component that reads the theme palette inherits the token color.
 Pattern-based selectors cover filled, outlined, and text variants for buttons,
 chips, alerts, FABs, avatars, badges, and progress indicators. Inputs
@@ -89,10 +200,8 @@ activated below an ancestor with `data-theme="dark"`. `Surface`, `Content`,
 and `Interactive` are semantic roles that can be consumed by application CSS
 without changing the token's component selectors.
 
-The generated selectors are intentionally versioned against MudBlazor 9.6.
-The package emits both MudBlazor palette variables and explicit selectors for
-component variants and states, so updates to MudBlazor can be checked with the
-CSS snapshot tests before changing the package dependency.
+The generated selectors are versioned against the MudBlazor pin in this package
+(currently **9.7**). Check CSS snapshot / inventory tests before bumping Mud.
 
 ## Design-system extras
 
@@ -155,25 +264,12 @@ MudBlazor CSS, keeping the customer's design source portable across tools.
 
 ## Visual catalog
 
-Install the optional catalog package and register routes for `/nerd-design-tokens`:
-
-```xml
-<PackageReference Include="TheNerdCollective.MudComponents.DesignTokens.Catalog" />
-```
+See **Host checklist §3**. Short form:
 
 ```csharp
-builder.Services.AddNerdDesignTokens(options =>
-{
-    options.Prefix = "dnf";
-    options.EnableCatalogPage = true; // default
-    options.CatalogRoute = "/nerd-design-tokens";
-});
 builder.Services.AddNerdDesignTokenCatalog();
-
 app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode()
-    .AddNerdDesignTokenCatalog(app.Services)
-    .AddNerdDesignSystemHub(app.Services);
+    .AddNerdDesignTokenCatalog(app.Services);
 ```
 
 `AddNerdDesignTokenCatalog(app.Services)` registers the catalog assembly when
@@ -201,3 +297,5 @@ component (the built-in default page is at `/nerd-design-tokens`):
 ```
 
 Set `options.CatalogRoute` to match your route so hub links stay correct.
+
+**Note:** `DesignTokens.Catalog` may not yet be on nuget.org — pack from this repo (`dotnet pack …Catalog.csproj`) or use the local feed documented in host repos (e.g. nerd-rules `packages/`).
