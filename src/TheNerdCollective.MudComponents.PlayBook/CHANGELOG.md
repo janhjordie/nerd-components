@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.9
+
+- MudDrawer preview is a static MudPaper mock — real Open/Fixed drawers covered the PlayBook viewport (Playwright confirmed).
+
 ## 1.2.8
 
 - MudDrawer preview uses nested `MudLayout` so Persistent+Open drawers no longer hijack the host shell (blank left margin / dark drawer strip on PlayBook).
