@@ -53,12 +53,18 @@ public sealed class NerdDesignTokenOptions
     /// </summary>
     public bool EmitFrameworkNeutralIntents { get; set; } = true;
 
-    /// <summary>
+    /// <summary>Enables the visual catalog page when the Catalog package is mounted.</summary>
     public bool EnableCatalogPage { get; set; } = true;
     public string CatalogRoute { get; set; } = "/nerd-design-tokens";
     public string RecipesCatalogRoute { get; set; } = "/nerd-design-token-recipes";
     public bool RestrictCatalogToDevelopment { get; set; } = true;
     public bool WarnOnAccessibilityFailuresAtStartup { get; set; } = true;
+
+    /// <summary>
+    /// When true, host startup throws if any token fails WCAG AA (stronger than log-only warnings).
+    /// </summary>
+    public bool FailOnAccessibilityFailuresAtStartup { get; set; }
+
     public string WcagVersion { get; set; } = NerdDesignTokenTools.DefaultWcagVersion;
 
     /// <summary>Brand pack restored on each new Blazor circuit (set during startup configure).</summary>
@@ -279,6 +285,7 @@ public sealed class NerdDesignTokenOptions
         RecipesCatalogRoute = source.RecipesCatalogRoute;
         RestrictCatalogToDevelopment = source.RestrictCatalogToDevelopment;
         WarnOnAccessibilityFailuresAtStartup = source.WarnOnAccessibilityFailuresAtStartup;
+        FailOnAccessibilityFailuresAtStartup = source.FailOnAccessibilityFailuresAtStartup;
         WcagVersion = source.WcagVersion;
     }
 

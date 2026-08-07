@@ -130,7 +130,10 @@ Design Tokens already measures contrast:
 | `/nerd-wcag` (`NerdWcagGuide`) | Human-readable WCAG guide |
 | `NerdStyleGuardTools.ValidatePlacements` | Catalog chrome label + outlined control vs page-surface (≥ 3:1 UI) |
 
-Set `options.WarnOnAccessibilityFailuresAtStartup = true` (or assert in CI) so illegal combinations cannot ship silently.
+Set `options.WarnOnAccessibilityFailuresAtStartup = true` (default) to log WCAG failures at host start.
+Set `options.FailOnAccessibilityFailuresAtStartup = true` to throw and stop the host when tokens fail AA.
+CI: call `AssertAccessibilityCompliance` + `AssertPlacementCompliance` (see Brand.Dnf tests).
+Build: package ships Roslyn analyzer **NRDT001** (Razor AdditionalFiles) warning for Text/Outlined + muted-content/primary-action Class misuse.
 
 ---
 

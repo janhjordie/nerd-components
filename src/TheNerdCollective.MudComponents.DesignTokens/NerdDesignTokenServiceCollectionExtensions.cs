@@ -51,7 +51,8 @@ public static class NerdDesignTokenServiceCollectionExtensions
         services.TryAddSingleton<INerdMudThemeController, NerdMudThemeController>();
         services.TryAddSingleton<INerdBrandPackImportSink, NerdBrandPackImportSink>();
 
-        if (options.Colors.Count > 0 && options.WarnOnAccessibilityFailuresAtStartup)
+        if (options.Colors.Count > 0 &&
+            (options.WarnOnAccessibilityFailuresAtStartup || options.FailOnAccessibilityFailuresAtStartup))
         {
             services.AddHostedService<NerdDesignTokenAccessibilityStartupValidator>();
         }

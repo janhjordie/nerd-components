@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using TheNerdCollective.MudComponents.Shared;
 
 namespace TheNerdCollective.MudComponents.DesignTokens;
@@ -17,12 +18,34 @@ internal sealed class NerdDesignTokenAccessibilityStartupValidator : Microsoft.E
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        if (_options.Colors.Count == 0 || !_options.WarnOnAccessibilityFailuresAtStartup)
+        if (_options.Colors.Count == 0)
         {
             return Task.CompletedTask;
         }
 
-        NerdDesignTokenTools.LogAccessibilityWarnings(_options, _logger);
+        if (_options.FailOnAccessibilityFailuresAtStartup)
+        {
+            NerdDesignTokenTools.AssertAccessibilityCompliance(_options);
+            NerdStyleGuardTools.AssertPlacementCompliance(_options);
+            return Task.CompletedTask;
+        }
+
+        if (_options.WarnOnAccessibilityFailuresAtStartup)
+        {
+            NerdDesignTokenTools.LogAccessibilityWarnings(_options, _logger);
+            foreach (var violation in NerdStyleGuardTools.ValidatePlacements(_options))
+            {
+                _logger.LogWarning(
+                    "Design token style guard ({Placement}/{Role}): {ContrastRatio:0.0}:1 < {RequiredRatio:0.0}:1 ({Foreground} on {Background}).",
+                    violation.Placement,
+                    violation.Role,
+                    violation.ContrastRatio,
+                    violation.RequiredRatio,
+                    violation.Foreground,
+                    violation.Background);
+            }
+        }
+
         return Task.CompletedTask;
     }
 

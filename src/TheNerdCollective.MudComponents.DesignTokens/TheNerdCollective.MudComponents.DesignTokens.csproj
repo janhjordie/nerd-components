@@ -4,10 +4,10 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <PackageId>TheNerdCollective.MudComponents.DesignTokens</PackageId>
-    <Version>2.1.3</Version>
+    <Version>2.1.4</Version>
     <Authors>The Nerd Collective</Authors>
     <Description>Customer-specific CSS design tokens and MudBlazor component color variants.</Description>
-    <PackageTags>mudblazor;blazor;design-tokens;css;branding;colors</PackageTags>
+    <PackageTags>mudblazor;blazor;design-tokens;css;branding;colors;wcag;analyzer</PackageTags>
     <LicenseExpression>Apache-2.0</LicenseExpression>
     <RepositoryUrl>https://github.com/janhjordie/nerd-components</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
@@ -25,11 +25,16 @@
   <ItemGroup>
     <ProjectReference Include="..\TheNerdCollective.DesignTokens.Core\TheNerdCollective.DesignTokens.Core.csproj" />
     <ProjectReference Include="..\TheNerdCollective.MudComponents.Shared\TheNerdCollective.MudComponents.Shared.csproj" />
+    <ProjectReference Include="..\TheNerdCollective.MudComponents.DesignTokens.Analyzers\TheNerdCollective.MudComponents.DesignTokens.Analyzers.csproj"
+                      ReferenceOutputAssembly="false"
+                      OutputItemType="Analyzer"
+                      SetTargetFramework="TargetFramework=netstandard2.0" />
   </ItemGroup>
 
   <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="\" />
     <None Include="CHANGELOG.md" Pack="true" PackagePath="\" />
+    <None Include="build\TheNerdCollective.MudComponents.DesignTokens.props" Pack="true" PackagePath="build\" />
     <Content Include="reference\mudblazor\**\*.yaml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -37,4 +42,15 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+
+  <Target Name="PackNerdContrastAnalyzer" BeforeTargets="GenerateNuspec" DependsOnTargets="Build">
+    <PropertyGroup>
+      <_NerdAnalyzerDll>$(MSBuildThisFileDirectory)..\TheNerdCollective.MudComponents.DesignTokens.Analyzers\bin\$(Configuration)\netstandard2.0\TheNerdCollective.MudComponents.DesignTokens.Analyzers.dll</_NerdAnalyzerDll>
+    </PropertyGroup>
+    <ItemGroup Condition="Exists('$(_NerdAnalyzerDll)')">
+      <_PackageFiles Include="$(_NerdAnalyzerDll)">
+        <PackagePath>analyzers/dotnet/cs</PackagePath>
+      </_PackageFiles>
+    </ItemGroup>
+  </Target>
 </Project>

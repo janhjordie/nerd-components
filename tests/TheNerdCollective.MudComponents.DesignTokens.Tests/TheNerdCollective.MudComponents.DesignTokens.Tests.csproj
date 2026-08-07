@@ -23,6 +23,7 @@
     <ProjectReference Include="..\..\src\TheNerdCollective.Brand.Dryk\TheNerdCollective.Brand.Dryk.csproj" />
     <ProjectReference Include="..\..\src\TheNerdCollective.Brand.Tnc\TheNerdCollective.Brand.Tnc.csproj" />
     <ProjectReference Include="..\..\src\TheNerdCollective.MudComponents.DesignTokens\TheNerdCollective.MudComponents.DesignTokens.csproj" />
+    <ProjectReference Include="..\..\src\TheNerdCollective.MudComponents.DesignTokens.Analyzers\TheNerdCollective.MudComponents.DesignTokens.Analyzers.csproj" />
     <ProjectReference Include="..\..\src\TheNerdCollective.MudComponents.DesignTokens.Catalog\TheNerdCollective.MudComponents.DesignTokens.Catalog.csproj" />
   </ItemGroup>
 </Project>
