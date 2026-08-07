@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.11
+
+- Intent inspector uses Outlined `info` (Filled painted a full-width dark green band on page-surface).
+
 ## 1.2.10
 
 - MudTabs no longer take BrandChrome Class (it painted whole tab panels dark). Default Mud theme tabs like Colors catalog.
