@@ -27,6 +27,12 @@ internal sealed class NerdDesignTokenAccessibilityStartupValidator : Microsoft.E
         {
             NerdDesignTokenTools.AssertAccessibilityCompliance(_options);
             NerdStyleGuardTools.AssertPlacementCompliance(_options);
+            if (NerdStyleGuardTools.CssPaintsOutlinedBrandChromeWithContrastText(_options))
+            {
+                throw new InvalidOperationException(
+                    "Style guard failed: BrandChrome outlined controls are painted with OnBrandChrome (ContrastText) — white-on-light on page-surface.");
+            }
+
             return Task.CompletedTask;
         }
 
@@ -43,6 +49,12 @@ internal sealed class NerdDesignTokenAccessibilityStartupValidator : Microsoft.E
                     violation.RequiredRatio,
                     violation.Foreground,
                     violation.Background);
+            }
+
+            if (NerdStyleGuardTools.CssPaintsOutlinedBrandChromeWithContrastText(_options))
+            {
+                _logger.LogWarning(
+                    "Design token style guard: BrandChrome outlined MudButton CSS uses OnBrandChrome (ContrastText) — expect white-on-white on page-surface. Use BrandChrome accent for outlined/text.");
             }
         }
 

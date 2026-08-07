@@ -77,6 +77,8 @@ public partial class NerdDesignTokensCatalog : IDisposable
     private IReadOnlyList<string> _packIds = [];
     private IReadOnlyList<NerdAccessibilityResult> _accessibility = [];
     private IReadOnlyList<NerdAccessibilityWarning> _warnings = [];
+    private IReadOnlyList<NerdStyleGuardViolation> _placementWarnings = [];
+    private bool _outlinedContrastTextPaintBug;
     private string _diffBaseline = string.Empty;
     private IReadOnlyList<NerdTokenPackDiffEntry> _packDiff = [];
     private Dictionary<string, string> _comments = new(StringComparer.OrdinalIgnoreCase);
@@ -208,6 +210,9 @@ public partial class NerdDesignTokensCatalog : IDisposable
     {
         _accessibility = NerdDesignTokenTools.CheckAccessibility(Options);
         _warnings = NerdDesignTokenTools.GetAccessibilityWarnings(Options);
+        _placementWarnings = NerdStyleGuardTools.ValidatePlacements(Options);
+        _outlinedContrastTextPaintBug =
+            NerdStyleGuardTools.CssPaintsOutlinedBrandChromeWithContrastText(Options);
         HubOptions.DesignTokenCount = Options.Colors.Count;
         HubOptions.DesignTokenRecipeCount = Options.Recipes.Count;
         HubOptions.ActiveBrandIdentityVersion = Options.ActiveBrandIdentityVersion;

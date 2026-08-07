@@ -42,7 +42,8 @@ public static class NerdStyleGuardTools
             AaNormalTextRatio,
             variables);
 
-        // Outlined / text controls on page-surface (WCAG UI component contrast ≥ 3:1).
+        // Outlined / text BrandChrome controls on page-surface (WCAG UI component contrast ≥ 3:1).
+        // Paint must use BrandChrome accent — never OnBrandChrome (filled ContrastText → white-on-white).
         if (options.Aliases.ContainsKey(NerdDesignSystemUi.BrandChrome))
         {
             var brandChrome = ResolveAliasAccentColor(options, NerdDesignSystemUi.BrandChrome);
@@ -57,6 +58,75 @@ public static class NerdStyleGuardTools
         }
 
         return violations;
+    }
+
+    /// <summary>
+    /// True when generated CSS paints BrandChrome outlined controls with OnBrandChrome (white-on-light).
+    /// </summary>
+    public static bool CssPaintsOutlinedBrandChromeWithContrastText(NerdDesignTokenOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        if (!options.Aliases.ContainsKey(NerdDesignSystemUi.BrandChrome) ||
+            !options.Aliases.ContainsKey(NerdDesignSystemUi.OnBrandChrome))
+        {
+            return false;
+        }
+
+        var css = MudBlazorDesignTokenCssGenerator.Generate(options);
+        var prefix = options.Prefix;
+        var outlinedNeedle =
+            $".{prefix}-{NerdDesignSystemUi.BrandChrome}.mud-button-outlined";
+        var contrastVar = $"var(--{prefix}-color-{NerdDesignSystemUi.OnBrandChrome})";
+        var accentVar = $"var(--{prefix}-color-{NerdDesignSystemUi.BrandChrome})";
+
+        var index = 0;
+        while ((index = css.IndexOf(outlinedNeedle, index, StringComparison.Ordinal)) >= 0)
+        {
+            var blockEnd = css.IndexOf('}', index);
+            if (blockEnd < 0)
+            {
+                break;
+            }
+
+            var block = css[index..blockEnd];
+            if (block.Contains(contrastVar, StringComparison.Ordinal)
+                && !block.Contains($"color: {accentVar}", StringComparison.Ordinal))
+            {
+                return true;
+            }
+
+            index = blockEnd + 1;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Advisory: OnBrandChrome (filled ContrastText) on page-surface fails UI contrast — do not use for outlined controls.
+    /// </summary>
+    public static IReadOnlyList<NerdStyleGuardViolation> ValidateOutlinedContrastTextAntipattern(
+        NerdDesignTokenOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        if (!options.Aliases.ContainsKey(NerdDesignSystemUi.PageSurface) ||
+            !options.Aliases.ContainsKey(NerdDesignSystemUi.OnBrandChrome))
+        {
+            return [];
+        }
+
+        var variables = NerdDesignTokenColorVariables.Build(options);
+        var pageSurface = ResolveAliasSurfaceColor(options, NerdDesignSystemUi.PageSurface);
+        var onBrandChrome = ResolveAliasAccentColor(options, NerdDesignSystemUi.OnBrandChrome);
+        var warnings = new List<NerdStyleGuardViolation>();
+        AddContrastCheck(
+            warnings,
+            NerdDesignSystemUi.CatalogChromePlacement,
+            "outlined-contrast-text-antipattern",
+            onBrandChrome,
+            pageSurface,
+            UiComponentRatio,
+            variables);
+        return warnings;
     }
 
     public static IReadOnlyList<NerdStyleGuardViolation> ValidateCatalogChromeAccentWarnings(

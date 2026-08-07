@@ -118,6 +118,8 @@ MudBlazor [`Color`](https://mudblazor.com/api/Color#fields) is a closed set of *
 
 **Do not** put `MutedContent` / filled `ContrastText` intents on `Variant.Text` or `Variant.Outlined` buttons — that paints light-on-light and fails WCAG. Use `BrandChrome` (or `PrimaryAction` **Filled** only) for controls on `page-surface`.
 
+`Class="…-brand-chrome"` on an **Outlined** control must paint the BrandChrome **accent** (dark-on-light). Never `OnBrandChrome` / ContrastText — that is for text **on** a filled BrandChrome surface (AppBar) and becomes white-on-white on page-surface. Catalog shows a red alert if generated CSS regresses to that paint.
+
 ### 5. WCAG 2.1 contrast
 
 Design Tokens already measures contrast:

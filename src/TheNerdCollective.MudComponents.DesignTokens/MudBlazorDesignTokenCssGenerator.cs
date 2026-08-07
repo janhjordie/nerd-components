@@ -586,7 +586,7 @@ public static class MudBlazorDesignTokenCssGenerator
         var borderVariable = $"--{prefix}-color-{name}-border";
         var textVariable = $"--{prefix}-color-{name}-text";
 
-        css.AppendLine($"{root} {{");
+        css.AppendLine($"{root}:not(.mud-button-root):not([class*=\"mud-button\"]):not(.mud-chip):not([class*=\"mud-chip\"]) {{");
         css.AppendLine($"  background-color: var({surfaceVariable}){important};");
         css.AppendLine($"  color: var({contentVariable}){important};");
         if (options.UsePaletteFirstAdapter && !options.UseIntentPseudoCssThemes)
@@ -839,8 +839,12 @@ public static class MudBlazorDesignTokenCssGenerator
         if (string.Equals(surfaceAlias, NerdDesignSystemUi.BrandChrome, StringComparison.OrdinalIgnoreCase) &&
             options.Aliases.ContainsKey(NerdDesignSystemUi.OnBrandChrome))
         {
-            outlined = NerdDesignSystemUi.OnBrandChrome;
-            text = NerdDesignSystemUi.OnBrandChrome;
+            // BrandChrome Class on a control = brand accent paint (dark-on-light for outlined/text).
+            // OnBrandChrome is ONLY for text/icons sitting ON a filled BrandChrome surface (AppBar) —
+            // using it for outlined controls on page-surface paints white-on-white.
+            filled = NerdDesignSystemUi.BrandChrome;
+            outlined = NerdDesignSystemUi.BrandChrome;
+            text = NerdDesignSystemUi.BrandChrome;
         }
 
         return (filled, outlined, text);

@@ -125,13 +125,28 @@ else
                 Title="Client pack save is not enabled"
                 Description="Configure catalog entitlements in your host application to persist client packs to disk." />
 
-            @if (_warnings.Count > 0)
+            @if (_warnings.Count > 0 || _placementWarnings.Count > 0 || _outlinedContrastTextPaintBug)
             {
                 <MudAlert Class="@Ui(NerdDesignSystemUi.Danger)" Variant="Variant.Filled">
                     <MudText Typo="Typo.subtitle2" Class="mb-2">
-                        @_warnings.Count WCAG @Options.WcagVersion accessibility warning@(_warnings.Count == 1 ? "" : "s")
+                        Accessibility warnings
                     </MudText>
                     <MudStack Spacing="1">
+                        @if (_outlinedContrastTextPaintBug)
+                        {
+                            <MudText Typo="Typo.body2">
+                                <strong>Catalog chrome paint:</strong> BrandChrome outlined buttons use OnBrandChrome (ContrastText)
+                                — white text/border on page-surface. Prefer BrandChrome accent for Outlined/Text.
+                            </MudText>
+                        }
+                        @foreach (var violation in _placementWarnings)
+                        {
+                            <MudText Typo="Typo.body2">
+                                <strong>Style guard (@violation.Placement/@violation.Role):</strong>
+                                @FormatRatio(violation.ContrastRatio) &lt; @FormatRatio(violation.RequiredRatio)
+                                (@violation.Foreground on @violation.Background).
+                            </MudText>
+                        }
                         @foreach (var warning in _warnings)
                         {
                             <MudText Typo="Typo.body2">

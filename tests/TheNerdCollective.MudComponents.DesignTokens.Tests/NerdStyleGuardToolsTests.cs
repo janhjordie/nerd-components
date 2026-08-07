@@ -54,4 +54,28 @@ public sealed class NerdStyleGuardToolsTests
 
         Assert.Contains(violations, violation => violation.Role == "label-text");
     }
+
+    [Fact]
+    public void BrandChrome_outlined_uses_accent_not_contrast_text()
+    {
+        var options = NerdBrandPackTestBootstrap.CreateReferenceOptions("dnf");
+        var css = MudBlazorDesignTokenCssGenerator.Generate(options);
+
+        Assert.False(NerdStyleGuardTools.CssPaintsOutlinedBrandChromeWithContrastText(options));
+        Assert.Contains(
+            ":root .dnf-brand-chrome.mud-button-outlined, :root .dnf-brand-chrome[class*=\"mud-button-outlined\"] {\n  color: var(--dnf-color-brand-chrome)",
+            css);
+        Assert.DoesNotContain(
+            ":root .dnf-brand-chrome.mud-button-outlined, :root .dnf-brand-chrome[class*=\"mud-button-outlined\"] {\n  color: var(--dnf-color-on-brand-chrome)",
+            css);
+    }
+
+    [Fact]
+    public void OnBrandChrome_on_page_surface_is_flagged_as_outlined_antipattern()
+    {
+        var options = NerdBrandPackTestBootstrap.CreateReferenceOptions("dnf");
+        var warnings = NerdStyleGuardTools.ValidateOutlinedContrastTextAntipattern(options);
+
+        Assert.Contains(warnings, w => w.Role == "outlined-contrast-text-antipattern");
+    }
 }
