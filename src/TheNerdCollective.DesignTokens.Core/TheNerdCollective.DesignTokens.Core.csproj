@@ -6,7 +6,7 @@
     <RootNamespace>TheNerdCollective.MudComponents.DesignTokens</RootNamespace>
     <AssemblyName>TheNerdCollective.DesignTokens.Core</AssemblyName>
     <PackageId>TheNerdCollective.DesignTokens.Core</PackageId>
-    <Version>1.0.0</Version>
+    <Version>1.0.1</Version>
     <Authors>The Nerd Collective</Authors>
     <Description>Framework-agnostic design token pack model, validation, intent CSS, and CSS-variables generator.</Description>
     <PackageTags>design-tokens;css;branding;wcag;recipes</PackageTags>
