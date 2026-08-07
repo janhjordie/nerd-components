@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.3
+
+- Added `NerdCatalogPageHeader` + `NerdCatalogHubNav` for aligned catalog menus (BrandChrome Outlined/Filled, no route chips).
+
+
 ## 1.5.0
 
 - Added `INerdBrandPackImportSink` for design-system hub token-pack import.

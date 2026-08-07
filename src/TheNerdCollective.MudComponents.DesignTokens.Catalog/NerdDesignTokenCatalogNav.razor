@@ -1,25 +1,16 @@
 @using TheNerdCollective.MudComponents.Shared
 
-<MudStack Row="true" Spacing="1" Class="flex-wrap mb-2">
-    <MudButton Href="@Options.CatalogRoute"
-               Variant="@(Current == "colors" ? Variant.Filled : Variant.Outlined)"
-               Size="Size.Small"
-               Class="@Ui(NerdDesignSystemUi.BrandChrome)">
-        Colors@(Options.Colors.Count > 0 ? $" ({Options.Colors.Count})" : "")
-    </MudButton>
-    <MudButton Href="@Options.RecipesCatalogRoute"
-               Variant="@(Current == "recipes" ? Variant.Filled : Variant.Outlined)"
-               Size="Size.Small"
-               Class="@Ui(NerdDesignSystemUi.BrandChrome)">
-        Recipes@(Options.Recipes.Count > 0 ? $" ({Options.Recipes.Count})" : "")
-    </MudButton>
-    <MudButton Href="@HubOptions.PlayBookRoute"
-               Variant="Variant.Outlined"
-               Size="Size.Small"
-               Class="@Ui(NerdDesignSystemUi.BrandChrome)">
-        PlayBook
-    </MudButton>
-</MudStack>
+@*
+  Backward-compatible wrapper — prefer NerdCatalogHubNav / NerdCatalogPageHeader.
+*@
+<NerdCatalogHubNav Current="@(Current switch
+                         {
+                             "recipes" => NerdCatalogSection.Recipes,
+                             "colors" => NerdCatalogSection.Colors,
+                             _ => NerdCatalogSection.Colors
+                         })"
+                   ColorCount="Options.Colors.Count"
+                   RecipeCount="Options.Recipes.Count" />
 
 @code {
     [Parameter, EditorRequired]
@@ -30,7 +21,4 @@
 
     [Parameter]
     public string Current { get; set; } = "colors";
-
-    private string Ui(string semanticAlias) =>
-        NerdDesignSystemUi.TokenClass(Options.Prefix, semanticAlias);
 }

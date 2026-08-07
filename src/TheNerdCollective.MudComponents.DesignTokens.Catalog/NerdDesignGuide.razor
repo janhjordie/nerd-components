@@ -15,22 +15,18 @@ else
     <NerdDesignTokenStyles />
     <NerdCatalogPage MaxWidth="MaxWidth.ExtraLarge">
         <MudStack Spacing="5">
-            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-3">
-                <div>
-                    <MudText Typo="Typo.h4">Design guide</MudText>
-                    <MudText Typo="Typo.body2" Class="@Ui(NerdDesignSystemUi.MutedContent)">
-                        @(Options.ActiveBrandPackId ?? Options.Prefix)
-                        @if (!string.IsNullOrWhiteSpace(Options.ActiveBrandIdentityVersion))
-                        {
-                            <span> · @Options.ActiveBrandIdentityVersion</span>
-                        }
-                    </MudText>
-                </div>
-                <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="flex-wrap">
-                        <MudButton Href="@HubOptions.HubRoute" Variant="Variant.Text" Size="Size.Small" Class="@Ui(NerdDesignSystemUi.BrandChrome)">System</MudButton>
-                    <MudButton Href="@HubOptions.PlayBookRoute" Variant="Variant.Text" Size="Size.Small" Class="@Ui(NerdDesignSystemUi.BrandChrome)">PlayBook</MudButton>
-                </MudStack>
-            </MudStack>
+            <NerdCatalogPageHeader Title="Design guide"
+                                   Current="NerdCatalogSection.DesignGuide"
+                                   ColorCount="HubOptions.DesignTokenCount"
+                                   RecipeCount="HubOptions.DesignTokenRecipeCount">
+                <SubtitleContent>
+                    @(Options.ActiveBrandPackId ?? Options.Prefix)
+                    @if (!string.IsNullOrWhiteSpace(Options.ActiveBrandIdentityVersion))
+                    {
+                        <span> · @Options.ActiveBrandIdentityVersion</span>
+                    }
+                </SubtitleContent>
+            </NerdCatalogPageHeader>
 
             <NerdDesignGuideScenes TokenOptions="Options" />
             <NerdDesignGuideBrandPreview />

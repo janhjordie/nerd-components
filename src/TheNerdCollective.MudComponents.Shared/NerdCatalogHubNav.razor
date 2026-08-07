@@ -1,0 +1,78 @@
+@*
+  Shared catalog hub menu — same BrandChrome Outlined/Filled MudButtons on every catalog page.
+  No route MudChips (shape/casing mismatch); active section uses Variant.Filled.
+*@
+@inject NerdDesignSystemOptions Options
+
+<MudStack Row="true"
+          Spacing="1"
+          AlignItems="AlignItems.Center"
+          Class="@($"flex-wrap {Class}")"
+          data-nerd-token="@ChromeSurfaceClass"
+          data-nerd-style-guard="@NerdDesignSystemUi.CatalogChromePlacement">
+    <MudButton Href="@Options.HubRoute"
+               Variant="@VariantFor(NerdCatalogSection.Hub)"
+               Size="Size.Small"
+               Class="@ChromeClass">
+        Design system
+    </MudButton>
+    <MudButton Href="@Options.DesignTokensRoute"
+               Variant="@VariantFor(NerdCatalogSection.Colors)"
+               Size="Size.Small"
+               Class="@ChromeClass">
+        Colors@(ColorCount > 0 ? $" ({ColorCount})" : "")
+    </MudButton>
+    <MudButton Href="@Options.DesignTokenRecipesRoute"
+               Variant="@VariantFor(NerdCatalogSection.Recipes)"
+               Size="Size.Small"
+               Class="@ChromeClass">
+        Recipes@(RecipeCount > 0 ? $" ({RecipeCount})" : "")
+    </MudButton>
+    <MudButton Href="@Options.TypographyRoute"
+               Variant="@VariantFor(NerdCatalogSection.Typography)"
+               Size="Size.Small"
+               Class="@ChromeClass">
+        Typography
+    </MudButton>
+    <MudButton Href="@Options.PlayBookRoute"
+               Variant="@VariantFor(NerdCatalogSection.PlayBook)"
+               Size="Size.Small"
+               Class="@ChromeClass">
+        PlayBook
+    </MudButton>
+    @if (ShowWcag)
+    {
+        <MudButton Href="@Options.WcagGuideRoute"
+                   Variant="@VariantFor(NerdCatalogSection.Wcag)"
+                   Size="Size.Small"
+                   Class="@ChromeClass">
+            WCAG
+        </MudButton>
+    }
+</MudStack>
+
+@code {
+    [Parameter]
+    public NerdCatalogSection Current { get; set; } = NerdCatalogSection.None;
+
+    [Parameter]
+    public int ColorCount { get; set; }
+
+    [Parameter]
+    public int RecipeCount { get; set; }
+
+    [Parameter]
+    public bool ShowWcag { get; set; } = true;
+
+    [Parameter]
+    public string? Class { get; set; }
+
+    private string ChromeClass =>
+        NerdDesignSystemUi.TokenClass(Options.TokenPrefix, NerdDesignSystemUi.BrandChrome);
+
+    private string ChromeSurfaceClass =>
+        NerdDesignSystemUi.TokenClass(Options.TokenPrefix, NerdDesignSystemUi.PageSurface);
+
+    private Variant VariantFor(NerdCatalogSection section) =>
+        Current == section ? Variant.Filled : Variant.Outlined;
+}

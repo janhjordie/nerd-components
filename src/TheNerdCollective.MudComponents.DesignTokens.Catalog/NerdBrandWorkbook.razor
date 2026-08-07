@@ -29,15 +29,11 @@ else
         <NerdDesignTokenStyles />
         <NerdCatalogPage MaxWidth="MaxWidth.Large">
             <MudStack Spacing="3">
-                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-3">
-                    <div>
-                        <MudText Typo="Typo.h4">Brand workbook</MudText>
-                        <MudText Typo="Typo.body2" Class="@Ui(NerdDesignSystemUi.MutedContent)">
-                            JSON-first onboarding: import, edit palette/aliases/recipes/pairings, export for your client.
-                        </MudText>
-                    </div>
-                    <MudButton Href="@HubOptions.HubRoute" Variant="Variant.Text" Class="@Ui(NerdDesignSystemUi.BrandChrome)">Design system</MudButton>
-                </MudStack>
+                <NerdCatalogPageHeader Title="Brand workbook"
+                                       Current="NerdCatalogSection.BrandWorkbook"
+                                       ColorCount="HubOptions.DesignTokenCount"
+                                       RecipeCount="HubOptions.DesignTokenRecipeCount"
+                                       Subtitle="JSON-first onboarding: import, edit palette/aliases/recipes/pairings, export for your client." />
 
                 <MudStepper @bind-ActiveIndex="_activeStep" Class="mb-2">
                     <MudStep Title="Import" />

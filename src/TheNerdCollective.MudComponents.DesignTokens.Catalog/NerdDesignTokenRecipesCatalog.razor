@@ -17,20 +17,17 @@ else
         <NerdDesignTokenStyles />
         <NerdCatalogPage>
             <MudStack Spacing="3">
-                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-3">
-                    <div>
-                        <MudText Typo="Typo.h4">Design token recipes</MudText>
-                        <MudText Typo="Typo.body2" Class="@Ui(NerdDesignSystemUi.MutedContent)">
-                            Surface + content + action pairings · Prefix <code>@Options.Prefix</code>
-                        </MudText>
-                    </div>
-                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="flex-wrap" data-nerd-token="@Ui(NerdDesignSystemUi.PageSurface)">
+                <NerdCatalogPageHeader Title="Design token recipes"
+                                       Current="NerdCatalogSection.Recipes"
+                                       ColorCount="Options.Colors.Count"
+                                       RecipeCount="Options.Recipes.Count">
+                    <SubtitleContent>
+                        Surface + content + action pairings · Prefix <code>@Options.Prefix</code>
+                    </SubtitleContent>
+                    <Trailing>
                         <MudSwitch @bind-Value="_previewDark" Label="Preview dark mode" />
-                        <MudButton Href="@HubOptions.HubRoute" Variant="Variant.Text" Class="@Ui(NerdDesignSystemUi.BrandChrome)">Design system</MudButton>
-                    </MudStack>
-                </MudStack>
-
-                <NerdDesignTokenCatalogNav Options="Options" HubOptions="HubOptions" Current="recipes" />
+                    </Trailing>
+                </NerdCatalogPageHeader>
 
                 @if (_saveStatus is not null)
                 {

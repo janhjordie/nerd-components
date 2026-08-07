@@ -1,0 +1,86 @@
+@*
+  Shared catalog page chrome: title + optional tools + hub nav.
+  Keeps menu alignment identical across Tokens / Typography / PlayBook / WCAG / hub.
+*@
+@inject NerdDesignSystemOptions Options
+
+<MudStack Spacing="2" Class="@Class">
+    <MudStack Row="true"
+              AlignItems="AlignItems.Center"
+              Justify="Justify.SpaceBetween"
+              Class="flex-wrap gap-3">
+        <div>
+            <MudText Typo="Typo.h4">@Title</MudText>
+            @if (!string.IsNullOrWhiteSpace(Subtitle))
+            {
+                <MudText Typo="Typo.body2" Class="@MutedClass">
+                    @Subtitle
+                </MudText>
+            }
+            @if (SubtitleContent is not null)
+            {
+                <MudText Typo="Typo.body2" Class="@MutedClass">
+                    @SubtitleContent
+                </MudText>
+            }
+        </div>
+        @if (Trailing is not null)
+        {
+            <MudStack Row="true"
+                      AlignItems="AlignItems.Center"
+                      Spacing="2"
+                      Class="flex-wrap"
+                      data-nerd-token="@PageSurfaceClass">
+                @Trailing
+            </MudStack>
+        }
+    </MudStack>
+
+    @if (ShowNav)
+    {
+        <NerdCatalogHubNav Current="Current"
+                           ColorCount="ColorCount"
+                           RecipeCount="RecipeCount"
+                           ShowWcag="ShowWcag" />
+    }
+</MudStack>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = "";
+
+    /// <summary>Plain subtitle text. Prefer <see cref="SubtitleContent"/> when markup is needed.</summary>
+    [Parameter]
+    public string? Subtitle { get; set; }
+
+    [Parameter]
+    public RenderFragment? SubtitleContent { get; set; }
+
+    /// <summary>Page tools (dark-mode switch, theme set, …) — not hub links.</summary>
+    [Parameter]
+    public RenderFragment? Trailing { get; set; }
+
+    [Parameter]
+    public NerdCatalogSection Current { get; set; } = NerdCatalogSection.None;
+
+    [Parameter]
+    public int ColorCount { get; set; }
+
+    [Parameter]
+    public int RecipeCount { get; set; }
+
+    [Parameter]
+    public bool ShowWcag { get; set; } = true;
+
+    [Parameter]
+    public bool ShowNav { get; set; } = true;
+
+    [Parameter]
+    public string? Class { get; set; }
+
+    private string MutedClass =>
+        NerdDesignSystemUi.TokenClass(Options.TokenPrefix, NerdDesignSystemUi.MutedContent);
+
+    private string PageSurfaceClass =>
+        NerdDesignSystemUi.TokenClass(Options.TokenPrefix, NerdDesignSystemUi.PageSurface);
+}

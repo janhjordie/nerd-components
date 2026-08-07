@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.3
+
+- PlayBook header uses shared catalog hub nav (aligned with Tokens/Typography/WCAG).
+
+
 ## 1.2.2
 
 - Route chip `/nerd-playbook` uses `BrandChrome` Outlined instead of `Info` (`flod` cyan) so chrome on page-surface stays WCAG-readable.

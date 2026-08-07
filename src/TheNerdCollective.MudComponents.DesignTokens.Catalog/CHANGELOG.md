@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.0.5
+
+- Catalog pages use shared `NerdCatalogPageHeader` / hub nav.
+
+
 ## 2.0.4
 
 - Surface `outlined-status-intent:*` NRDT001 risks in Accessibility warnings.

@@ -19,19 +19,14 @@ else
         }
         <NerdCatalogPage Class="nerd-typography-catalog-preview">
             <MudStack Spacing="4">
-                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-3">
-                    <div>
-                        <MudText Typo="Typo.h4">Responsive typography</MudText>
-                        <MudText Typo="Typo.body2" Class="@Ui(NerdDesignSystemUi.MutedContent)">
-                            CSS <code>clamp()</code> through <code>MudTheme.Typography</code> — no JS, no viewport service.
-                        </MudText>
-                    </div>
-                    <MudStack Row="true" Spacing="1" Class="flex-wrap">
-                        <MudButton Href="@HubOptions.HubRoute" Variant="Variant.Outlined" Class="@Ui(NerdDesignSystemUi.BrandChrome)">Design system</MudButton>
-                        <MudButton Href="@HubOptions.WcagGuideRoute" Variant="Variant.Outlined" Class="@Ui(NerdDesignSystemUi.BrandChrome)">WCAG guide</MudButton>
-                        <MudChip T="string" Class="@Ui(NerdDesignSystemUi.BrandChrome)" Variant="Variant.Outlined">@Options.CatalogRoute</MudChip>
-                    </MudStack>
-                </MudStack>
+                <NerdCatalogPageHeader Title="Responsive typography"
+                                       Current="NerdCatalogSection.Typography"
+                                       ColorCount="HubOptions.DesignTokenCount"
+                                       RecipeCount="HubOptions.DesignTokenRecipeCount">
+                    <SubtitleContent>
+                        CSS <code>clamp()</code> through <code>MudTheme.Typography</code> — no JS, no viewport service.
+                    </SubtitleContent>
+                </NerdCatalogPageHeader>
 
                 @if (_warnings.Count > 0)
                 {

@@ -17,14 +17,14 @@ else
         <NerdDesignTokenStyles />
         <NerdCatalogPage MaxWidth="MaxWidth.False">
         <MudStack Spacing="3">
-            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-3">
-                <div>
-                    <MudText Typo="Typo.h4">Design token colors</MudText>
-                    <MudText Typo="Typo.body2" Class="@Ui(NerdDesignSystemUi.MutedContent)">
-                        Brand palette swatches · Prefix <code>@Options.Prefix</code> · MudBlazor @Options.MudBlazorVersion
-                    </MudText>
-                </div>
-                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="flex-wrap" data-nerd-token="@Ui(NerdDesignSystemUi.PageSurface)">
+            <NerdCatalogPageHeader Title="Design token colors"
+                                   Current="NerdCatalogSection.Colors"
+                                   ColorCount="Options.Colors.Count"
+                                   RecipeCount="Options.Recipes.Count">
+                <SubtitleContent>
+                    Brand palette swatches · Prefix <code>@Options.Prefix</code> · MudBlazor @Options.MudBlazorVersion
+                </SubtitleContent>
+                <Trailing>
                     <MudSwitch @bind-Value="_previewDark" Label="Preview dark mode" />
                     @if (ThemeSets.Count > 0)
                     {
@@ -36,16 +36,8 @@ else
                             }
                         </MudSelect>
                     }
-                    <MudButton Href="@HubOptions.HubRoute"
-                               Variant="Variant.Outlined"
-                               Size="Size.Small"
-                               Class="@Ui(NerdDesignSystemUi.BrandChrome)">
-                        Design system
-                    </MudButton>
-                </MudStack>
-            </MudStack>
-
-            <NerdDesignTokenCatalogNav Options="Options" HubOptions="HubOptions" Current="colors" />
+                </Trailing>
+            </NerdCatalogPageHeader>
 
             <NerdTokenPackExportPanel Options="Options" ClientId="@_clientId" GetTypographyRoles="GetTypographyRolesForExport" />
             <NerdDtcgImporter Options="Options" OnImported="RefreshAfterDtcgImportAsync" />
