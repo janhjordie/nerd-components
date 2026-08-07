@@ -154,6 +154,65 @@ public sealed class NerdMudButtonContrastAnalyzerTests
     }
 
     [Fact]
+    public void Flags_mudtabs_with_primary_action_class()
+    {
+        const string razor = """
+            <MudTabs Elevation="1" Rounded="true" Class="@Ui(NerdDesignSystemUi.PrimaryAction)">
+                <MudTabPanel Text="Mud components" />
+            </MudTabs>
+            """;
+
+        var hits = NerdRazorContrastHeuristics.FindViolations(razor);
+
+        Assert.Single(hits);
+        Assert.Contains("MudTabs", hits[0].Message, StringComparison.Ordinal);
+        Assert.Contains("PrimaryAction", hits[0].Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Flags_mudtabs_with_literal_primary_action_class()
+    {
+        const string razor = """
+            <MudTabs Class="dnf-primary-action" Elevation="0">
+                <MudTabPanel Text="All (53)" />
+            </MudTabs>
+            """;
+
+        var hits = NerdRazorContrastHeuristics.FindViolations(razor);
+
+        Assert.Single(hits);
+    }
+
+    [Fact]
+    public void Allows_mudtabs_with_brand_chrome_class()
+    {
+        const string razor = """
+            <MudTabs Class="@Ui(NerdDesignSystemUi.BrandChrome)" Elevation="1" Rounded="true">
+                <MudTabPanel Text="Mud components" />
+            </MudTabs>
+            """;
+
+        var hits = NerdRazorContrastHeuristics.FindViolations(razor);
+
+        Assert.Empty(hits);
+    }
+
+    [Fact]
+    public void Flags_mudtabs_with_color_primary()
+    {
+        const string razor = """
+            <MudTabs Color="Color.Primary" Elevation="1">
+                <MudTabPanel Text="Buttons" />
+            </MudTabs>
+            """;
+
+        var hits = NerdRazorContrastHeuristics.FindViolations(razor);
+
+        Assert.Single(hits);
+        Assert.Contains("Color.Primary", hits[0].Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Allows_mudalert_with_token_class()
     {
         const string razor = """

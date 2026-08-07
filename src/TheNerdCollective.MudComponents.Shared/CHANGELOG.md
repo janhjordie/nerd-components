@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.7
+
+- WCAG guide CTA uses BrandChrome Filled (not PrimaryAction lime fill as only emphasis).
+
 ## 1.5.6
 
 - Catalog layout: `NerdCatalogPage` is the only width frame (ExtraLarge). Hub nav counts always come from `NerdDesignSystemOptions` so badges match across pages. Hub/WCAG no longer use Medium.

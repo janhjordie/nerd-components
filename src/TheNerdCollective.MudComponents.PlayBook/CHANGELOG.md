@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.7
+
+- MudTabs use BrandChrome (not PrimaryAction) so active tab text/slider stay readable on page-surface.
+
 ## 1.2.6
 
 - PlayBook uses canonical catalog ExtraLarge frame (aligned with hub / WCAG / tokens).

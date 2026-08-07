@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.6
+
+- MudTabs + chrome buttons use BrandChrome (NRDT001: no PrimaryAction on tabs / Outlined).
+
 ## 1.4.5
 
 - Typography catalog uses canonical `NerdCatalogPage` ExtraLarge frame.

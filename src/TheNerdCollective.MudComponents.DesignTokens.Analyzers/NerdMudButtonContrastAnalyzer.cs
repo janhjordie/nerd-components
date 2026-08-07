@@ -7,8 +7,9 @@ using Microsoft.CodeAnalysis.Text;
 namespace TheNerdCollective.MudComponents.DesignTokens.Analyzers;
 
 /// <summary>
-/// Scans Razor AdditionalFiles for MudButton/MudChip/MudLink patterns that typically paint
-/// light-on-light (WCAG fail), e.g. Variant.Text/Outlined + muted-content / primary-action / Color.Primary.
+/// Scans Razor AdditionalFiles for MudButton/MudChip/MudLink/MudTabs patterns that typically paint
+/// light-on-light (WCAG fail), e.g. Variant.Text/Outlined + muted-content / primary-action / Color.Primary,
+/// or MudTabs with primary-action (active tab text = channel color on page-surface).
 /// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class NerdMudButtonContrastAnalyzer : DiagnosticAnalyzer
@@ -23,7 +24,7 @@ public sealed class NerdMudButtonContrastAnalyzer : DiagnosticAnalyzer
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
         description:
-            "Outlined/Text Mud controls must not use filled/status intents (muted-content, primary-action, page-surface, info, success, highlight) or Mud Color.Primary/Info/Success on chrome. MudLink must not use action intents. Prefer BrandChrome Outlined or Filled + PrimaryAction.");
+            "Outlined/Text Mud controls must not use filled/status intents (muted-content, primary-action, page-surface, info, success, highlight) or Mud Color.Primary/Info/Success on chrome. MudTabs paint active tab text with the Class channel color — primary-action/info/success fail on page-surface. MudLink must not use action intents. Prefer BrandChrome Outlined or Filled + PrimaryAction.");
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } =
         ImmutableArray.Create(Rule);
@@ -83,7 +84,7 @@ public readonly struct NerdRazorContrastHit
 public static class NerdRazorContrastHeuristics
 {
     private static readonly Regex ControlBlock = new(
-        @"<(?<tag>MudButton|MudIconButton|MudChip|MudFab|MudLink|MudAlert)\b(?<attrs>[\s\S]*?)(?:/>|>)",
+        @"<(?<tag>MudButton|MudIconButton|MudChip|MudFab|MudLink|MudAlert|MudTabs)\b(?<attrs>[\s\S]*?)(?:/>|>)",
         RegexOptions.CultureInvariant | RegexOptions.Compiled);
 
     private static readonly Regex VariantAttr = new(
@@ -109,6 +110,7 @@ public static class NerdRazorContrastHeuristics
     /// <summary>
     /// Intents that paint poorly as Outlined/Text on page-surface (light fills, ContrastText, status accents).
     /// Status aliases (info/success/highlight) are for Filled alerts/chips — not chrome labels.
+    /// Same set fails on MudTabs: active tab text uses the Class channel color on page-surface.
     /// </summary>
     private static readonly string[] DangerousIntents =
     [
@@ -169,6 +171,13 @@ public static class NerdRazorContrastHeuristics
                 continue;
             }
 
+            if (string.Equals(tag, "MudTabs", StringComparison.Ordinal))
+            {
+                // MudTabs have no Variant — Class channel color paints active tab text + slider on page-surface.
+                TryAddMudTabsViolation(hits, attrs, line);
+                continue;
+            }
+
             var variant = VariantAttr.Match(attrs);
             var variantValue = variant.Success ? variant.Groups["v"].Value : string.Empty;
             var isTextOrOutlined =
@@ -191,6 +200,51 @@ public static class NerdRazorContrastHeuristics
         }
 
         return hits;
+    }
+
+    private static void TryAddMudTabsViolation(
+        List<NerdRazorContrastHit> hits,
+        string attrs,
+        int line)
+    {
+        var classMatch = ClassAttr.Match(attrs);
+        var classValue = classMatch.Success ? classMatch.Groups["c"].Value : string.Empty;
+        if (string.IsNullOrEmpty(classValue) && ClassExpr.IsMatch(attrs))
+        {
+            classValue = ClassExpr.Match(attrs).Value;
+        }
+
+        if (!string.IsNullOrEmpty(classValue))
+        {
+            foreach (var intent in DangerousIntents)
+            {
+                if (classValue.IndexOf(intent, StringComparison.OrdinalIgnoreCase) < 0)
+                {
+                    continue;
+                }
+
+                hits.Add(new NerdRazorContrastHit(
+                    line,
+                    $"MudTabs with Class intent '{intent}' paints active tab text and slider with that channel color on page-surface (light-on-light / WCAG 2.1). Use BrandChrome so active tabs stay readable."));
+                break;
+            }
+        }
+
+        var colorMatch = ColorAttr.Match(attrs);
+        if (!colorMatch.Success)
+        {
+            return;
+        }
+
+        var colorValue = colorMatch.Groups["c"].Value;
+        if (DangerousMudColors.All(c => !string.Equals(c, colorValue, StringComparison.Ordinal)))
+        {
+            return;
+        }
+
+        hits.Add(new NerdRazorContrastHit(
+            line,
+            $"MudTabs with Color.{colorValue} paints active tab text with the Mud theme accent on page-surface (WCAG 2.1). Prefer Class=\"dnf-brand-chrome\" (or BrandChrome via Ui())."));
     }
 
     private static void TryAddIntentViolation(

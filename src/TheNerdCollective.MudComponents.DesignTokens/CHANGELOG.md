@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.2.2
+
+- **NRDT001:** flag `MudTabs` with `primary-action` / status intents or `Color.Primary` — active tab text uses the channel color on page-surface (light green on white). Prefer `BrandChrome`.
+
 ## 2.2.1
 
 - **Style guard:** `CssPaintsOutlinedBrandChromeWithContrastText` scopes to `:root` only so intentional matching-surface `on-brand-chrome` paint under `[data-nerd-token="…-brand-chrome"]` is not a false positive (HttpBridge FailOnAccessibility).

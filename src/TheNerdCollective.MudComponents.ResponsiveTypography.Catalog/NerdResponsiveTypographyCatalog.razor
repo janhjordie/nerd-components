@@ -80,7 +80,7 @@ else
                 <MudTabs @bind-ActivePanelIndex="_activeTabIndex"
                          Elevation="1"
                          Rounded="true"
-                         Class="@Ui(NerdDesignSystemUi.PrimaryAction)"
+                         Class="@Ui(NerdDesignSystemUi.BrandChrome)"
                          ApplyEffectsToContainer="true">
                     <MudTabPanel Text="Previews" Icon="@Icons.Material.Filled.Preview">
                         <MudStack Spacing="3">
@@ -276,7 +276,7 @@ else
                                         Live typography preview (@_editorRole)
                                     </MudText>
                                     <code>@EditorClamp</code>
-                                    <MudButton Variant="Variant.Outlined" Class="@Ui(NerdDesignSystemUi.PrimaryAction)" OnClick="ApplyEditorToRole">
+                                    <MudButton Variant="Variant.Outlined" Class="@Ui(NerdDesignSystemUi.BrandChrome)" OnClick="ApplyEditorToRole">
                                         Apply to @_editorRole
                                     </MudButton>
                                 </MudStack>
@@ -288,8 +288,8 @@ else
                                     <MudStack Row="true" Spacing="2" Class="flex-wrap">
                                         <MudNumericField @bind-Value="_scaleBaseRem" Label="Base (rem)" Min="0.5" Max="4" Step="0.125" Immediate="true" />
                                         <MudNumericField @bind-Value="_scaleRatio" Label="Ratio" Min="1.05" Max="2" Step="0.05" Immediate="true" />
-                                        <MudButton Variant="Variant.Outlined" Class="@Ui(NerdDesignSystemUi.PrimaryAction)" OnClick="RefreshModularScalePreview">Preview scale</MudButton>
-                                        <MudButton Variant="Variant.Filled" Class="@Ui(NerdDesignSystemUi.PrimaryAction)" OnClick="ApplyModularScaleToPreview">Apply to preview</MudButton>
+                                        <MudButton Variant="Variant.Outlined" Class="@Ui(NerdDesignSystemUi.BrandChrome)" OnClick="RefreshModularScalePreview">Preview scale</MudButton>
+                                        <MudButton Variant="Variant.Filled" Class="@Ui(NerdDesignSystemUi.BrandChrome)" OnClick="ApplyModularScaleToPreview">Apply to preview</MudButton>
                                     </MudStack>
                                     <MudSimpleTable Dense="true" Bordered="true" Hover="true">
                                         <thead><tr><th>Role</th><th>Clamp</th></tr></thead>
@@ -315,7 +315,7 @@ else
                             </MudText>
                             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="flex-wrap">
                                 <MudTextField @bind-Value="_clientId" Label="ClientId" Immediate="true" />
-                                <MudButton Variant="Variant.Filled" Class="@Ui(NerdDesignSystemUi.PrimaryAction)" OnClick="SaveClientPackAsync"
+                                <MudButton Variant="Variant.Filled" Class="@Ui(NerdDesignSystemUi.BrandChrome)" OnClick="SaveClientPackAsync"
                                            Disabled="@(!Entitlements.CanSaveAnotherPack(_packIds.Count))">
                                     Gem som klient
                                 </MudButton>

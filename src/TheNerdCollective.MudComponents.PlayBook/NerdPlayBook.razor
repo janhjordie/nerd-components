@@ -37,13 +37,13 @@ else
                     @bind-SearchQuery="_searchQuery" />
 
                 <NerdCatalogChrome>
-                <MudTabs @bind-ActivePanelIndex="_activeSectionTabIndex" Elevation="1" Rounded="true" Class="@Ui(NerdDesignSystemUi.PrimaryAction)">
+                <MudTabs @bind-ActivePanelIndex="_activeSectionTabIndex" Elevation="1" Rounded="true" Class="@Ui(NerdDesignSystemUi.BrandChrome)">
                     <MudTabPanel Text="Mud components" Icon="@Icons.Material.Filled.Widgets">
                         <MudStack Spacing="3" Class="mt-4">
                             <MudTabs @bind-ActivePanelIndex="_activeCategoryTabIndex"
                                      Elevation="0"
                                      Rounded="true"
-                                     Class="@Ui(NerdDesignSystemUi.PrimaryAction)"
+                                     Class="@Ui(NerdDesignSystemUi.BrandChrome)"
                                      Style="max-width: 100%;">
                                 <MudTabPanel Text="@($"All ({CountInCategory(null)})")" />
                                 @foreach (var category in MudBlazorPlayBookCatalog.Categories)
