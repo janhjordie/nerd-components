@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.0
+
+- Search field filters title, description, version, and change type.
+- Multi-select chips for major / minor / patch with “N of M” count.
+- MudDataGrid Filterable + SortMode Multiple; clearer empty-filter state.
+- Page subtitle shows total entry count.
+
 ## 1.0.1
 
 - `ChangelogRoute` is overridable: public URL via options; canonical Blazor page remains `/nerd-changelog`.

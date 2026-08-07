@@ -15,16 +15,19 @@
     <MudStack Spacing="3">
         <NerdCatalogPageHeader Title="Changelog"
                                Current="NerdCatalogSection.Changelog"
-                               Subtitle="@($"Product history from changelog*.json · current {_version ?? "0.0.0"}")" />
+                               Subtitle="@($"Product history from changelog*.json · current {_version ?? "0.0.0"} · {_entryCount} entries")" />
         <NerdChangelog />
     </MudStack>
 </NerdCatalogPage>
 
 @code {
     private string? _version;
+    private int _entryCount;
 
     protected override async Task OnInitializedAsync()
     {
         _version = await ChangelogService.GetLatestVersionAsync();
+        var entries = await ChangelogService.GetEntriesAsync();
+        _entryCount = entries.Count;
     }
 }

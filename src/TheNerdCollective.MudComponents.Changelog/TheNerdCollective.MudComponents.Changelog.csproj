@@ -7,7 +7,7 @@
     <RootNamespace>TheNerdCollective.MudComponents.Changelog</RootNamespace>
     <AssemblyName>TheNerdCollective.MudComponents.Changelog</AssemblyName>
     <PackageId>TheNerdCollective.MudComponents.Changelog</PackageId>
-    <Version>1.0.1</Version>
+    <Version>1.1.0</Version>
     <Authors>The Nerd Collective</Authors>
     <Description>MudBlazor changelog viewer for multi-file changelog*.json (50-entry rotation) with semver calculation.</Description>
     <PackageTags>mudblazor;blazor;changelog;release-notes;components</PackageTags>

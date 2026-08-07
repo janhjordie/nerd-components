@@ -13,34 +13,80 @@ else if (_entries.Count == 0)
 }
 else
 {
-    <MudDataGrid T="NerdChangelogEntry" Items="_entries" Hover="true" Dense="true" ReadOnly="true">
-        <Columns>
-            <HierarchyColumn T="NerdChangelogEntry" EnableHeaderToggle="true" InitiallyExpandedFunc="@ShouldInitiallyExpand" />
-            <PropertyColumn Property="x => x.Version" Title="Version">
-                <CellTemplate>
-                    <MudChip T="string" Color="Color.Primary" Size="Size.Small">@context.Item.Version</MudChip>
-                </CellTemplate>
-            </PropertyColumn>
-            <PropertyColumn Property="x => x.ChangeType" Title="Type">
-                <CellTemplate>
-                    <MudChip T="string" Color="@GetChangeTypeColor(context.Item.ChangeType)" Size="Size.Small">
-                        @context.Item.ChangeType
-                    </MudChip>
-                </CellTemplate>
-            </PropertyColumn>
-            <PropertyColumn Property="x => x.Title" Title="Title" />
-            <PropertyColumn Property="x => x.ParsedDateTime" Title="Date" Format="yyyy-MM-dd HH:mm" />
-        </Columns>
-        <ChildRowContent>
-            <MudCard Elevation="0">
-                <MudCardContent>
-                    <MudText Typo="Typo.body2"><strong>Details</strong></MudText>
-                    <MudText Typo="Typo.body2" Class="mt-2">@((MarkupString)context.Item.ProcessedDescription)</MudText>
-                </MudCardContent>
-            </MudCard>
-        </ChildRowContent>
-        <PagerContent>
-            <MudDataGridPager T="NerdChangelogEntry" />
-        </PagerContent>
-    </MudDataGrid>
+    <MudStack Spacing="3">
+        <MudStack Row="true" Spacing="2" Wrap="Wrap.Wrap" AlignItems="AlignItems.Center">
+            <MudTextField @bind-Value="_search"
+                          @bind-Value:after="OnFilterChanged"
+                          Label="Search"
+                          Placeholder="Title or description"
+                          Variant="Variant.Outlined"
+                          Immediate="true"
+                          Clearable="true"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          Class="flex-grow-1" />
+            <MudChipSet T="string"
+                        SelectionMode="SelectionMode.MultiSelection"
+                        @bind-SelectedValues="_selectedTypes"
+                        @bind-SelectedValues:after="OnFilterChanged"
+                        CheckMark="true"
+                        Color="Color.Primary"
+                        Variant="Variant.Outlined">
+                <MudChip T="string" Value="@("major")" Color="Color.Error">major</MudChip>
+                <MudChip T="string" Value="@("minor")" Color="Color.Warning">minor</MudChip>
+                <MudChip T="string" Value="@("patch")" Color="Color.Success">patch</MudChip>
+            </MudChipSet>
+            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                @_filtered.Count of @_entries.Count
+            </MudText>
+        </MudStack>
+
+        @if (_filtered.Count == 0)
+        {
+            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true">
+                No entries match the current search or type filters.
+            </MudAlert>
+        }
+        else
+        {
+            <MudDataGrid T="NerdChangelogEntry"
+                         Items="_filtered"
+                         Hover="true"
+                         Dense="true"
+                         ReadOnly="true"
+                         Filterable="true"
+                         SortMode="SortMode.Multiple">
+                <Columns>
+                    <HierarchyColumn T="NerdChangelogEntry"
+                                     EnableHeaderToggle="true"
+                                     InitiallyExpandedFunc="@ShouldInitiallyExpand" />
+                    <PropertyColumn Property="x => x.Version" Title="Version">
+                        <CellTemplate>
+                            <MudChip T="string" Color="Color.Primary" Size="Size.Small">@context.Item.Version</MudChip>
+                        </CellTemplate>
+                    </PropertyColumn>
+                    <PropertyColumn Property="x => x.ChangeType" Title="Type">
+                        <CellTemplate>
+                            <MudChip T="string" Color="@GetChangeTypeColor(context.Item.ChangeType)" Size="Size.Small">
+                                @context.Item.ChangeType
+                            </MudChip>
+                        </CellTemplate>
+                    </PropertyColumn>
+                    <PropertyColumn Property="x => x.Title" Title="Title" />
+                    <PropertyColumn Property="x => x.ParsedDateTime" Title="Date" Format="yyyy-MM-dd HH:mm" />
+                </Columns>
+                <ChildRowContent>
+                    <MudCard Elevation="0">
+                        <MudCardContent>
+                            <MudText Typo="Typo.body2"><strong>Details</strong></MudText>
+                            <MudText Typo="Typo.body2" Class="mt-2">@((MarkupString)context.Item.ProcessedDescription)</MudText>
+                        </MudCardContent>
+                    </MudCard>
+                </ChildRowContent>
+                <PagerContent>
+                    <MudDataGridPager T="NerdChangelogEntry" />
+                </PagerContent>
+            </MudDataGrid>
+        }
+    </MudStack>
 }

@@ -3,7 +3,11 @@
 MudBlazor viewer for multi-file product changelogs (`changelog.json`, `changelog-1.json`, …).
 
 Agents update the JSON via the **`update changelog`** skill / `NR_CHANGELOG_*` rules.
-This package is **read-only** for the UI.
+This package is **read-only** for the UI. **Never** put PII in changelog JSON (`NR_CHANGELOG_NO_PII`).
+
+## UI (1.1.0+)
+
+`<NerdChangelog />` includes search, major/minor/patch filter chips, sortable/filterable MudDataGrid, and an “N of M” count.
 
 ## Setup
 
