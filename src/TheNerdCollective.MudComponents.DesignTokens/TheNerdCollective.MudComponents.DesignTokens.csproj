@@ -4,7 +4,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <PackageId>TheNerdCollective.MudComponents.DesignTokens</PackageId>
-    <Version>2.1.6</Version>
+    <Version>2.1.7</Version>
     <Authors>The Nerd Collective</Authors>
     <Description>Customer-specific CSS design tokens and MudBlazor component color variants.</Description>
     <PackageTags>mudblazor;blazor;design-tokens;css;branding;colors;wcag;analyzer</PackageTags>
@@ -35,6 +35,7 @@
     <None Include="README.md" Pack="true" PackagePath="\" />
     <None Include="CHANGELOG.md" Pack="true" PackagePath="\" />
     <None Include="build\TheNerdCollective.MudComponents.DesignTokens.props" Pack="true" PackagePath="build\" />
+    <None Include="buildTransitive\TheNerdCollective.MudComponents.DesignTokens.props" Pack="true" PackagePath="buildTransitive\" />
     <Content Include="reference\mudblazor\**\*.yaml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -43,11 +44,14 @@
     </Content>
   </ItemGroup>
 
+  <!-- Ship NRDT001 analyzer ON by default for PackageReference consumers. -->
   <Target Name="PackNerdContrastAnalyzer" BeforeTargets="GenerateNuspec" DependsOnTargets="Build">
     <PropertyGroup>
       <_NerdAnalyzerDll>$(MSBuildThisFileDirectory)..\TheNerdCollective.MudComponents.DesignTokens.Analyzers\bin\$(Configuration)\netstandard2.0\TheNerdCollective.MudComponents.DesignTokens.Analyzers.dll</_NerdAnalyzerDll>
     </PropertyGroup>
-    <ItemGroup Condition="Exists('$(_NerdAnalyzerDll)')">
+    <Error Condition="!Exists('$(_NerdAnalyzerDll)')"
+           Text="NRDT001 analyzer DLL missing at $(_NerdAnalyzerDll). Build DesignTokens.Analyzers before packing." />
+    <ItemGroup>
       <_PackageFiles Include="$(_NerdAnalyzerDll)">
         <PackagePath>analyzers/dotnet/cs</PackagePath>
       </_PackageFiles>

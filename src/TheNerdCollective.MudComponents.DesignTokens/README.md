@@ -135,7 +135,17 @@ Design Tokens already measures contrast:
 Set `options.WarnOnAccessibilityFailuresAtStartup = true` (default) to log WCAG failures at host start.
 Set `options.FailOnAccessibilityFailuresAtStartup = true` to throw and stop the host when tokens fail AA.
 CI: call `AssertAccessibilityCompliance` + `AssertPlacementCompliance` (see Brand.Dnf tests).
-Build: package ships Roslyn analyzer **NRDT001** (Razor AdditionalFiles) warning for Text/Outlined + muted-content/primary-action Class misuse.
+
+**Roslyn NRDT001 (enabled by default):** DesignTokens NuGet ships the analyzer + `build`/`buildTransitive` props that feed `**/*.razor` as AdditionalFiles. NRDT001 is treated as a **build error** by default (`WarningsAsErrors`). Opt out:
+
+```xml
+<!-- turn analyzer off entirely -->
+<DisableNerdDesignTokenRazorContrastAnalyzer>true</DisableNerdDesignTokenRazorContrastAnalyzer>
+<!-- or keep analyzer as warning only -->
+<NerdDesignTokenRazorContrastTreatAsError>false</NerdDesignTokenRazorContrastTreatAsError>
+```
+
+Flags Text/Outlined + muted-content / primary-action / page-surface Class misuse.
 
 ---
 
