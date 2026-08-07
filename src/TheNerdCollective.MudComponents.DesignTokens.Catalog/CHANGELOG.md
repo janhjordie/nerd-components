@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.0.8
+
+- Catalog pages use canonical `NerdCatalogPage` ExtraLarge width (no per-page Medium/False/Large).
+
+## 2.0.7
+
+- Host checklist / WCAG chips and shared hub nav alignment.
+
 ## 2.0.6
 
 - MudBlazor **9.8.0** package pin.

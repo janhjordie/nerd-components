@@ -1,4 +1,7 @@
-@* Page surface comes from NerdAppShell shell.main (page-surface). Catalogs only provide width and padding. *@
+@*
+  Canonical catalog page frame. Host layouts must NOT wrap @Body in another MudContainer —
+  every catalog (hub / colors / recipes / typography / playbook / WCAG) uses this width.
+*@
 <MudContainer MaxWidth="@MaxWidth" Class="@($"my-6 pa-4 {Class}")">
     @ChildContent
 </MudContainer>
@@ -7,6 +10,7 @@
     [Parameter]
     public RenderFragment? ChildContent { get; set; }
 
+    /// <summary>Canonical catalog width — do not override per page unless the matrix truly needs full bleed.</summary>
     [Parameter]
     public MaxWidth MaxWidth { get; set; } = MaxWidth.ExtraLarge;
 

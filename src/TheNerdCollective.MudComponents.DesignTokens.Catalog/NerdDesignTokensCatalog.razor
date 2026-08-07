@@ -15,12 +15,10 @@ else
     }
     <NerdCatalogThemeProvider Theme="_catalogTheme" IsDarkMode="_previewDark">
         <NerdDesignTokenStyles />
-        <NerdCatalogPage MaxWidth="MaxWidth.False">
+        <NerdCatalogPage>
         <MudStack Spacing="3">
             <NerdCatalogPageHeader Title="Design token colors"
-                                   Current="NerdCatalogSection.Colors"
-                                   ColorCount="Options.Colors.Count"
-                                   RecipeCount="Options.Recipes.Count">
+                                   Current="NerdCatalogSection.Colors">
                 <SubtitleContent>
                     Brand palette swatches · Prefix <code>@Options.Prefix</code> · MudBlazor @Options.MudBlazorVersion
                 </SubtitleContent>

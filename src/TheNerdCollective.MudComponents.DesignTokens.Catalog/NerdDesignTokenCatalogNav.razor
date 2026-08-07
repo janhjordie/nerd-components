@@ -2,15 +2,18 @@
 
 @*
   Backward-compatible wrapper — prefer NerdCatalogHubNav / NerdCatalogPageHeader.
+  Syncs hub counts from the live token options so nav badges stay consistent.
 *@
+@{
+    HubOptions.DesignTokenCount = Options.Colors.Count;
+    HubOptions.DesignTokenRecipeCount = Options.Recipes.Count;
+}
 <NerdCatalogHubNav Current="@(Current switch
                          {
                              "recipes" => NerdCatalogSection.Recipes,
                              "colors" => NerdCatalogSection.Colors,
                              _ => NerdCatalogSection.Colors
-                         })"
-                   ColorCount="Options.Colors.Count"
-                   RecipeCount="Options.Recipes.Count" />
+                         })" />
 
 @code {
     [Parameter, EditorRequired]

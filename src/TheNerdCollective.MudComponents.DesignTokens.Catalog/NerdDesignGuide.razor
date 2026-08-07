@@ -13,12 +13,10 @@ else
 {
     <NerdDesignSystemScripts />
     <NerdDesignTokenStyles />
-    <NerdCatalogPage MaxWidth="MaxWidth.ExtraLarge">
-        <MudStack Spacing="5">
+    <NerdCatalogPage>
+        <MudStack Spacing="3">
             <NerdCatalogPageHeader Title="Design guide"
-                                   Current="NerdCatalogSection.DesignGuide"
-                                   ColorCount="HubOptions.DesignTokenCount"
-                                   RecipeCount="HubOptions.DesignTokenRecipeCount">
+                                   Current="NerdCatalogSection.DesignGuide">
                 <SubtitleContent>
                     @(Options.ActiveBrandPackId ?? Options.Prefix)
                     @if (!string.IsNullOrWhiteSpace(Options.ActiveBrandIdentityVersion))

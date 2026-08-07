@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.6
+
+- Catalog layout: `NerdCatalogPage` is the only width frame (ExtraLarge). Hub nav counts always come from `NerdDesignSystemOptions` so badges match across pages. Hub/WCAG no longer use Medium.
+
 ## 1.5.5
 
 - `NerdWcagGuide`: info alert uses token `Info` + `Outlined` (WCAG 1.4.3 on page-surface).

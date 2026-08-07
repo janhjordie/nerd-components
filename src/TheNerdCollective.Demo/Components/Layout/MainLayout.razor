@@ -36,9 +36,8 @@
         <NavMenu />
     </MudDrawer>
      <MudMainContent Style="@NerdDesignSystemUi.PageSurfaceStyle(LayoutSurfacePrefix)">
-       <MudContainer MaxWidth="MaxWidth.Large" Class="my-6 pt-6">
+        @* Catalog pages own width via NerdCatalogPage — do not nest another MudContainer here. *@
         @Body
-        </MudContainer>
     </MudMainContent>
 </MudLayout>
 

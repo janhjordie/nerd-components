@@ -1,6 +1,6 @@
 @*
   Shared catalog hub menu — same BrandChrome Outlined/Filled MudButtons on every catalog page.
-  No route MudChips (shape/casing mismatch); active section uses Variant.Filled.
+  Counts always come from NerdDesignSystemOptions so every page shows identical badges.
 *@
 @inject NerdDesignSystemOptions Options
 
@@ -20,13 +20,13 @@
                Variant="@VariantFor(NerdCatalogSection.Colors)"
                Size="Size.Small"
                Class="@ChromeClass">
-        Colors@(ColorCount > 0 ? $" ({ColorCount})" : "")
+        Colors@(Options.DesignTokenCount > 0 ? $" ({Options.DesignTokenCount})" : "")
     </MudButton>
     <MudButton Href="@Options.DesignTokenRecipesRoute"
                Variant="@VariantFor(NerdCatalogSection.Recipes)"
                Size="Size.Small"
                Class="@ChromeClass">
-        Recipes@(RecipeCount > 0 ? $" ({RecipeCount})" : "")
+        Recipes@(Options.DesignTokenRecipeCount > 0 ? $" ({Options.DesignTokenRecipeCount})" : "")
     </MudButton>
     <MudButton Href="@Options.TypographyRoute"
                Variant="@VariantFor(NerdCatalogSection.Typography)"
@@ -54,12 +54,6 @@
 @code {
     [Parameter]
     public NerdCatalogSection Current { get; set; } = NerdCatalogSection.None;
-
-    [Parameter]
-    public int ColorCount { get; set; }
-
-    [Parameter]
-    public int RecipeCount { get; set; }
 
     [Parameter]
     public bool ShowWcag { get; set; } = true;

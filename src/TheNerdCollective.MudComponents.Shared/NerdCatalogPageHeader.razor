@@ -1,6 +1,6 @@
 @*
   Shared catalog page chrome: title + optional tools + hub nav.
-  Keeps menu alignment identical across Tokens / Typography / PlayBook / WCAG / hub.
+  Keeps menu alignment and page width identical across Tokens / Typography / PlayBook / WCAG / hub.
 *@
 @inject NerdDesignSystemOptions Options
 
@@ -38,10 +38,7 @@
 
     @if (ShowNav)
     {
-        <NerdCatalogHubNav Current="Current"
-                           ColorCount="ColorCount"
-                           RecipeCount="RecipeCount"
-                           ShowWcag="ShowWcag" />
+        <NerdCatalogHubNav Current="Current" ShowWcag="ShowWcag" />
     }
 </MudStack>
 
@@ -62,12 +59,6 @@
 
     [Parameter]
     public NerdCatalogSection Current { get; set; } = NerdCatalogSection.None;
-
-    [Parameter]
-    public int ColorCount { get; set; }
-
-    [Parameter]
-    public int RecipeCount { get; set; }
 
     [Parameter]
     public bool ShowWcag { get; set; } = true;

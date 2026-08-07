@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.6
+
+- PlayBook uses canonical catalog ExtraLarge frame (aligned with hub / WCAG / tokens).
+
+## 1.2.5
+
+- Outlined hub nav BrandChrome; MudBlazor 9.8 pin.
+
 ## 1.2.4
 
 - MudBlazor **9.8.0** package pin.

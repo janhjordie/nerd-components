@@ -27,12 +27,10 @@ else
     }
     <NerdCatalogThemeProvider Theme="_catalogTheme" IsDarkMode="false">
         <NerdDesignTokenStyles />
-        <NerdCatalogPage MaxWidth="MaxWidth.Large">
+        <NerdCatalogPage>
             <MudStack Spacing="3">
                 <NerdCatalogPageHeader Title="Brand workbook"
                                        Current="NerdCatalogSection.BrandWorkbook"
-                                       ColorCount="HubOptions.DesignTokenCount"
-                                       RecipeCount="HubOptions.DesignTokenRecipeCount"
                                        Subtitle="JSON-first onboarding: import, edit palette/aliases/recipes/pairings, export for your client." />
 
                 <MudStepper @bind-ActiveIndex="_activeStep" Class="mb-2">
