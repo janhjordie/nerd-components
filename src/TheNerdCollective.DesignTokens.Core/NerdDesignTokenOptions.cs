@@ -27,7 +27,7 @@ public sealed class NerdDesignTokenOptions
     private readonly Dictionary<string, NerdThemeSet> _themeSets = new(StringComparer.OrdinalIgnoreCase);
 
     public string Prefix { get; set; } = "nerd";
-    public string MudBlazorVersion { get; set; } = "9.7.0";
+    public string MudBlazorVersion { get; set; } = "9.8.0";
     public bool UseCssLayer { get; set; }
     public string CssLayerName { get; set; } = "nerd-design-tokens";
     public string? ScopeSelector { get; set; }

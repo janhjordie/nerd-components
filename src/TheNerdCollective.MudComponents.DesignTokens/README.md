@@ -1,6 +1,6 @@
 # TheNerdCollective.MudComponents.DesignTokens
 
-Customer-specific CSS design tokens for **MudBlazor 9.7+**. Define meaningful
+Customer-specific CSS design tokens for **MudBlazor 9.8+**. Define meaningful
 colors such as `sand`, `forest`, `sun`, and `sea`, then use the generated
 classes directly on any MudBlazor component. No wrappers, JavaScript, or
 MudBlazor fork is required.
@@ -79,7 +79,7 @@ To expose the catalog:
 <!-- Catalog: publish to nuget.org when ready; until then pack locally -->
 <PackageReference Include="TheNerdCollective.MudComponents.DesignTokens.Catalog" Version="2.0.0" />
 <PackageReference Include="TheNerdCollective.MudComponents.ResponsiveTypography" Version="1.5.0" />
-<PackageReference Include="MudBlazor" Version="9.7.0" />
+<PackageReference Include="MudBlazor" Version="9.8.0" />
 ```
 
 ```csharp

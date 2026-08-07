@@ -18,7 +18,7 @@ public sealed class NerdCoreAssemblyGuardTests
     [Fact]
     public void Mud_harvest_adapter_delegates_to_inventory_validator()
     {
-        var errors = NerdMudHarvestAdapter.ValidateHarvestCoverage("9.7.0");
+        var errors = NerdMudHarvestAdapter.ValidateHarvestCoverage("9.8.0");
 
         Assert.Empty(errors);
     }

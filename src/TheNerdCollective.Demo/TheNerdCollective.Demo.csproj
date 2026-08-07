@@ -8,7 +8,7 @@
 
 
   <ItemGroup>
-    <PackageReference Include="MudBlazor" Version="9.7.0" />
+    <PackageReference Include="MudBlazor" Version="9.8.0" />
     <ProjectReference Include="..\TheNerdCollective.Components\TheNerdCollective.Components.csproj" />
     <ProjectReference Include="..\TheNerdCollective.MudComponents.MudQuillEditor\TheNerdCollective.MudComponents.MudQuillEditor.csproj" />
     <ProjectReference Include="..\TheNerdCollective.Brand.Acme\TheNerdCollective.Brand.Acme.csproj" />

@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.4
+
+- MudBlazor **9.8.0** package pin.
+
+
 ## 1.5.3
 
 - Added `NerdCatalogPageHeader` + `NerdCatalogHubNav` for aligned catalog menus (BrandChrome Outlined/Filled, no route chips).

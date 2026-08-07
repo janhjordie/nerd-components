@@ -4,7 +4,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <PackageId>TheNerdCollective.MudComponents.Shared</PackageId>
-    <Version>1.5.3</Version>
+    <Version>1.5.4</Version>
     <Authors>The Nerd Collective</Authors>
     <Description>Shared WCAG helpers and design-system catalog utilities for MudBlazor component packages.</Description>
     <PackageTags>mudblazor;blazor;wcag;design-system</PackageTags>
@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="MudBlazor" Version="9.7.0" />
+    <PackageReference Include="MudBlazor" Version="9.8.0" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,12 +1,12 @@
 namespace TheNerdCollective.MudComponents.DesignTokens;
 
 /// <summary>
-/// Complete MudBlazor 9.7.0 palette CSS custom properties from <c>MudThemeProvider.GenerateTheme</c>.
+/// Complete MudBlazor 9.8.0 palette CSS custom properties from <c>MudThemeProvider.GenerateTheme</c>.
 /// Used to validate brand-root emission coverage.
 /// </summary>
 public static class MudBlazorPaletteManifest
 {
-    public const string MudBlazorVersion = "9.7.0";
+    public const string MudBlazorVersion = "9.8.0";
 
     public static readonly string[] ChannelColors =
     [

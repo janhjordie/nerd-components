@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.1.10
+
+- MudBlazor **9.8.0** pin + `reference/mudblazor/9.8.0` archive (palette unchanged from 9.7.0).
+
+
 ## 2.1.9
 
 - **NRDT001:** flag Outlined/Text + `info` / `success` / `highlight` / `flod` (not only muted/primary/page-surface).

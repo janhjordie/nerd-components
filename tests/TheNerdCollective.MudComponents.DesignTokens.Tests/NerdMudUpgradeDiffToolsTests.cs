@@ -60,7 +60,7 @@ public sealed class NerdMudUpgradeDiffToolsTests
     public void ReadCommittedPaletteVariables_loads_current_manifest_catalog()
     {
         var root = NerdMudUpgradeDiffTools.ResolveDesignTokensRoot();
-        var variables = NerdMudUpgradeDiffTools.ReadCommittedPaletteVariables(root, "9.7.0");
+        var variables = NerdMudUpgradeDiffTools.ReadCommittedPaletteVariables(root, "9.8.0");
 
         Assert.Contains("--mud-palette-primary", variables);
         Assert.Contains("--mud-palette-surface", variables);

@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.1
+
+- MudBlazor **9.8.0** package pin.
+
+
 ## 1.5.0
 
 - Added `INerdBrandTypographyPack`, `NerdBrandTypographyRegistry`, and `RegisterBrandTypography` for brand-pack typography switching.

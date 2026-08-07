@@ -7,7 +7,7 @@ public sealed class NerdMudInventoryValidatorTests
     [Fact]
     public void ValidateDirectory_passes_for_committed_wave1_inventories()
     {
-        var directory = NerdMudInventoryValidator.ResolveInventoryDirectory("9.7.0");
+        var directory = NerdMudInventoryValidator.ResolveInventoryDirectory("9.8.0");
         var errors = NerdMudInventoryValidator.ValidateDirectory(directory);
         Assert.Empty(errors);
     }
@@ -15,7 +15,7 @@ public sealed class NerdMudInventoryValidatorTests
     [Fact]
     public void ValidateHarvestCoverage_passes_for_committed_components_list()
     {
-        var errors = NerdMudInventoryValidator.ValidateHarvestCoverage("9.7.0");
+        var errors = NerdMudInventoryValidator.ValidateHarvestCoverage("9.8.0");
         Assert.Empty(errors);
     }
 

@@ -4,7 +4,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TESTS="$ROOT/../../tests/TheNerdCollective.MudComponents.DesignTokens.Tests/TheNerdCollective.MudComponents.DesignTokens.Tests.csproj"
-VERSION="${MUD_VERSION:-$(node -pe "require('fs').readFileSync('$ROOT/reference/mudblazor/9.7.0/MANIFEST.json','utf8')" 2>/dev/null | sed -n 's/.*"mudblazorVersion"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' || echo "9.7.0")}"
+VERSION="${MUD_VERSION:-$(node -pe "require('fs').readFileSync('$ROOT/reference/mudblazor/9.8.0/MANIFEST.json','utf8')" 2>/dev/null | sed -n 's/.*"mudblazorVersion"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' || echo "9.8.0")}"
 TAG="v${VERSION}"
 INVENTORY="$ROOT/reference/mudblazor/${VERSION}/inventory"
 SOURCES="$ROOT/reference/mudblazor/${VERSION}/sources"

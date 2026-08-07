@@ -1,0 +1,39 @@
+component: switch
+scss: _switch.scss
+classification: P1
+family: toggle
+states:
+  - name: unchecked
+    selectors:
+      - .mud-switch-base:not(.mud-checked)
+      - .mud-switch-track
+    properties: [background-color, border-color]
+  - name: checked
+    selectors:
+      - .mud-switch-base.mud-checked
+      - .mud-switch-base.mud-checked + .mud-switch-track
+    properties: [background-color]
+    notes: mud-checked is on .mud-switch-base, NOT .mud-switch root
+  - name: thumb
+    selectors:
+      - .mud-switch-thumb-medium
+      - .mud-button-root (inside switch)
+    properties: [background-color, color]
+  - name: label
+    selectors:
+      - .mud-switch + .mud-typography
+    properties: [color]
+adapter:
+  do_not:
+    - Use .mud-switch.mud-checked + .mud-switch-track
+    - Apply InputPatterns color flatten to mud-switch class substring
+  do:
+    - Style track via sibling selector .mud-switch-base.mud-checked + .mud-switch-track
+    - Map label typography to content token
+generator_required:
+  - .mud-switch-base.mud-checked + .mud-switch-track
+  - .mud-switch .mud-switch-base
+  - .mud-switch .mud-switch-track
+  generator_forbidden:
+    - .mud-switch.mud-checked + .mud-switch-track
+    - .mud-switch .mud-button-root

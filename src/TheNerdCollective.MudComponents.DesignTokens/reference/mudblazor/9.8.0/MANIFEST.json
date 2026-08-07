@@ -1,0 +1,9 @@
+{
+  "mudblazorVersion": "9.8.0",
+  "nugetPackage": "MudBlazor",
+  "githubTag": "v9.8.0",
+  "githubCommit": "pending-harvest",
+  "analysisDate": "2026-08-07",
+  "agentRunId": "mud-9.8.0-upgrade",
+  "notes": "Promoted from 9.8.0 archive; palette variables unchanged (0 added/removed)."
+}

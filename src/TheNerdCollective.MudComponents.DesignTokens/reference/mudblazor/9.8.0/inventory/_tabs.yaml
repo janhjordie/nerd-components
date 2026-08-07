@@ -1,0 +1,39 @@
+component: tabs
+scss: _tabs.scss
+classification: P1
+family: navigation
+states:
+  - name: default
+    selectors:
+      - .mud-tab
+    properties: [color, background-color]
+  - name: active
+    selectors:
+      - .mud-tab.mud-tab-active
+      - .mud-tab.mud-tab-active .mud-tab-icon-text
+    properties: [color]
+  - name: inactive
+    selectors:
+      - .mud-tab:not(.mud-tab-active)
+    properties: [color]
+  - name: slider
+    selectors:
+      - .mud-tab-slider
+    properties: [background-color]
+    notes: Uses --mud-palette-primary by default in Mud SCSS
+  - name: hover
+    selectors:
+      - .mud-tab:hover
+    properties: [background-color, color]
+adapter:
+  do_not:
+    - Flatten all .mud-tab via AccentTextPatterns or input patterns
+  do:
+    - Map inactive to content token, active + slider to channel token
+    - Exclude .mud-tab from filled-button hover block
+generator_required:
+  - .mud-tab.mud-tab-active
+  - .mud-tab:not(.mud-tab-active)
+  - .mud-tab-slider
+generator_forbidden:
+  - '[class*="mud-tab"]'

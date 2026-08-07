@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.3
+
+- MudBlazor **9.8.0** package pin.
+
+
 ## 1.4.2
 
 - Typography catalog uses shared `NerdCatalogPageHeader` hub nav.

@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.4
+
+- MudBlazor **9.8.0** package pin.
+
+
 ## 1.2.3
 
 - PlayBook header uses shared catalog hub nav (aligned with Tokens/Typography/WCAG).

@@ -7,7 +7,7 @@ public sealed class NerdMudInventoryRuleTableTests
     [Fact]
     public void Load_reads_committed_inventory_entries()
     {
-        var entries = NerdMudInventoryRuleTable.Load("9.7.0");
+        var entries = NerdMudInventoryRuleTable.Load("9.8.0");
 
         Assert.True(entries.Count >= 74);
         Assert.Contains(entries, entry => entry.Component == "button");
@@ -93,7 +93,7 @@ public sealed class NerdMudInventoryRuleTableTests
     [Fact]
     public void ValidateGeneratedCss_covers_all_inventory_entries_with_requirements()
     {
-        var entries = NerdMudInventoryRuleTable.Load("9.7.0");
+        var entries = NerdMudInventoryRuleTable.Load("9.8.0");
         var withRequirements = entries
             .Where(entry => entry.RequiredSelectors.Count > 0 || entry.ForbiddenSelectors.Count > 0)
             .ToList();
@@ -121,10 +121,10 @@ public sealed class NerdMudInventoryRuleTableTests
     [Fact]
     public void WriteGeneratedArtifacts_updates_committed_markdown()
     {
-        NerdMudInventoryRuleTable.WriteGeneratedArtifacts("9.7.0");
+        NerdMudInventoryRuleTable.WriteGeneratedArtifacts("9.8.0");
 
         var path = Path.Combine(
-            NerdMudInventoryValidator.ResolveInventoryDirectory("9.7.0"),
+            NerdMudInventoryValidator.ResolveInventoryDirectory("9.8.0"),
             "..",
             "generated-rule-table.md");
 

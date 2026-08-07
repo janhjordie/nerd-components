@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.0.6
+
+- MudBlazor **9.8.0** package pin.
+
+
 ## 2.0.5
 
 - Catalog pages use shared `NerdCatalogPageHeader` / hub nav.

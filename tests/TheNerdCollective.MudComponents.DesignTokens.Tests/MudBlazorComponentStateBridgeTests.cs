@@ -122,7 +122,7 @@ public class MudBlazorComponentStateBridgeTests
     public void MudBlazorVersion_matches_package_reference()
     {
         var options = new NerdDesignTokenOptions();
-        Assert.Equal("9.7.0", options.MudBlazorVersion);
+        Assert.Equal("9.8.0", options.MudBlazorVersion);
     }
 
     [Fact]
