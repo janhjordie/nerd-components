@@ -116,6 +116,22 @@ MudBlazor [`Color`](https://mudblazor.com/api/Color#fields) is a closed set of *
 - Global chrome after DI palette map → `Color.Primary` etc. is fine  
 - Extra brand / section colors → `Class="dnf-forest"` or recipe/intent classes (`TokenClass` / `RecipeClass`)
 
+**Do not** put `MutedContent` / filled `ContrastText` intents on `Variant.Text` or `Variant.Outlined` buttons — that paints light-on-light and fails WCAG. Use `BrandChrome` (or `PrimaryAction` **Filled** only) for controls on `page-surface`.
+
+### 5. WCAG 2.1 contrast
+
+Design Tokens already measures contrast:
+
+| API / UI | What it does |
+|----------|----------------|
+| `NerdDesignTokenTools.CheckAccessibility(options)` | Per-token light/dark ratio vs AA |
+| `GetAccessibilityWarnings` / startup validator | Gate or log failures |
+| Catalog token cards | Light/Dark AA chips with ratios |
+| `/nerd-wcag` (`NerdWcagGuide`) | Human-readable WCAG guide |
+| `NerdStyleGuardTools.ValidatePlacements` | Catalog chrome label + outlined control vs page-surface (≥ 3:1 UI) |
+
+Set `options.WarnOnAccessibilityFailuresAtStartup = true` (or assert in CI) so illegal combinations cannot ship silently.
+
 ---
 
 ## Brand packs (recommended)

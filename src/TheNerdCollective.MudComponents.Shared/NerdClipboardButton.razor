@@ -17,7 +17,11 @@
     public string Label { get; set; } = "Copy";
 
     [Parameter]
-    public string Intent { get; set; } = NerdDesignSystemUi.PrimaryAction;
+    /// <summary>
+    /// Token intent for outlined chrome. Prefer BrandChrome (readable on page-surface);
+    /// PrimaryAction ContrastText is for filled buttons and fails WCAG on outlined/text.
+    /// </summary>
+    public string Intent { get; set; } = NerdDesignSystemUi.BrandChrome;
 
     private string IntentClass =>
         NerdDesignSystemUi.TokenClass(HubOptions, Intent);

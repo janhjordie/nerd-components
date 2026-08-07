@@ -1024,6 +1024,22 @@ public static class MudBlazorDesignTokenCssGenerator
         css.AppendLine($"  color: {pageContent}{important};");
         css.AppendLine($"  caret-color: {accent}{important};");
         css.AppendLine("}");
+
+        // Outlined/text controls on page-surface must use readable content/accent — never filled ContrastText.
+        css.AppendLine($"{accentRoot} .mud-button-outlined{previewScopeExclude},");
+        css.AppendLine($"{accentRoot} .mud-button-outlined .mud-button-label{previewScopeExclude},");
+        css.AppendLine($"{accentRoot} .mud-button-text{previewScopeExclude},");
+        css.AppendLine($"{accentRoot} .mud-button-text .mud-button-label{previewScopeExclude} {{");
+        css.AppendLine($"  color: {pageContent}{important};");
+        css.AppendLine($"  border-color: {pageContent}{important};");
+        css.AppendLine($"  background-color: transparent{important};");
+        css.AppendLine("}");
+        css.AppendLine($"{accentRoot} .mud-button-filled{previewScopeExclude},");
+        css.AppendLine($"{accentRoot} .mud-button-filled .mud-button-label{previewScopeExclude} {{");
+        css.AppendLine($"  background-color: {accent}{important};");
+        css.AppendLine($"  color: var(--{prefix}-color-{NerdDesignSystemUi.PrimaryAction}-text){important};");
+        css.AppendLine($"  border-color: {accent}{important};");
+        css.AppendLine("}");
     }
 
     private static void AppendCatalogToolbarRules(StringBuilder css, NerdDesignTokenOptions options)

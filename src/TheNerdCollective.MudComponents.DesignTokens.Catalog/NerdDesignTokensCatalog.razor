@@ -15,7 +15,7 @@ else
     }
     <NerdCatalogThemeProvider Theme="_catalogTheme" IsDarkMode="_previewDark">
         <NerdDesignTokenStyles />
-        <NerdCatalogPage>
+        <NerdCatalogPage MaxWidth="MaxWidth.False">
         <MudStack Spacing="3">
             <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-3">
                 <div>
@@ -36,7 +36,12 @@ else
                             }
                         </MudSelect>
                     }
-                    <MudButton Href="@HubOptions.HubRoute" Variant="Variant.Text" Class="@Ui(NerdDesignSystemUi.MutedContent)">Design system</MudButton>
+                    <MudButton Href="@HubOptions.HubRoute"
+                               Variant="Variant.Outlined"
+                               Size="Size.Small"
+                               Class="@Ui(NerdDesignSystemUi.BrandChrome)">
+                        Design system
+                    </MudButton>
                 </MudStack>
             </MudStack>
 
@@ -338,11 +343,34 @@ else
                                         @ColorValue(previewColor)
                                         @ColorValue(previewContrast)
                                     </MudStack>
-                                    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mt-2">
-                                        <code>.@className</code>
-                                        <NerdClipboardButton Text="@($".{className}")" Label="Copy" />
-                                        <NerdClipboardButton Text="@BuildRazorSnippet(pair.Key)" Label="Copy Razor" />
-                                        <NerdClipboardButton Text="@BuildCssSnippet(pair.Key)" Label="Copy CSS" />
+                                    <MudStack Spacing="1" Class="mt-2">
+                                        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-1">
+                                            <code>.@className</code>
+                                            @if (accessibility is not null)
+                                            {
+                                                var lightOk = accessibility.Light.MeetsAa;
+                                                var darkOk = accessibility.Dark.MeetsAa;
+                                                <MudStack Row="true" Spacing="1" Class="flex-wrap">
+                                                    <MudChip T="string"
+                                                             Size="Size.Small"
+                                                             Variant="Variant.Outlined"
+                                                             Class="@(lightOk ? Ui(NerdDesignSystemUi.Success) : Ui(NerdDesignSystemUi.Danger))">
+                                                        Light @FormatRatio(accessibility.Light.ContrastRatio) @(lightOk ? "AA" : "fail")
+                                                    </MudChip>
+                                                    <MudChip T="string"
+                                                             Size="Size.Small"
+                                                             Variant="Variant.Outlined"
+                                                             Class="@(darkOk ? Ui(NerdDesignSystemUi.Success) : Ui(NerdDesignSystemUi.Danger))">
+                                                        Dark @FormatRatio(accessibility.Dark.ContrastRatio) @(darkOk ? "AA" : "fail")
+                                                    </MudChip>
+                                                </MudStack>
+                                            }
+                                        </MudStack>
+                                        <MudStack Row="true" Spacing="1" Class="flex-wrap">
+                                            <NerdClipboardButton Text="@($".{className}")" Label="Copy" />
+                                            <NerdClipboardButton Text="@BuildRazorSnippet(pair.Key)" Label="Copy Razor" />
+                                            <NerdClipboardButton Text="@BuildCssSnippet(pair.Key)" Label="Copy CSS" />
+                                        </MudStack>
                                     </MudStack>
                                     @if (EnableCollaborativeComments)
                                     {

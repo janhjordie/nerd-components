@@ -42,6 +42,20 @@ public static class NerdStyleGuardTools
             AaNormalTextRatio,
             variables);
 
+        // Outlined / text controls on page-surface (WCAG UI component contrast ≥ 3:1).
+        if (options.Aliases.ContainsKey(NerdDesignSystemUi.BrandChrome))
+        {
+            var brandChrome = ResolveAliasAccentColor(options, NerdDesignSystemUi.BrandChrome);
+            AddContrastCheck(
+                violations,
+                NerdDesignSystemUi.CatalogChromePlacement,
+                "outlined-control",
+                brandChrome,
+                pageSurface,
+                UiComponentRatio,
+                variables);
+        }
+
         return violations;
     }
 

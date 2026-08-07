@@ -1,9 +1,10 @@
-@* Catalog controls sit on page-surface. Accent intent scopes interactive chrome only. *@
+@* Catalog controls sit on page-surface.
+   Accent is data-nerd-accent only (no token Class) so children do not inherit
+   primary-action / filled ContrastText paint — that caused white text on outlined buttons. *@
 <div class="@($"{NerdDesignSystemUi.CatalogChromeClass} {PageSurfaceClass} {Class}")"
      data-nerd-token="@PageSurfaceClass"
      data-nerd-style-guard="@NerdDesignSystemUi.CatalogChromePlacement">
-    <div class="@AccentClass"
-         data-nerd-accent="@AccentClass">
+    <div data-nerd-accent="@AccentClass">
         @ChildContent
     </div>
 </div>
