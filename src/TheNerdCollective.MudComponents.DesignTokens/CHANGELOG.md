@@ -1,9 +1,16 @@
 # Changelog
 
+## 2.2.0
+
+- **NRDT001:** also flags Outlined/Text `Color="Color.Primary"` (and Info/Success/Warning/Secondary/Tertiary) without token Class.
+- **NRDT001:** flags `MudLink` with action/status token intents (`dnf-primary-action`, etc.).
+- **NRDT001:** flags `MudAlert` with `Severity.*` but no design-token `Class` (Mud theme severity on page-surface).
+- **CSS:** same-intent controls on matching `data-nerd-token` surface (e.g. brand-chrome PlayBook cell) use `on-brand-chrome` paint.
+- MudBlazor **9.8.0** pin + `reference/mudblazor/9.8.0` archive.
+
 ## 2.1.10
 
 - MudBlazor **9.8.0** pin + `reference/mudblazor/9.8.0` archive (palette unchanged from 9.7.0).
-
 
 ## 2.1.9
 

@@ -1,14 +1,17 @@
 # Changelog
 
+## 1.5.5
+
+- `NerdWcagGuide`: info alert uses token `Info` + `Outlined` (WCAG 1.4.3 on page-surface).
+- `NerdClipboardButton`: default intent is `brand-chrome` (documented; NRDT001-safe on outlined).
+
 ## 1.5.4
 
 - MudBlazor **9.8.0** package pin.
 
-
 ## 1.5.3
 
 - Added `NerdCatalogPageHeader` + `NerdCatalogHubNav` for aligned catalog menus (BrandChrome Outlined/Filled, no route chips).
-
 
 ## 1.5.0
 
@@ -29,14 +32,4 @@
 
 ## 1.1.0
 
-- Added `NerdDesignSystemScripts` to load `nerd-shared.js` for clipboard and download helpers.
-- Added `NerdCatalogThemeProvider` for consistent MudBlazor theme context in catalogs.
-- `AddNerdDesignSystem` now merges configuration from multiple package registrations.
-- Added `hsl()` / `hsla()` support to `NerdColorParser`.
-- Split default hub route into `Pages/NerdDesignSystemPage.razor` (component no longer owns `@page`).
-
-## 1.0.0
-
-- Added `WcagStandards` and `NerdColorParser` for shared contrast calculations (hex and `rgb()`/`rgba()`).
-- Added `NerdClipboardService`, `NerdDownloadService`, and `NerdClipboardButton` with `wwwroot/nerd-shared.js`.
-- Added design-system hub at `/nerd-design-system` via `AddNerdDesignSystem()` and `AddNerdDesignSystemHub()`.
+- Initial shared catalog utilities and WCAG guide.

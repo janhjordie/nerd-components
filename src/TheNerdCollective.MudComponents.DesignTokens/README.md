@@ -145,7 +145,7 @@ CI: call `AssertAccessibilityCompliance` + `AssertPlacementCompliance` (see Bran
 <NerdDesignTokenRazorContrastTreatAsError>false</NerdDesignTokenRazorContrastTreatAsError>
 ```
 
-Flags Text/Outlined + muted-content / primary-action / page-surface / **info** / **success** / **highlight** Class misuse (and DNF `flod`). Prefer BrandChrome Outlined or Filled + status intent.
+Flags Text/Outlined + muted-content / primary-action / page-surface / **info** / **success** / **highlight** Class misuse (and DNF `flod`), **Mud Color.Primary/Info/Success** on Outlined/Text chrome, and **MudLink** with action intents. Prefer BrandChrome Outlined or Filled + status intent.
 
 ---
 

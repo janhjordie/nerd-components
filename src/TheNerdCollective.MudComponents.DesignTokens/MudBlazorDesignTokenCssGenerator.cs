@@ -109,6 +109,7 @@ public static class MudBlazorDesignTokenCssGenerator
 
         AppendCatalogChromeRules(css, options);
         AppendCatalogToolbarRules(css, options);
+        AppendIntentOnMatchingSurfaceRules(css, options);
         AppendPairingSurfaceRules(css, options);
         AppendShellSelectionRules(css, options);
         AppendRecipeTypographyOverrides(css, options);
@@ -1043,6 +1044,49 @@ public static class MudBlazorDesignTokenCssGenerator
         css.AppendLine($"  background-color: {accent}{important};");
         css.AppendLine($"  color: var(--{prefix}-color-{NerdDesignSystemUi.PrimaryAction}-text){important};");
         css.AppendLine($"  border-color: {accent}{important};");
+        css.AppendLine("}");
+    }
+
+    /// <summary>
+    /// When a control carries the same intent class as its <c>data-nerd-token</c> host surface
+    /// (e.g. brand-chrome button inside brand-chrome PlayBook cell), paint with on-surface content.
+    /// </summary>
+    private static void AppendIntentOnMatchingSurfaceRules(StringBuilder css, NerdDesignTokenOptions options)
+    {
+        if (!options.Aliases.ContainsKey(NerdDesignSystemUi.BrandChrome) ||
+            !options.Aliases.ContainsKey(NerdDesignSystemUi.OnBrandChrome))
+        {
+            return;
+        }
+
+        var prefix = options.Prefix;
+        var important = options.UseImportantOverrides ? " !important" : string.Empty;
+        var surfaceToken = $"{prefix}-{NerdDesignSystemUi.BrandChrome}";
+        var intentClass = $".{surfaceToken}";
+        var surfaceRoot = $"[data-nerd-token=\"{surfaceToken}\"]";
+        var onSurface = $"var(--{prefix}-color-{NerdDesignSystemUi.OnBrandChrome})";
+        var surfaceAccent = $"var(--{prefix}-color-{NerdDesignSystemUi.BrandChrome})";
+
+        css.AppendLine($"{surfaceRoot} {intentClass}[class*=\"mud-button-outlined\"],");
+        css.AppendLine($"{surfaceRoot} {intentClass}.mud-button-outlined,");
+        css.AppendLine($"{surfaceRoot} {intentClass}[class*=\"mud-chip-outlined\"],");
+        css.AppendLine($"{surfaceRoot} {intentClass}.mud-chip-outlined {{");
+        css.AppendLine($"  color: {onSurface}{important};");
+        css.AppendLine($"  border-color: {onSurface}{important};");
+        css.AppendLine($"  background-color: transparent{important};");
+        css.AppendLine("}");
+
+        css.AppendLine($"{surfaceRoot} {intentClass}[class*=\"mud-button-text\"],");
+        css.AppendLine($"{surfaceRoot} {intentClass}.mud-button-text {{");
+        css.AppendLine($"  color: {onSurface}{important};");
+        css.AppendLine($"  background-color: transparent{important};");
+        css.AppendLine("}");
+
+        css.AppendLine($"{surfaceRoot} {intentClass}[class*=\"mud-button-filled\"],");
+        css.AppendLine($"{surfaceRoot} {intentClass}.mud-button-filled {{");
+        css.AppendLine($"  background-color: {onSurface}{important};");
+        css.AppendLine($"  color: {surfaceAccent}{important};");
+        css.AppendLine($"  border-color: {onSurface}{important};");
         css.AppendLine("}");
     }
 

@@ -1,7 +1,7 @@
 @if (!IsAvailable)
 {
     <MudContainer MaxWidth="MaxWidth.Medium" Class="my-8">
-        <MudAlert Severity="Severity.Warning" Variant="Variant.Filled">
+        <MudAlert Class="@Ui(NerdDesignSystemUi.Highlight)" Variant="Variant.Filled">
             Design token catalog is disabled or only available in Development.
         </MudAlert>
     </MudContainer>
@@ -107,7 +107,7 @@ else
                 }
                 @if (_saveStatus is not null)
                 {
-                    <MudChip T="string" Color="Color.Success" Variant="Variant.Outlined">@_saveStatus</MudChip>
+                    <MudChip T="string" Class="@Ui(NerdDesignSystemUi.Success)" Variant="Variant.Filled">@_saveStatus</MudChip>
                 }
                 <InputFile OnChange="ImportTokenPackAsync" accept=".json,application/json" class="mud-button-root mud-button mud-button-outlined mud-ripple" style="width:auto;padding:.375rem .75rem;" />
             </MudStack>

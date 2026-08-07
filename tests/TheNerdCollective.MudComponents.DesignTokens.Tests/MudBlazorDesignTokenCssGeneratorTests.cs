@@ -441,6 +441,18 @@ public class MudBlazorDesignTokenCssGeneratorTests
     }
 
     [Fact]
+    public void Generate_brand_chrome_on_matching_surface_uses_on_brand_chrome_for_outlined_controls()
+    {
+        var options = new NerdDesignTokenOptions { Prefix = "tnc", UseImportantOverrides = false };
+        NerdTncDesignTokenPresets.Apply(options);
+
+        var css = MudBlazorDesignTokenCssGenerator.Generate(options);
+
+        Assert.Contains("[data-nerd-token=\"tnc-brand-chrome\"] .tnc-brand-chrome[class*=\"mud-button-outlined\"]", css);
+        Assert.Contains("color: var(--tnc-color-on-brand-chrome)", css);
+    }
+
+    [Fact]
     public void Generate_brand_chrome_surface_paints_content_on_tables_and_typography()
     {
         var options = new NerdDesignTokenOptions { Prefix = "tnc", UseImportantOverrides = false };

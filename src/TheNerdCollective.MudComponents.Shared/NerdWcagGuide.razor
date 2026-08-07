@@ -6,7 +6,7 @@
 @if (!IsAvailable)
 {
     <MudContainer MaxWidth="MaxWidth.Medium" Class="my-8">
-        <MudAlert Severity="Severity.Warning" Variant="Variant.Filled">
+        <MudAlert Class="@Ui(NerdDesignSystemUi.Highlight)" Variant="Variant.Filled">
             WCAG-guiden er deaktiveret eller kun tilgængelig i Development.
         </MudAlert>
     </MudContainer>
@@ -21,7 +21,7 @@ else
                                    RecipeCount="Options.DesignTokenRecipeCount"
                                    Subtitle="Praktisk reference for typografi, kontrast og hvad vores design system checker automatisk." />
 
-            <MudAlert Severity="Severity.Info" Variant="Variant.Filled" Dense="true">
+            <MudAlert Class="@Ui(NerdDesignSystemUi.Info)" Variant="Variant.Outlined" Dense="true">
                 WCAG kræver <strong>ikke</strong> 16px på Caption og Overline. Vores storyboard bruger rolle-specifikke gulve
                 (12px / 14px / 16px) som best practice — ikke som direkte AA-krav.
             </MudAlert>

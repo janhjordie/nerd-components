@@ -1,7 +1,7 @@
 @if (!IsAvailable)
 {
     <MudContainer MaxWidth="MaxWidth.Medium" Class="my-8">
-        <MudAlert Severity="Severity.Warning" Variant="Variant.Filled">
+        <MudAlert Class="@Ui(NerdDesignSystemUi.Highlight)" Variant="Variant.Filled">
             Design token recipes catalog is disabled or only available in Development.
         </MudAlert>
     </MudContainer>
@@ -31,7 +31,7 @@ else
 
                 @if (_saveStatus is not null)
                 {
-                    <MudChip T="string" Color="Color.Success" Variant="Variant.Outlined">@_saveStatus</MudChip>
+                    <MudChip T="string" Class="@Ui(NerdDesignSystemUi.Success)" Variant="Variant.Filled">@_saveStatus</MudChip>
                 }
 
                 @if (HasBrandPairingGuide)
@@ -124,7 +124,7 @@ else
                             </MudButton>
                             @if (!string.IsNullOrWhiteSpace(_studioToken) && Options.IsTokenLocked(_studioToken))
                             {
-                                <MudChip T="string" Color="Color.Warning" Variant="Variant.Outlined">Locked by brand guide</MudChip>
+                                <MudChip T="string" Class="@Ui(NerdDesignSystemUi.Highlight)" Variant="Variant.Filled">Locked by brand guide</MudChip>
                             }
                             <MudButton Variant="Variant.Outlined" OnClick="UndoStudioEditAsync" Disabled="@(!CanUndo)">Undo</MudButton>
                             <MudButton Variant="Variant.Outlined" OnClick="RedoStudioEditAsync" Disabled="@(!CanRedo)">Redo</MudButton>

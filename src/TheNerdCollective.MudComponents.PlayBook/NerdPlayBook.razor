@@ -1,7 +1,7 @@
 @if (!IsAvailable)
 {
     <MudContainer MaxWidth="MaxWidth.Medium" Class="my-8">
-        <MudAlert Severity="Severity.Warning" Variant="Variant.Filled">
+        <MudAlert Class="@Ui(NerdDesignSystemUi.Highlight)" Variant="Variant.Filled">
             MudBlazor PlayBook is disabled or only available in Development.
         </MudAlert>
     </MudContainer>
@@ -39,12 +39,13 @@ else
                     @bind-SearchQuery="_searchQuery" />
 
                 <NerdCatalogChrome>
-                <MudTabs @bind-ActivePanelIndex="_activeSectionTabIndex" Elevation="1" Rounded="true">
+                <MudTabs @bind-ActivePanelIndex="_activeSectionTabIndex" Elevation="1" Rounded="true" Class="@Ui(NerdDesignSystemUi.PrimaryAction)">
                     <MudTabPanel Text="Mud components" Icon="@Icons.Material.Filled.Widgets">
                         <MudStack Spacing="3" Class="mt-4">
                             <MudTabs @bind-ActivePanelIndex="_activeCategoryTabIndex"
                                      Elevation="0"
                                      Rounded="true"
+                                     Class="@Ui(NerdDesignSystemUi.PrimaryAction)"
                                      Style="max-width: 100%;">
                                 <MudTabPanel Text="@($"All ({CountInCategory(null)})")" />
                                 @foreach (var category in MudBlazorPlayBookCatalog.Categories)
@@ -74,13 +75,13 @@ else
 
                             @if (_tokenNames.Count == 0)
                             {
-                                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
+                                <MudAlert Class="@Ui(NerdDesignSystemUi.Info)" Variant="Variant.Outlined">
                                     No design tokens configured. Register colors with <code>AddNerdDesignTokens</code> to enable the token matrix.
                                 </MudAlert>
                             }
                             else if (FilteredEntries.Count == 0)
                             {
-                                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
+                                <MudAlert Class="@Ui(NerdDesignSystemUi.Info)" Variant="Variant.Outlined">
                                     No components match the current filter. Try another category or clear the search.
                                 </MudAlert>
                             }

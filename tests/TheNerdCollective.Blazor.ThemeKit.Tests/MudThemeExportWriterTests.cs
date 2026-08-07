@@ -51,7 +51,7 @@ public class MudThemeExportWriterTests
             DisplayName: "BilletSalg Default",
             Version: "1.0.1",
             UpdatedAt: "2026-06-16",
-            MudBlazorVersion: "9.5",
+            MudBlazorVersion: "9.8",
             SourceNotes: "Baseline BilletSalg V2 shell theme");
 
         var manifest = MudThemeExportWriter.WriteThemeManifest(options);

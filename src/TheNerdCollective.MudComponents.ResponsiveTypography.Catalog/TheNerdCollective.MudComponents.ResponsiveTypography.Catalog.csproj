@@ -4,7 +4,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <PackageId>TheNerdCollective.MudComponents.ResponsiveTypography.Catalog</PackageId>
-    <Version>1.4.3</Version>
+    <Version>1.4.4</Version>
     <Authors>The Nerd Collective</Authors>
     <Description>Visual responsive typography catalog UI for TheNerdCollective.MudComponents.ResponsiveTypography (development tooling).</Description>
     <PackageTags>mudblazor;blazor;typography;catalog;responsive</PackageTags>

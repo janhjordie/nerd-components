@@ -20,13 +20,13 @@
         }
         @if (!string.IsNullOrWhiteSpace(_documentation.Usage))
         {
-            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mt-3">
+            <MudAlert Class="@($"{Ui(NerdDesignSystemUi.Info)} mt-3")" Variant="Variant.Outlined" Dense="true">
                 <strong>Usage:</strong> @_documentation.Usage
             </MudAlert>
         }
         @if (!string.IsNullOrWhiteSpace(_documentation.DoNot))
         {
-            <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="mt-2">
+            <MudAlert Class="@($"{Ui(NerdDesignSystemUi.Highlight)} mt-2")" Variant="Variant.Outlined" Dense="true">
                 <strong>Don't:</strong> @_documentation.DoNot
             </MudAlert>
         }
@@ -46,4 +46,7 @@
     {
         _documentation = Selection is null ? null : NerdTokenDocumentationTools.Resolve(Options, Selection);
     }
+
+    private string Ui(string semanticAlias) =>
+        NerdDesignSystemUi.TokenClass(Options.Prefix, semanticAlias);
 }

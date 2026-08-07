@@ -1,7 +1,7 @@
 @if (!IsAvailable)
 {
     <MudContainer MaxWidth="MaxWidth.Medium" Class="my-8">
-        <MudAlert Severity="Severity.Warning" Variant="Variant.Filled">
+        <MudAlert Class="@Ui(NerdDesignSystemUi.Highlight)" Variant="Variant.Filled">
             Responsive typography catalog is disabled or only available in Development.
         </MudAlert>
     </MudContainer>
@@ -30,7 +30,7 @@ else
 
                 @if (_warnings.Count > 0)
                 {
-                    <MudAlert Class="@Ui(NerdDesignSystemUi.Danger)" Severity="Severity.Error" Variant="Variant.Filled">
+                    <MudAlert Class="@Ui(NerdDesignSystemUi.Danger)" Variant="Variant.Filled">
                         <MudText Typo="Typo.subtitle2" Class="mb-2">
                             @_warnings.Count WCAG @Options.WcagVersion typography warning@(_warnings.Count == 1 ? "" : "s")
                         </MudText>
@@ -82,6 +82,7 @@ else
                 <MudTabs @bind-ActivePanelIndex="_activeTabIndex"
                          Elevation="1"
                          Rounded="true"
+                         Class="@Ui(NerdDesignSystemUi.PrimaryAction)"
                          ApplyEffectsToContainer="true">
                     <MudTabPanel Text="Previews" Icon="@Icons.Material.Filled.Preview">
                         <MudStack Spacing="3">

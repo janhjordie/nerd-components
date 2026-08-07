@@ -9,7 +9,7 @@
     </MudStack>
     @if (_issues.Count == 0)
     {
-        <MudAlert Severity="Severity.Success" Variant="Variant.Outlined" Dense="true" Class="mt-2">
+        <MudAlert Class="@($"{Ui(NerdDesignSystemUi.Success)} mt-2")" Variant="Variant.Outlined" Dense="true">
             No naming, reference, or coverage issues detected.
         </MudAlert>
     }
@@ -46,4 +46,7 @@
     {
         _issues = NerdTokenStructureLinterTools.Analyze(Options);
     }
+
+    private string Ui(string semanticAlias) =>
+        NerdDesignSystemUi.TokenClass(Options.Prefix, semanticAlias);
 }

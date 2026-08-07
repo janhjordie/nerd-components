@@ -89,4 +89,79 @@ public sealed class NerdMudButtonContrastAnalyzerTests
 
         Assert.Empty(hits);
     }
+
+    [Fact]
+    public void Flags_outlined_button_with_color_primary()
+    {
+        const string razor = """
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Href="/fair-departure">CTA</MudButton>
+            """;
+
+        var hits = NerdRazorContrastHeuristics.FindViolations(razor);
+
+        Assert.Single(hits);
+        Assert.Contains("Color.Primary", hits[0].Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Flags_text_button_with_color_primary()
+    {
+        const string razor = """
+            <MudButton Variant="Variant.Text" Color="Color.Primary" Href="/pricing">Pricing</MudButton>
+            """;
+
+        var hits = NerdRazorContrastHeuristics.FindViolations(razor);
+
+        Assert.Single(hits);
+    }
+
+    [Fact]
+    public void Flags_mudlink_with_primary_action_class()
+    {
+        const string razor = """
+            <MudLink Href="/mission" Class="nc-hero-impact-link dnf-primary-action">Mission →</MudLink>
+            """;
+
+        var hits = NerdRazorContrastHeuristics.FindViolations(razor);
+
+        Assert.Single(hits);
+        Assert.Contains("primary-action", hits[0].Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Allows_mudlink_without_dangerous_intent()
+    {
+        const string razor = """
+            <MudLink Href="/trust" Typo="Typo.body2">Trust →</MudLink>
+            """;
+
+        var hits = NerdRazorContrastHeuristics.FindViolations(razor);
+
+        Assert.Empty(hits);
+    }
+
+    [Fact]
+    public void Flags_mudalert_with_severity_without_token_class()
+    {
+        const string razor = """
+            <MudAlert Severity="Severity.Info" Variant="Variant.Filled" Dense="true">Invisible on DNF</MudAlert>
+            """;
+
+        var hits = NerdRazorContrastHeuristics.FindViolations(razor);
+
+        Assert.Single(hits);
+        Assert.Contains("MudAlert", hits[0].Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Allows_mudalert_with_token_class()
+    {
+        const string razor = """
+            <MudAlert Class="dnf-info" Variant="Variant.Outlined" Dense="true">Readable</MudAlert>
+            """;
+
+        var hits = NerdRazorContrastHeuristics.FindViolations(razor);
+
+        Assert.Empty(hits);
+    }
 }

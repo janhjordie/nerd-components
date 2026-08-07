@@ -366,7 +366,7 @@ public sealed class MudThemeStateService : IMudThemeStateService
             DisplayName: descriptor?.DisplayName ?? _currentThemeId,
             Version: exportVersion,
             UpdatedAt: ThemeVersionHelper.TodayIsoDate(),
-            MudBlazorVersion: mudBlazorVersion ?? "9.5",
+            MudBlazorVersion: mudBlazorVersion ?? "9.8",
             SourceNotes: descriptor?.Source);
     }
 

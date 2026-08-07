@@ -102,6 +102,14 @@ public partial class NerdBrandWorkbook
     private string Ui(string semanticAlias) =>
         NerdDesignSystemUi.TokenClass(Options.Prefix, semanticAlias);
 
+    private string StatusUi() =>
+        _statusSeverity switch
+        {
+            Severity.Error => Ui(NerdDesignSystemUi.Danger),
+            Severity.Warning => Ui(NerdDesignSystemUi.Highlight),
+            _ => Ui(NerdDesignSystemUi.Success),
+        };
+
     protected override void OnInitialized()
     {
         if (!IsAvailable)

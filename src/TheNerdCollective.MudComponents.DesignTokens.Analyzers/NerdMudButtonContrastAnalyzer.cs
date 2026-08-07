@@ -7,8 +7,8 @@ using Microsoft.CodeAnalysis.Text;
 namespace TheNerdCollective.MudComponents.DesignTokens.Analyzers;
 
 /// <summary>
-/// Scans Razor AdditionalFiles for MudButton/MudChip patterns that typically paint
-/// light-on-light (WCAG fail), e.g. Variant.Text/Outlined + muted-content / primary-action.
+/// Scans Razor AdditionalFiles for MudButton/MudChip/MudLink patterns that typically paint
+/// light-on-light (WCAG fail), e.g. Variant.Text/Outlined + muted-content / primary-action / Color.Primary.
 /// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class NerdMudButtonContrastAnalyzer : DiagnosticAnalyzer
@@ -17,13 +17,13 @@ public sealed class NerdMudButtonContrastAnalyzer : DiagnosticAnalyzer
 
     private static readonly DiagnosticDescriptor Rule = new(
         DiagnosticId,
-        title: "Mud control Class may fail WCAG contrast on page surface",
+        title: "Mud control may fail WCAG contrast on page surface",
         messageFormat: "{0}",
         category: "Accessibility",
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
         description:
-            "Outlined/Text Mud controls must not use filled/status intents (muted-content, primary-action, page-surface, info, success, highlight). Prefer BrandChrome Outlined or Filled + PrimaryAction/Info.");
+            "Outlined/Text Mud controls must not use filled/status intents (muted-content, primary-action, page-surface, info, success, highlight) or Mud Color.Primary/Info/Success on chrome. MudLink must not use action intents. Prefer BrandChrome Outlined or Filled + PrimaryAction.");
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } =
         ImmutableArray.Create(Rule);
@@ -83,7 +83,7 @@ public readonly struct NerdRazorContrastHit
 public static class NerdRazorContrastHeuristics
 {
     private static readonly Regex ControlBlock = new(
-        @"<(?<tag>MudButton|MudIconButton|MudChip|MudFab)\b(?<attrs>[\s\S]*?)(?:/>|>)",
+        @"<(?<tag>MudButton|MudIconButton|MudChip|MudFab|MudLink|MudAlert)\b(?<attrs>[\s\S]*?)(?:/>|>)",
         RegexOptions.CultureInvariant | RegexOptions.Compiled);
 
     private static readonly Regex VariantAttr = new(
@@ -96,6 +96,14 @@ public static class NerdRazorContrastHeuristics
 
     private static readonly Regex ClassExpr = new(
         @"Class\s*=\s*""?@[^""\n>]*(?<c>MutedContent|PrimaryAction|PageSurface|OnPrimaryAction|Info|Success|Highlight|muted-content|primary-action|page-surface|on-primary-action|info|success|highlight)[^""\n>]*""?",
+        RegexOptions.CultureInvariant | RegexOptions.Compiled);
+
+    private static readonly Regex ColorAttr = new(
+        @"Color\s*=\s*""(?:@)?Color\.(?<c>\w+)""",
+        RegexOptions.CultureInvariant | RegexOptions.Compiled);
+
+    private static readonly Regex SeverityAttr = new(
+        @"Severity\s*=\s*""(?:@)?Severity\.(\w+)""",
         RegexOptions.CultureInvariant | RegexOptions.Compiled);
 
     /// <summary>
@@ -122,6 +130,19 @@ public static class NerdRazorContrastHeuristics
         "flod" // DNF Info accent — light cyan fails WCAG as outlined chrome
     ];
 
+    /// <summary>
+    /// Mud theme colors that paint poorly as Outlined/Text chrome on page-surface (DNF lime/cyan on cream).
+    /// </summary>
+    private static readonly string[] DangerousMudColors =
+    [
+        "Primary",
+        "Info",
+        "Success",
+        "Warning",
+        "Secondary",
+        "Tertiary"
+    ];
+
     public static IReadOnlyList<NerdRazorContrastHit> FindViolations(string razorSource)
     {
         if (string.IsNullOrWhiteSpace(razorSource))
@@ -134,6 +155,20 @@ public static class NerdRazorContrastHeuristics
         {
             var attrs = match.Groups["attrs"].Value;
             var tag = match.Groups["tag"].Value;
+            var line = LineNumber(razorSource, match.Index);
+
+            if (string.Equals(tag, "MudLink", StringComparison.Ordinal))
+            {
+                TryAddIntentViolation(hits, tag, attrs, variantValue: null, line);
+                continue;
+            }
+
+            if (string.Equals(tag, "MudAlert", StringComparison.Ordinal))
+            {
+                TryAddMudAlertViolation(hits, attrs, line);
+                continue;
+            }
+
             var variant = VariantAttr.Match(attrs);
             var variantValue = variant.Success ? variant.Groups["v"].Value : string.Empty;
             var isTextOrOutlined =
@@ -151,34 +186,112 @@ public static class NerdRazorContrastHeuristics
                 continue;
             }
 
-            var classMatch = ClassAttr.Match(attrs);
-            var classValue = classMatch.Success ? classMatch.Groups["c"].Value : string.Empty;
-            if (string.IsNullOrEmpty(classValue) && ClassExpr.IsMatch(attrs))
-            {
-                classValue = ClassExpr.Match(attrs).Value;
-            }
+            TryAddIntentViolation(hits, tag, attrs, variantValue, line);
+            TryAddColorViolation(hits, tag, attrs, variantValue, line);
+        }
 
-            if (string.IsNullOrEmpty(classValue))
+        return hits;
+    }
+
+    private static void TryAddIntentViolation(
+        List<NerdRazorContrastHit> hits,
+        string tag,
+        string attrs,
+        string? variantValue,
+        int line)
+    {
+        var classMatch = ClassAttr.Match(attrs);
+        var classValue = classMatch.Success ? classMatch.Groups["c"].Value : string.Empty;
+        if (string.IsNullOrEmpty(classValue) && ClassExpr.IsMatch(attrs))
+        {
+            classValue = ClassExpr.Match(attrs).Value;
+        }
+
+        if (string.IsNullOrEmpty(classValue))
+        {
+            return;
+        }
+
+        foreach (var intent in DangerousIntents)
+        {
+            if (classValue.IndexOf(intent, StringComparison.OrdinalIgnoreCase) < 0)
             {
                 continue;
             }
 
-            foreach (var intent in DangerousIntents)
-            {
-                if (classValue.IndexOf(intent, StringComparison.OrdinalIgnoreCase) < 0)
-                {
-                    continue;
-                }
+            var variantLabel = string.Equals(tag, "MudLink", StringComparison.Ordinal)
+                ? "(link)"
+                : string.IsNullOrEmpty(variantValue) ? "(default/Text)" : variantValue;
 
-                var line = LineNumber(razorSource, match.Index);
-                hits.Add(new NerdRazorContrastHit(
-                    line,
-                    $"{tag} with Variant {(string.IsNullOrEmpty(variantValue) ? "(default/Text)" : variantValue)} uses Class intent '{intent}', which often paints light-on-light (WCAG 2.1). Use BrandChrome (Outlined) or PrimaryAction with Variant.Filled."));
-                break;
-            }
+            hits.Add(new NerdRazorContrastHit(
+                line,
+                $"{tag} with Variant {variantLabel} uses Class intent '{intent}', which often paints light-on-light (WCAG 2.1). Use BrandChrome (Outlined) or PrimaryAction with Variant.Filled."));
+            break;
+        }
+    }
+
+    private static void TryAddMudAlertViolation(
+        List<NerdRazorContrastHit> hits,
+        string attrs,
+        int line)
+    {
+        if (!SeverityAttr.IsMatch(attrs) || HasDesignTokenClass(attrs))
+        {
+            return;
         }
 
-        return hits;
+        var severity = SeverityAttr.Match(attrs).Groups[1].Value;
+        hits.Add(new NerdRazorContrastHit(
+            line,
+            $"MudAlert uses Severity.{severity} without a design-token Class. Mud theme severity colors often fail WCAG on page-surface (e.g. forest-on-forest). Use Class with Info/Success/Highlight/Danger token + Variant.Outlined or Filled."));
+    }
+
+    private static bool HasDesignTokenClass(string attrs)
+    {
+        if (ClassExpr.IsMatch(attrs))
+        {
+            return true;
+        }
+
+        var classMatch = ClassAttr.Match(attrs);
+        if (!classMatch.Success)
+        {
+            return false;
+        }
+
+        var classValue = classMatch.Groups["c"].Value;
+        return classValue.Contains("dnf-", StringComparison.OrdinalIgnoreCase)
+               || classValue.Contains("tnc-", StringComparison.OrdinalIgnoreCase)
+               || classValue.Contains("acme-", StringComparison.OrdinalIgnoreCase)
+               || classValue.Contains("dryk-", StringComparison.OrdinalIgnoreCase)
+               || classValue.Contains("recipe-", StringComparison.OrdinalIgnoreCase)
+               || classValue.Contains("brand-chrome", StringComparison.OrdinalIgnoreCase)
+               || classValue.Contains("primary-action", StringComparison.OrdinalIgnoreCase)
+               || classValue.Contains("muted-content", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static void TryAddColorViolation(
+        List<NerdRazorContrastHit> hits,
+        string tag,
+        string attrs,
+        string variantValue,
+        int line)
+    {
+        var colorMatch = ColorAttr.Match(attrs);
+        if (!colorMatch.Success)
+        {
+            return;
+        }
+
+        var colorValue = colorMatch.Groups["c"].Value;
+        if (DangerousMudColors.All(c => !string.Equals(c, colorValue, StringComparison.Ordinal)))
+        {
+            return;
+        }
+
+        hits.Add(new NerdRazorContrastHit(
+            line,
+            $"{tag} with Variant {(string.IsNullOrEmpty(variantValue) ? "(default/Text)" : variantValue)} uses Color.{colorValue}, which often paints theme accent on page-surface (WCAG 2.1). Use Class=\"dnf-brand-chrome\" for Outlined chrome or Variant.Filled for primary CTAs."));
     }
 
     private static int LineNumber(string text, int index)

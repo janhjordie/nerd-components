@@ -7,7 +7,7 @@ public sealed record MudThemeCatalogExportOptions(
     string UpdatedAt,
     string? ClassName = null,
     string Namespace = "SharedUI.Themes.Catalog",
-    string MudBlazorVersion = "9.5",
+    string MudBlazorVersion = "9.8",
     string? SourceNotes = null);
 
 public sealed record MudThemeProductionExport(

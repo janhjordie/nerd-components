@@ -10,7 +10,7 @@
 
     @if (FilteredNodes.Count == 0)
     {
-        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mt-2">
+        <MudAlert Class="@($"{Ui(NerdDesignSystemUi.Info)} mt-2")" Variant="Variant.Outlined" Dense="true">
             No tokens match <strong>@_search</strong>.
         </MudAlert>
     }
@@ -60,4 +60,7 @@
 
     private static int CountLeaves(NerdTokenTreeNode node) =>
         node.Children.Count == 0 ? 1 : node.Children.Sum(CountLeaves);
+
+    private string Ui(string semanticAlias) =>
+        NerdDesignSystemUi.TokenClass(Options.Prefix, semanticAlias);
 }

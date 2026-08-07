@@ -1,7 +1,7 @@
 @if (!IsAvailable)
 {
     <MudContainer MaxWidth="MaxWidth.Medium" Class="my-8">
-        <MudAlert Severity="Severity.Warning" Variant="Variant.Filled">
+        <MudAlert Class="@Ui(NerdDesignSystemUi.Highlight)" Variant="Variant.Filled">
             Brand workbook is disabled or only available in Development.
         </MudAlert>
     </MudContainer>
@@ -52,7 +52,7 @@ else
                 {
                     case 0:
                         <NerdBrandPackImporter Options="Options" OnImported="ApplyImportedPackAsync" />
-                        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true">
+                        <MudAlert Class="@Ui(NerdDesignSystemUi.Info)" Variant="Variant.Outlined" Dense="true">
                             Reference packs live in <code>reference/brands/*.token-pack.json</code>.
                         </MudAlert>
                         break;
@@ -162,7 +162,7 @@ else
                             </MudGrid>
                             @if (SelectedIntentEntry is not null)
                             {
-                                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mb-3">
+                                <MudAlert Class="@($"{Ui(NerdDesignSystemUi.Info)} mb-3")" Variant="Variant.Outlined" Dense="true">
                                     <strong>@SelectedIntentEntry.Name</strong> — @SelectedIntentEntry.Summary
                                     <br />Usage: @SelectedIntentEntry.UsageHint
                                     <br />Class: <code>@IntentClass</code>
@@ -421,7 +421,7 @@ else
 
                 @if (_status is not null)
                 {
-                    <MudAlert Severity="_statusSeverity" Variant="Variant.Outlined" Dense="true">@_status</MudAlert>
+                    <MudAlert Class="@StatusUi()" Variant="Variant.Outlined" Dense="true">@_status</MudAlert>
                 }
             </MudStack>
         </NerdCatalogPage>

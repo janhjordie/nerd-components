@@ -2,6 +2,8 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <!--
     NRDT001 Razor contrast analyzer — ON by default for every DesignTokens consumer.
+    Flags Outlined/Text Mud controls with token intents OR Mud Color.Primary/Info/Success on chrome,
+    and MudLink with action intents (primary-action, etc.).
     Opt out:
       <DisableNerdDesignTokenRazorContrastAnalyzer>true</DisableNerdDesignTokenRazorContrastAnalyzer>
     Keep warnings (do not fail build):
