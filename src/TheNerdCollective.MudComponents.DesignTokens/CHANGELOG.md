@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.2.5
+
+- `/nerd-theme` coverage is brand-relevant: Typography is **External**, intentional Mud fallbacks are **AcceptedDefault**, and only real **Unmapped** gaps dilute the %.
+
 ## 2.2.4
 
 - Publish pipeline: DesignTokens.Catalog is included in NuGet auto-publish (hosts can consume `/nerd-theme` via package).

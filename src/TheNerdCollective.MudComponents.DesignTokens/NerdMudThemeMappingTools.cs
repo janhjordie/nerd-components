@@ -6,8 +6,10 @@ using MudBlazor.Utilities;
 namespace TheNerdCollective.MudComponents.DesignTokens;
 
 /// <summary>
-/// Builds the complete MudBlazor <c>MudTheme</c> inventory for <c>/nerd-theme</c>,
-/// including mapped, derived, hardcoded, and <strong>unmapped</strong> properties so gaps are visible.
+/// Builds the complete MudBlazor <c>MudTheme</c> inventory for <c>/nerd-theme</c>.
+/// Brand-relevant coverage counts Mapped / Hardcoded / Derived / Unmapped;
+/// <see cref="NerdMudThemeMappingStatus.AcceptedDefault"/> and
+/// <see cref="NerdMudThemeMappingStatus.External"/> stay visible but do not dilute the score.
 /// </summary>
 public static class NerdMudThemeMappingTools
 {
@@ -56,7 +58,7 @@ public static class NerdMudThemeMappingTools
                 continue;
             }
 
-            result.Add(BuildUnmapped(slot, theme));
+            result.Add(BuildResidual(slot, theme));
         }
 
         return result;
@@ -71,7 +73,9 @@ public static class NerdMudThemeMappingTools
             list.Count(entry => entry.Status == NerdMudThemeMappingStatus.Mapped),
             list.Count(entry => entry.Status == NerdMudThemeMappingStatus.Hardcoded),
             list.Count(entry => entry.Status == NerdMudThemeMappingStatus.Derived),
-            list.Count(entry => entry.Status == NerdMudThemeMappingStatus.Unmapped));
+            list.Count(entry => entry.Status == NerdMudThemeMappingStatus.Unmapped),
+            list.Count(entry => entry.Status == NerdMudThemeMappingStatus.AcceptedDefault),
+            list.Count(entry => entry.Status == NerdMudThemeMappingStatus.External));
     }
 
     public static IReadOnlyList<NerdMudThemeMappingEntry> BuildPaletteMappings(NerdDesignTokenOptions options) =>
@@ -500,18 +504,45 @@ public static class NerdMudThemeMappingTools
         return false;
     }
 
-    private static NerdMudThemeMappingEntry BuildUnmapped(NerdMudThemeInventorySlot slot, MudTheme theme)
+    private static NerdMudThemeMappingEntry BuildResidual(NerdMudThemeInventorySlot slot, MudTheme theme)
     {
         var (light, dark) = ReadSlotValues(slot, theme);
-        var notes = slot.Category switch
+
+        // Typography is owned by ResponsiveTypography / INerdMudThemeConfigurator — not a factory gap.
+        if (slot.Category == CategoryTypography)
         {
-            CategoryTypography => "Unmapped — apply via AddNerdResponsiveTypography / INerdMudThemeConfigurator",
-            CategoryLayout => "Unmapped — Mud default (no pack radii/spacing key)",
-            CategoryShadows => "Unmapped — Mud default elevation (no pack shadows key)",
-            CategoryZIndex => "Unmapped — Mud default (no pack zIndex key)",
-            CategoryPseudoCss => "Unmapped — Mud default PseudoCss.Scope (:root)",
-            CategoryPalette => "Unmapped — Mud default (not set by NerdMudThemeFactory)",
-            _ => "Unmapped"
+            return new NerdMudThemeMappingEntry(
+                slot.Category,
+                slot.Property,
+                slot.CssVariable,
+                null,
+                null,
+                light,
+                dark,
+                "External",
+                NerdMudThemeMappingStatus.External,
+                "External — apply via AddNerdResponsiveTypography / INerdMudThemeConfigurator (not NerdMudThemeFactory)");
+        }
+
+        // Remaining structural props intentionally keep Mud defaults unless a pack key is present.
+        var (valueKind, notes) = slot.Category switch
+        {
+            CategoryLayout => (
+                "AcceptedDefault",
+                "Accepted Mud default — optional pack keys: radii.*, spacing.drawer-width"),
+            CategoryShadows => (
+                "AcceptedDefault",
+                "Accepted Mud default elevation — optional pack shadows keys (0/sm/md/lg/…)"),
+            CategoryZIndex => (
+                "AcceptedDefault",
+                "Accepted Mud default — optional pack zIndex keys"),
+            CategoryPseudoCss => (
+                "AcceptedDefault",
+                "Accepted Mud default — brand theme uses :root; intent/recipe themes set scoped PseudoCss"),
+            CategoryPalette => (
+                "AcceptedDefault",
+                "Accepted Mud default — interaction opacity not pack-driven"),
+            _ => ("AcceptedDefault", "Accepted Mud default")
         };
 
         return new NerdMudThemeMappingEntry(
@@ -522,8 +553,8 @@ public static class NerdMudThemeMappingTools
             null,
             light,
             dark,
-            "Unmapped",
-            NerdMudThemeMappingStatus.Unmapped,
+            valueKind,
+            NerdMudThemeMappingStatus.AcceptedDefault,
             notes);
     }
 
