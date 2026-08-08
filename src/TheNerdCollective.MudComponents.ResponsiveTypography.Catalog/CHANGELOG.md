@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.9
+
+- Package added to NuGet auto-publish workflow.
+
 ## 1.4.8
 
 - Typography catalog page marks `[AllowAnonymous]` for hosts with a default authorize policy.

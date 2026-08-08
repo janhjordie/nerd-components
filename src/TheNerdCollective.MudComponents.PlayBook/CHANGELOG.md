@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.13
+
+- NuGet republish alongside catalog auth/allowlist fixes.
+
 ## 1.2.12
 
 - PlayBook page marks `[AllowAnonymous]` for hosts with a default authorize policy.

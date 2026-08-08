@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.11
+
+- Package added to NuGet auto-publish workflow (first public Catalog releases).
+
 ## 2.0.10
 
 - Catalog pages (`/nerd-theme` and siblings) mark `[AllowAnonymous]` for hosts with a default authorize policy.

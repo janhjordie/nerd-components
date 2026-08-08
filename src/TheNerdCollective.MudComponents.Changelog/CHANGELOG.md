@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.2
+
+- NuGet republish alongside catalog auth/allowlist fixes.
+
 ## 1.1.1
 
 - Changelog page marks `[AllowAnonymous]` for hosts with a default authorize policy.

@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.2.4
+
+- Publish pipeline: DesignTokens.Catalog is included in NuGet auto-publish (hosts can consume `/nerd-theme` via package).
+
 ## 2.2.3
 
 - Added `NerdMudThemeMappingTools` + `/nerd-theme` catalog route for precise token → `MudTheme` prop mapping.
