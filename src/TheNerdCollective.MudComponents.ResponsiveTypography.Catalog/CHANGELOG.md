@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.8
+
+- Typography catalog page marks `[AllowAnonymous]` for hosts with a default authorize policy.
+
 ## 1.4.7
 
 - MudTabs no longer use BrandChrome Class (avoids painting tab panels).

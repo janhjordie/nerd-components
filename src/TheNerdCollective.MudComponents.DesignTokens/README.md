@@ -107,7 +107,7 @@ app.MapRazorComponents<App>()
 ```
 
 **Product hosts** (Consent): motor + theme is enough — omit Catalog unless you want an internal design hub.  
-**Auth middleware:** allow `/_content`, `/_framework`, `/_blazor`, and catalog routes as public if the host gates other paths.
+**Auth middleware:** allow `/_content`, `/_framework`, `/_blazor`, and **all** catalog routes as public if the host gates other paths. Prefer `NerdDesignSystemOptions.EnumerateCatalogRoutes()` / `IsCatalogPath()` so new pages like `/nerd-theme` are included automatically — a hard-coded allowlist that omits `/nerd-theme` returns **Unauthorized**.
 
 ### 4. Mud `Color` vs token `Class`
 
