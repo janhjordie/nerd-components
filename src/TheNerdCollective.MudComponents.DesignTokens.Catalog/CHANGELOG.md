@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.10
+
+- Catalog pages (`/nerd-theme` and siblings) mark `[AllowAnonymous]` for hosts with a default authorize policy.
+
 ## 2.0.9
 
 - Added `/nerd-theme` catalog: complete MudBlazor `MudTheme` inventory with token mapping status (Mapped / Hardcoded / Derived / Unmapped gaps).

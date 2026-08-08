@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.12
+
+- PlayBook page marks `[AllowAnonymous]` for hosts with a default authorize policy.
+
 ## 1.2.11
 
 - Intent inspector uses Outlined `info` (Filled painted a full-width dark green band on page-surface).

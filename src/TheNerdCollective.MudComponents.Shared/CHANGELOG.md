@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.10
+
+- Added `EnumerateCatalogRoutes()` / `IsCatalogPath()` for host auth allowlists (includes `/nerd-theme`).
+- Catalog hub/WCAG pages mark `[AllowAnonymous]` so AuthorizeRouteView hosts do not return Unauthorized.
+
 ## 1.5.9
 
 - Added `ThemeRoute` (`/nerd-theme`) and Theme link in `NerdCatalogHubNav` / `NerdCatalogSection.Theme`.

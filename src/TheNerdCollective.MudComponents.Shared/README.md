@@ -26,6 +26,22 @@ app.MapRazorComponents<App>()
 `AddNerdDesignTokens` and `AddNerdResponsiveTypography` call `AddNerdDesignSystem`
 automatically and update hub links when catalogs are registered.
 
+### Auth allowlists (hosts with login)
+
+If the host requires authentication by default, allow catalog routes anonymously
+(or the Theme link shows **Unauthorized**):
+
+```csharp
+var hub = app.Services.GetRequiredService<NerdDesignSystemOptions>();
+// Cookie/OIDC path gate:
+if (hub.IsCatalogPath(context.Request.Path)) { /* allow anonymous */ }
+
+// Or expand a string list:
+var catalogRoutes = hub.EnumerateCatalogRoutes(); // includes /nerd-theme
+```
+
+Catalog Blazor pages also carry `[AllowAnonymous]` for `AuthorizeRouteView` hosts.
+
 ## Assets
 
 Catalog pages call `AddNerdDesignSystemAssets()` to register this assembly.

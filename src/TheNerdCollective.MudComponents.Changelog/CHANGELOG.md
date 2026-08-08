@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.1
+
+- Changelog page marks `[AllowAnonymous]` for hosts with a default authorize policy.
+
 ## 1.1.0
 
 - Search field filters title, description, version, and change type.

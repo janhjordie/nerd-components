@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Http;
+
 namespace TheNerdCollective.MudComponents.Shared;
 
 /// <summary>
@@ -99,4 +101,94 @@ public sealed class NerdDesignSystemOptions
     public event Action? BrandChanged;
 
     public void NotifyBrandChanged() => BrandChanged?.Invoke();
+
+    /// <summary>
+    /// All configured design-system catalog routes (hub, tokens, theme, playbook, …).
+    /// Use this for host auth allowlists instead of hard-coding paths — new pages like
+    /// <see cref="ThemeRoute"/> must be included or browsers get Unauthorized.
+    /// </summary>
+    public IReadOnlyList<string> EnumerateCatalogRoutes()
+    {
+        var routes = new List<string>(12);
+        Add(HubRoute);
+        Add(DesignTokensRoute);
+        Add(DesignTokenRecipesRoute);
+        Add(TypographyRoute);
+        Add(ThemeRoute);
+        Add(PlayBookRoute);
+        Add(ChangelogRoute);
+        Add(BrandWorkbookRoute);
+        Add(DesignGuideRoute);
+        Add(WcagGuideRoute);
+        return routes;
+
+        void Add(string? route)
+        {
+            if (string.IsNullOrWhiteSpace(route))
+            {
+                return;
+            }
+
+            var normalized = route.Trim();
+            if (!normalized.StartsWith('/'))
+            {
+                normalized = "/" + normalized;
+            }
+
+            if (!routes.Contains(normalized, StringComparer.OrdinalIgnoreCase))
+            {
+                routes.Add(normalized);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Returns true when <paramref name="path"/> matches a catalog route or is under one
+    /// (e.g. <c>/nerd-theme</c> or <c>/nerd-theme/…</c>).
+    /// </summary>
+    public bool IsCatalogPath(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return false;
+        }
+
+        var value = path.Trim();
+        var query = value.IndexOf('?', StringComparison.Ordinal);
+        if (query >= 0)
+        {
+            value = value[..query];
+        }
+
+        if (!value.StartsWith('/'))
+        {
+            value = "/" + value;
+        }
+
+        return IsCatalogPath(new PathString(value));
+    }
+
+    /// <summary>
+    /// Returns true when <paramref name="path"/> matches a catalog route or is under one
+    /// (e.g. <c>/nerd-theme</c>).
+    /// </summary>
+    public bool IsCatalogPath(PathString path)
+    {
+        var value = path.Value;
+        if (string.IsNullOrEmpty(value))
+        {
+            return false;
+        }
+
+        foreach (var route in EnumerateCatalogRoutes())
+        {
+            if (value.Equals(route, StringComparison.OrdinalIgnoreCase) ||
+                value.StartsWith(route + "/", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }

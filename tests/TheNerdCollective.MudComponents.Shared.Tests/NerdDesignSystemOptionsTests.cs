@@ -5,6 +5,21 @@ namespace TheNerdCollective.MudComponents.Shared.Tests;
 public sealed class NerdDesignSystemOptionsTests
 {
     [Fact]
+    public void EnumerateCatalogRoutes_includes_theme_route()
+    {
+        var options = new NerdDesignSystemOptions();
+
+        var routes = options.EnumerateCatalogRoutes();
+
+        Assert.Contains("/nerd-theme", routes);
+        Assert.Contains("/nerd-design-tokens", routes);
+        Assert.Contains("/nerd-playbook", routes);
+        Assert.True(options.IsCatalogPath("/nerd-theme"));
+        Assert.True(options.IsCatalogPath("/nerd-theme?x=1"));
+        Assert.False(options.IsCatalogPath("/admin"));
+    }
+
+    [Fact]
     public void FormatActiveTokenPackLabel_includes_identity_version_when_present()
     {
         var options = new NerdDesignSystemOptions
