@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.11
+
+- NuGet republish with catalog route helpers for host allowlists (`EnumerateCatalogRoutes` / `IsCatalogPath`).
+
 ## 1.5.10
 
 - Added `EnumerateCatalogRoutes()` / `IsCatalogPath()` for host auth allowlists (includes `/nerd-theme`).

@@ -4,7 +4,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <PackageId>TheNerdCollective.MudComponents.DesignTokens</PackageId>
-    <Version>2.2.3</Version>
+    <Version>2.2.4</Version>
     <Authors>The Nerd Collective</Authors>
     <Description>Customer-specific CSS design tokens and MudBlazor component color variants.</Description>
     <PackageTags>mudblazor;blazor;design-tokens;css;branding;colors;wcag;analyzer</PackageTags>

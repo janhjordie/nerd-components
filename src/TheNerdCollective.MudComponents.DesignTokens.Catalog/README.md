@@ -2,6 +2,8 @@
 
 Optional visual catalog for design tokens and recipes. Production apps typically install only `DesignTokens` plus one `Brand.*` package; add this package when you want `/nerd-design-tokens`, `/nerd-theme`, and the recipes studio in Development or internal tooling.
 
+Published to NuGet as `TheNerdCollective.MudComponents.DesignTokens.Catalog`.
+
 ## Setup (complete)
 
 ```csharp
