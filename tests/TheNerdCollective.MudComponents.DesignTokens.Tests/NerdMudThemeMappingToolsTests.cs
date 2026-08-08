@@ -26,7 +26,7 @@ public sealed class NerdMudThemeMappingToolsTests
     }
 
     [Fact]
-    public void BuildAll_lists_complete_mud_theme_inventory_including_gaps()
+    public void BuildAll_lists_complete_mud_theme_inventory_with_honest_coverage()
     {
         var options = new NerdDesignTokenOptions { Prefix = "tnc" };
         options.Add("navy", new NerdColorToken { Value = "#0B1F33", ContrastText = "#FFFFFF" });
@@ -49,23 +49,50 @@ public sealed class NerdMudThemeMappingToolsTests
 
         Assert.Equal(inventory.Count, mappings.Count);
         Assert.Equal(inventory.Count, coverage.Total);
-        Assert.True(coverage.Unmapped > 0);
+        Assert.Equal(coverage.Covered + coverage.Unmapped, coverage.InScope);
+        Assert.Equal(coverage.InScope + coverage.AcceptedDefault + coverage.External, coverage.Total);
+        Assert.Equal(0, coverage.Unmapped);
+        Assert.Equal(100, coverage.CoveredPercent);
+        Assert.True(coverage.AcceptedDefault > 0);
+        Assert.Equal(14 * 6, coverage.External);
         Assert.Contains(mappings, entry => entry.MudThemeProperty == "LayoutProperties.DefaultBorderRadius");
         Assert.Contains(mappings, entry => entry.MudThemeProperty == "LayoutProperties.DrawerWidthLeft");
         Assert.Contains(mappings, entry => entry.MudThemeProperty == "LayoutProperties.AppbarHeight" &&
-                                           entry.Status == NerdMudThemeMappingStatus.Unmapped);
+                                           entry.Status == NerdMudThemeMappingStatus.AcceptedDefault);
         Assert.Contains(mappings, entry => entry.MudThemeProperty == "Shadows.Elevation[1]");
         Assert.Contains(mappings, entry => entry.MudThemeProperty == "Shadows.Elevation[25]" &&
-                                           entry.Status == NerdMudThemeMappingStatus.Unmapped);
+                                           entry.Status == NerdMudThemeMappingStatus.AcceptedDefault);
         Assert.Contains(mappings, entry => entry.MudThemeProperty == "ZIndex.Drawer");
         Assert.Contains(mappings, entry => entry.MudThemeProperty == "Typography.H1.FontSize" &&
-                                           entry.Status == NerdMudThemeMappingStatus.Unmapped);
+                                           entry.Status == NerdMudThemeMappingStatus.External);
         Assert.Contains(mappings, entry => entry.MudThemeProperty == "PseudoCss.Scope" &&
-                                           entry.Status == NerdMudThemeMappingStatus.Unmapped);
+                                           entry.Status == NerdMudThemeMappingStatus.AcceptedDefault);
         Assert.Contains(mappings, entry => entry.MudThemeProperty == "Palette.PrimaryDarken" &&
                                            entry.Status == NerdMudThemeMappingStatus.Derived);
         Assert.Contains(mappings, entry => entry.MudThemeProperty == "Palette.RippleOpacity" &&
-                                           entry.Status == NerdMudThemeMappingStatus.Unmapped);
+                                           entry.Status == NerdMudThemeMappingStatus.AcceptedDefault);
+    }
+
+    [Fact]
+    public void EvaluateCoverage_excludes_accepted_and_external_from_percent()
+    {
+        var entries = new[]
+        {
+            new NerdMudThemeMappingEntry("Palette", "Palette.Primary", "", null, null, "#000", "#000", "Color", NerdMudThemeMappingStatus.Mapped, ""),
+            new NerdMudThemeMappingEntry("Typography", "Typography.H1.FontSize", "", null, null, "2rem", "2rem", "External", NerdMudThemeMappingStatus.External, ""),
+            new NerdMudThemeMappingEntry("Shadows", "Shadows.Elevation[25]", "", null, null, "none", "none", "AcceptedDefault", NerdMudThemeMappingStatus.AcceptedDefault, ""),
+            new NerdMudThemeMappingEntry("Layout", "LayoutProperties.AppbarHeight", "", null, null, "64px", "64px", "Unmapped", NerdMudThemeMappingStatus.Unmapped, "")
+        };
+
+        var coverage = NerdMudThemeMappingTools.EvaluateCoverage(entries);
+
+        Assert.Equal(4, coverage.Total);
+        Assert.Equal(1, coverage.Mapped);
+        Assert.Equal(1, coverage.Unmapped);
+        Assert.Equal(1, coverage.AcceptedDefault);
+        Assert.Equal(1, coverage.External);
+        Assert.Equal(2, coverage.InScope);
+        Assert.Equal(50, coverage.CoveredPercent);
     }
 
     [Fact]

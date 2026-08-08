@@ -30,21 +30,26 @@ else
                     <MudStack Spacing="2">
                         <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-2">
                             <div>
-                                <MudText Typo="Typo.h6">Coverage</MudText>
+                                <MudText Typo="Typo.h6">Brand-relevant coverage</MudText>
                                 <MudText Typo="Typo.body2" Class="@Ui(NerdDesignSystemUi.MutedContent)">
-                                    Every MudBlazor theme leaf property — Mapped / Hardcoded / Derived / Unmapped gaps.
+                                    Score counts Mapped / Hardcoded / Derived / Unmapped only.
+                                    Accepted Mud defaults and External typography stay in the inventory but do not dilute the %.
                                 </MudText>
                             </div>
                             <MudChip T="string"
                                      Variant="Variant.Filled"
                                      Class="@Ui(NerdDesignSystemUi.BrandChrome)"
                                      data-testid="nerd-theme-coverage-score">
-                                @_coverage.Covered / @_coverage.Total (@_coverage.CoveredPercent%)
+                                @_coverage.Covered / @_coverage.InScope (@_coverage.CoveredPercent%)
                             </MudChip>
                         </MudStack>
                         <MudProgressLinear Value="@_coverage.CoveredPercent"
                                            Color="@(_coverage.Unmapped == 0 ? Color.Success : Color.Warning)"
                                            Size="Size.Medium" />
+                        <MudText Typo="Typo.caption" Class="@Ui(NerdDesignSystemUi.MutedContent)" data-testid="nerd-theme-inventory-total">
+                            Full inventory @_coverage.Total · in-scope @_coverage.InScope ·
+                            accepted defaults @_coverage.AcceptedDefault · external @_coverage.External
+                        </MudText>
                         <MudStack Row="true" Spacing="1" Class="flex-wrap">
                             <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Class="@Ui(NerdDesignSystemUi.BrandChrome)">
                                 Mapped @_coverage.Mapped
@@ -55,12 +60,33 @@ else
                             <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Class="@Ui(NerdDesignSystemUi.BrandChrome)">
                                 Derived @_coverage.Derived
                             </MudChip>
-                            <MudChip T="string"
-                                     Size="Size.Small"
-                                     Variant="Variant.Filled"
-                                     Class="@Ui(NerdDesignSystemUi.Highlight)"
-                                     data-testid="nerd-theme-unmapped-count">
-                                Unmapped @_coverage.Unmapped
+                            @if (_coverage.Unmapped == 0)
+                            {
+                                <MudChip T="string"
+                                         Size="Size.Small"
+                                         Variant="Variant.Outlined"
+                                         Class="@Ui(NerdDesignSystemUi.BrandChrome)"
+                                         data-testid="nerd-theme-unmapped-count">
+                                    Unmapped 0
+                                </MudChip>
+                            }
+                            else
+                            {
+                                <MudChip T="string"
+                                         Size="Size.Small"
+                                         Variant="Variant.Filled"
+                                         Class="@Ui(NerdDesignSystemUi.Highlight)"
+                                         data-testid="nerd-theme-unmapped-count">
+                                    Unmapped @_coverage.Unmapped
+                                </MudChip>
+                            }
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Class="@Ui(NerdDesignSystemUi.BrandChrome)"
+                                     data-testid="nerd-theme-accepted-count">
+                                Accepted default @_coverage.AcceptedDefault
+                            </MudChip>
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Class="@Ui(NerdDesignSystemUi.BrandChrome)"
+                                     data-testid="nerd-theme-external-count">
+                                External @_coverage.External
                             </MudChip>
                         </MudStack>
                     </MudStack>
@@ -134,7 +160,7 @@ else
                                 <MudText Typo="Typo.h6">MudTheme property map</MudText>
                                 <MudText Typo="Typo.body2" Class="@Ui(NerdDesignSystemUi.MutedContent)">
                                     Full inventory of <code>Palette</code>, layout, shadows, z-index, typography, and PseudoCss.
-                                    Unmapped rows are the gaps.
+                                    Unmapped = real gaps · Accepted default = intentional Mud fallback · External = ResponsiveTypography.
                                 </MudText>
                             </div>
                             <MudTextField @bind-Value="_search"
@@ -181,7 +207,7 @@ else
                                          Class="@StatusChipClass(status)"
                                          OnClick="@(() => _statusFilter = status)"
                                          data-testid="@($"theme-status-filter-{status.ToString().ToLowerInvariant()}")">
-                                    @status
+                                    @StatusLabel(status)
                                 </MudChip>
                             }
                         </MudStack>
@@ -208,7 +234,7 @@ else
                                         data-status="@entry.Status.ToString().ToLowerInvariant()">
                                         <td>
                                             <MudChip T="string" Size="Size.Small" Variant="@StatusChipVariant(entry.Status)" Class="@StatusChipClass(entry.Status)">
-                                                @entry.Status
+                                                @StatusLabel(entry.Status)
                                             </MudChip>
                                         </td>
                                         <td>@entry.Category</td>

@@ -13,7 +13,9 @@ public partial class NerdMudThemeCatalog : IDisposable
         NerdMudThemeMappingStatus.Mapped,
         NerdMudThemeMappingStatus.Hardcoded,
         NerdMudThemeMappingStatus.Derived,
-        NerdMudThemeMappingStatus.Unmapped
+        NerdMudThemeMappingStatus.Unmapped,
+        NerdMudThemeMappingStatus.AcceptedDefault,
+        NerdMudThemeMappingStatus.External
     ];
 
     [Inject]
@@ -42,7 +44,7 @@ public partial class NerdMudThemeCatalog : IDisposable
     private IReadOnlyList<NerdMudThemeMappingEntry> _mappings = [];
     private IReadOnlyList<BindingRow> _bindingRows = [];
     private IReadOnlyList<string> _categories = [];
-    private NerdMudThemeMappingCoverage _coverage = new(0, 0, 0, 0, 0);
+    private NerdMudThemeMappingCoverage _coverage = new(0, 0, 0, 0, 0, 0, 0);
 
     private bool IsAvailable =>
         Options.EnableCatalogPage &&
@@ -129,7 +131,19 @@ public partial class NerdMudThemeCatalog : IDisposable
         };
 
     private Variant StatusChipVariant(NerdMudThemeMappingStatus status) =>
-        status == NerdMudThemeMappingStatus.Unmapped ? Variant.Filled : Variant.Outlined;
+        status switch
+        {
+            NerdMudThemeMappingStatus.Unmapped => Variant.Filled,
+            NerdMudThemeMappingStatus.Mapped => Variant.Filled,
+            _ => Variant.Outlined
+        };
+
+    private static string StatusLabel(NerdMudThemeMappingStatus status) =>
+        status switch
+        {
+            NerdMudThemeMappingStatus.AcceptedDefault => "Accepted default",
+            _ => status.ToString()
+        };
 
     private static string SwatchStyle(string value) =>
         $"display:inline-block;width:18px;height:18px;border-radius:4px;border:1px solid var(--mud-palette-lines-default);background:{value};flex-shrink:0;";

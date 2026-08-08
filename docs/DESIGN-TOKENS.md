@@ -200,8 +200,9 @@ Giver klassen `.dnf-primary-action` med samme styling som `.dnf-forest`.
 
 `/nerd-theme` (konfigurerbart via `ThemeCatalogRoute`) viser den **komplette** MudBlazor
 `MudTheme`-inventar (Palette, Layout, Shadows, ZIndex, Typography, PseudoCss) med status
-Mapped / Hardcoded / Derived / Unmapped — så manglende mappings er synlige — plus CSS-variabler
-og resolved color tokens.
+Mapped / Hardcoded / Derived / Unmapped / AcceptedDefault / External.
+Coverage-% er **brand-relevant** (ekskluderer Accepted Mud defaults og External typography);
+kun Unmapped tæller som reelle gaps.
 
 Kataloget er et **verifikationsværktøj** — det må ikke indeholde token-specifik
 CSS eller patches. Hvis previews ser forkerte ud, rettes den generiske generator.

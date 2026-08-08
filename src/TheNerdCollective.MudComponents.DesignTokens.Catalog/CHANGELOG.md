@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.12
+
+- `/nerd-theme` coverage UI: brand-relevant score excludes Accepted Mud defaults and External typography so the % is not misleading.
+
 ## 2.0.11
 
 - Package added to NuGet auto-publish workflow (first public Catalog releases).
