@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.2.3
+
+- Added `NerdMudThemeMappingTools` + `/nerd-theme` catalog route for precise token → `MudTheme` prop mapping.
+
 ## 2.2.2
 
 - **NRDT001:** flag `MudTabs` with `primary-action` / status intents or `Color.Primary` — active tab text uses the channel color on page-surface (light green on white). Prefer `BrandChrome`.

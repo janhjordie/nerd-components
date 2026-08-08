@@ -42,6 +42,12 @@ export const DESIGN_SYSTEM_PAGES: DesignSystemPage[] = [
     heading: /responsive typography/i,
   },
   {
+    id: 'theme',
+    path: '/nerd-theme',
+    heading: /mudblazor theme map/i,
+    usesBrandSwitcher: true,
+  },
+  {
     id: 'playbook',
     path: '/nerd-playbook',
     heading: /mudblazor playbook/i,

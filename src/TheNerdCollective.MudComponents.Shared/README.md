@@ -10,6 +10,7 @@ builder.Services.AddNerdDesignSystem(options =>
 {
     options.HubRoute = "/nerd-design-system";
     options.DesignTokensRoute = "/nerd-design-tokens";
+    options.ThemeRoute = "/nerd-theme";
     options.TypographyRoute = "/nerd-typography";
 });
 ```

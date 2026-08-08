@@ -20,6 +20,9 @@ public sealed class NerdDesignSystemOptions
     /// <summary>Route linked from the hub to the responsive typography catalog.</summary>
     public string TypographyRoute { get; set; } = "/nerd-typography";
 
+    /// <summary>Route linked from the hub to the MudBlazor theme token mapping catalog.</summary>
+    public string ThemeRoute { get; set; } = "/nerd-theme";
+
     /// <summary>Route linked from the hub to the MudBlazor PlayBook.</summary>
     public string PlayBookRoute { get; set; } = "/nerd-playbook";
 

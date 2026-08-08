@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.9
+
+- Added `/nerd-theme` catalog: token → MudBlazor `MudTheme` property map (palette bindings, CSS vars, light/dark values).
+
 ## 2.0.8
 
 - Catalog pages use canonical `NerdCatalogPage` ExtraLarge width (no per-page Medium/False/Large).
