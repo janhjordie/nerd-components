@@ -2,7 +2,7 @@
 
 ## 2.0.9
 
-- Added `/nerd-theme` catalog: token → MudBlazor `MudTheme` property map (palette bindings, CSS vars, light/dark values).
+- Added `/nerd-theme` catalog: complete MudBlazor `MudTheme` inventory with token mapping status (Mapped / Hardcoded / Derived / Unmapped gaps).
 
 ## 2.0.8
 

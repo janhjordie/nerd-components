@@ -86,6 +86,9 @@ public class NerdDesignTokensCatalogTests : MudComponentTestContext
         Assert.Contains("Palette.Primary", cut.Markup);
         Assert.Contains("--mud-palette-primary", cut.Markup);
         Assert.Contains("frameworkDefaults.mudblazor.palette", cut.Markup);
+        Assert.Contains("Unmapped", cut.Markup);
+        Assert.Contains("Typography.H1.FontSize", cut.Markup);
+        Assert.Contains("LayoutProperties.AppbarHeight", cut.Markup);
     }
 
     private void RegisterCatalogServices(

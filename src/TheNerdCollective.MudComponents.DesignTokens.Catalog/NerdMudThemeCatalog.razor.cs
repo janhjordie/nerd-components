@@ -8,6 +8,14 @@ namespace TheNerdCollective.MudComponents.DesignTokens;
 
 public partial class NerdMudThemeCatalog : IDisposable
 {
+    private static readonly NerdMudThemeMappingStatus[] StatusFilters =
+    [
+        NerdMudThemeMappingStatus.Mapped,
+        NerdMudThemeMappingStatus.Hardcoded,
+        NerdMudThemeMappingStatus.Derived,
+        NerdMudThemeMappingStatus.Unmapped
+    ];
+
     [Inject]
     private NerdDesignTokenOptions Options { get; set; } = default!;
 
@@ -30,9 +38,11 @@ public partial class NerdMudThemeCatalog : IDisposable
     private MudTheme _catalogTheme = new();
     private string _search = string.Empty;
     private string? _categoryFilter;
+    private NerdMudThemeMappingStatus? _statusFilter;
     private IReadOnlyList<NerdMudThemeMappingEntry> _mappings = [];
     private IReadOnlyList<BindingRow> _bindingRows = [];
     private IReadOnlyList<string> _categories = [];
+    private NerdMudThemeMappingCoverage _coverage = new(0, 0, 0, 0, 0);
 
     private bool IsAvailable =>
         Options.EnableCatalogPage &&
@@ -47,6 +57,11 @@ public partial class NerdMudThemeCatalog : IDisposable
             {
                 query = query.Where(entry =>
                     string.Equals(entry.Category, _categoryFilter, StringComparison.Ordinal));
+            }
+
+            if (_statusFilter is not null)
+            {
+                query = query.Where(entry => entry.Status == _statusFilter);
             }
 
             if (!string.IsNullOrWhiteSpace(_search))
@@ -76,6 +91,7 @@ public partial class NerdMudThemeCatalog : IDisposable
             ThemeController,
             configurator: ThemeConfigurator);
         _mappings = NerdMudThemeMappingTools.BuildAll(Options);
+        _coverage = NerdMudThemeMappingTools.EvaluateCoverage(_mappings);
         _categories = _mappings
             .Select(entry => entry.Category)
             .Distinct(StringComparer.Ordinal)
@@ -105,6 +121,16 @@ public partial class NerdMudThemeCatalog : IDisposable
     private string Ui(string semanticAlias) =>
         NerdDesignSystemUi.TokenClass(Options.Prefix, semanticAlias);
 
+    private string StatusChipClass(NerdMudThemeMappingStatus status) =>
+        status switch
+        {
+            NerdMudThemeMappingStatus.Unmapped => Ui(NerdDesignSystemUi.Highlight),
+            _ => Ui(NerdDesignSystemUi.BrandChrome)
+        };
+
+    private Variant StatusChipVariant(NerdMudThemeMappingStatus status) =>
+        status == NerdMudThemeMappingStatus.Unmapped ? Variant.Filled : Variant.Outlined;
+
     private static string SwatchStyle(string value) =>
         $"display:inline-block;width:18px;height:18px;border-radius:4px;border:1px solid var(--mud-palette-lines-default);background:{value};flex-shrink:0;";
 
@@ -129,7 +155,8 @@ public partial class NerdMudThemeCatalog : IDisposable
         Contains(entry.ValueKind, search) ||
         Contains(entry.Notes, search) ||
         Contains(entry.LightValue, search) ||
-        Contains(entry.DarkValue, search);
+        Contains(entry.DarkValue, search) ||
+        Contains(entry.Status.ToString(), search);
 
     private static bool Contains(string? haystack, string needle) =>
         !string.IsNullOrWhiteSpace(haystack) &&

@@ -3,6 +3,7 @@
 ## 2.2.3
 
 - Added `NerdMudThemeMappingTools` + `/nerd-theme` catalog route for precise token → `MudTheme` prop mapping.
+- `/nerd-theme` lists the **complete** MudBlazor `MudTheme` inventory (Palette, Layout, Shadows[0–25], ZIndex, Typography, PseudoCss) with Mapped / Hardcoded / Derived / Unmapped status so missing mappings are visible.
 
 ## 2.2.2
 
