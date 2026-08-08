@@ -57,6 +57,7 @@ public sealed class NerdDesignTokenOptions
     public bool EnableCatalogPage { get; set; } = true;
     public string CatalogRoute { get; set; } = "/nerd-design-tokens";
     public string RecipesCatalogRoute { get; set; } = "/nerd-design-token-recipes";
+    public string ThemeCatalogRoute { get; set; } = "/nerd-theme";
     public bool RestrictCatalogToDevelopment { get; set; } = true;
     public bool WarnOnAccessibilityFailuresAtStartup { get; set; } = true;
 
@@ -283,6 +284,7 @@ public sealed class NerdDesignTokenOptions
         EnableCatalogPage = source.EnableCatalogPage;
         CatalogRoute = source.CatalogRoute;
         RecipesCatalogRoute = source.RecipesCatalogRoute;
+        ThemeCatalogRoute = source.ThemeCatalogRoute;
         RestrictCatalogToDevelopment = source.RestrictCatalogToDevelopment;
         WarnOnAccessibilityFailuresAtStartup = source.WarnOnAccessibilityFailuresAtStartup;
         FailOnAccessibilityFailuresAtStartup = source.FailOnAccessibilityFailuresAtStartup;

@@ -511,6 +511,7 @@ public class MudBlazorDesignTokenCssGeneratorTests
 
         Assert.True(options.EnableCatalogPage);
         Assert.Equal("/nerd-design-tokens", options.CatalogRoute);
+        Assert.Equal("/nerd-theme", options.ThemeCatalogRoute);
         Assert.True(options.RestrictCatalogToDevelopment);
     }
 

@@ -198,6 +198,11 @@ Giver klassen `.dnf-primary-action` med samme styling som `.dnf-forest`.
 - WCAG 2.1 AA/AAA badges og kontrastforhold
 - Eksport af CSS, JSON og Stitch `DESIGN.md`
 
+`/nerd-theme` (konfigurerbart via `ThemeCatalogRoute`) viser den **komplette** MudBlazor
+`MudTheme`-inventar (Palette, Layout, Shadows, ZIndex, Typography, PseudoCss) med status
+Mapped / Hardcoded / Derived / Unmapped — så manglende mappings er synlige — plus CSS-variabler
+og resolved color tokens.
+
 Kataloget er et **verifikationsværktøj** — det må ikke indeholde token-specifik
 CSS eller patches. Hvis previews ser forkerte ud, rettes den generiske generator.
 

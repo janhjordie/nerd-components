@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.9
+
+- Added `ThemeRoute` (`/nerd-theme`) and Theme link in `NerdCatalogHubNav` / `NerdCatalogSection.Theme`.
+
 ## 1.5.8
 
 - `ChangelogRoute` on `NerdDesignSystemOptions` + Changelog link in `NerdCatalogHubNav`.

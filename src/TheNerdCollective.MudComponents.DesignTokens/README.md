@@ -69,7 +69,7 @@ Prefer `NerdMudThemeProvider` (maps brand aliases → Mud `Color.Primary`…`Err
 
 ### 3. Catalog URL is opt-in
 
-`AddNerdDesignTokens` only sets hub **route strings** (`CatalogRoute` default `/nerd-design-tokens`). It does **not** mount pages.
+`AddNerdDesignTokens` only sets hub **route strings** (`CatalogRoute` default `/nerd-design-tokens`, `ThemeCatalogRoute` default `/nerd-theme`). It does **not** mount pages.
 
 To expose the catalog:
 

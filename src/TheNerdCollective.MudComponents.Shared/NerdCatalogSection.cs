@@ -10,6 +10,7 @@ public enum NerdCatalogSection
     Colors,
     Recipes,
     Typography,
+    Theme,
     PlayBook,
     Changelog,
     Wcag,

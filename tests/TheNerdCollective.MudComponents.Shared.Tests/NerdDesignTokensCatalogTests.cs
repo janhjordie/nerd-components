@@ -65,6 +65,32 @@ public class NerdDesignTokensCatalogTests : MudComponentTestContext
         Assert.Contains("kridt-himmel", cut.Markup);
     }
 
+    [Fact]
+    public void Theme_catalog_renders_palette_mappings_when_enabled_in_development()
+    {
+        NerdBrandPackRegistry.Instance.Reset();
+        NerdBrandPackRegistry.Instance.Register(NerdDnfBrandPack.Instance);
+        var options = new NerdDesignTokenOptions { EnableCatalogPage = true };
+        NerdBrandPackRegistry.Instance.Configure("dnf", options);
+        RegisterCatalogServices(options, new NerdDesignTokenCss(MudBlazorDesignTokenCssGenerator.Generate(options)), [NerdDnfBrandPack.Instance]);
+
+        var cut = Render(builder =>
+        {
+            builder.OpenComponent<MudBlazor.MudPopoverProvider>(0);
+            builder.CloseComponent();
+            builder.OpenComponent<NerdMudThemeCatalog>(1);
+            builder.CloseComponent();
+        });
+
+        Assert.Contains("MudBlazor theme map", cut.Markup);
+        Assert.Contains("Palette.Primary", cut.Markup);
+        Assert.Contains("--mud-palette-primary", cut.Markup);
+        Assert.Contains("frameworkDefaults.mudblazor.palette", cut.Markup);
+        Assert.Contains("Unmapped", cut.Markup);
+        Assert.Contains("Typography.H1.FontSize", cut.Markup);
+        Assert.Contains("LayoutProperties.AppbarHeight", cut.Markup);
+    }
+
     private void RegisterCatalogServices(
         NerdDesignTokenOptions options,
         NerdDesignTokenCss tokenCss,

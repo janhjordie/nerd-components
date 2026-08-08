@@ -1,0 +1,270 @@
+@using TheNerdCollective.MudComponents.DesignTokens
+@using TheNerdCollective.MudComponents.Shared
+
+@if (!IsAvailable)
+{
+    <MudContainer MaxWidth="MaxWidth.Medium" Class="my-8">
+        <MudAlert Class="@Ui(NerdDesignSystemUi.Highlight)" Variant="Variant.Filled">
+            Design token catalog is disabled or only available in Development.
+        </MudAlert>
+    </MudContainer>
+}
+else
+{
+    <NerdDesignSystemScripts />
+    <NerdCatalogThemeProvider Theme="_catalogTheme" IsDarkMode="_previewDark">
+        <NerdDesignTokenStyles />
+        <NerdCatalogPage>
+            <MudStack Spacing="3">
+                <NerdCatalogPageHeader Title="MudBlazor theme map"
+                                       Current="NerdCatalogSection.Theme">
+                    <SubtitleContent>
+                        Complete <code>MudTheme</code> inventory · Prefix <code>@Options.Prefix</code> · MudBlazor @Options.MudBlazorVersion
+                    </SubtitleContent>
+                    <Trailing>
+                        <MudSwitch @bind-Value="_previewDark" Label="Preview dark mode" />
+                    </Trailing>
+                </NerdCatalogPageHeader>
+
+                <MudPaper Outlined="true" Class="pa-4" data-testid="nerd-theme-coverage">
+                    <MudStack Spacing="2">
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-2">
+                            <div>
+                                <MudText Typo="Typo.h6">Coverage</MudText>
+                                <MudText Typo="Typo.body2" Class="@Ui(NerdDesignSystemUi.MutedContent)">
+                                    Every MudBlazor theme leaf property — Mapped / Hardcoded / Derived / Unmapped gaps.
+                                </MudText>
+                            </div>
+                            <MudChip T="string"
+                                     Variant="Variant.Filled"
+                                     Class="@Ui(NerdDesignSystemUi.BrandChrome)"
+                                     data-testid="nerd-theme-coverage-score">
+                                @_coverage.Covered / @_coverage.Total (@_coverage.CoveredPercent%)
+                            </MudChip>
+                        </MudStack>
+                        <MudProgressLinear Value="@_coverage.CoveredPercent"
+                                           Color="@(_coverage.Unmapped == 0 ? Color.Success : Color.Warning)"
+                                           Size="Size.Medium" />
+                        <MudStack Row="true" Spacing="1" Class="flex-wrap">
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Class="@Ui(NerdDesignSystemUi.BrandChrome)">
+                                Mapped @_coverage.Mapped
+                            </MudChip>
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Class="@Ui(NerdDesignSystemUi.BrandChrome)">
+                                Hardcoded @_coverage.Hardcoded
+                            </MudChip>
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Class="@Ui(NerdDesignSystemUi.BrandChrome)">
+                                Derived @_coverage.Derived
+                            </MudChip>
+                            <MudChip T="string"
+                                     Size="Size.Small"
+                                     Variant="Variant.Filled"
+                                     Class="@Ui(NerdDesignSystemUi.Highlight)"
+                                     data-testid="nerd-theme-unmapped-count">
+                                Unmapped @_coverage.Unmapped
+                            </MudChip>
+                        </MudStack>
+                    </MudStack>
+                </MudPaper>
+
+                <MudPaper Outlined="true" Class="pa-4" data-testid="nerd-theme-bindings">
+                    <MudStack Spacing="2">
+                        <MudText Typo="Typo.h6">frameworkDefaults.mudblazor.palette</MudText>
+                        <MudText Typo="Typo.body2" Class="@Ui(NerdDesignSystemUi.MutedContent)">
+                            Semantic alias bindings that feed <code>NerdMudThemeFactory</code> /
+                            <code>NerdMudBrandPaletteMap</code>. Empty slots fall back to convention aliases.
+                        </MudText>
+                        <MudSimpleTable Dense="true" Hover="true" Bordered="true" Style="overflow-x:auto;">
+                            <thead>
+                                <tr>
+                                    <th>Mud slot</th>
+                                    <th>Alias</th>
+                                    <th>Color token</th>
+                                    <th>Light</th>
+                                    <th>Dark</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var binding in _bindingRows)
+                                {
+                                    <tr data-testid="@($"theme-binding-{binding.MudSlot.ToLowerInvariant()}")">
+                                        <td><code>@binding.MudSlot</code></td>
+                                        <td>
+                                            @if (string.IsNullOrWhiteSpace(binding.Alias))
+                                            {
+                                                <span class="@Ui(NerdDesignSystemUi.MutedContent)">—</span>
+                                            }
+                                            else
+                                            {
+                                                <code>@binding.Alias</code>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (string.IsNullOrWhiteSpace(binding.ColorToken))
+                                            {
+                                                <span class="@Ui(NerdDesignSystemUi.MutedContent)">—</span>
+                                            }
+                                            else
+                                            {
+                                                <code>@binding.ColorToken</code>
+                                            }
+                                        </td>
+                                        <td>
+                                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                                                <span style="@SwatchStyle(binding.LightValue)"></span>
+                                                <code>@binding.LightValue</code>
+                                            </MudStack>
+                                        </td>
+                                        <td>
+                                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                                                <span style="@SwatchStyle(binding.DarkValue)"></span>
+                                                <code>@binding.DarkValue</code>
+                                            </MudStack>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </MudSimpleTable>
+                    </MudStack>
+                </MudPaper>
+
+                <MudPaper Outlined="true" Class="pa-4" data-testid="nerd-theme-mappings">
+                    <MudStack Spacing="2">
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-2">
+                            <div>
+                                <MudText Typo="Typo.h6">MudTheme property map</MudText>
+                                <MudText Typo="Typo.body2" Class="@Ui(NerdDesignSystemUi.MutedContent)">
+                                    Full inventory of <code>Palette</code>, layout, shadows, z-index, typography, and PseudoCss.
+                                    Unmapped rows are the gaps.
+                                </MudText>
+                            </div>
+                            <MudTextField @bind-Value="_search"
+                                          Label="Search"
+                                          Variant="Variant.Outlined"
+                                          Clearable="true"
+                                          Style="min-width: 220px;"
+                                          Immediate="true" />
+                        </MudStack>
+
+                        <MudStack Row="true" Spacing="1" Class="flex-wrap">
+                            @foreach (var category in _categories)
+                            {
+                                <MudChip T="string"
+                                         Size="Size.Small"
+                                         Variant="@(_categoryFilter == category ? Variant.Filled : Variant.Outlined)"
+                                         Class="@Ui(NerdDesignSystemUi.BrandChrome)"
+                                         OnClick="@(() => _categoryFilter = category)">
+                                    @category
+                                </MudChip>
+                            }
+                            <MudChip T="string"
+                                     Size="Size.Small"
+                                     Variant="@(_categoryFilter is null ? Variant.Filled : Variant.Outlined)"
+                                     Class="@Ui(NerdDesignSystemUi.BrandChrome)"
+                                     OnClick="@(() => _categoryFilter = null)">
+                                All
+                            </MudChip>
+                        </MudStack>
+
+                        <MudStack Row="true" Spacing="1" Class="flex-wrap">
+                            <MudChip T="string"
+                                     Size="Size.Small"
+                                     Variant="@(_statusFilter is null ? Variant.Filled : Variant.Outlined)"
+                                     Class="@Ui(NerdDesignSystemUi.BrandChrome)"
+                                     OnClick="@(() => _statusFilter = null)">
+                                Any status
+                            </MudChip>
+                            @foreach (var status in StatusFilters)
+                            {
+                                <MudChip T="string"
+                                         Size="Size.Small"
+                                         Variant="@(_statusFilter == status ? Variant.Filled : StatusChipVariant(status))"
+                                         Class="@StatusChipClass(status)"
+                                         OnClick="@(() => _statusFilter = status)"
+                                         data-testid="@($"theme-status-filter-{status.ToString().ToLowerInvariant()}")">
+                                    @status
+                                </MudChip>
+                            }
+                        </MudStack>
+
+                        <MudSimpleTable Dense="true" Hover="true" Bordered="true" Style="overflow-x:auto;" data-testid="nerd-theme-map-table">
+                            <thead>
+                                <tr>
+                                    <th>Status</th>
+                                    <th>Category</th>
+                                    <th>MudTheme prop</th>
+                                    <th>CSS variable</th>
+                                    <th>Alias</th>
+                                    <th>Token</th>
+                                    <th>Kind</th>
+                                    <th>@(_previewDark ? "Dark" : "Light")</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var entry in FilteredMappings)
+                                {
+                                    var value = _previewDark ? entry.DarkValue : entry.LightValue;
+                                    <tr data-testid="@($"theme-map-{Sanitize(entry.MudThemeProperty)}")"
+                                        data-status="@entry.Status.ToString().ToLowerInvariant()">
+                                        <td>
+                                            <MudChip T="string" Size="Size.Small" Variant="@StatusChipVariant(entry.Status)" Class="@StatusChipClass(entry.Status)">
+                                                @entry.Status
+                                            </MudChip>
+                                        </td>
+                                        <td>@entry.Category</td>
+                                        <td><code>@entry.MudThemeProperty</code></td>
+                                        <td>
+                                            @if (string.IsNullOrWhiteSpace(entry.CssVariable))
+                                            {
+                                                <span class="@Ui(NerdDesignSystemUi.MutedContent)">—</span>
+                                            }
+                                            else
+                                            {
+                                                <code>@entry.CssVariable</code>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (string.IsNullOrWhiteSpace(entry.BindingAlias))
+                                            {
+                                                <span class="@Ui(NerdDesignSystemUi.MutedContent)">—</span>
+                                            }
+                                            else
+                                            {
+                                                <code>@entry.BindingAlias</code>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (string.IsNullOrWhiteSpace(entry.ColorToken))
+                                            {
+                                                <span class="@Ui(NerdDesignSystemUi.MutedContent)">—</span>
+                                            }
+                                            else
+                                            {
+                                                <code>@entry.ColorToken</code>
+                                            }
+                                        </td>
+                                        <td>@entry.ValueKind</td>
+                                        <td>
+                                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                                                @if (LooksLikeColor(value))
+                                                {
+                                                    <span style="@SwatchStyle(value)"></span>
+                                                }
+                                                <code>@Truncate(value)</code>
+                                            </MudStack>
+                                        </td>
+                                        <td>
+                                            <MudText Typo="Typo.caption" Class="@Ui(NerdDesignSystemUi.MutedContent)">
+                                                @entry.Notes
+                                            </MudText>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </MudSimpleTable>
+                    </MudStack>
+                </MudPaper>
+            </MudStack>
+        </NerdCatalogPage>
+    </NerdCatalogThemeProvider>
+}

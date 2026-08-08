@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.9
+
+- Added `/nerd-theme` catalog: complete MudBlazor `MudTheme` inventory with token mapping status (Mapped / Hardcoded / Derived / Unmapped gaps).
+
 ## 2.0.8
 
 - Catalog pages use canonical `NerdCatalogPage` ExtraLarge width (no per-page Medium/False/Large).

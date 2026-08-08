@@ -36,6 +36,7 @@ public static class NerdDesignTokenServiceCollectionExtensions
         {
             hub.DesignTokensRoute = options.CatalogRoute;
             hub.DesignTokenRecipesRoute = options.RecipesCatalogRoute;
+            hub.ThemeRoute = options.ThemeCatalogRoute;
             hub.DesignTokenCount = options.Colors.Count;
             hub.DesignTokenRecipeCount = options.Recipes.Count;
             hub.TokenPrefix = options.Prefix;
