@@ -28,15 +28,11 @@ public static class ServiceCollectionExtensions
         IConfiguration configuration,
         IHostEnvironment environment)
     {
+        // BacklogTrace: PERF-P7-S14 — 5s retention in all environments (§11 circuit-budget policy).
         // Configure Circuit Options to handle long-running sessions and prevent abrupt disconnections
         services.Configure<CircuitOptions>(options =>
         {
-            // Dev: 5s for fast teardown (CircuitDefaults default).
-            // Production: 3 minutes so users survive brief network blips,
-            // LB re-routes, and Container Apps health-probe failovers.
-            options.DisconnectedCircuitRetentionPeriod = environment.IsDevelopment()
-                ? CircuitDefaults.DisconnectedCircuitRetentionPeriod
-                : TimeSpan.FromMinutes(3);
+            options.DisconnectedCircuitRetentionPeriod = CircuitDefaults.DisconnectedCircuitRetentionPeriod;
 
             // Maximum number of circuits to retain per session
             options.DisconnectedCircuitMaxRetained = CircuitDefaults.DisconnectedCircuitMaxRetained;
