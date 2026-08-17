@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Components.Server.Circuits;
+using Microsoft.AspNetCore.Http;
 
 namespace TheNerdCollective.Blazor.SessionMonitor;
 
@@ -8,20 +9,39 @@ namespace TheNerdCollective.Blazor.SessionMonitor;
 public class SessionMonitorCircuitHandler : CircuitHandler
 {
     private readonly SessionMonitorService _monitorService;
+    private readonly SessionMonitorCircuitContext _circuitContext;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public SessionMonitorCircuitHandler(ISessionMonitorService monitorService)
+    public SessionMonitorCircuitHandler(
+        ISessionMonitorService monitorService,
+        SessionMonitorCircuitContext circuitContext,
+        IHttpContextAccessor httpContextAccessor)
     {
         _monitorService = (SessionMonitorService)monitorService;
+        _circuitContext = circuitContext;
+        _httpContextAccessor = httpContextAccessor;
     }
 
     public override Task OnCircuitOpenedAsync(Circuit circuit, CancellationToken cancellationToken)
     {
-        _monitorService.OnCircuitOpened(circuit.Id);
+        _circuitContext.CircuitId = circuit.Id;
+
+        var httpContext = _httpContextAccessor.HttpContext;
+        var initialPath = httpContext is null
+            ? null
+            : httpContext.Request.Path.Value + httpContext.Request.QueryString;
+
+        _monitorService.OnCircuitOpened(circuit.Id, initialPath);
         return Task.CompletedTask;
     }
 
     public override Task OnCircuitClosedAsync(Circuit circuit, CancellationToken cancellationToken)
     {
+        if (_circuitContext.CircuitId == circuit.Id)
+        {
+            _circuitContext.CircuitId = null;
+        }
+
         _monitorService.OnCircuitClosed(circuit.Id);
         return Task.CompletedTask;
     }

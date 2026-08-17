@@ -5,19 +5,26 @@
 <MudStack Spacing="3" Class="pa-4">
     <MudText Typo="Typo.subtitle1">Session History</MudText>
 
+    @if (IsDegradedMode)
+    {
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined">
+            Summary-only mode: history capped at @EffectiveHistoryCap snapshots and lookback limited to 6 hours.
+        </MudAlert>
+    }
+
     <MudStack Row="true" Spacing="2" Class="align-flex-end">
         <MudNumericField T="int" 
                         Label="Hours Lookback" 
                         @bind-Value="HoursLookback"
                         Min="1"
-                        Max="168"
+                        Max="@MaxHoursLookback"
                         Variant="Variant.Outlined"/>
 
         <MudNumericField T="int"
                         Label="Max Records"
                         @bind-Value="MaxRecords"
                         Min="10"
-                        Max="1000"
+                        Max="@MaxRecordsLimit"
                         Variant="Variant.Outlined"/>
 
         <MudButton Variant="Variant.Filled"
@@ -65,18 +72,28 @@
 </MudStack>
 
 @code {
-    private int HoursLookback = 1;
-    private int MaxRecords = 100;
-    private IEnumerable<SessionSnapshot> History = new List<SessionSnapshot>();
-    private bool HasSearched = false;
+  [Parameter] public bool IsDegradedMode { get; set; }
 
-    private async Task LoadHistory()
-    {
-        var since = DateTime.UtcNow.AddHours(-HoursLookback);
-        History = SessionMonitor.GetHistory(since, MaxRecords);
-        HasSearched = true;
-        await Task.CompletedTask;
-    }
+  [Parameter] public int EffectiveHistoryCap { get; set; } = 10000;
+
+  private int HoursLookback = 1;
+  private int MaxRecords = 100;
+  private IEnumerable<SessionSnapshot> History = new List<SessionSnapshot>();
+  private bool HasSearched = false;
+
+  private int MaxHoursLookback => IsDegradedMode ? 6 : 168;
+
+  private int MaxRecordsLimit => IsDegradedMode ? Math.Max(10, EffectiveHistoryCap) : 1000;
+
+  private async Task LoadHistory()
+  {
+    var hours = IsDegradedMode ? Math.Min(HoursLookback, 6) : HoursLookback;
+    var maxRecords = IsDegradedMode ? Math.Min(MaxRecords, EffectiveHistoryCap) : MaxRecords;
+    var since = DateTime.UtcNow.AddHours(-hours);
+    History = SessionMonitor.GetHistory(since, maxRecords);
+    HasSearched = true;
+    await Task.CompletedTask;
+  }
 
     private string? GetTrendIcon(SessionSnapshot snapshot)
     {

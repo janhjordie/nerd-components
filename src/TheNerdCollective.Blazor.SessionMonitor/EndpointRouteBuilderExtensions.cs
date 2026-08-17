@@ -51,11 +51,38 @@ public static class EndpointRouteBuilderExtensions
         // GET /api/session-monitor/active-circuits
         endpoints.MapGet($"{pattern}/active-circuits", async (ISessionMonitorService monitor) =>
         {
-            var circuits = monitor.GetActiveCircuitIds();
-            return Results.Json(new { activeCircuits = circuits, count = circuits.Count() }, jsonOptions);
+            var metrics = monitor.GetCurrentMetrics();
+            var sessions = monitor.GetActiveSessions().ToList();
+            return Results.Json(new
+            {
+                trackingMode = metrics.TrackingMode,
+                isDegradedMode = metrics.IsDegradedMode,
+                degradedModeThreshold = metrics.DegradedModeThreshold,
+                activeCircuits = sessions.Select(s => s.CircuitId),
+                sessions,
+                count = metrics.ActiveSessions,
+                detailAvailable = !metrics.IsDegradedMode
+            }, jsonOptions);
         })
         .WithName("GetActiveCircuits")
         .WithDescription("Get list of active circuit IDs");
+
+        // GET /api/session-monitor/active-by-path
+        endpoints.MapGet($"{pattern}/active-by-path", async (ISessionMonitorService monitor) =>
+        {
+            var metrics = monitor.GetCurrentMetrics();
+            var summaries = monitor.GetActiveSessionsByPath().ToList();
+            return Results.Json(new
+            {
+                trackingMode = metrics.TrackingMode,
+                isDegradedMode = metrics.IsDegradedMode,
+                paths = summaries,
+                uniquePaths = summaries.Count,
+                totalActiveSessions = metrics.ActiveSessions
+            }, jsonOptions);
+        })
+        .WithName("GetActiveSessionsByPath")
+        .WithDescription("Get active session counts grouped by URL path");
 
         // GET /api/session-monitor/deployment-windows?windowMinutes=5&lookbackHours=24
         endpoints.MapGet($"{pattern}/deployment-windows", async (

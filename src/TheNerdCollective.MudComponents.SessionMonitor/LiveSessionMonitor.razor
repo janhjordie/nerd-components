@@ -11,6 +11,13 @@
             <MudText Typo="Typo.h4">Live Session Monitor</MudText>
             <MudSpacer />
             <MudStack Row="true" Spacing="2" Class="align-center">
+                @if (_metrics.IsDegradedMode)
+                {
+                    <MudChip T="string" Color="Color.Warning" Size="Size.Small" Variant="Variant.Filled"
+                             Icon="@Icons.Material.Filled.Speed">
+                        Summary only
+                    </MudChip>
+                }
                 <DeploymentSafetyIndicator />
                 <MudChip T="string" Color="Color.Default" Size="Size.Small" Variant="Variant.Outlined"
                          Icon="@Icons.Material.Filled.Update">
@@ -26,6 +33,16 @@
 
         <!-- Quick metrics bar -->
         <QuickMetricsBar ShowRefreshButton="false" />
+
+        @if (_metrics.IsDegradedMode)
+        {
+            <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Speed">
+                <MudText Typo="Typo.subtitle2">High load — summary only</MudText>
+                <MudText Typo="Typo.body2">
+                    Over @_metrics.DegradedModeThreshold active sessions. Circuit details are hidden and history is capped at @_metrics.EffectiveHistoryCap snapshots to reduce monitor overhead.
+                </MudText>
+            </MudAlert>
+        }
 
         <!-- Real-time cards -->
         <MudGrid>
@@ -110,14 +127,17 @@
 
         <!-- Tabs for detail views -->
         <MudTabs Outlined="true" ApplyEffectsToContainer="true">
-            <MudTabPanel Text="Active Circuits" Icon="@Icons.Material.Filled.Lan">
-                <SessionDetailsTable />
+            <MudTabPanel Text="By URL" Icon="@Icons.Material.Filled.Link">
+                <UrlSessionCountsTable RefreshToken="@_metrics.Timestamp" IsDegradedMode="@_metrics.IsDegradedMode" />
+            </MudTabPanel>
+            <MudTabPanel Text="Active Circuits" Icon="@Icons.Material.Filled.Lan" Disabled="@_metrics.IsDegradedMode">
+                <SessionDetailsTable RefreshToken="@_metrics.Timestamp" IsDegradedMode="@_metrics.IsDegradedMode" />
             </MudTabPanel>
             <MudTabPanel Text="Session History" Icon="@Icons.Material.Filled.History">
-                <SessionHistoryChart />
+                <SessionHistoryChart IsDegradedMode="@_metrics.IsDegradedMode" EffectiveHistoryCap="@_metrics.EffectiveHistoryCap" />
             </MudTabPanel>
             <MudTabPanel Text="Deployment Windows" Icon="@Icons.Material.Filled.Timeline">
-                <DeploymentWindowsTable />
+                <DeploymentWindowsTable IsDegradedMode="@_metrics.IsDegradedMode" />
             </MudTabPanel>
         </MudTabs>
 

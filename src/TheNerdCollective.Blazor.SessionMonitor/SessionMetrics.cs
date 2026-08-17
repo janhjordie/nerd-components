@@ -55,4 +55,24 @@ public class SessionMetrics
     /// When session tracking started (process start time).
     /// </summary>
     public DateTime TrackingSince { get; set; }
+
+    /// <summary>
+    /// Current tracking mode (normal or degraded summary-only).
+    /// </summary>
+    public SessionTrackingMode TrackingMode { get; set; }
+
+    /// <summary>
+    /// Whether degraded summary-only mode is active.
+    /// </summary>
+    public bool IsDegradedMode => TrackingMode == SessionTrackingMode.DegradedSummaryOnly;
+
+    /// <summary>
+    /// Threshold that triggers degraded mode.
+    /// </summary>
+    public int DegradedModeThreshold { get; set; }
+
+    /// <summary>
+    /// Current effective history snapshot cap.
+    /// </summary>
+    public int EffectiveHistoryCap { get; set; }
 }

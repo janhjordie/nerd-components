@@ -25,6 +25,21 @@ public interface ISessionMonitorService
     IEnumerable<string> GetActiveCircuitIds();
 
     /// <summary>
+    /// Get active circuits with path and connection metadata.
+    /// </summary>
+    IEnumerable<ActiveCircuitSession> GetActiveSessions();
+
+    /// <summary>
+    /// Get active session counts grouped by current URL path.
+    /// </summary>
+    IEnumerable<ActivePathSessionSummary> GetActiveSessionsByPath();
+
+    /// <summary>
+    /// Current tracking mode based on active load.
+    /// </summary>
+    SessionTrackingMode GetTrackingMode();
+
+    /// <summary>
     /// Check if there are any active sessions.
     /// </summary>
     bool HasActiveSessions();

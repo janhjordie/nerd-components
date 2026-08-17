@@ -3,9 +3,15 @@
 @inject ISessionMonitorService SessionMonitor
 
 <MudStack Spacing="3" Class="pa-4">
-    <MudText Typo="Typo.subtitle1">Currently Active Circuits: @ActiveCircuits.Count()</MudText>
+    <MudText Typo="Typo.subtitle1">Currently Active Circuits: @ActiveSessions.Count</MudText>
 
-    @if (!ActiveCircuits.Any())
+    @if (IsDegradedMode)
+    {
+        <MudAlert Severity="Severity.Warning">
+            Circuit details are unavailable in summary-only mode. Use the <b>By URL</b> tab for aggregates.
+        </MudAlert>
+    }
+    else if (ActiveSessions.Count == 0)
     {
         <MudAlert Severity="Severity.Info">
             No active sessions at this moment.
@@ -13,21 +19,46 @@
     }
     else
     {
-        <MudDataGrid T="string" Items="@ActiveCircuits" ReadOnly="true" Hover="true" Striped="true">
+        <MudDataGrid T="ActiveCircuitSession" Items="@ActiveSessions" ReadOnly="true" Hover="true" Striped="true">
             <Columns>
-                <PropertyColumn Property="x => x" Title="Circuit ID">
+                <PropertyColumn Property="x => x.CurrentPath" Title="Current URL">
+                    <CellTemplate>
+                        @if (string.IsNullOrWhiteSpace(context.Item.CurrentPath))
+                        {
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">—</MudText>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.body2">@context.Item.CurrentPath</MudText>
+                        }
+                    </CellTemplate>
+                </PropertyColumn>
+                <PropertyColumn Property="x => x.CircuitId" Title="Circuit ID">
                     <CellTemplate>
                         <MudStack Row="true" Spacing="1" Class="align-center">
-                            <MudIcon Icon="@Icons.Material.Filled.Lan" Size="Size.Small" Color="Color.Success"/>
-                            <MudText Typo="Typo.body2">@context.Item</MudText>
+                            <MudIcon Icon="@Icons.Material.Filled.Lan" Size="Size.Small" Color="@(context.Item.IsDisconnected ? Color.Warning : Color.Success)" />
+                            <MudText Typo="Typo.caption">@context.Item.CircuitId</MudText>
                         </MudStack>
+                    </CellTemplate>
+                </PropertyColumn>
+                <PropertyColumn Property="x => x.StartedAt" Title="Started" Format="g" />
+                <PropertyColumn Property="x => x.IsDisconnected" Title="Status">
+                    <CellTemplate>
+                        @if (context.Item.IsDisconnected)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined">Disconnected</MudChip>
+                        }
+                        else
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Outlined">Connected</MudChip>
+                        }
                     </CellTemplate>
                 </PropertyColumn>
             </Columns>
         </MudDataGrid>
     }
 
-    <MudButton Variant="Variant.Outlined" 
+    <MudButton Variant="Variant.Outlined"
                Size="Size.Small"
                StartIcon="@Icons.Material.Filled.Refresh"
                OnClick="RefreshSessions">
@@ -36,16 +67,33 @@
 </MudStack>
 
 @code {
-    private IEnumerable<string> ActiveCircuits = new List<string>();
+    private List<ActiveCircuitSession> ActiveSessions = [];
+
+    [Parameter] public DateTime RefreshToken { get; set; }
+
+    [Parameter] public bool IsDegradedMode { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
         await RefreshSessions();
     }
 
+    protected override async Task OnParametersSetAsync()
+    {
+        await RefreshSessions();
+    }
+
     private async Task RefreshSessions()
     {
-        ActiveCircuits = SessionMonitor.GetActiveCircuitIds();
+        if (IsDegradedMode)
+        {
+            ActiveSessions = [];
+        }
+        else
+        {
+            ActiveSessions = SessionMonitor.GetActiveSessions().ToList();
+        }
+
         await Task.CompletedTask;
     }
 }

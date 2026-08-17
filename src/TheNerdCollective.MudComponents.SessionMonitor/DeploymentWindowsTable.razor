@@ -3,6 +3,13 @@
 @inject ISessionMonitorService SessionMonitor
 
 <MudStack Spacing="3" Class="pa-4">
+    @if (IsDegradedMode)
+    {
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined">
+            Summary-only mode: deployment window analysis uses up to 6 hours of reduced history.
+        </MudAlert>
+    }
+
     <MudNumericField T="int" 
                   Label="Window Duration (minutes)" 
                   @bind-Value="WindowMinutes"
@@ -73,13 +80,16 @@
 </MudStack>
 
 @code {
+    [Parameter] public bool IsDegradedMode { get; set; }
+
     private int WindowMinutes = 5;
     private IEnumerable<DeploymentWindow> Windows = new List<DeploymentWindow>();
     private bool HasSearched = false;
 
     private async Task CalculateWindows()
     {
-        Windows = SessionMonitor.FindOptimalDeploymentWindows(WindowMinutes, 24);
+        var lookbackHours = IsDegradedMode ? 6 : 24;
+        Windows = SessionMonitor.FindOptimalDeploymentWindows(WindowMinutes, lookbackHours);
         HasSearched = true;
         await Task.CompletedTask;
     }
