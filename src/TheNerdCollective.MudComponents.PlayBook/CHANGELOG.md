@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.14
+
+- PlayBook contrast backdrop uses tighter padding (`pa-1`) on preview tiles.
+
 ## 1.2.13
 
 - NuGet republish alongside catalog auth/allowlist fixes.

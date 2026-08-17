@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.2.6
+
+- PlayBook contrast backdrops: `on-primary-action` / `on-brand-chrome` controls inside parent surface scopes use on-surface colors (fixes pink-on-pink outlined buttons).
+
 ## 2.2.5
 
 - `/nerd-theme` coverage is brand-relevant: Typography is **External**, intentional Mud fallbacks are **AcceptedDefault**, and only real **Unmapped** gaps dilute the %.

@@ -1048,46 +1048,119 @@ public static class MudBlazorDesignTokenCssGenerator
     }
 
     /// <summary>
-    /// When a control carries the same intent class as its <c>data-nerd-token</c> host surface
-    /// (e.g. brand-chrome button inside brand-chrome PlayBook cell), paint with on-surface content.
+    /// When a control carries an on-surface intent inside its matching surface (PlayBook contrast
+    /// backdrop or same-class surface cell), paint outlined/text with on-surface content.
     /// </summary>
     private static void AppendIntentOnMatchingSurfaceRules(StringBuilder css, NerdDesignTokenOptions options)
     {
-        if (!options.Aliases.ContainsKey(NerdDesignSystemUi.BrandChrome) ||
-            !options.Aliases.ContainsKey(NerdDesignSystemUi.OnBrandChrome))
+        AppendOnSurfaceControlRules(
+            css,
+            options,
+            NerdDesignSystemUi.BrandChrome,
+            NerdDesignSystemUi.OnBrandChrome,
+            includeMatchingSurfaceHost: true);
+        AppendOnSurfaceControlRules(
+            css,
+            options,
+            NerdDesignSystemUi.PrimaryAction,
+            NerdDesignSystemUi.OnPrimaryAction,
+            includeMatchingSurfaceHost: false);
+    }
+
+    private static void AppendOnSurfaceControlRules(
+        StringBuilder css,
+        NerdDesignTokenOptions options,
+        string surfaceAlias,
+        string onSurfaceAlias,
+        bool includeMatchingSurfaceHost)
+    {
+        if (!options.Aliases.ContainsKey(surfaceAlias) ||
+            !options.Aliases.ContainsKey(onSurfaceAlias))
         {
             return;
         }
 
         var prefix = options.Prefix;
         var important = options.UseImportantOverrides ? " !important" : string.Empty;
-        var surfaceToken = $"{prefix}-{NerdDesignSystemUi.BrandChrome}";
-        var intentClass = $".{surfaceToken}";
-        var surfaceRoot = $"[data-nerd-token=\"{surfaceToken}\"]";
-        var onSurface = $"var(--{prefix}-color-{NerdDesignSystemUi.OnBrandChrome})";
-        var surfaceAccent = $"var(--{prefix}-color-{NerdDesignSystemUi.BrandChrome})";
+        var surfaceToken = $"{prefix}-{surfaceAlias}";
+        var onToken = $"{prefix}-{onSurfaceAlias}";
+        var onSurface = $"var(--{prefix}-color-{onSurfaceAlias})";
+        var onBorder =
+            $"var(--{prefix}-color-{onSurfaceAlias}-border, var(--{prefix}-color-{onSurfaceAlias}))";
+        var surfaceAccent = $"var(--{prefix}-color-{surfaceAlias})";
 
-        css.AppendLine($"{surfaceRoot} {intentClass}[class*=\"mud-button-outlined\"],");
-        css.AppendLine($"{surfaceRoot} {intentClass}.mud-button-outlined,");
-        css.AppendLine($"{surfaceRoot} {intentClass}[class*=\"mud-chip-outlined\"],");
-        css.AppendLine($"{surfaceRoot} {intentClass}.mud-chip-outlined {{");
+        if (includeMatchingSurfaceHost)
+        {
+            AppendOnSurfaceControlPaintRules(
+                css,
+                $"[data-nerd-token=\"{surfaceToken}\"] .{surfaceToken}",
+                onSurface,
+                onBorder,
+                surfaceAccent,
+                important);
+        }
+
+        AppendOnSurfaceControlPaintRules(
+            css,
+            $".{surfaceToken} [data-nerd-token=\"{onToken}\"] .{onToken}",
+            onSurface,
+            onBorder,
+            surfaceAccent,
+            important);
+    }
+
+    private static void AppendOnSurfaceControlPaintRules(
+        StringBuilder css,
+        string root,
+        string onSurface,
+        string onBorder,
+        string surfaceAccent,
+        string important)
+    {
+        css.AppendLine($"{root}[class*=\"mud-button-outlined\"],");
+        css.AppendLine($"{root}.mud-button-outlined,");
+        css.AppendLine($"{root}[class*=\"mud-chip-outlined\"],");
+        css.AppendLine($"{root}.mud-chip-outlined {{");
         css.AppendLine($"  color: {onSurface}{important};");
-        css.AppendLine($"  border-color: {onSurface}{important};");
+        css.AppendLine($"  border-color: {onBorder}{important};");
         css.AppendLine($"  background-color: transparent{important};");
         css.AppendLine("}");
 
-        css.AppendLine($"{surfaceRoot} {intentClass}[class*=\"mud-button-text\"],");
-        css.AppendLine($"{surfaceRoot} {intentClass}.mud-button-text {{");
+        css.AppendLine($"{root}[class*=\"mud-button-text\"],");
+        css.AppendLine($"{root}.mud-button-text {{");
         css.AppendLine($"  color: {onSurface}{important};");
         css.AppendLine($"  background-color: transparent{important};");
         css.AppendLine("}");
 
-        css.AppendLine($"{surfaceRoot} {intentClass}[class*=\"mud-button-filled\"],");
-        css.AppendLine($"{surfaceRoot} {intentClass}.mud-button-filled {{");
+        css.AppendLine($"{root}[class*=\"mud-button-filled\"],");
+        css.AppendLine($"{root}.mud-button-filled,");
+        css.AppendLine($"{root}[class*=\"mud-fab\"],");
+        css.AppendLine($"{root}.mud-fab {{");
         css.AppendLine($"  background-color: {onSurface}{important};");
         css.AppendLine($"  color: {surfaceAccent}{important};");
         css.AppendLine($"  border-color: {onSurface}{important};");
         css.AppendLine("}");
+
+        css.AppendLine($"{root}[class*=\"mud-icon-button\"],");
+        css.AppendLine($"{root}.mud-icon-button {{");
+        css.AppendLine($"  color: {onSurface}{important};");
+        css.AppendLine("}");
+
+        css.AppendLine($"{root}[class*=\"mud-toggle-item\"][class*=\"mud-button-outlined\"],");
+        css.AppendLine($"{root} :where([class*=\"mud-toggle-item\"][class*=\"mud-button-outlined\"]) {{");
+        css.AppendLine($"  color: {onSurface}{important};");
+        css.AppendLine($"  border-color: {onBorder}{important};");
+        css.AppendLine($"  background-color: transparent{important};");
+        css.AppendLine("}}");
+
+        css.AppendLine($"{root}[class*=\"mud-toggle-item\"][class*=\"mud-button-filled\"],");
+        css.AppendLine($"{root}[class*=\"mud-toggle-item\"][class*=\"mud-toggle-item-selected\"],");
+        css.AppendLine($"{root} :where([class*=\"mud-toggle-item\"][class*=\"mud-button-filled\"]),");
+        css.AppendLine($"{root} :where([class*=\"mud-toggle-item\"][class*=\"mud-toggle-item-selected\"]) {{");
+        css.AppendLine($"  background-color: {onSurface}{important};");
+        css.AppendLine($"  color: {surfaceAccent}{important};");
+        css.AppendLine($"  border-color: {onSurface}{important};");
+        css.AppendLine("}}");
     }
 
     private static void AppendCatalogToolbarRules(StringBuilder css, NerdDesignTokenOptions options)

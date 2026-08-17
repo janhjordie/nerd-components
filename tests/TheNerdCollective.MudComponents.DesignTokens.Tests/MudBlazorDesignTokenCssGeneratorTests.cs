@@ -453,6 +453,34 @@ public class MudBlazorDesignTokenCssGeneratorTests
     }
 
     [Fact]
+    public void Generate_on_primary_action_backdrop_uses_on_primary_action_for_outlined_controls()
+    {
+        var options = new NerdDesignTokenOptions { Prefix = "tnc", UseImportantOverrides = false };
+        NerdTncDesignTokenPresets.Apply(options);
+
+        var css = MudBlazorDesignTokenCssGenerator.Generate(options);
+
+        Assert.Contains(
+            ".tnc-primary-action [data-nerd-token=\"tnc-on-primary-action\"] .tnc-on-primary-action[class*=\"mud-button-outlined\"]",
+            css);
+        Assert.Contains("color: var(--tnc-color-on-primary-action)", css);
+    }
+
+    [Fact]
+    public void Generate_on_brand_chrome_backdrop_uses_on_brand_chrome_for_outlined_controls()
+    {
+        var options = new NerdDesignTokenOptions { Prefix = "tnc", UseImportantOverrides = false };
+        NerdTncDesignTokenPresets.Apply(options);
+
+        var css = MudBlazorDesignTokenCssGenerator.Generate(options);
+
+        Assert.Contains(
+            ".tnc-brand-chrome [data-nerd-token=\"tnc-on-brand-chrome\"] .tnc-on-brand-chrome[class*=\"mud-button-outlined\"]",
+            css);
+        Assert.Contains("color: var(--tnc-color-on-brand-chrome)", css);
+    }
+
+    [Fact]
     public void Generate_brand_chrome_surface_paints_content_on_tables_and_typography()
     {
         var options = new NerdDesignTokenOptions { Prefix = "tnc", UseImportantOverrides = false };
