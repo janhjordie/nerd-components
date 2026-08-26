@@ -202,12 +202,40 @@ public class SessionMonitorService : ISessionMonitorService
             .Select(s => new ActiveCircuitSession
             {
                 CircuitId = s.CircuitId,
+                ClientId = s.ClientId,
+                ClientLabel = FormatClientLabel(s.ClientId),
                 CurrentPath = s.CurrentPath,
                 CurrentPathUpdatedAt = s.CurrentPathUpdatedAt,
                 StartedAt = s.StartedAt,
                 IsDisconnected = s.DisconnectedAt.HasValue
             })
             .ToList();
+    }
+
+    public IEnumerable<ActiveClientSessionSummary> GetActiveSessionsByClient()
+    {
+        var summaries = _activeSessions.Values
+            .GroupBy(s => string.IsNullOrWhiteSpace(s.ClientId)
+                ? ActiveClientSessionSummary.UnknownClientLabel
+                : s.ClientId!)
+            .Select(g => new ActiveClientSessionSummary
+            {
+                ClientId = g.Key == ActiveClientSessionSummary.UnknownClientLabel ? null : g.Key,
+                ClientLabel = FormatClientLabel(g.Key == ActiveClientSessionSummary.UnknownClientLabel ? null : g.Key),
+                ActiveSessionCount = g.Count(),
+                ConnectedCount = g.Count(s => !s.DisconnectedAt.HasValue),
+                DisconnectedCount = g.Count(s => s.DisconnectedAt.HasValue),
+                DistinctPathCount = g.Select(s => SessionPathNormalizer.GroupKey(s.CurrentPath)).Distinct().Count()
+            })
+            .OrderByDescending(s => s.ActiveSessionCount)
+            .ThenBy(s => s.ClientLabel, StringComparer.OrdinalIgnoreCase);
+
+        if (IsDegradedMode())
+        {
+            return summaries.Take(_options.DegradedMaxPathSummaries).ToList();
+        }
+
+        return summaries.ToList();
     }
 
     public IEnumerable<ActivePathSessionSummary> GetActiveSessionsByPath()
@@ -384,6 +412,16 @@ public class SessionMonitorService : ISessionMonitorService
         }
 
         return null;
+    }
+
+    internal static string FormatClientLabel(string? clientId)
+    {
+        if (string.IsNullOrWhiteSpace(clientId))
+        {
+            return ActiveClientSessionSummary.UnknownClientLabel;
+        }
+
+        return clientId.Length <= 8 ? clientId : clientId[..8];
     }
 
     private class CircuitSession

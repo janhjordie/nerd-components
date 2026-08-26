@@ -153,6 +153,9 @@
             <MudTabPanel Text="By URL" Icon="@Icons.Material.Filled.Link">
                 <UrlSessionCountsTable RefreshToken="@_metrics.Timestamp" IsDegradedMode="@_metrics.IsDegradedMode" />
             </MudTabPanel>
+            <MudTabPanel Text="By Browser" Icon="@Icons.Material.Filled.Devices">
+                <ClientSessionCountsTable RefreshToken="@_metrics.Timestamp" IsDegradedMode="@_metrics.IsDegradedMode" />
+            </MudTabPanel>
             <MudTabPanel Text="Active Circuits" Icon="@Icons.Material.Filled.Lan" Disabled="@_metrics.IsDegradedMode">
                 <SessionDetailsTable RefreshToken="@_metrics.Timestamp" IsDegradedMode="@_metrics.IsDegradedMode" />
             </MudTabPanel>

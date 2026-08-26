@@ -1,0 +1,137 @@
+@using TheNerdCollective.Blazor.SessionMonitor
+@using MudBlazor
+@inject ISessionMonitorService SessionMonitor
+
+<MudStack Spacing="3" Class="pa-4">
+    <MudStack Row="true" Class="align-center flex-wrap" Spacing="2">
+        <MudText Typo="Typo.subtitle1">
+            Active sessions by browser: @_totalActiveSessions circuits across @_clientSummaries.Count browsers
+        </MudText>
+        <MudSpacer />
+        @if (_clientSummaries.Count > 0)
+        {
+            <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">
+                @_clientSummaries.Count unique browsers
+            </MudChip>
+        }
+    </MudStack>
+
+    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
+        Circuits from the same browser share the session monitor cookie (<code>.bs-sm-client</code>). Multiple tabs usually mean one browser row with several circuits.
+    </MudAlert>
+
+    @if (IsDegradedMode)
+    {
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mb-2">
+            Showing top browser clients only in summary-only mode.
+        </MudAlert>
+    }
+
+    @if (_clientSummaries.Count == 0)
+    {
+        <MudAlert Severity="Severity.Info">
+            No active sessions at this moment.
+        </MudAlert>
+    }
+    else
+    {
+        <MudDataGrid T="ActiveClientSessionSummary" Items="@_clientSummaries" ReadOnly="true" Hover="true" Striped="true">
+            <Columns>
+                <PropertyColumn Property="x => x.ClientLabel" Title="Browser">
+                    <CellTemplate>
+                        <MudStack Row="true" Spacing="1" Class="align-center">
+                            <MudIcon Icon="@Icons.Material.Filled.Devices" Size="Size.Small" Color="Color.Primary" />
+                            @if (context.Item.ClientId is null)
+                            {
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">@context.Item.ClientLabel</MudText>
+                            }
+                            else
+                            {
+                                <MudText Typo="Typo.body2">@context.Item.ClientLabel</MudText>
+                            }
+                        </MudStack>
+                    </CellTemplate>
+                </PropertyColumn>
+                <PropertyColumn Property="x => x.ActiveSessionCount" Title="Circuits">
+                    <CellTemplate>
+                        <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled">
+                            @context.Item.ActiveSessionCount
+                        </MudChip>
+                    </CellTemplate>
+                </PropertyColumn>
+                <PropertyColumn Property="x => x.DistinctPathCount" Title="URLs">
+                    <CellTemplate>
+                        <MudText Typo="Typo.body2">@context.Item.DistinctPathCount</MudText>
+                    </CellTemplate>
+                </PropertyColumn>
+                <PropertyColumn Property="x => x.ConnectedCount" Title="Connected">
+                    <CellTemplate>
+                        <MudText Typo="Typo.body2" Color="Color.Success">@context.Item.ConnectedCount</MudText>
+                    </CellTemplate>
+                </PropertyColumn>
+                <PropertyColumn Property="x => x.DisconnectedCount" Title="Disconnected">
+                    <CellTemplate>
+                        @if (context.Item.DisconnectedCount > 0)
+                        {
+                            <MudText Typo="Typo.body2" Color="Color.Warning">@context.Item.DisconnectedCount</MudText>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">0</MudText>
+                        }
+                    </CellTemplate>
+                </PropertyColumn>
+                <PropertyColumn Property="x => x.ActiveSessionCount" Title="Share">
+                    <CellTemplate>
+                        <MudProgressLinear Color="Color.Primary" Rounded="true" Size="Size.Small"
+                                           Value="@GetSharePercent(context.Item.ActiveSessionCount)" Class="my-2" />
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">@GetSharePercent(context.Item.ActiveSessionCount):F0}%</MudText>
+                    </CellTemplate>
+                </PropertyColumn>
+            </Columns>
+        </MudDataGrid>
+    }
+
+    <MudButton Variant="Variant.Outlined"
+               Size="Size.Small"
+               StartIcon="@Icons.Material.Filled.Refresh"
+               OnClick="RefreshSummaries">
+        Refresh List
+    </MudButton>
+</MudStack>
+
+@code {
+    private List<ActiveClientSessionSummary> _clientSummaries = [];
+    private int _totalActiveSessions;
+
+    [Parameter] public DateTime RefreshToken { get; set; }
+
+    [Parameter] public bool IsDegradedMode { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RefreshSummaries();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await RefreshSummaries();
+    }
+
+    private async Task RefreshSummaries()
+    {
+        _clientSummaries = SessionMonitor.GetActiveSessionsByClient().ToList();
+        _totalActiveSessions = _clientSummaries.Sum(s => s.ActiveSessionCount);
+        await Task.CompletedTask;
+    }
+
+    private double GetSharePercent(int count)
+    {
+        if (_totalActiveSessions == 0)
+        {
+            return 0;
+        }
+
+        return (double)count / _totalActiveSessions * 100;
+    }
+}

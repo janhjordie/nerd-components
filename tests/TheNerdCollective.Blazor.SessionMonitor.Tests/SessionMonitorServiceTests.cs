@@ -171,6 +171,39 @@ public sealed class SessionMonitorServiceTests
         }
     }
 
+    [Fact]
+    public void GetActiveSessionsByClient_groups_tabs_from_same_browser()
+    {
+        const string clientId = "client-abc-1234567890";
+        var monitor = CreateMonitor();
+
+        monitor.OnCircuitOpened("circuit-tab-1", "/developer/monitor", clientId);
+        monitor.OnCircuitOpened("circuit-tab-2", "/events", clientId);
+        monitor.OnCircuitOpened("circuit-other", "/");
+
+        var summaries = monitor.GetActiveSessionsByClient().ToList();
+        var sameBrowser = summaries.Single(s => s.ClientId == clientId);
+
+        Assert.Equal(2, sameBrowser.ActiveSessionCount);
+        Assert.Equal(2, sameBrowser.ConnectedCount);
+        Assert.Equal(2, sameBrowser.DistinctPathCount);
+        Assert.Equal(2, summaries.Count);
+    }
+
+    [Fact]
+    public void GetActiveSessions_includes_client_label()
+    {
+        const string clientId = "abcdef1234567890";
+        var monitor = CreateMonitor();
+
+        monitor.OnCircuitOpened("circuit-1", "/developer/monitor", clientId);
+
+        var session = monitor.GetActiveSessions().Single();
+
+        Assert.Equal(clientId, session.ClientId);
+        Assert.Equal("abcdef12", session.ClientLabel);
+    }
+
     private static SessionMonitorService CreateMonitor()
         => new(Options.Create(new SessionMonitorOptions()));
 }

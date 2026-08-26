@@ -35,6 +35,11 @@ public interface ISessionMonitorService
     IEnumerable<ActivePathSessionSummary> GetActiveSessionsByPath();
 
     /// <summary>
+    /// Get active session counts grouped by browser client identifier (shared cookie across tabs).
+    /// </summary>
+    IEnumerable<ActiveClientSessionSummary> GetActiveSessionsByClient();
+
+    /// <summary>
     /// Current tracking mode based on active load.
     /// </summary>
     SessionTrackingMode GetTrackingMode();

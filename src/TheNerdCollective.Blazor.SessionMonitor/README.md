@@ -159,6 +159,30 @@ GET /api/session-monitor/active-circuits
 }
 ```
 
+### Get Active Sessions by Browser Client
+
+```http
+GET /api/session-monitor/active-by-client
+```
+
+**Response:**
+```json
+{
+  "clients": [
+    {
+      "clientId": "a1b2c3d4e5f67890",
+      "clientLabel": "a1b2c3d4",
+      "activeSessionCount": 3,
+      "connectedCount": 3,
+      "disconnectedCount": 0,
+      "distinctPathCount": 2
+    }
+  ],
+  "uniqueBrowsers": 1,
+  "totalActiveSessions": 3
+}
+```
+
 ### Find Deployment Windows
 
 ```http

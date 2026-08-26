@@ -84,6 +84,23 @@ public static class EndpointRouteBuilderExtensions
         .WithName("GetActiveSessionsByPath")
         .WithDescription("Get active session counts grouped by URL path");
 
+        // GET /api/session-monitor/active-by-client
+        endpoints.MapGet($"{pattern}/active-by-client", async (ISessionMonitorService monitor) =>
+        {
+            var metrics = monitor.GetCurrentMetrics();
+            var summaries = monitor.GetActiveSessionsByClient().ToList();
+            return Results.Json(new
+            {
+                trackingMode = metrics.TrackingMode,
+                isDegradedMode = metrics.IsDegradedMode,
+                clients = summaries,
+                uniqueBrowsers = summaries.Count,
+                totalActiveSessions = metrics.ActiveSessions
+            }, jsonOptions);
+        })
+        .WithName("GetActiveSessionsByClient")
+        .WithDescription("Get active session counts grouped by browser client (shared cookie across tabs)");
+
         // GET /api/session-monitor/deployment-windows?windowMinutes=5&lookbackHours=24
         endpoints.MapGet($"{pattern}/deployment-windows", async (
             ISessionMonitorService monitor,

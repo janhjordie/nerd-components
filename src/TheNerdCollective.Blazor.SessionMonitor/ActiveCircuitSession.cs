@@ -8,6 +8,16 @@ public class ActiveCircuitSession
   public string CircuitId { get; set; } = "";
 
   /// <summary>
+  /// Browser client identifier shared across tabs (from session monitor cookie).
+  /// </summary>
+  public string? ClientId { get; set; }
+
+  /// <summary>
+  /// Short label for dashboards (first 8 characters of <see cref="ClientId"/>).
+  /// </summary>
+  public string? ClientLabel { get; set; }
+
+  /// <summary>
   /// Relative path and query for the page the circuit is currently on.
   /// </summary>
   public string? CurrentPath { get; set; }

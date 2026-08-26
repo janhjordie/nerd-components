@@ -21,6 +21,19 @@
     {
         <MudDataGrid T="ActiveCircuitSession" Items="@ActiveSessions" ReadOnly="true" Hover="true" Striped="true">
             <Columns>
+                <PropertyColumn Property="x => x.ClientLabel" Title="Browser">
+                    <CellTemplate>
+                        @if (string.IsNullOrWhiteSpace(context.Item.ClientLabel)
+                             || context.Item.ClientLabel == ActiveClientSessionSummary.UnknownClientLabel)
+                        {
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">@ActiveClientSessionSummary.UnknownClientLabel</MudText>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.body2">@context.Item.ClientLabel</MudText>
+                        }
+                    </CellTemplate>
+                </PropertyColumn>
                 <PropertyColumn Property="x => x.CurrentPath" Title="Current URL">
                     <CellTemplate>
                         @if (string.IsNullOrWhiteSpace(context.Item.CurrentPath))
