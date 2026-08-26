@@ -34,13 +34,13 @@ public class SessionMonitorCircuitHandler : CircuitHandler
         var initialPath = httpContext is null
             ? null
             : httpContext.Request.Path.Value + httpContext.Request.QueryString;
-        var clientId = GetOrCreateClientId(httpContext);
+        var clientId = GetClientId(httpContext);
 
         _monitorService.OnCircuitOpened(circuit.Id, initialPath, clientId);
         return Task.CompletedTask;
     }
 
-    private string? GetOrCreateClientId(HttpContext? httpContext)
+    private string? GetClientId(HttpContext? httpContext)
     {
         if (httpContext is null)
         {
@@ -54,17 +54,7 @@ public class SessionMonitorCircuitHandler : CircuitHandler
             return existing;
         }
 
-        var clientId = Guid.NewGuid().ToString("N");
-        httpContext.Response.Cookies.Append(cookieName, clientId, new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = httpContext.Request.IsHttps,
-            SameSite = SameSiteMode.Lax,
-            MaxAge = TimeSpan.FromDays(365),
-            IsEssential = true
-        });
-
-        return clientId;
+        return null;
     }
 
     public override Task OnCircuitClosedAsync(Circuit circuit, CancellationToken cancellationToken)

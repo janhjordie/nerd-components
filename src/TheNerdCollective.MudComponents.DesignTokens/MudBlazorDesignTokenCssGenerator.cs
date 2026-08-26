@@ -1151,7 +1151,7 @@ public static class MudBlazorDesignTokenCssGenerator
         css.AppendLine($"  color: {onSurface}{important};");
         css.AppendLine($"  border-color: {onBorder}{important};");
         css.AppendLine($"  background-color: transparent{important};");
-        css.AppendLine("}}");
+        css.AppendLine("}");
 
         css.AppendLine($"{root}[class*=\"mud-toggle-item\"][class*=\"mud-button-filled\"],");
         css.AppendLine($"{root}[class*=\"mud-toggle-item\"][class*=\"mud-toggle-item-selected\"],");
@@ -1160,7 +1160,7 @@ public static class MudBlazorDesignTokenCssGenerator
         css.AppendLine($"  background-color: {onSurface}{important};");
         css.AppendLine($"  color: {surfaceAccent}{important};");
         css.AppendLine($"  border-color: {onSurface}{important};");
-        css.AppendLine("}}");
+        css.AppendLine("}");
     }
 
     private static void AppendCatalogToolbarRules(StringBuilder css, NerdDesignTokenOptions options)

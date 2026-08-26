@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Components.Server.Circuits;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -32,6 +33,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ISessionMonitorService>(sp => sp.GetRequiredService<SessionMonitorService>());
 
         services.AddHttpContextAccessor();
+        services.AddSingleton<IStartupFilter, SessionMonitorStartupFilter>();
         services.AddScoped<SessionMonitorCircuitContext>();
         services.AddScoped<CircuitHandler, SessionMonitorCircuitHandler>();
 
