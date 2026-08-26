@@ -36,7 +36,15 @@
 
             <MudItem xs="12" sm="6" md="3">
                 <SessionMetricsCard 
-                    Title="Total Started"
+                    Title="Circuits Opened"
+                    Value="@CurrentMetrics.TotalCircuitsOpened.ToString()"
+                    Color="Color.Info"
+                    Icon="@Icons.Material.Filled.Lan"/>
+            </MudItem>
+
+            <MudItem xs="12" sm="6" md="3">
+                <SessionMetricsCard 
+                    Title="Client Sessions"
                     Value="@CurrentMetrics.TotalSessionsStarted.ToString()"
                     Color="Color.Success"
                     Icon="@Icons.Material.Filled.CheckCircle"/>

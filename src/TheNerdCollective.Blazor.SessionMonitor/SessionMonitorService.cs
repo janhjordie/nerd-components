@@ -15,26 +15,34 @@ public class SessionMonitorService : ISessionMonitorService
     private readonly object _statsLock = new();
 
     private long _totalSessionsStarted;
+    private long _totalCircuitsOpened;
     private long _totalSessionsEnded;
     private int _peakSessions;
     private long _totalDisconnects;
     private long _totalReconnects;
+    private long _completedDurationTicks;
+    private long _completedSessionCount;
     private readonly DateTime _trackingStartedAt = DateTime.UtcNow;
 
     private DateTime _lastSnapshotTime = DateTime.UtcNow;
     private int _lastSnapshotCount;
     private SessionTrackingMode _trackingMode = SessionTrackingMode.Normal;
+    private readonly string? _instanceId;
+    private readonly string _machineName;
 
     public SessionMonitorService(IOptions<SessionMonitorOptions> options)
     {
         _options = options.Value;
+        _machineName = Environment.MachineName;
+        _instanceId = ResolveInstanceId(_options.InstanceIdOverride);
     }
 
-    internal void OnCircuitOpened(string circuitId, string? initialPath = null)
+    internal void OnCircuitOpened(string circuitId, string? initialPath = null, string? clientId = null)
     {
         var session = new CircuitSession
         {
             CircuitId = circuitId,
+            ClientId = clientId,
             StartedAt = DateTime.UtcNow,
             CurrentPath = initialPath,
             CurrentPathUpdatedAt = initialPath is null ? null : DateTime.UtcNow
@@ -44,15 +52,26 @@ public class SessionMonitorService : ISessionMonitorService
 
         lock (_statsLock)
         {
-            _totalSessionsStarted++;
-            var currentCount = _activeSessions.Count;
-            if (currentCount > _peakSessions)
+            _totalCircuitsOpened++;
+
+            var isReloadReplacement = _options.DeduplicateReloadStarts
+                && clientId is not null
+                && _activeSessions.Values.Any(s =>
+                    s.CircuitId != circuitId && s.ClientId == clientId);
+
+            if (!isReloadReplacement)
             {
-                _peakSessions = currentCount;
+                _totalSessionsStarted++;
+            }
+
+            var connectedCount = GetConnectedSessionCount();
+            if (connectedCount > _peakSessions)
+            {
+                _peakSessions = connectedCount;
             }
         }
 
-        UpdateTrackingMode(_activeSessions.Count);
+        UpdateTrackingMode(GetConnectedSessionCount());
         RecordSnapshot();
     }
 
@@ -61,13 +80,16 @@ public class SessionMonitorService : ISessionMonitorService
         if (_activeSessions.TryRemove(circuitId, out var session))
         {
             session.EndedAt = DateTime.UtcNow;
+            var duration = session.EndedAt.Value - session.StartedAt;
 
             lock (_statsLock)
             {
                 _totalSessionsEnded++;
+                _completedDurationTicks += duration.Ticks;
+                _completedSessionCount++;
             }
 
-            UpdateTrackingMode(_activeSessions.Count);
+            UpdateTrackingMode(GetConnectedSessionCount());
             RecordSnapshot();
         }
     }
@@ -103,18 +125,19 @@ public class SessionMonitorService : ISessionMonitorService
 
     public SessionMetrics GetCurrentMetrics()
     {
-        var currentCount = _activeSessions.Count;
+        var currentCount = GetConnectedSessionCount();
         UpdateTrackingMode(currentCount);
 
-        var sessions = _activeSessions.Values.ToList();
-        var completedSessions = sessions.Where(s => s.EndedAt.HasValue).ToList();
-        var disconnectedSessions = sessions.Where(s => s.DisconnectedAt.HasValue).ToList();
+        var disconnectedSessions = _activeSessions.Values
+            .Where(s => s.DisconnectedAt.HasValue)
+            .ToList();
 
-        double? avgDuration = null;
-        if (completedSessions.Count > 0)
+        double? avgDuration;
+        lock (_statsLock)
         {
-            avgDuration = completedSessions
-                .Average(s => (s.EndedAt!.Value - s.StartedAt).TotalSeconds);
+            avgDuration = _completedSessionCount > 0
+                ? TimeSpan.FromTicks(_completedDurationTicks).TotalSeconds / _completedSessionCount
+                : null;
         }
 
         return new SessionMetrics
@@ -123,6 +146,7 @@ public class SessionMonitorService : ISessionMonitorService
             Timestamp = DateTime.UtcNow,
             PeakSessions = _peakSessions,
             TotalSessionsStarted = _totalSessionsStarted,
+            TotalCircuitsOpened = _totalCircuitsOpened,
             TotalSessionsEnded = _totalSessionsEnded,
             AverageSessionDurationSeconds = avgDuration,
             DisconnectedSessions = disconnectedSessions.Count,
@@ -131,7 +155,9 @@ public class SessionMonitorService : ISessionMonitorService
             TrackingSince = _trackingStartedAt,
             TrackingMode = _trackingMode,
             DegradedModeThreshold = _options.DegradedModeThreshold,
-            EffectiveHistoryCap = GetEffectiveMaxHistorySize()
+            EffectiveHistoryCap = GetEffectiveMaxHistorySize(),
+            InstanceId = _instanceId,
+            MachineName = _machineName
         };
     }
 
@@ -279,7 +305,7 @@ public class SessionMonitorService : ISessionMonitorService
     private void RecordSnapshot()
     {
         var now = DateTime.UtcNow;
-        var currentCount = _activeSessions.Count;
+        var currentCount = GetConnectedSessionCount();
 
         if (currentCount != _lastSnapshotCount || (now - _lastSnapshotTime).TotalMinutes >= 1)
         {
@@ -330,9 +356,40 @@ public class SessionMonitorService : ISessionMonitorService
 
     private bool IsDegradedMode() => _trackingMode == SessionTrackingMode.DegradedSummaryOnly;
 
+    private int GetConnectedSessionCount() => _activeSessions.Values.Count(s => !s.DisconnectedAt.HasValue);
+
+    private static string? ResolveInstanceId(string? instanceIdOverride)
+    {
+        if (!string.IsNullOrWhiteSpace(instanceIdOverride))
+        {
+            return instanceIdOverride;
+        }
+
+        return FirstNonEmptyEnvironmentVariable(
+                   "CONTAINER_APP_REPLICA_NAME",
+                   "WEBSITE_INSTANCE_ID",
+                   "HOSTNAME")
+               ?? Environment.MachineName;
+    }
+
+    private static string? FirstNonEmptyEnvironmentVariable(params string[] names)
+    {
+        foreach (var name in names)
+        {
+            var value = Environment.GetEnvironmentVariable(name);
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                return value;
+            }
+        }
+
+        return null;
+    }
+
     private class CircuitSession
     {
         public string CircuitId { get; set; } = "";
+        public string? ClientId { get; set; }
         public DateTime StartedAt { get; set; }
         public DateTime? EndedAt { get; set; }
         public DateTime? DisconnectedAt { get; set; }

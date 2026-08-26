@@ -24,4 +24,20 @@ public class SessionMonitorOptions
     /// Maximum URL path rows returned in degraded mode (top paths by session count).
     /// </summary>
     public int DegradedMaxPathSummaries { get; set; } = 100;
+
+    /// <summary>
+    /// Optional override for <see cref="SessionMetrics.InstanceId"/> (useful in tests).
+    /// </summary>
+    public string? InstanceIdOverride { get; set; }
+
+    /// <summary>
+    /// Cookie name used to persist a browser client identifier across page reloads.
+    /// </summary>
+    public string ClientIdCookieName { get; set; } = ".bs-sm-client";
+
+    /// <summary>
+    /// When true, page reloads from the same browser client (same cookie) do not
+    /// increment <see cref="SessionMetrics.TotalSessionsStarted"/>.
+    /// </summary>
+    public bool DeduplicateReloadStarts { get; set; } = true;
 }

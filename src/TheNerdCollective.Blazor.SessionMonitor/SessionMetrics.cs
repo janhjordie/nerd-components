@@ -21,9 +21,16 @@ public class SessionMetrics
     public int PeakSessions { get; set; }
 
     /// <summary>
-    /// Total number of sessions started since tracking began.
+    /// Total number of unique client sessions started since tracking began.
+    /// When reload deduplication is enabled, page reloads from the same browser
+    /// client do not increment this counter.
     /// </summary>
     public long TotalSessionsStarted { get; set; }
+
+    /// <summary>
+    /// Total number of Blazor circuits opened since tracking began (includes reloads).
+    /// </summary>
+    public long TotalCircuitsOpened { get; set; }
 
     /// <summary>
     /// Total number of sessions ended since tracking began.
@@ -75,4 +82,14 @@ public class SessionMetrics
     /// Current effective history snapshot cap.
     /// </summary>
     public int EffectiveHistoryCap { get; set; }
+
+    /// <summary>
+    /// Replica or process identifier for this monitor instance (metrics are per-process).
+    /// </summary>
+    public string? InstanceId { get; set; }
+
+    /// <summary>
+    /// Host machine name for this monitor instance.
+    /// </summary>
+    public string? MachineName { get; set; }
 }

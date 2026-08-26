@@ -31,6 +31,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<SessionMonitorService>();
         services.AddSingleton<ISessionMonitorService>(sp => sp.GetRequiredService<SessionMonitorService>());
 
+        services.AddHttpContextAccessor();
         services.AddScoped<SessionMonitorCircuitContext>();
         services.AddScoped<CircuitHandler, SessionMonitorCircuitHandler>();
 

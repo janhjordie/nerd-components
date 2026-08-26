@@ -11,6 +11,13 @@
             <MudText Typo="Typo.h4">Live Session Monitor</MudText>
             <MudSpacer />
             <MudStack Row="true" Spacing="2" Class="align-center">
+                @if (!string.IsNullOrWhiteSpace(_metrics.InstanceId))
+                {
+                    <MudChip T="string" Color="Color.Info" Size="Size.Small" Variant="Variant.Outlined"
+                             Icon="@Icons.Material.Filled.Dns">
+                        @_metrics.InstanceId
+                    </MudChip>
+                }
                 @if (_metrics.IsDegradedMode)
                 {
                     <MudChip T="string" Color="Color.Warning" Size="Size.Small" Variant="Variant.Filled"
@@ -31,8 +38,18 @@
             </MudStack>
         </MudStack>
 
+        @if (!string.IsNullOrWhiteSpace(_metrics.InstanceId))
+        {
+            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Info">
+                <MudText Typo="Typo.subtitle2">Per-replica metrics</MudText>
+                <MudText Typo="Typo.body2">
+                    Showing metrics for replica <b>@_metrics.InstanceId</b> only. In multi-replica deployments, numbers may vary as load balancing routes requests to different instances. Use sticky sessions for the monitor route to keep a consistent view.
+                </MudText>
+            </MudAlert>
+        }
+
         <!-- Quick metrics bar -->
-        <QuickMetricsBar ShowRefreshButton="false" />
+        <QuickMetricsBar Metrics="@_metrics" ShowRefreshButton="false" />
 
         @if (_metrics.IsDegradedMode)
         {
@@ -93,8 +110,14 @@
                 </MudStack>
                 <MudDivider Vertical="true" FlexItem="true" />
                 <MudStack Row="true" Spacing="1" Class="align-center">
+                    <MudIcon Icon="@Icons.Material.Filled.Lan" Color="Color.Info" Size="Size.Small" />
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Circuits opened:</MudText>
+                    <MudText Typo="Typo.body1"><b>@_metrics.TotalCircuitsOpened</b></MudText>
+                </MudStack>
+                <MudDivider Vertical="true" FlexItem="true" />
+                <MudStack Row="true" Spacing="1" Class="align-center">
                     <MudIcon Icon="@Icons.Material.Filled.Login" Color="Color.Success" Size="Size.Small" />
-                    <MudText Typo="Typo.body2" Color="Color.Secondary">Total Started:</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Client sessions:</MudText>
                     <MudText Typo="Typo.body1"><b>@_metrics.TotalSessionsStarted</b></MudText>
                 </MudStack>
                 <MudDivider Vertical="true" FlexItem="true" />

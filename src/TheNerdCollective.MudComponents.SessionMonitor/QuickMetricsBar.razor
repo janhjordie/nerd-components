@@ -9,7 +9,7 @@
             <MudStack Row="true" Spacing="1" Class="align-center">
                 <MudIcon Icon="@Icons.Material.Filled.Cloud" Color="Color.Primary" Size="Size.Small"/>
                 <MudText Typo="Typo.body2" Color="Color.Secondary">Active:</MudText>
-                <MudText Typo="Typo.body1"><b>@CurrentMetrics.ActiveSessions</b></MudText>
+                <MudText Typo="Typo.body1"><b>@DisplayMetrics.ActiveSessions</b></MudText>
             </MudStack>
         }
 
@@ -19,7 +19,17 @@
             <MudStack Row="true" Spacing="1" Class="align-center">
                 <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Color="Color.Warning" Size="Size.Small"/>
                 <MudText Typo="Typo.body2" Color="Color.Secondary">Peak:</MudText>
-                <MudText Typo="Typo.body1"><b>@CurrentMetrics.PeakSessions</b></MudText>
+                <MudText Typo="Typo.body1"><b>@DisplayMetrics.PeakSessions</b></MudText>
+            </MudStack>
+        }
+
+        @if (ShowCircuitsOpened)
+        {
+            <MudDivider Vertical="true" FlexItem="true"/>
+            <MudStack Row="true" Spacing="1" Class="align-center">
+                <MudIcon Icon="@Icons.Material.Filled.Lan" Color="Color.Info" Size="Size.Small"/>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">Circuits opened:</MudText>
+                <MudText Typo="Typo.body1"><b>@FormatLargeNumber(DisplayMetrics.TotalCircuitsOpened)</b></MudText>
             </MudStack>
         }
 
@@ -28,8 +38,8 @@
             <MudDivider Vertical="true" FlexItem="true"/>
             <MudStack Row="true" Spacing="1" Class="align-center">
                 <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small"/>
-                <MudText Typo="Typo.body2" Color="Color.Secondary">Started:</MudText>
-                <MudText Typo="Typo.body1"><b>@FormatLargeNumber(CurrentMetrics.TotalSessionsStarted)</b></MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">Client sessions:</MudText>
+                <MudText Typo="Typo.body1"><b>@FormatLargeNumber(DisplayMetrics.TotalSessionsStarted)</b></MudText>
             </MudStack>
         }
 
@@ -39,17 +49,17 @@
             <MudStack Row="true" Spacing="1" Class="align-center">
                 <MudIcon Icon="@Icons.Material.Filled.CancelScheduleSend" Color="Color.Info" Size="Size.Small"/>
                 <MudText Typo="Typo.body2" Color="Color.Secondary">Ended:</MudText>
-                <MudText Typo="Typo.body1"><b>@FormatLargeNumber(CurrentMetrics.TotalSessionsEnded)</b></MudText>
+                <MudText Typo="Typo.body1"><b>@FormatLargeNumber(DisplayMetrics.TotalSessionsEnded)</b></MudText>
             </MudStack>
         }
 
-        @if (ShowAvgDuration && CurrentMetrics.AverageSessionDurationSeconds.HasValue)
+        @if (ShowAvgDuration && DisplayMetrics.AverageSessionDurationSeconds.HasValue)
         {
             <MudDivider Vertical="true" FlexItem="true"/>
             <MudStack Row="true" Spacing="1" Class="align-center">
                 <MudIcon Icon="@Icons.Material.Filled.Timer" Color="Color.Default" Size="Size.Small"/>
                 <MudText Typo="Typo.body2" Color="Color.Secondary">Avg:</MudText>
-                <MudText Typo="Typo.body1"><b>@FormatDuration(CurrentMetrics.AverageSessionDurationSeconds.Value)</b></MudText>
+                <MudText Typo="Typo.body1"><b>@FormatDuration(DisplayMetrics.AverageSessionDurationSeconds.Value)</b></MudText>
             </MudStack>
         }
 
@@ -65,6 +75,21 @@
 
 @code {
     private SessionMetrics CurrentMetrics = new();
+    private DateTime? _lastRefreshToken;
+
+    /// <summary>
+    /// Optional parent-provided metrics. When set, the bar displays these values instead of self-fetching.
+    /// </summary>
+    [Parameter]
+    public SessionMetrics? Metrics { get; set; }
+
+    /// <summary>
+    /// When <see cref="Metrics"/> is not provided, changing this token triggers a refresh from the service.
+    /// </summary>
+    [Parameter]
+    public DateTime? RefreshToken { get; set; }
+
+    private SessionMetrics DisplayMetrics => Metrics ?? CurrentMetrics;
 
     /// <summary>
     /// Whether to show active sessions count.
@@ -79,7 +104,13 @@
     public bool ShowPeak { get; set; } = true;
 
     /// <summary>
-    /// Whether to show total sessions started.
+    /// Whether to show total circuits opened (includes reloads).
+    /// </summary>
+    [Parameter]
+    public bool ShowCircuitsOpened { get; set; } = true;
+
+    /// <summary>
+    /// Whether to show deduplicated unique client sessions started.
     /// </summary>
     [Parameter]
     public bool ShowStarted { get; set; } = true;
@@ -116,7 +147,20 @@
 
     protected override void OnInitialized()
     {
-        Refresh();
+        if (Metrics is null)
+            Refresh();
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (Metrics is not null)
+            return;
+
+        if (RefreshToken.HasValue && RefreshToken != _lastRefreshToken)
+        {
+            _lastRefreshToken = RefreshToken;
+            Refresh();
+        }
     }
 
     /// <summary>
