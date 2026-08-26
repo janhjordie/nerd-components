@@ -9,7 +9,11 @@ on:
       - 'src/**/*.cs'
       - 'src/**/*.razor'
       - 'src/**/README.md'
+      - 'tests/**/*.csproj'
+      - 'tests/**/*.cs'
+      - '**/*.sln'
       - '.github/workflows/publish-packages.yml'
+  workflow_dispatch:
 
 permissions:
   contents: write
