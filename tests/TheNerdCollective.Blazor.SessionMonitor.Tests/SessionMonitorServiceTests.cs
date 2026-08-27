@@ -187,6 +187,7 @@ public sealed class SessionMonitorServiceTests
         Assert.Equal(2, sameBrowser.ActiveSessionCount);
         Assert.Equal(2, sameBrowser.ConnectedCount);
         Assert.Equal(2, sameBrowser.DistinctPathCount);
+        Assert.Equal(2, sameBrowser.Circuits.Count);
         Assert.Equal(2, summaries.Count);
     }
 

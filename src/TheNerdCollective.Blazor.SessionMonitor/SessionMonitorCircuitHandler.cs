@@ -34,27 +34,10 @@ public class SessionMonitorCircuitHandler : CircuitHandler
         var initialPath = httpContext is null
             ? null
             : httpContext.Request.Path.Value + httpContext.Request.QueryString;
-        var clientId = GetClientId(httpContext);
+        var clientId = SessionMonitorClientIdResolver.Resolve(httpContext, _options.ClientIdCookieName);
 
         _monitorService.OnCircuitOpened(circuit.Id, initialPath, clientId);
         return Task.CompletedTask;
-    }
-
-    private string? GetClientId(HttpContext? httpContext)
-    {
-        if (httpContext is null)
-        {
-            return null;
-        }
-
-        var cookieName = _options.ClientIdCookieName;
-        if (httpContext.Request.Cookies.TryGetValue(cookieName, out var existing)
-            && !string.IsNullOrWhiteSpace(existing))
-        {
-            return existing;
-        }
-
-        return null;
     }
 
     public override Task OnCircuitClosedAsync(Circuit circuit, CancellationToken cancellationToken)

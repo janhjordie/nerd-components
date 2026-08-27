@@ -36,4 +36,9 @@ public class ActiveClientSessionSummary
     /// Number of distinct URL paths open across this browser client's circuits.
     /// </summary>
     public int DistinctPathCount { get; set; }
+
+    /// <summary>
+    /// Active circuits belonging to this browser client.
+    /// </summary>
+    public IReadOnlyList<ActiveCircuitSession> Circuits { get; set; } = [];
 }

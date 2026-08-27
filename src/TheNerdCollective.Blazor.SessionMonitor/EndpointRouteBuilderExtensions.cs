@@ -52,15 +52,18 @@ public static class EndpointRouteBuilderExtensions
         endpoints.MapGet($"{pattern}/active-circuits", async (ISessionMonitorService monitor) =>
         {
             var metrics = monitor.GetCurrentMetrics();
-            var sessions = monitor.GetActiveSessions().ToList();
+            var clients = monitor.GetActiveSessionsByClient().ToList();
+            var sessions = clients.SelectMany(c => c.Circuits).ToList();
             return Results.Json(new
             {
                 trackingMode = metrics.TrackingMode,
                 isDegradedMode = metrics.IsDegradedMode,
                 degradedModeThreshold = metrics.DegradedModeThreshold,
                 activeCircuits = sessions.Select(s => s.CircuitId),
+                clients,
                 sessions,
                 count = metrics.ActiveSessions,
+                uniqueBrowsers = clients.Count,
                 detailAvailable = !metrics.IsDegradedMode
             }, jsonOptions);
         })

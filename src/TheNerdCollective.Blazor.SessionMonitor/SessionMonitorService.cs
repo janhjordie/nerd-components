@@ -198,17 +198,9 @@ public class SessionMonitorService : ISessionMonitorService
         }
 
         return _activeSessions.Values
-            .OrderByDescending(s => s.CurrentPathUpdatedAt ?? s.StartedAt)
-            .Select(s => new ActiveCircuitSession
-            {
-                CircuitId = s.CircuitId,
-                ClientId = s.ClientId,
-                ClientLabel = FormatClientLabel(s.ClientId),
-                CurrentPath = s.CurrentPath,
-                CurrentPathUpdatedAt = s.CurrentPathUpdatedAt,
-                StartedAt = s.StartedAt,
-                IsDisconnected = s.DisconnectedAt.HasValue
-            })
+            .OrderBy(s => SessionMonitorService.FormatClientLabel(s.ClientId), StringComparer.OrdinalIgnoreCase)
+            .ThenByDescending(s => s.CurrentPathUpdatedAt ?? s.StartedAt)
+            .Select(MapToActiveCircuitSession)
             .ToList();
     }
 
@@ -218,14 +210,26 @@ public class SessionMonitorService : ISessionMonitorService
             .GroupBy(s => string.IsNullOrWhiteSpace(s.ClientId)
                 ? ActiveClientSessionSummary.UnknownClientLabel
                 : s.ClientId!)
-            .Select(g => new ActiveClientSessionSummary
+            .Select(g =>
             {
-                ClientId = g.Key == ActiveClientSessionSummary.UnknownClientLabel ? null : g.Key,
-                ClientLabel = FormatClientLabel(g.Key == ActiveClientSessionSummary.UnknownClientLabel ? null : g.Key),
-                ActiveSessionCount = g.Count(),
-                ConnectedCount = g.Count(s => !s.DisconnectedAt.HasValue),
-                DisconnectedCount = g.Count(s => s.DisconnectedAt.HasValue),
-                DistinctPathCount = g.Select(s => SessionPathNormalizer.GroupKey(s.CurrentPath)).Distinct().Count()
+                var circuits = g
+                    .OrderByDescending(s => s.CurrentPathUpdatedAt ?? s.StartedAt)
+                    .Select(MapToActiveCircuitSession)
+                    .ToList();
+
+                return new ActiveClientSessionSummary
+                {
+                    ClientId = g.Key == ActiveClientSessionSummary.UnknownClientLabel ? null : g.Key,
+                    ClientLabel = FormatClientLabel(g.Key == ActiveClientSessionSummary.UnknownClientLabel ? null : g.Key),
+                    ActiveSessionCount = circuits.Count,
+                    ConnectedCount = circuits.Count(s => !s.IsDisconnected),
+                    DisconnectedCount = circuits.Count(s => s.IsDisconnected),
+                    DistinctPathCount = circuits
+                        .Select(s => SessionPathNormalizer.GroupKey(s.CurrentPath))
+                        .Distinct()
+                        .Count(),
+                    Circuits = circuits
+                };
             })
             .OrderByDescending(s => s.ActiveSessionCount)
             .ThenBy(s => s.ClientLabel, StringComparer.OrdinalIgnoreCase);
@@ -423,6 +427,18 @@ public class SessionMonitorService : ISessionMonitorService
 
         return clientId.Length <= 8 ? clientId : clientId[..8];
     }
+
+    private static ActiveCircuitSession MapToActiveCircuitSession(CircuitSession session)
+        => new()
+        {
+            CircuitId = session.CircuitId,
+            ClientId = session.ClientId,
+            ClientLabel = FormatClientLabel(session.ClientId),
+            CurrentPath = session.CurrentPath,
+            CurrentPathUpdatedAt = session.CurrentPathUpdatedAt,
+            StartedAt = session.StartedAt,
+            IsDisconnected = session.DisconnectedAt.HasValue
+        };
 
     private class CircuitSession
     {

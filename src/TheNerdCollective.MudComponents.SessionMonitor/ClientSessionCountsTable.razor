@@ -17,7 +17,7 @@
     </MudStack>
 
     <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
-        Circuits from the same browser share the session monitor cookie (<code>.bs-sm-client</code>). Multiple tabs usually mean one browser row with several circuits.
+        Circuits from the same browser share the session monitor cookie (<code>.bs-sm-client</code>). Tabs from one browser are grouped together below.
     </MudAlert>
 
     @if (IsDegradedMode)
@@ -35,61 +35,72 @@
     }
     else
     {
-        <MudDataGrid T="ActiveClientSessionSummary" Items="@_clientSummaries" ReadOnly="true" Hover="true" Striped="true">
-            <Columns>
-                <PropertyColumn Property="x => x.ClientLabel" Title="Browser">
-                    <CellTemplate>
-                        <MudStack Row="true" Spacing="1" Class="align-center">
-                            <MudIcon Icon="@Icons.Material.Filled.Devices" Size="Size.Small" Color="Color.Primary" />
-                            @if (context.Item.ClientId is null)
+        <MudSimpleTable Dense="true" Hover="true" Bordered="true" Class="mb-2">
+            <thead>
+                <tr>
+                    <th>Browser</th>
+                    <th>Circuits</th>
+                    <th>URLs</th>
+                    <th>Connected</th>
+                    <th>Disconnected</th>
+                    <th>Share</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var summary in _clientSummaries)
+                {
+                    <tr>
+                        <td>
+                            <MudStack Row="true" Spacing="1" Class="align-center">
+                                <MudIcon Icon="@Icons.Material.Filled.Devices" Size="Size.Small" Color="Color.Primary" />
+                                <MudText Typo="Typo.body2">@summary.ClientLabel</MudText>
+                            </MudStack>
+                        </td>
+                        <td><MudText Typo="Typo.body2"><b>@summary.ActiveSessionCount</b></MudText></td>
+                        <td><MudText Typo="Typo.body2">@summary.DistinctPathCount</MudText></td>
+                        <td><MudText Typo="Typo.body2" Color="Color.Success">@summary.ConnectedCount</MudText></td>
+                        <td>
+                            @if (summary.DisconnectedCount > 0)
                             {
-                                <MudText Typo="Typo.body2" Color="Color.Secondary">@context.Item.ClientLabel</MudText>
+                                <MudText Typo="Typo.body2" Color="Color.Warning">@summary.DisconnectedCount</MudText>
                             }
                             else
                             {
-                                <MudText Typo="Typo.body2">@context.Item.ClientLabel</MudText>
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">0</MudText>
                             }
-                        </MudStack>
-                    </CellTemplate>
-                </PropertyColumn>
-                <PropertyColumn Property="x => x.ActiveSessionCount" Title="Circuits">
-                    <CellTemplate>
-                        <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled">
-                            @context.Item.ActiveSessionCount
-                        </MudChip>
-                    </CellTemplate>
-                </PropertyColumn>
-                <PropertyColumn Property="x => x.DistinctPathCount" Title="URLs">
-                    <CellTemplate>
-                        <MudText Typo="Typo.body2">@context.Item.DistinctPathCount</MudText>
-                    </CellTemplate>
-                </PropertyColumn>
-                <PropertyColumn Property="x => x.ConnectedCount" Title="Connected">
-                    <CellTemplate>
-                        <MudText Typo="Typo.body2" Color="Color.Success">@context.Item.ConnectedCount</MudText>
-                    </CellTemplate>
-                </PropertyColumn>
-                <PropertyColumn Property="x => x.DisconnectedCount" Title="Disconnected">
-                    <CellTemplate>
-                        @if (context.Item.DisconnectedCount > 0)
+                        </td>
+                        <td>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">@GetSharePercent(summary.ActiveSessionCount):F0}%</MudText>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </MudSimpleTable>
+
+        <MudExpansionPanels MultiExpansion="true">
+            @foreach (var group in _clientSummaries)
+            {
+                <MudExpansionPanel Text="@GetPanelTitle(group)" Expanded="@(group.ActiveSessionCount <= 3)">
+                    <MudStack Spacing="1">
+                        @foreach (var circuit in group.Circuits)
                         {
-                            <MudText Typo="Typo.body2" Color="Color.Warning">@context.Item.DisconnectedCount</MudText>
+                            <MudPaper Class="pa-2" Elevation="0" Outlined="true">
+                                <MudStack Row="true" Spacing="2" Class="align-center flex-wrap">
+                                    <MudIcon Icon="@Icons.Material.Filled.Lan" Size="Size.Small" Color="@(circuit.IsDisconnected ? Color.Warning : Color.Success)" />
+                                    <MudText Typo="Typo.body2">@(circuit.CurrentPath ?? "—")</MudText>
+                                    <MudSpacer />
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">@circuit.CircuitId</MudText>
+                                    @if (circuit.IsDisconnected)
+                                    {
+                                        <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined">Disconnected</MudChip>
+                                    }
+                                </MudStack>
+                            </MudPaper>
                         }
-                        else
-                        {
-                            <MudText Typo="Typo.body2" Color="Color.Secondary">0</MudText>
-                        }
-                    </CellTemplate>
-                </PropertyColumn>
-                <PropertyColumn Property="x => x.ActiveSessionCount" Title="Share">
-                    <CellTemplate>
-                        <MudProgressLinear Color="Color.Primary" Rounded="true" Size="Size.Small"
-                                           Value="@GetSharePercent(context.Item.ActiveSessionCount)" Class="my-2" />
-                        <MudText Typo="Typo.caption" Color="Color.Secondary">@GetSharePercent(context.Item.ActiveSessionCount):F0}%</MudText>
-                    </CellTemplate>
-                </PropertyColumn>
-            </Columns>
-        </MudDataGrid>
+                    </MudStack>
+                </MudExpansionPanel>
+            }
+        </MudExpansionPanels>
     }
 
     <MudButton Variant="Variant.Outlined"
@@ -134,4 +145,7 @@
 
         return (double)count / _totalActiveSessions * 100;
     }
+
+    private static string GetPanelTitle(ActiveClientSessionSummary group)
+        => $"{group.ClientLabel} · {group.ActiveSessionCount} circuits · {group.DistinctPathCount} URLs";
 }

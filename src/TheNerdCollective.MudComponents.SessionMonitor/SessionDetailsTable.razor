@@ -3,15 +3,17 @@
 @inject ISessionMonitorService SessionMonitor
 
 <MudStack Spacing="3" Class="pa-4">
-    <MudText Typo="Typo.subtitle1">Currently Active Circuits: @ActiveSessions.Count</MudText>
+    <MudText Typo="Typo.subtitle1">
+        Active circuits grouped by browser: @_totalCircuits circuits across @_clientGroups.Count browsers
+    </MudText>
 
     @if (IsDegradedMode)
     {
         <MudAlert Severity="Severity.Warning">
-            Circuit details are unavailable in summary-only mode. Use the <b>By URL</b> tab for aggregates.
+            Circuit details are unavailable in summary-only mode. Use the <b>By Browser</b> tab for aggregates.
         </MudAlert>
     }
-    else if (ActiveSessions.Count == 0)
+    else if (_clientGroups.Count == 0)
     {
         <MudAlert Severity="Severity.Info">
             No active sessions at this moment.
@@ -19,56 +21,50 @@
     }
     else
     {
-        <MudDataGrid T="ActiveCircuitSession" Items="@ActiveSessions" ReadOnly="true" Hover="true" Striped="true">
-            <Columns>
-                <PropertyColumn Property="x => x.ClientLabel" Title="Browser">
-                    <CellTemplate>
-                        @if (string.IsNullOrWhiteSpace(context.Item.ClientLabel)
-                             || context.Item.ClientLabel == ActiveClientSessionSummary.UnknownClientLabel)
-                        {
-                            <MudText Typo="Typo.body2" Color="Color.Secondary">@ActiveClientSessionSummary.UnknownClientLabel</MudText>
-                        }
-                        else
-                        {
-                            <MudText Typo="Typo.body2">@context.Item.ClientLabel</MudText>
-                        }
-                    </CellTemplate>
-                </PropertyColumn>
-                <PropertyColumn Property="x => x.CurrentPath" Title="Current URL">
-                    <CellTemplate>
-                        @if (string.IsNullOrWhiteSpace(context.Item.CurrentPath))
-                        {
-                            <MudText Typo="Typo.body2" Color="Color.Secondary">—</MudText>
-                        }
-                        else
-                        {
-                            <MudText Typo="Typo.body2">@context.Item.CurrentPath</MudText>
-                        }
-                    </CellTemplate>
-                </PropertyColumn>
-                <PropertyColumn Property="x => x.CircuitId" Title="Circuit ID">
-                    <CellTemplate>
-                        <MudStack Row="true" Spacing="1" Class="align-center">
-                            <MudIcon Icon="@Icons.Material.Filled.Lan" Size="Size.Small" Color="@(context.Item.IsDisconnected ? Color.Warning : Color.Success)" />
-                            <MudText Typo="Typo.caption">@context.Item.CircuitId</MudText>
-                        </MudStack>
-                    </CellTemplate>
-                </PropertyColumn>
-                <PropertyColumn Property="x => x.StartedAt" Title="Started" Format="g" />
-                <PropertyColumn Property="x => x.IsDisconnected" Title="Status">
-                    <CellTemplate>
-                        @if (context.Item.IsDisconnected)
-                        {
-                            <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined">Disconnected</MudChip>
-                        }
-                        else
-                        {
-                            <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Outlined">Connected</MudChip>
-                        }
-                    </CellTemplate>
-                </PropertyColumn>
-            </Columns>
-        </MudDataGrid>
+        <MudExpansionPanels MultiExpansion="true">
+            @foreach (var group in _clientGroups)
+            {
+                <MudExpansionPanel Text="@GetPanelTitle(group)" Expanded="true">
+                    <MudDataGrid T="ActiveCircuitSession" Items="@group.Circuits" ReadOnly="true" Hover="true" Dense="true" Striped="true">
+                        <Columns>
+                            <PropertyColumn Property="x => x.CurrentPath" Title="Current URL">
+                                <CellTemplate>
+                                    @if (string.IsNullOrWhiteSpace(context.Item.CurrentPath))
+                                    {
+                                        <MudText Typo="Typo.body2" Color="Color.Secondary">—</MudText>
+                                    }
+                                    else
+                                    {
+                                        <MudText Typo="Typo.body2">@context.Item.CurrentPath</MudText>
+                                    }
+                                </CellTemplate>
+                            </PropertyColumn>
+                            <PropertyColumn Property="x => x.CircuitId" Title="Circuit ID">
+                                <CellTemplate>
+                                    <MudStack Row="true" Spacing="1" Class="align-center">
+                                        <MudIcon Icon="@Icons.Material.Filled.Lan" Size="Size.Small" Color="@(context.Item.IsDisconnected ? Color.Warning : Color.Success)" />
+                                        <MudText Typo="Typo.caption">@context.Item.CircuitId</MudText>
+                                    </MudStack>
+                                </CellTemplate>
+                            </PropertyColumn>
+                            <PropertyColumn Property="x => x.StartedAt" Title="Started" Format="g" />
+                            <PropertyColumn Property="x => x.IsDisconnected" Title="Status">
+                                <CellTemplate>
+                                    @if (context.Item.IsDisconnected)
+                                    {
+                                        <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined">Disconnected</MudChip>
+                                    }
+                                    else
+                                    {
+                                        <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Outlined">Connected</MudChip>
+                                    }
+                                </CellTemplate>
+                            </PropertyColumn>
+                        </Columns>
+                    </MudDataGrid>
+                </MudExpansionPanel>
+            }
+        </MudExpansionPanels>
     }
 
     <MudButton Variant="Variant.Outlined"
@@ -80,7 +76,8 @@
 </MudStack>
 
 @code {
-    private List<ActiveCircuitSession> ActiveSessions = [];
+    private List<ActiveClientSessionSummary> _clientGroups = [];
+    private int _totalCircuits;
 
     [Parameter] public DateTime RefreshToken { get; set; }
 
@@ -100,13 +97,24 @@
     {
         if (IsDegradedMode)
         {
-            ActiveSessions = [];
+            _clientGroups = [];
+            _totalCircuits = 0;
         }
         else
         {
-            ActiveSessions = SessionMonitor.GetActiveSessions().ToList();
+            _clientGroups = SessionMonitor.GetActiveSessionsByClient().ToList();
+            _totalCircuits = _clientGroups.Sum(g => g.ActiveSessionCount);
         }
 
         await Task.CompletedTask;
+    }
+
+    private static string GetPanelTitle(ActiveClientSessionSummary group)
+    {
+        var label = string.IsNullOrWhiteSpace(group.ClientLabel)
+            ? ActiveClientSessionSummary.UnknownClientLabel
+            : group.ClientLabel;
+
+        return $"{label} · {group.ActiveSessionCount} circuits · {group.ConnectedCount} connected";
     }
 }

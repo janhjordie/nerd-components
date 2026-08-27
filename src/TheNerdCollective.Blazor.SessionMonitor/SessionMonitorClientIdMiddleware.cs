@@ -19,11 +19,9 @@ internal sealed class SessionMonitorClientIdMiddleware
     public async Task InvokeAsync(HttpContext context, IOptions<SessionMonitorOptions> options)
     {
         var cookieName = options.Value.ClientIdCookieName;
-        if (!string.IsNullOrWhiteSpace(cookieName)
-            && (!context.Request.Cookies.TryGetValue(cookieName, out var existing)
-                || string.IsNullOrWhiteSpace(existing)))
+        if (!string.IsNullOrWhiteSpace(cookieName))
         {
-            context.Response.Cookies.Append(cookieName, Guid.NewGuid().ToString("N"), CreateCookieOptions(context));
+            SessionMonitorClientIdResolver.EnsureClientId(context, cookieName);
         }
 
         await _next(context);
