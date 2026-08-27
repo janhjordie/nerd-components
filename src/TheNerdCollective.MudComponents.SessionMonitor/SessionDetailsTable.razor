@@ -32,6 +32,13 @@
                             Admin browser — sessions from this group are excluded from deploy safety counts while the monitor tab is open.
                         </MudAlert>
                     }
+                    <MudStack Spacing="2" Class="mb-2">
+                        <ClientEnvironmentChips Environment="@group.ClientEnvironment" />
+                        @if (!string.IsNullOrWhiteSpace(group.ClientEnvironment.UserAgent))
+                        {
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">@group.ClientEnvironment.UserAgent</MudText>
+                        }
+                    </MudStack>
                     <MudDataGrid T="ActiveCircuitSession" Items="@group.Circuits" ReadOnly="true" Hover="true" Dense="true" Striped="true">
                         <Columns>
                             <PropertyColumn Property="x => x.CurrentPath" Title="Current URL">

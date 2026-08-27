@@ -47,4 +47,9 @@ public class ActiveClientSessionSummary
     /// (for example <c>/developer/monitor</c>). Other tabs from the same browser are included.
     /// </summary>
     public bool IsAdminMonitorGroup { get; set; }
+
+    /// <summary>
+    /// Parsed browser/device environment for this browser client group.
+    /// </summary>
+    public SessionClientEnvironment ClientEnvironment { get; set; } = SessionClientEnvironment.Unknown;
 }

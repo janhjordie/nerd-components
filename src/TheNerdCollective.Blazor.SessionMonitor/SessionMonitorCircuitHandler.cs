@@ -35,8 +35,9 @@ public class SessionMonitorCircuitHandler : CircuitHandler
             ? null
             : httpContext.Request.Path.Value + httpContext.Request.QueryString;
         var clientId = SessionMonitorClientIdResolver.Resolve(httpContext, _options.ClientIdCookieName);
+        var clientEnvironment = SessionClientEnvironmentParser.Parse(httpContext);
 
-        _monitorService.OnCircuitOpened(circuit.Id, initialPath, clientId);
+        _monitorService.OnCircuitOpened(circuit.Id, initialPath, clientId, clientEnvironment);
         return Task.CompletedTask;
     }
 

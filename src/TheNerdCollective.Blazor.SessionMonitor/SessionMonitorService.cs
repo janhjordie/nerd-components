@@ -37,12 +37,17 @@ public class SessionMonitorService : ISessionMonitorService
         _instanceId = ResolveInstanceId(_options.InstanceIdOverride);
     }
 
-    internal void OnCircuitOpened(string circuitId, string? initialPath = null, string? clientId = null)
+    internal void OnCircuitOpened(
+        string circuitId,
+        string? initialPath = null,
+        string? clientId = null,
+        SessionClientEnvironment? clientEnvironment = null)
     {
         var session = new CircuitSession
         {
             CircuitId = circuitId,
             ClientId = clientId,
+            ClientEnvironment = clientEnvironment ?? SessionClientEnvironment.Unknown,
             StartedAt = DateTime.UtcNow,
             CurrentPath = initialPath,
             CurrentPathUpdatedAt = initialPath is null ? null : DateTime.UtcNow
@@ -233,7 +238,8 @@ public class SessionMonitorService : ISessionMonitorService
                         .Distinct()
                         .Count(),
                     Circuits = circuits,
-                    IsAdminMonitorGroup = IsAdminMonitorClientGroup(g, adminClientIds, prefixes)
+                    IsAdminMonitorGroup = IsAdminMonitorClientGroup(g, adminClientIds, prefixes),
+                    ClientEnvironment = ResolveGroupClientEnvironment(g)
                 };
             })
             .OrderByDescending(s => s.ActiveSessionCount)
@@ -513,13 +519,26 @@ public class SessionMonitorService : ISessionMonitorService
                 && SessionPathNormalizer.MatchesPathPrefix(session.CurrentPath, prefixes),
             IsAdminMonitorGroup = prefixes is not null
                 && adminClientIds is not null
-                && IsAdminMonitorClientGroup([session], adminClientIds, prefixes)
+                && IsAdminMonitorClientGroup([session], adminClientIds, prefixes),
+            ClientEnvironment = session.ClientEnvironment
         };
+
+    private static SessionClientEnvironment ResolveGroupClientEnvironment(IEnumerable<CircuitSession> groupSessions)
+    {
+        return groupSessions
+            .Select(s => s.ClientEnvironment)
+            .FirstOrDefault(env => !string.Equals(env.Browser, "Unknown", StringComparison.Ordinal)
+                || !string.Equals(env.Platform, "Unknown", StringComparison.Ordinal)
+                || env.IsAutomation)
+            ?? groupSessions.Select(s => s.ClientEnvironment).FirstOrDefault()
+            ?? SessionClientEnvironment.Unknown;
+    }
 
     private class CircuitSession
     {
         public string CircuitId { get; set; } = "";
         public string? ClientId { get; set; }
+        public SessionClientEnvironment ClientEnvironment { get; set; } = SessionClientEnvironment.Unknown;
         public DateTime StartedAt { get; set; }
         public DateTime? EndedAt { get; set; }
         public DateTime? DisconnectedAt { get; set; }

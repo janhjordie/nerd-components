@@ -51,16 +51,18 @@
                 {
                     <tr>
                         <td>
-                            <MudStack Row="true" Spacing="1" Class="align-center flex-wrap">
-                                <MudIcon Icon="@Icons.Material.Filled.Devices" Size="Size.Small" Color="Color.Primary" />
-                                <MudText Typo="Typo.body2">@summary.ClientLabel</MudText>
-                                @if (summary.IsAdminMonitorGroup)
-                                {
-                                    <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined"
-                                             Icon="@Icons.Material.Filled.AdminPanelSettings">
-                                        Admin
-                                    </MudChip>
-                                }
+                            <MudStack Spacing="1">
+                                <MudStack Row="true" Spacing="1" Class="align-center flex-wrap">
+                                    <MudText Typo="Typo.body2"><b>@summary.ClientLabel</b></MudText>
+                                    @if (summary.IsAdminMonitorGroup)
+                                    {
+                                        <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined"
+                                                 Icon="@Icons.Material.Filled.AdminPanelSettings">
+                                            Admin
+                                        </MudChip>
+                                    }
+                                </MudStack>
+                                <ClientEnvironmentChips Environment="@summary.ClientEnvironment" />
                             </MudStack>
                         </td>
                         <td><MudText Typo="Typo.body2"><b>@summary.ActiveSessionCount</b></MudText></td>
@@ -88,6 +90,13 @@
             @foreach (var group in _clientSummaries)
             {
                 <MudExpansionPanel Text="@GetPanelTitle(group)" Expanded="@(group.ActiveSessionCount <= 3)">
+                    <MudStack Spacing="2" Class="mb-2">
+                        <ClientEnvironmentChips Environment="@group.ClientEnvironment" />
+                        @if (!string.IsNullOrWhiteSpace(group.ClientEnvironment.UserAgent))
+                        {
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">@group.ClientEnvironment.UserAgent</MudText>
+                        }
+                    </MudStack>
                     <MudStack Spacing="1">
                         @foreach (var circuit in group.Circuits)
                         {

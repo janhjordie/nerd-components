@@ -1,0 +1,88 @@
+@using TheNerdCollective.Blazor.SessionMonitor
+@using MudBlazor
+
+@if (HasAnyChip)
+{
+    <MudStack Row="true" Spacing="1" Class="align-center flex-wrap">
+        @if (ShowBrowserChip)
+        {
+            <MudTooltip Text="@($"Browser: {Environment.Browser}")">
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Icon="@GetBrowserIcon()">
+                    @Environment.Browser
+                </MudChip>
+            </MudTooltip>
+        }
+        @if (ShowFormFactorChip)
+        {
+            <MudTooltip Text="@($"Size: {Environment.FormFactor}")">
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Icon="@GetFormFactorIcon()">
+                    @Environment.FormFactor
+                </MudChip>
+            </MudTooltip>
+        }
+        @if (ShowPlatformChip)
+        {
+            <MudTooltip Text="@($"Device: {Environment.Platform}")">
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Icon="@GetPlatformIcon()">
+                    @Environment.Platform
+                </MudChip>
+            </MudTooltip>
+        }
+        @if (Environment.IsAutomation)
+        {
+            <MudTooltip Text="@AutomationTooltip">
+                <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined"
+                         Icon="@Icons.Material.Filled.SmartToy">
+                    @(Environment.AutomationKind ?? "Automation")
+                </MudChip>
+            </MudTooltip>
+        }
+    </MudStack>
+}
+
+@code {
+    [Parameter] public SessionClientEnvironment Environment { get; set; } = SessionClientEnvironment.Unknown;
+
+    private bool ShowBrowserChip => !string.IsNullOrWhiteSpace(Environment.Browser)
+        && !string.Equals(Environment.Browser, "Unknown", StringComparison.Ordinal);
+
+    private bool ShowFormFactorChip => !string.IsNullOrWhiteSpace(Environment.FormFactor);
+
+    private bool ShowPlatformChip => !string.IsNullOrWhiteSpace(Environment.Platform)
+        && !string.Equals(Environment.Platform, "Unknown", StringComparison.Ordinal);
+
+    private bool HasAnyChip => ShowBrowserChip || ShowFormFactorChip || ShowPlatformChip || Environment.IsAutomation;
+
+    private string AutomationTooltip => string.IsNullOrWhiteSpace(Environment.UserAgent)
+        ? "Automated browser session"
+        : Environment.UserAgent!;
+
+    private string GetBrowserIcon()
+        => Environment.Browser switch
+        {
+            "Chrome" => Icons.Material.Filled.Language,
+            "Safari" => Icons.Material.Filled.TravelExplore,
+            "Firefox" => Icons.Material.Filled.LocalFireDepartment,
+            "Edge" => Icons.Material.Filled.Explore,
+            _ => Icons.Material.Filled.Public
+        };
+
+    private string GetFormFactorIcon()
+        => Environment.FormFactor switch
+        {
+            "Mobile" => Icons.Material.Filled.Smartphone,
+            "Tablet" => Icons.Material.Filled.Tablet,
+            _ => Icons.Material.Filled.Computer
+        };
+
+    private string GetPlatformIcon()
+        => Environment.Platform switch
+        {
+            "iOS" or "iPadOS" => Icons.Material.Filled.PhoneIphone,
+            "Android" => Icons.Material.Filled.PhoneAndroid,
+            "Windows" => Icons.Material.Filled.DesktopWindows,
+            "macOS" => Icons.Material.Filled.LaptopMac,
+            "Linux" or "ChromeOS" => Icons.Material.Filled.Terminal,
+            _ => Icons.Material.Filled.DevicesOther
+        };
+}

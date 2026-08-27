@@ -37,4 +37,9 @@ public class ActiveCircuitSession
   /// True when this circuit belongs to a browser group with an active admin monitor session.
   /// </summary>
   public bool IsAdminMonitorGroup { get; set; }
+
+  /// <summary>
+  /// Parsed browser/device environment captured when the circuit opened.
+  /// </summary>
+  public SessionClientEnvironment ClientEnvironment { get; set; } = SessionClientEnvironment.Unknown;
 }
