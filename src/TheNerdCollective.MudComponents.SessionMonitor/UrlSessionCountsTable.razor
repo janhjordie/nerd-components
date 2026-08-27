@@ -76,7 +76,7 @@
                     <CellTemplate>
                         <MudProgressLinear Color="Color.Primary" Rounded="true" Size="Size.Small"
                                            Value="@GetSharePercent(context.Item.ActiveSessionCount)" Class="my-2" />
-                        <MudText Typo="Typo.caption" Color="Color.Secondary">@GetSharePercent(context.Item.ActiveSessionCount):F0}%</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">@($"{GetSharePercent(context.Item.ActiveSessionCount):F0}%")</MudText>
                     </CellTemplate>
                 </PropertyColumn>
             </Columns>

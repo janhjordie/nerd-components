@@ -40,4 +40,10 @@ public class SessionMonitorOptions
     /// increment <see cref="SessionMetrics.TotalSessionsStarted"/>.
     /// </summary>
     public bool DeduplicateReloadStarts { get; set; } = true;
+
+    /// <summary>
+    /// URL path prefixes treated as admin session monitor routes. Circuits on these paths,
+    /// and other circuits from the same browser client, are excluded from deploy safety counts.
+    /// </summary>
+    public string[] AdminMonitorPathPrefixes { get; set; } = ["/developer/monitor"];
 }

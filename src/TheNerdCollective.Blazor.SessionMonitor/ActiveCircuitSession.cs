@@ -27,4 +27,14 @@ public class ActiveCircuitSession
   public DateTime StartedAt { get; set; }
 
   public bool IsDisconnected { get; set; }
+
+  /// <summary>
+  /// True when this circuit is on an admin monitor path (for example <c>/developer/monitor</c>).
+  /// </summary>
+  public bool IsOnAdminMonitorPath { get; set; }
+
+  /// <summary>
+  /// True when this circuit belongs to a browser group with an active admin monitor session.
+  /// </summary>
+  public bool IsAdminMonitorGroup { get; set; }
 }

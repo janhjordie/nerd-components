@@ -59,6 +59,12 @@
     public string Class { get; set; } = string.Empty;
 
     /// <summary>
+    /// When this value changes, the indicator refreshes (typically metrics timestamp from parent).
+    /// </summary>
+    [Parameter]
+    public DateTime RefreshToken { get; set; }
+
+    /// <summary>
     /// Event callback when safety status changes.
     /// </summary>
     [Parameter]
@@ -66,7 +72,7 @@
 
     private bool _lastSafeStatus = true;
 
-    protected override void OnInitialized()
+    protected override void OnParametersSet()
     {
         Refresh();
     }
@@ -76,8 +82,8 @@
     /// </summary>
     public void Refresh()
     {
-        var metrics = SessionMonitor.GetCurrentMetrics();
-        var isSafe = metrics.ActiveSessions <= MaxAllowedSessions;
+        var assessment = SessionMonitor.GetDeploymentSafety(MaxAllowedSessions);
+        var isSafe = assessment.CanDeploy;
 
         if (isSafe)
         {
@@ -90,7 +96,7 @@
             StatusColor = Color.Error;
             StatusIcon = Icons.Material.Filled.Warning;
             StatusText = ShowSessionCount 
-                ? $"{UnsafeText} ({metrics.ActiveSessions})"
+                ? $"{UnsafeText} ({assessment.NonAdminActiveSessions})"
                 : UnsafeText;
         }
 

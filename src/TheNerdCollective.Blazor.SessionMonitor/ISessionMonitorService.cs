@@ -55,6 +55,11 @@ public interface ISessionMonitorService
     /// <param name="windowMinutes">Length of deployment window in minutes.</param>
     /// <param name="lookbackHours">How far back to analyze (default 24 hours).</param>
     IEnumerable<DeploymentWindow> FindOptimalDeploymentWindows(int windowMinutes = 5, int lookbackHours = 24);
+
+    /// <summary>
+    /// Assess whether deployment is safe, excluding admin monitor browsers.
+    /// </summary>
+    DeploymentSafetyAssessment GetDeploymentSafety(int maxActiveSessions = 0);
 }
 
 /// <summary>

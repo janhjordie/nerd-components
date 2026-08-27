@@ -200,12 +200,16 @@ public class SessionMonitorService : ISessionMonitorService
         return _activeSessions.Values
             .OrderBy(s => SessionMonitorService.FormatClientLabel(s.ClientId), StringComparer.OrdinalIgnoreCase)
             .ThenByDescending(s => s.CurrentPathUpdatedAt ?? s.StartedAt)
-            .Select(MapToActiveCircuitSession)
+            .Select(s => MapToActiveCircuitSession(s))
             .ToList();
     }
 
     public IEnumerable<ActiveClientSessionSummary> GetActiveSessionsByClient()
     {
+        var prefixes = _options.AdminMonitorPathPrefixes ?? [];
+        var connected = _activeSessions.Values.Where(s => !s.DisconnectedAt.HasValue).ToList();
+        var adminClientIds = GetAdminClientIds(connected, prefixes);
+
         var summaries = _activeSessions.Values
             .GroupBy(s => string.IsNullOrWhiteSpace(s.ClientId)
                 ? ActiveClientSessionSummary.UnknownClientLabel
@@ -214,7 +218,7 @@ public class SessionMonitorService : ISessionMonitorService
             {
                 var circuits = g
                     .OrderByDescending(s => s.CurrentPathUpdatedAt ?? s.StartedAt)
-                    .Select(MapToActiveCircuitSession)
+                    .Select(s => MapToActiveCircuitSession(s, prefixes, adminClientIds))
                     .ToList();
 
                 return new ActiveClientSessionSummary
@@ -228,7 +232,8 @@ public class SessionMonitorService : ISessionMonitorService
                         .Select(s => SessionPathNormalizer.GroupKey(s.CurrentPath))
                         .Distinct()
                         .Count(),
-                    Circuits = circuits
+                    Circuits = circuits,
+                    IsAdminMonitorGroup = IsAdminMonitorClientGroup(g, adminClientIds, prefixes)
                 };
             })
             .OrderByDescending(s => s.ActiveSessionCount)
@@ -334,6 +339,69 @@ public class SessionMonitorService : ISessionMonitorService
             .Take(20);
     }
 
+    /// <inheritdoc />
+    public DeploymentSafetyAssessment GetDeploymentSafety(int maxActiveSessions = 0)
+    {
+        var connected = _activeSessions.Values
+            .Where(s => !s.DisconnectedAt.HasValue)
+            .ToList();
+
+        var prefixes = _options.AdminMonitorPathPrefixes ?? [];
+        var adminClientIds = GetAdminClientIds(connected, prefixes);
+
+        var adminMonitorSessions = connected.Count(s => IsExcludedForDeploySafety(s, adminClientIds, prefixes));
+        var nonAdminActiveSessions = connected.Count - adminMonitorSessions;
+
+        return new DeploymentSafetyAssessment
+        {
+            ActiveSessions = connected.Count,
+            NonAdminActiveSessions = nonAdminActiveSessions,
+            AdminMonitorSessions = adminMonitorSessions,
+            HasAdminMonitorSession = connected.Any(s => SessionPathNormalizer.MatchesPathPrefix(s.CurrentPath, prefixes)),
+            MaxActiveSessions = maxActiveSessions,
+            CanDeploy = nonAdminActiveSessions <= maxActiveSessions
+        };
+    }
+
+    private static HashSet<string> GetAdminClientIds(
+        IReadOnlyList<CircuitSession> connected,
+        IReadOnlyList<string> prefixes)
+    {
+        return connected
+            .Where(s => !string.IsNullOrWhiteSpace(s.ClientId)
+                && SessionPathNormalizer.MatchesPathPrefix(s.CurrentPath, prefixes))
+            .Select(s => s.ClientId!)
+            .ToHashSet(StringComparer.Ordinal);
+    }
+
+    private static bool IsAdminMonitorClientGroup(
+        IEnumerable<CircuitSession> groupSessions,
+        HashSet<string> adminClientIds,
+        IReadOnlyList<string> prefixes)
+    {
+        var clientId = groupSessions.Select(s => s.ClientId).FirstOrDefault(id => !string.IsNullOrWhiteSpace(id));
+        if (clientId is not null && adminClientIds.Contains(clientId))
+        {
+            return true;
+        }
+
+        return groupSessions.Any(s =>
+            !s.DisconnectedAt.HasValue && SessionPathNormalizer.MatchesPathPrefix(s.CurrentPath, prefixes));
+    }
+
+    private static bool IsExcludedForDeploySafety(
+        CircuitSession session,
+        HashSet<string> adminClientIds,
+        IReadOnlyList<string> prefixes)
+    {
+        if (SessionPathNormalizer.MatchesPathPrefix(session.CurrentPath, prefixes))
+        {
+            return true;
+        }
+
+        return session.ClientId is not null && adminClientIds.Contains(session.ClientId);
+    }
+
     private void RecordSnapshot()
     {
         var now = DateTime.UtcNow;
@@ -428,7 +496,10 @@ public class SessionMonitorService : ISessionMonitorService
         return clientId.Length <= 8 ? clientId : clientId[..8];
     }
 
-    private static ActiveCircuitSession MapToActiveCircuitSession(CircuitSession session)
+    private static ActiveCircuitSession MapToActiveCircuitSession(
+        CircuitSession session,
+        IReadOnlyList<string>? prefixes = null,
+        HashSet<string>? adminClientIds = null)
         => new()
         {
             CircuitId = session.CircuitId,
@@ -437,7 +508,12 @@ public class SessionMonitorService : ISessionMonitorService
             CurrentPath = session.CurrentPath,
             CurrentPathUpdatedAt = session.CurrentPathUpdatedAt,
             StartedAt = session.StartedAt,
-            IsDisconnected = session.DisconnectedAt.HasValue
+            IsDisconnected = session.DisconnectedAt.HasValue,
+            IsOnAdminMonitorPath = prefixes is not null
+                && SessionPathNormalizer.MatchesPathPrefix(session.CurrentPath, prefixes),
+            IsAdminMonitorGroup = prefixes is not null
+                && adminClientIds is not null
+                && IsAdminMonitorClientGroup([session], adminClientIds, prefixes)
         };
 
     private class CircuitSession

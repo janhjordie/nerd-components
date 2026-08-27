@@ -41,4 +41,10 @@ public class ActiveClientSessionSummary
     /// Active circuits belonging to this browser client.
     /// </summary>
     public IReadOnlyList<ActiveCircuitSession> Circuits { get; set; } = [];
+
+    /// <summary>
+    /// True when this browser has a connected circuit on an admin monitor path
+    /// (for example <c>/developer/monitor</c>). Other tabs from the same browser are included.
+    /// </summary>
+    public bool IsAdminMonitorGroup { get; set; }
 }

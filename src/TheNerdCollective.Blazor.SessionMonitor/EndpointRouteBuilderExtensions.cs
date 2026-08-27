@@ -121,13 +121,16 @@ public static class EndpointRouteBuilderExtensions
             ISessionMonitorService monitor,
             int maxActiveSessions = 0) =>
         {
+            var assessment = monitor.GetDeploymentSafety(maxActiveSessions);
             var metrics = monitor.GetCurrentMetrics();
-            var canDeploy = metrics.ActiveSessions <= maxActiveSessions;
 
             return Results.Json(new
             {
-                canDeploy,
-                currentActiveSessions = metrics.ActiveSessions,
+                canDeploy = assessment.CanDeploy,
+                currentActiveSessions = assessment.ActiveSessions,
+                nonAdminActiveSessions = assessment.NonAdminActiveSessions,
+                adminMonitorSessions = assessment.AdminMonitorSessions,
+                hasAdminMonitorSession = assessment.HasAdminMonitorSession,
                 disconnectedSessions = metrics.DisconnectedSessions,
                 threshold = maxActiveSessions,
                 timestamp = DateTime.UtcNow,

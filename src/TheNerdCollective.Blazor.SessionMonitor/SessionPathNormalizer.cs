@@ -16,4 +16,29 @@ internal static class SessionPathNormalizer
     {
         return string.IsNullOrWhiteSpace(path) ? ActivePathSessionSummary.UnknownPathLabel : Normalize(path);
     }
+
+    internal static bool MatchesPathPrefix(string? path, IReadOnlyList<string> prefixes)
+    {
+        if (string.IsNullOrWhiteSpace(path) || prefixes.Count == 0)
+        {
+            return false;
+        }
+
+        var normalized = GroupKey(path);
+        foreach (var prefix in prefixes)
+        {
+            if (string.IsNullOrWhiteSpace(prefix))
+            {
+                continue;
+            }
+
+            var normalizedPrefix = prefix.StartsWith('/') ? prefix : "/" + prefix;
+            if (normalized.StartsWith(normalizedPrefix, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }

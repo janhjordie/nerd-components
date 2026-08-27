@@ -51,9 +51,16 @@
                 {
                     <tr>
                         <td>
-                            <MudStack Row="true" Spacing="1" Class="align-center">
+                            <MudStack Row="true" Spacing="1" Class="align-center flex-wrap">
                                 <MudIcon Icon="@Icons.Material.Filled.Devices" Size="Size.Small" Color="Color.Primary" />
                                 <MudText Typo="Typo.body2">@summary.ClientLabel</MudText>
+                                @if (summary.IsAdminMonitorGroup)
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined"
+                                             Icon="@Icons.Material.Filled.AdminPanelSettings">
+                                        Admin
+                                    </MudChip>
+                                }
                             </MudStack>
                         </td>
                         <td><MudText Typo="Typo.body2"><b>@summary.ActiveSessionCount</b></MudText></td>
@@ -70,7 +77,7 @@
                             }
                         </td>
                         <td>
-                            <MudText Typo="Typo.caption" Color="Color.Secondary">@GetSharePercent(summary.ActiveSessionCount):F0}%</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">@($"{GetSharePercent(summary.ActiveSessionCount):F0}%")</MudText>
                         </td>
                     </tr>
                 }
@@ -88,6 +95,10 @@
                                 <MudStack Row="true" Spacing="2" Class="align-center flex-wrap">
                                     <MudIcon Icon="@Icons.Material.Filled.Lan" Size="Size.Small" Color="@(circuit.IsDisconnected ? Color.Warning : Color.Success)" />
                                     <MudText Typo="Typo.body2">@(circuit.CurrentPath ?? "—")</MudText>
+                                    @if (circuit.IsOnAdminMonitorPath)
+                                    {
+                                        <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Text">Monitor</MudChip>
+                                    }
                                     <MudSpacer />
                                     <MudText Typo="Typo.caption" Color="Color.Secondary">@circuit.CircuitId</MudText>
                                     @if (circuit.IsDisconnected)
@@ -147,5 +158,8 @@
     }
 
     private static string GetPanelTitle(ActiveClientSessionSummary group)
-        => $"{group.ClientLabel} · {group.ActiveSessionCount} circuits · {group.DistinctPathCount} URLs";
+    {
+        var adminSuffix = group.IsAdminMonitorGroup ? " · Admin" : "";
+        return $"{group.ClientLabel} · {group.ActiveSessionCount} circuits · {group.DistinctPathCount} URLs{adminSuffix}";
+    }
 }

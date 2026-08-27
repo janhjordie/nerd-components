@@ -25,6 +25,13 @@
             @foreach (var group in _clientGroups)
             {
                 <MudExpansionPanel Text="@GetPanelTitle(group)" Expanded="true">
+                    @if (group.IsAdminMonitorGroup)
+                    {
+                        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mb-2"
+                                  Icon="@Icons.Material.Filled.AdminPanelSettings">
+                            Admin browser — sessions from this group are excluded from deploy safety counts while the monitor tab is open.
+                        </MudAlert>
+                    }
                     <MudDataGrid T="ActiveCircuitSession" Items="@group.Circuits" ReadOnly="true" Hover="true" Dense="true" Striped="true">
                         <Columns>
                             <PropertyColumn Property="x => x.CurrentPath" Title="Current URL">
@@ -35,7 +42,13 @@
                                     }
                                     else
                                     {
-                                        <MudText Typo="Typo.body2">@context.Item.CurrentPath</MudText>
+                                        <MudStack Row="true" Spacing="1" Class="align-center flex-wrap">
+                                            <MudText Typo="Typo.body2">@context.Item.CurrentPath</MudText>
+                                            @if (context.Item.IsOnAdminMonitorPath)
+                                            {
+                                                <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Text">Monitor</MudChip>
+                                            }
+                                        </MudStack>
                                     }
                                 </CellTemplate>
                             </PropertyColumn>
@@ -114,7 +127,8 @@
         var label = string.IsNullOrWhiteSpace(group.ClientLabel)
             ? ActiveClientSessionSummary.UnknownClientLabel
             : group.ClientLabel;
+        var adminSuffix = group.IsAdminMonitorGroup ? " · Admin" : "";
 
-        return $"{label} · {group.ActiveSessionCount} circuits · {group.ConnectedCount} connected";
+        return $"{label} · {group.ActiveSessionCount} circuits · {group.ConnectedCount} connected{adminSuffix}";
     }
 }

@@ -25,7 +25,7 @@
                         Summary only
                     </MudChip>
                 }
-                <DeploymentSafetyIndicator />
+                <DeploymentSafetyIndicator RefreshToken="@_metrics.Timestamp" />
                 <MudChip T="string" Color="Color.Default" Size="Size.Small" Variant="Variant.Outlined"
                          Icon="@Icons.Material.Filled.Update">
                     @(_autoRefresh ? $"Live ({RefreshIntervalSeconds}s)" : "Paused")

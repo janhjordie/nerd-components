@@ -205,6 +205,79 @@ public sealed class SessionMonitorServiceTests
         Assert.Equal("abcdef12", session.ClientLabel);
     }
 
+    [Fact]
+    public void GetDeploymentSafety_excludes_admin_browser_with_monitor_and_other_tabs()
+    {
+        const string adminClientId = "admin-client-1234567890";
+        var monitor = CreateMonitor();
+
+        monitor.OnCircuitOpened("admin-monitor", "/developer/monitor", adminClientId);
+        monitor.OnCircuitOpened("admin-events", "/events", adminClientId);
+        monitor.OnCircuitOpened("customer", "/");
+
+        var assessment = monitor.GetDeploymentSafety(maxActiveSessions: 0);
+
+        Assert.Equal(3, assessment.ActiveSessions);
+        Assert.Equal(1, assessment.NonAdminActiveSessions);
+        Assert.Equal(2, assessment.AdminMonitorSessions);
+        Assert.True(assessment.HasAdminMonitorSession);
+        Assert.False(assessment.CanDeploy);
+    }
+
+    [Fact]
+    public void GetDeploymentSafety_safe_when_only_admin_browser_is_active()
+    {
+        const string adminClientId = "admin-client-1234567890";
+        var monitor = CreateMonitor();
+
+        monitor.OnCircuitOpened("admin-monitor", "/developer/monitor", adminClientId);
+        monitor.OnCircuitOpened("admin-events", "/events", adminClientId);
+
+        var assessment = monitor.GetDeploymentSafety(maxActiveSessions: 0);
+
+        Assert.Equal(2, assessment.ActiveSessions);
+        Assert.Equal(0, assessment.NonAdminActiveSessions);
+        Assert.True(assessment.CanDeploy);
+    }
+
+    [Fact]
+    public void GetDeploymentSafety_uses_configured_monitor_path_prefix()
+    {
+        var options = Options.Create(new SessionMonitorOptions
+        {
+            AdminMonitorPathPrefixes = ["/admin/live-monitor"]
+        });
+        var monitor = new SessionMonitorService(options);
+
+        monitor.OnCircuitOpened("admin-monitor", "/admin/live-monitor", "admin-client");
+        monitor.OnCircuitOpened("admin-other", "/checkout", "admin-client");
+
+        var assessment = monitor.GetDeploymentSafety(maxActiveSessions: 0);
+
+        Assert.Equal(0, assessment.NonAdminActiveSessions);
+        Assert.True(assessment.CanDeploy);
+    }
+
+    [Fact]
+    public void GetActiveSessionsByClient_marks_admin_browser_group()
+    {
+        const string adminClientId = "admin-client-1234567890";
+        var monitor = CreateMonitor();
+
+        monitor.OnCircuitOpened("admin-monitor", "/developer/monitor", adminClientId);
+        monitor.OnCircuitOpened("admin-events", "/events", adminClientId);
+        monitor.OnCircuitOpened("customer", "/", "customer-client");
+
+        var summaries = monitor.GetActiveSessionsByClient().ToList();
+        var admin = summaries.Single(s => s.ClientId == adminClientId);
+        var customer = summaries.Single(s => s.ClientId == "customer-client");
+
+        Assert.True(admin.IsAdminMonitorGroup);
+        Assert.False(customer.IsAdminMonitorGroup);
+        Assert.True(admin.Circuits.Single(c => c.CurrentPath == "/developer/monitor").IsOnAdminMonitorPath);
+        Assert.True(admin.Circuits.Single(c => c.CurrentPath == "/events").IsAdminMonitorGroup);
+    }
+
     private static SessionMonitorService CreateMonitor()
         => new(Options.Create(new SessionMonitorOptions()));
 }
