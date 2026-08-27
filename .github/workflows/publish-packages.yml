@@ -77,12 +77,10 @@ jobs:
           add_package() {
             local pkg_name="$1"
             local pkg_path="$2"
-            local entry
-            entry=$(jq -nc --arg name "$pkg_name" --arg path "$pkg_path" '{name:$name,path:$path}')
             if [ "$PACKAGES_TO_BUILD" = "[]" ]; then
-              PACKAGES_TO_BUILD="$entry"
+              PACKAGES_TO_BUILD=$(jq -nc --arg name "$pkg_name" --arg path "$pkg_path" '[{name:$name,path:$path}]')
             elif ! echo "$PACKAGES_TO_BUILD" | jq -e --arg name "$pkg_name" 'any(.name == $name)' >/dev/null; then
-              PACKAGES_TO_BUILD=$(echo "$PACKAGES_TO_BUILD" | jq -c ". + [$entry]")
+              PACKAGES_TO_BUILD=$(echo "$PACKAGES_TO_BUILD" | jq -c --arg name "$pkg_name" --arg path "$pkg_path" '. + [{name:$name,path:$path}]')
             fi
           }
 
