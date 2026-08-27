@@ -43,7 +43,7 @@
 </MudPaper>
 
 <MudPaper Class="pa-3" Outlined="true">
-    <MudText Typo="Typo.subtitle2" Class="mb-2">Buttons & chips</MudText>
+    <MudText Typo="Typo.subtitle2" Class="mb-2">Buttons &amp; chips</MudText>
     <MudStack Spacing="2">
         <MudStack Row="true" Spacing="1" Class="flex-wrap gap-1">
             <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary">Primary</MudButton>
@@ -67,11 +67,11 @@
 {
     <MudText Typo="Typo.subtitle2" Class="mb-2 mt-4">Palette pairs</MudText>
     <MudStack Spacing="2">
-        @foreach (var pair in GetColorPairs())
+        @foreach (var colorPair in GetColorPairs())
         {
             <MudPaper Outlined="true" Class="pa-2">
-                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1">@pair.Label</MudText>
-                <div style="@pair.Style">Sample text</div>
+                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1">@colorPair.Label</MudText>
+                <div style="@(colorPair.Style)">Sample text</div>
             </MudPaper>
         }
     </MudStack>

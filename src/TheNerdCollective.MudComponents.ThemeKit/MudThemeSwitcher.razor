@@ -5,8 +5,8 @@
 @if (Catalog.All.Count > 0 && (AlwaysVisible || Catalog.All.Count > 1))
 {
     <MudSelect T="string"
-               @key="@ThemeRefreshKey"
-               Value="@ThemeState.CurrentThemeId"
+               @key="@(ThemeRefreshKey)"
+               Value="@(ThemeState.CurrentThemeId)"
                ValueChanged="OnThemeChanged"
                Label="Theme"
                Variant="@(OnAppBar ? Variant.Text : Variant.Outlined)"
@@ -15,10 +15,10 @@
                Class="@SelectClass"
                Style="min-width: 220px;"
                Disabled="@(Catalog.All.Count == 1)">
-        @foreach (var theme in Catalog.All)
+        @foreach (var catalogTheme in Catalog.All)
         {
-            var hasSession = ShowSessionMarkers && _sessionThemeIds.Contains(theme.Id);
-            <MudSelectItem Value="@theme.Id">@FormatThemeLabel(theme, hasSession)</MudSelectItem>
+            var hasSession = ShowSessionMarkers && _sessionThemeIds.Contains(catalogTheme.Id);
+            <MudSelectItem Value="@(catalogTheme.Id)">@FormatThemeLabel(catalogTheme, hasSession)</MudSelectItem>
         }
     </MudSelect>
 }

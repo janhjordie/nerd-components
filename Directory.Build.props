@@ -1,9 +1,7 @@
 <Project>
+  <!-- SDK 10.0.400: Razor source generator has false RZ1021 on markup inside @if blocks
+       (dotnet/razor#13184). Legacy compiler is stable for these component libraries. -->
   <PropertyGroup>
-    <GenerateDocumentationFile>false</GenerateDocumentationFile>
-    <NerdBrandPackageVersion>2.0.0</NerdBrandPackageVersion>
-  </PropertyGroup>
-  <PropertyGroup Condition="$([System.String]::Copy('$(MSBuildProjectName)').StartsWith('TheNerdCollective.Brand.'))">
-    <Version>$(NerdBrandPackageVersion)</Version>
+    <UseRazorSourceGenerator>false</UseRazorSourceGenerator>
   </PropertyGroup>
 </Project>

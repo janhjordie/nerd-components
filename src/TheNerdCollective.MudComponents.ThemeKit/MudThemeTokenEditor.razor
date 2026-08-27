@@ -55,7 +55,7 @@
             <MudItem xs="12" sm="6" md="2">
                 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
                     <MudSwitch T="bool"
-                               Value="@ThemeState.IsDarkMode"
+                               Value="@(ThemeState.IsDarkMode)"
                                ValueChanged="v => ThemeState.SetDarkMode(v)"
                                Color="Color.Primary"
                                Label="Dark mode preview" />
@@ -125,7 +125,7 @@
 
     <MudGrid Spacing="4">
         <MudItem xs="12" lg="8">
-            <div @key="@ThemeState.CurrentThemeId">
+            <div @key="@(ThemeState.CurrentThemeId)">
                 @if (!HasVisibleTokens())
                 {
                     <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
@@ -173,7 +173,7 @@
                                                 continue;
                                             }
 
-                                            <MudItem xs="12" sm="@ThemeTokenEditorLayout.GetGridColumns(row.TokenIds.Length)">
+                                            <MudItem xs="12" sm="@(ThemeTokenEditorLayout.GetGridColumns(row.TokenIds.Length))">
                                                 <MudThemeTokenField Token="@token" />
                                             </MudItem>
                                         }
@@ -297,9 +297,9 @@
                    Variant="Variant.Outlined"
                    Margin="Margin.Dense"
                    FullWidth="@true">
-            @foreach (var theme in Catalog.All)
+            @foreach (var catalogTheme in Catalog.All)
             {
-                <MudSelectItem Value="@theme.Id">@theme.DisplayName</MudSelectItem>
+                <MudSelectItem Value="@(catalogTheme.Id)">@(catalogTheme.DisplayName)</MudSelectItem>
             }
         </MudSelect>
     </DialogContent>
@@ -331,7 +331,7 @@
         <MudButton Color="Color.Error"
                    Variant="Variant.Filled"
                    OnClick="DeleteCurrentThemeAsync">
-            Slet @ThemeState.CurrentThemeId
+            Slet @(ThemeState.CurrentThemeId)
         </MudButton>
     </DialogActions>
 </MudDialog>

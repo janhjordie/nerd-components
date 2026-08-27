@@ -4,7 +4,7 @@
 
 @if (_ready)
 {
-    <MudThemeProvider Theme="@ThemeState.CurrentTheme" IsDarkMode="@ThemeState.IsDarkMode" />
+    <MudThemeProvider Theme="_currentTheme" IsDarkMode="_isDarkMode" />
     @ChildContent
 }
 
@@ -14,11 +14,14 @@
 
     private bool _ready;
     private bool _scriptLoaded;
+    private MudBlazor.MudTheme _currentTheme = new();
+    private bool _isDarkMode;
 
     protected override void OnInitialized()
     {
         ThemeState.Changed += OnThemeStateChanged;
         _ready = ThemeState.IsInitialized;
+        SyncThemeFromState();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -34,11 +37,22 @@
         }
 
         await EnsureScriptLoadedAsync();
+        SyncThemeFromState();
         _ready = true;
         await InvokeAsync(StateHasChanged);
     }
 
-    private void OnThemeStateChanged() => InvokeAsync(StateHasChanged);
+    private void OnThemeStateChanged()
+    {
+        SyncThemeFromState();
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void SyncThemeFromState()
+    {
+        _currentTheme = ThemeState.CurrentTheme;
+        _isDarkMode = ThemeState.IsDarkMode;
+    }
 
     private async Task EnsureScriptLoadedAsync()
     {

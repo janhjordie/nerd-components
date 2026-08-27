@@ -14,21 +14,20 @@
         </div>
     }
 
-    <div id="@_elementId" class="@EditorCssClass"></div>
-
-    @if (_isHtmlMode)
-    {
-        <MudTextField T="string"
-                      Value="@_sourceValue"
-                      ValueChanged="@OnSourceValueChangedAsync"
-                      Label="HTML"
-                      Placeholder="Edit raw HTML"
-                      Variant="Variant.Outlined"
-                      Margin="Margin.Dense"
-                      Lines="12"
-                      Immediate="true"
-                      Disabled="@ReadOnly"
-                      Class="mud-quill-editor-source" />
-    }
+    <div id="@_elementId" class="@(EditorCssClass)"></div>
 </div>
 
+@if (_isHtmlMode)
+{
+    <MudTextField T="string"
+                  Value="@_sourceValue"
+                  ValueChanged="@OnSourceValueChangedAsync"
+                  Label="HTML"
+                  Placeholder="Edit raw HTML"
+                  Variant="Variant.Outlined"
+                  Margin="Margin.Dense"
+                  Lines="12"
+                  Immediate="true"
+                  Disabled="@ReadOnly"
+                  Class="mud-quill-editor-source" />
+}
