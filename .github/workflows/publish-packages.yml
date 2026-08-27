@@ -4,19 +4,16 @@ on:
   push:
     branches:
       - main
-    paths:
-      - 'src/**/*.csproj'
-      - 'src/**/*.cs'
-      - 'src/**/*.razor'
-      - 'src/**/README.md'
-      - 'tests/**/*.csproj'
-      - 'tests/**/*.cs'
-      - '**/*.sln'
-      - '.github/workflows/publish-packages.yml'
   workflow_dispatch:
+    inputs:
+      publish_all:
+        description: Publish all packages (ignore change detection)
+        type: boolean
+        default: false
 
 permissions:
   contents: write
+  workflows: write
   id-token: write
 
 jobs:
@@ -32,11 +29,11 @@ jobs:
 
       - name: Detect changed packages
         id: filter
+        env:
+          PUBLISH_ALL: ${{ github.event_name == 'workflow_dispatch' && inputs.publish_all == 'true' }}
         run: |
-          # Get list of changed files
-          CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD)
-          
-          # Define package directories
+          set -euo pipefail
+
           declare -A PACKAGES=(
             ["TheNerdCollective.Services"]="src/TheNerdCollective.Services"
             ["TheNerdCollective.Services.BlazorServer"]="src/TheNerdCollective.Services.BlazorServer"
@@ -45,6 +42,7 @@ jobs:
             ["TheNerdCollective.Blazor.Reconnect"]="src/TheNerdCollective.Blazor.Reconnect"
             ["TheNerdCollective.Blazor.VersionMonitor"]="src/TheNerdCollective.Blazor.VersionMonitor"
             ["TheNerdCollective.Blazor.SessionMonitor"]="src/TheNerdCollective.Blazor.SessionMonitor"
+            ["TheNerdCollective.Blazor.ThemeKit"]="src/TheNerdCollective.Blazor.ThemeKit"
             ["TheNerdCollective.Blazor.Observability"]="src/TheNerdCollective.Blazor.Observability"
             ["TheNerdCollective.Blazor.Observability.SigNoz"]="src/TheNerdCollective.Blazor.Observability.SigNoz"
             ["TheNerdCollective.Helpers"]="src/TheNerdCollective.Helpers"
@@ -57,6 +55,7 @@ jobs:
             ["TheNerdCollective.MudComponents.MudSwiper"]="src/TheNerdCollective.MudComponents.MudSwiper"
             ["TheNerdCollective.MudComponents.HarvestTimesheet"]="src/TheNerdCollective.MudComponents.HarvestTimesheet"
             ["TheNerdCollective.MudComponents.SessionMonitor"]="src/TheNerdCollective.MudComponents.SessionMonitor"
+            ["TheNerdCollective.MudComponents.ThemeKit"]="src/TheNerdCollective.MudComponents.ThemeKit"
             ["TheNerdCollective.MudComponents.ObservabilityDashboard"]="src/TheNerdCollective.MudComponents.ObservabilityDashboard"
             ["TheNerdCollective.Blazor.ReCaptcha"]="src/TheNerdCollective.Blazor.ReCaptcha"
             ["TheNerdCollective.Blazor.FeatureFeedback"]="src/TheNerdCollective.Blazor.FeatureFeedback"
@@ -75,27 +74,56 @@ jobs:
             ["TheNerdCollective.Brand.Demo"]="src/TheNerdCollective.Brand.Demo"
             ["TheNerdCollective.Brand.Dryk"]="src/TheNerdCollective.Brand.Dryk"
           )
-          
-          # Detect which packages changed
-          PACKAGES_TO_BUILD="[]"
-          for pkg_name in "${!PACKAGES[@]}"; do
-            pkg_path="${PACKAGES[$pkg_name]}"
-            if echo "$CHANGED_FILES" | grep -q "^$pkg_path/"; then
-              PACKAGES_TO_BUILD=$(echo "$PACKAGES_TO_BUILD" | jq -c ". += [{\"name\": \"$pkg_name\", \"path\": \"$pkg_path\"}]")
+
+          add_package() {
+            local pkg_name="$1"
+            local pkg_path="$2"
+            local entry
+            entry=$(jq -nc --arg name "$pkg_name" --arg path "$pkg_path" '{name:$name,path:$path}')
+            if [ "$PACKAGES_TO_BUILD" = "[]" ]; then
+              PACKAGES_TO_BUILD="$entry"
+            elif ! echo "$PACKAGES_TO_BUILD" | jq -e --arg name "$pkg_name" 'any(.name == $name)' >/dev/null; then
+              PACKAGES_TO_BUILD=$(echo "$PACKAGES_TO_BUILD" | jq -c ". + [$entry]")
             fi
-          done
-          
-          # If workflow itself changed, build all packages
-          if echo "$CHANGED_FILES" | grep -q "^.github/workflows/publish-packages.yml"; then
-            echo "Workflow changed - building all packages"
+          }
+
+          build_all_packages() {
             PACKAGES_TO_BUILD="[]"
             for pkg_name in "${!PACKAGES[@]}"; do
-              pkg_path="${PACKAGES[$pkg_name]}"
-              PACKAGES_TO_BUILD=$(echo "$PACKAGES_TO_BUILD" | jq -c ". += [{\"name\": \"$pkg_name\", \"path\": \"$pkg_path\"}]")
+              add_package "$pkg_name" "${PACKAGES[$pkg_name]}"
             done
+          }
+
+          PACKAGES_TO_BUILD="[]"
+
+          if [ "$PUBLISH_ALL" = "true" ]; then
+            echo "Manual publish_all requested - building all packages"
+            build_all_packages
+          else
+            CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD || true)
+            echo "Changed files:"
+            echo "$CHANGED_FILES"
+
+            for pkg_name in "${!PACKAGES[@]}"; do
+              pkg_path="${PACKAGES[$pkg_name]}"
+              if echo "$CHANGED_FILES" | grep -q "^${pkg_path}/"; then
+                add_package "$pkg_name" "$pkg_path"
+              fi
+
+              for test_dir in "tests/${pkg_name}.Tests" "tests/${pkg_name}.IntegrationTests"; do
+                if echo "$CHANGED_FILES" | grep -q "^${test_dir}/"; then
+                  add_package "$pkg_name" "$pkg_path"
+                fi
+              done
+            done
+
+            if echo "$CHANGED_FILES" | grep -q "^\.github/workflows/publish-packages.yml"; then
+              echo "Publish workflow changed - building all packages"
+              build_all_packages
+            fi
           fi
-          
-          echo "packages=$PACKAGES_TO_BUILD" >> $GITHUB_OUTPUT
+
+          echo "packages=$PACKAGES_TO_BUILD" >> "$GITHUB_OUTPUT"
           echo "Packages to build: $PACKAGES_TO_BUILD"
 
   publish:
@@ -107,7 +135,7 @@ jobs:
       matrix:
         package: ${{ fromJson(needs.detect-changes.outputs.packages) }}
       fail-fast: false
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -154,6 +182,7 @@ jobs:
           done
 
       - name: Create Git Tag
+        continue-on-error: true
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
