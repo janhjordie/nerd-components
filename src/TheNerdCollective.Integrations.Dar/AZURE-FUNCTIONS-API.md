@@ -76,7 +76,7 @@ Autocomplete bruger `q` (min. 2 tegn).
 ```bash
 mkdir MyDarApi
 cd MyDarApi
-func init --worker-runtime dotnet-isolated --target-framework net8.0
+func init --worker-runtime dotnet-isolated --target-framework net10.0
 dotnet new func --name MyDarApi
 dotnet add package TheNerdCollective.Integrations.Dar
 dotnet add package Microsoft.Azure.Functions.Worker

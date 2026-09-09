@@ -5,8 +5,8 @@
 This repo (`TheNerdCollective.Components`) is a **.NET 10** monorepo of ~25 Blazor/MudBlazor NuGet libraries plus a couple of runnable Blazor Server host apps. There is no database or long-running backend service; the only "services" are the demo/test host apps and some external Danish-government APIs used by the `Integrations.Dar` package.
 
 ### Toolchain / environment
-- The .NET 10 SDK is installed at `~/.dotnet` (not via the system package manager). `~/.bashrc` already puts it on `PATH` and sets `DOTNET_ROOT`, so interactive shells get `dotnet` automatically. Non-interactive scripts that don't source `.bashrc` should call `"$HOME/.dotnet/dotnet"` or export `PATH="$HOME/.dotnet:$PATH"` first.
-- The update script runs `dotnet restore TheNerdCollective.Components.sln` (and guard-installs the SDK if `~/.dotnet` is missing). Standard build/test/run commands are in `README.md` and `CONTRIBUTING.md`.
+- The repo pins SDK `10.0.400` in `global.json`. On this macOS host the SDK is installed at `/usr/local/share/dotnet`; non-interactive scripts should export `DOTNET_ROOT=/usr/local/share/dotnet` and prepend `/usr/local/share/dotnet` to `PATH` when the shell resolves an older SDK.
+- Run `dotnet restore TheNerdCollective.Components.sln` after selecting the pinned SDK. Standard build/test/run commands are in `README.md` and `CONTRIBUTING.md`.
 
 ### Build / test / run (see CONTRIBUTING.md for the canonical list)
 - Build: `dotnet build TheNerdCollective.Components.sln`
