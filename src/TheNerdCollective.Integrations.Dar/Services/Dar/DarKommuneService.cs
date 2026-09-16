@@ -162,6 +162,20 @@ public sealed class DarKommuneService
             .ConfigureAwait(false);
         if (graphQlKommune is not null)
         {
+            if (_dagiOptions.EnableDawaFallback)
+            {
+                var dawaKommune = await _dawaClient.FindByWgs84Async(latitude, longitude, cancellationToken)
+                    .ConfigureAwait(false);
+                if (dawaKommune is not null
+                    && !string.Equals(
+                        graphQlKommune.Kommunekode,
+                        dawaKommune.Kommunekode,
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    return dawaKommune;
+                }
+            }
+
             return graphQlKommune;
         }
 

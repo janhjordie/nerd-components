@@ -917,7 +917,13 @@ Kræver whitelisted IP — ellers springes testen over ved `DAF-AUTH-0005`.
 
 ## Versionering
 
-**Nuværende version:** `1.7.0`
+**Nuværende version:** `1.7.1`
+
+### 1.7.1 — DAGI datakvalitet (DN-Turmodul)
+
+- `Kommune.FindByCoordinatesAsync` — ved `EnableDawaFallback` og uenighed mellem DAGI GraphQL og DAWA reverse, foretrækkes DAWA (fx København 0101 vs forkert 0173)
+- `Kommune.GetAllAsync` / enrichment — `visueltcenter` fra DAWA når DAGI-geometri mangler repræsentativt punkt
+- `DarDawaMigrationReporter` — nye probes for DAGI forkert/ufærdig (`DagiWrongNotEmpty`, `DagiIncomplete`, `DAGI.VisualCenterCoverage`)
 
 ### 1.7.0 — Geografi (DN-Turmodul)
 

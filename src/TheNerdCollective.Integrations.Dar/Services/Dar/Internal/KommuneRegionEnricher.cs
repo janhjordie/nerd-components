@@ -31,7 +31,8 @@ internal static class KommuneRegionEnricher
                     TryResolveRegion(regionById, graph.RegionLokalid),
                     TryResolveDawa(dawaByCode, graph.Kommunekode));
 
-                return ApplyRepresentativePoint(enriched, graph.Geometri);
+                enriched = ApplyRepresentativePoint(enriched, graph.Geometri);
+                return ApplyRepresentativePointFromDawa(enriched, TryResolveDawa(dawaByCode, graph.Kommunekode));
             })
             .OrderBy(k => k.Navn, StringComparer.CurrentCultureIgnoreCase)
             .ToList();
@@ -51,10 +52,14 @@ internal static class KommuneRegionEnricher
         var dawaByCode = BuildKommuneLookup(dawaKommuner);
 
         return kommuner
-            .Select(kommune => ApplyRegion(
-                kommune,
-                region: null,
-                TryResolveDawa(dawaByCode, kommune.Kommunekode)))
+            .Select(kommune =>
+            {
+                var enriched = ApplyRegion(
+                    kommune,
+                    region: null,
+                    TryResolveDawa(dawaByCode, kommune.Kommunekode));
+                return ApplyRepresentativePointFromDawa(enriched, TryResolveDawa(dawaByCode, kommune.Kommunekode));
+            })
             .OrderBy(k => k.Navn, StringComparer.CurrentCultureIgnoreCase)
             .ToList();
     }
@@ -161,6 +166,25 @@ internal static class KommuneRegionEnricher
         {
             RepræsentativPunktLatitude = centroid.Value.Latitude,
             RepræsentativPunktLongitude = centroid.Value.Longitude
+        };
+    }
+
+    private static KommuneDto ApplyRepresentativePointFromDawa(KommuneDto kommune, KommuneDto? dawa)
+    {
+        if (kommune.RepræsentativPunktLatitude is not null && kommune.RepræsentativPunktLongitude is not null)
+        {
+            return kommune;
+        }
+
+        if (dawa?.RepræsentativPunktLatitude is not double latitude || dawa.RepræsentativPunktLongitude is not double longitude)
+        {
+            return kommune;
+        }
+
+        return kommune with
+        {
+            RepræsentativPunktLatitude = latitude,
+            RepræsentativPunktLongitude = longitude
         };
     }
 }

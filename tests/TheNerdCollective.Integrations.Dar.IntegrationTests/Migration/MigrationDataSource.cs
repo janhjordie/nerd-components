@@ -4,6 +4,8 @@ internal enum MigrationDataSource
 {
     Datafordeler,
     DawaFallback,
+    DagiIncomplete,
+    DagiWrongNotEmpty,
     Unavailable,
     Blocked,
     NotApplicable

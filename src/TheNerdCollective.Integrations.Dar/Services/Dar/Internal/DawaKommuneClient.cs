@@ -146,14 +146,34 @@ internal sealed class DawaKommuneClient
             return null;
         }
 
+        var (latitude, longitude) = ReadVisualCenter(element);
+
         return new KommuneDto
         {
             IdLokalId = ReadString(element, "dagi_id"),
             Navn = navn,
             Kommunekode = kode,
             Regionskode = ReadRegionCode(element),
-            Regionnavn = ReadRegionName(element)
+            Regionnavn = ReadRegionName(element),
+            RepræsentativPunktLatitude = latitude,
+            RepræsentativPunktLongitude = longitude
         };
+    }
+
+    private static (double? Latitude, double? Longitude) ReadVisualCenter(JsonElement element)
+    {
+        if (!element.TryGetProperty("visueltcenter", out var center) || center.ValueKind != JsonValueKind.Array)
+        {
+            return (null, null);
+        }
+
+        var values = center.EnumerateArray().Select(v => v.GetDouble()).ToArray();
+        if (values.Length < 2)
+        {
+            return (null, null);
+        }
+
+        return (values[1], values[0]);
     }
 
     private static string? ReadRegionCode(JsonElement element)

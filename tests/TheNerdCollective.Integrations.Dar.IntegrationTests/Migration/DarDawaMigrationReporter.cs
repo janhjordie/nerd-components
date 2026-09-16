@@ -1,4 +1,6 @@
+using System.Net.Http.Json;
 using System.Text;
+using System.Text.Json.Serialization;
 using TheNerdCollective.Integrations.Dar.GraphQL;
 using TheNerdCollective.Integrations.Dar.Mapping;
 using TheNerdCollective.Integrations.Dar.Services;
@@ -34,7 +36,10 @@ internal static class DarDawaMigrationReporter
             await ProbePostnummerByMunicipalityAsync(datafordelerOnly, withDawa),
             await ProbePostnummerByPostalCodeAsync(datafordelerOnly, withDawa),
             await ProbePostnummerByCircleAsync(datafordelerOnly, withDawa),
-            await ProbePostnummerByMunicipalityWithKommunerAsync(datafordelerOnly, withDawa)
+            await ProbePostnummerByMunicipalityWithKommunerAsync(datafordelerOnly, withDawa),
+            await ProbeKommuneDagiDisagreementKbhAsync(datafordelerOnly),
+            await ProbeKommuneDagiDisagreementHelsingoerAsync(datafordelerOnly),
+            await ProbeKommuneVisualCenterCoverageAsync(datafordelerOnly)
         };
 
         return rows;
@@ -124,6 +129,29 @@ internal static class DarDawaMigrationReporter
             sb.AppendLine("Behold i config:");
             sb.AppendLine("  Dagi.EnableDawaFallback = true");
             sb.AppendLine("  Postnummer.EnableDawaEnrichment = true");
+        }
+
+        var dagiWrong = rows.Where(r => r.InferredSource == MigrationDataSource.DagiWrongNotEmpty).ToList();
+        var dagiIncomplete = rows.Where(r => r.InferredSource == MigrationDataSource.DagiIncomplete).ToList();
+        if (dagiWrong.Count > 0 || dagiIncomplete.Count > 0)
+        {
+            sb.AppendLine();
+            sb.AppendLine("DAGI kvalitet (Datafordeler-only vs DAWA reference):");
+            foreach (var row in dagiWrong)
+            {
+                sb.AppendLine($"  - FORKERT_MEN_IKKE_TOM: {row.Operation} ({row.DatafordelerDetail})");
+            }
+
+            foreach (var row in dagiIncomplete)
+            {
+                sb.AppendLine($"  - UFULDSTÆNDIG: {row.Operation} ({row.DatafordelerDetail})");
+            }
+
+            sb.AppendLine();
+            sb.AppendLine("Forkert vs tom:");
+            sb.AppendLine("  TOM       — GraphQL/REST returnerer null/0 (DAWA-fallback kan hjælpe)");
+            sb.AppendLine("  FORKERT   — GraphQL returnerer data, men kode/geometri matcher ikke DAWA");
+            sb.AppendLine("  UFULDSTÆNDIG — data findes, men mangler fx repræsentativt punkt/visueltcenter");
         }
         else if (ready)
         {
@@ -364,6 +392,114 @@ internal static class DarDawaMigrationReporter
             requiresFallback: true);
     }
 
+    private static async Task<MigrationProbeRow> ProbeKommuneDagiDisagreementKbhAsync(DarServices datafordelerOnly)
+        => await ProbeKommuneDagiDisagreementAsync(
+            datafordelerOnly,
+            "DAGI.GraphQlVsDawa.Kbh",
+            KbhLatitude,
+            KbhLongitude,
+            "0101");
+
+    private static async Task<MigrationProbeRow> ProbeKommuneDagiDisagreementHelsingoerAsync(DarServices datafordelerOnly)
+        => await ProbeKommuneDagiDisagreementAsync(
+            datafordelerOnly,
+            "DAGI.GraphQlVsDawa.Helsingoer",
+            HelsingoerLatitude,
+            HelsingoerLongitude,
+            "0217");
+
+    private static async Task<MigrationProbeRow> ProbeKommuneDagiDisagreementAsync(
+        DarServices datafordelerOnly,
+        string operation,
+        double latitude,
+        double longitude,
+        string expectedCode)
+    {
+        var df = await TryAsync(() => datafordelerOnly.Dar.Kommune.FindByCoordinatesDatafordelerAsync(latitude, longitude));
+        var dawaCode = await DawaReferenceKommuneCodeAsync(latitude, longitude);
+
+        var dfCode = df.Success ? df.Value?.Kommunekode : null;
+        var dfOk = string.Equals(dfCode, expectedCode, StringComparison.OrdinalIgnoreCase);
+        var dawaOk = string.Equals(dawaCode, expectedCode, StringComparison.OrdinalIgnoreCase);
+        var disagree = dfCode is not null
+            && dawaCode is not null
+            && !string.Equals(dfCode, dawaCode, StringComparison.OrdinalIgnoreCase);
+
+        var dfDetail = dfCode is null
+            ? Detail(df)
+            : $"{df.Value!.Navn} ({dfCode})";
+        if (disagree)
+        {
+            dfDetail += $"≠DAWA({dawaCode})";
+        }
+
+        var source = disagree
+            ? MigrationDataSource.DagiWrongNotEmpty
+            : dfOk
+                ? MigrationDataSource.Datafordeler
+                : dawaOk
+                    ? MigrationDataSource.DawaFallback
+                    : MigrationDataSource.Unavailable;
+
+        return new MigrationProbeRow(
+            operation,
+            dfOk,
+            df.IsBlocked,
+            dfDetail,
+            dawaOk,
+            dawaCode ?? "n/a",
+            source,
+            disagree || (!dfOk && dawaOk));
+    }
+
+    private static async Task<MigrationProbeRow> ProbeKommuneVisualCenterCoverageAsync(DarServices datafordelerOnly)
+    {
+        var df = await TryAsync(() => datafordelerOnly.Dar.Kommune.GetAllAsync());
+        var total = df.Success ? df.Value!.Count : 0;
+        var withCenter = df.Success
+            ? df.Value!.Count(k => k.RepræsentativPunktLatitude is double && k.RepræsentativPunktLongitude is double)
+            : 0;
+        var dfOk = total >= 90 && withCenter == total;
+        var incomplete = total >= 90 && withCenter < total;
+
+        return new MigrationProbeRow(
+            "DAGI.VisualCenterCoverage",
+            dfOk,
+            df.IsBlocked,
+            dfOk ? $"{withCenter}/{total}" : $"{withCenter}/{total}",
+            dfOk,
+            $"{withCenter}/{total}",
+            incomplete ? MigrationDataSource.DagiIncomplete : dfOk ? MigrationDataSource.Datafordeler : MigrationDataSource.Unavailable,
+            incomplete);
+    }
+
+    private static async Task<string?> DawaReferenceKommuneCodeAsync(double latitude, double longitude)
+    {
+        try
+        {
+            using var httpClient = new HttpClient
+            {
+                BaseAddress = new Uri("https://api.dataforsyningen.dk/"),
+                Timeout = TimeSpan.FromSeconds(30)
+            };
+
+            var url =
+                $"kommuner/reverse?x={longitude.ToString(System.Globalization.CultureInfo.InvariantCulture)}&y={latitude.ToString(System.Globalization.CultureInfo.InvariantCulture)}&srid=4326";
+            using var response = await httpClient.GetAsync(url).ConfigureAwait(false);
+            if (!response.IsSuccessStatusCode)
+            {
+                return null;
+            }
+
+            var payload = await response.Content.ReadFromJsonAsync<DawaReverseDto>().ConfigureAwait(false);
+            return payload?.Kode;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     private static async Task<MigrationProbeRow> ProbePostnummerByMunicipalityWithKommunerAsync(
         DarServices datafordelerOnly,
         DarServices withDawa)
@@ -439,11 +575,19 @@ internal static class DarDawaMigrationReporter
     {
         MigrationDataSource.Datafordeler => "Datafordeler",
         MigrationDataSource.DawaFallback => "DAWA",
+        MigrationDataSource.DagiIncomplete => "DAGI ufærdig",
+        MigrationDataSource.DagiWrongNotEmpty => "DAGI forkert",
         MigrationDataSource.Unavailable => "Utilgængelig",
         MigrationDataSource.Blocked => "Blokeret",
         MigrationDataSource.NotApplicable => "N/A",
         _ => source.ToString()
     };
+
+    private sealed class DawaReverseDto
+    {
+        [JsonPropertyName("kode")]
+        public string? Kode { get; set; }
+    }
 
     private static string Pad(string value, int width)
     {
