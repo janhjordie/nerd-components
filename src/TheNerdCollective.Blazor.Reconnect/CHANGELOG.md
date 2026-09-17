@@ -2,6 +2,11 @@
 
 All notable changes to `TheNerdCollective.Blazor.Reconnect` should be documented in this file.
 
+## 1.13.0 - 2026-09-17
+
+- Default `maxRetries` is now `1` with a 5s retry and `/health` ping interval, matching a 5s `DisconnectedCircuitRetentionPeriod`. Hosts with longer retention should override.
+- DOM reconnect polling runs every 250ms only while disconnected; connected tabs poll every 5s.
+
 ## 1.12.0 - 2026-05-20
 
 - Hardened the reconnect failure path so `keepReconnectingUiOnFailure` also keeps the primary The Nerd Collective reconnect dialog active when Blazor's polling fallback observes a failed state.

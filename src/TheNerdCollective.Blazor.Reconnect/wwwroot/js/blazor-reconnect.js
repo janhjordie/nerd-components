@@ -1,6 +1,6 @@
 /**
  * Blazor Server Reconnection Handler
- * TheNerdCollective.Blazor.Reconnect v1.11.0
+ * TheNerdCollective.Blazor.Reconnect v1.13.0
  *
  * Silent-first design: the modal is NEVER shown within the first 5 seconds.
  * During this window Blazor retries the circuit AND the /health endpoint is polled
@@ -19,7 +19,8 @@
  * - Silent grace period (showDelayMilliseconds, default 5000ms): modal is held
  *            back while Blazor retries + Phase 2 ping run in background.
  *            If reconnected / reloaded within 5s → completely invisible to user.
- * - Phase 1: Blazor circuit retry loop (effectively infinite — maxRetries=1000)
+ * Phase 1: Blazor circuit retry loop (default maxRetries=1, 5s interval — match typical
+ *            DisconnectedCircuitRetentionPeriod). Override for longer retention.
  * - Phase 2: server-alive ping starts IMMEDIATELY (serverPingStartDelayMs=0) the
  *            instant the circuit drops, in parallel with Phase 1. AbortController
  *            cancels any in-flight fetch the instant Blazor reconnects the circuit.
@@ -37,7 +38,7 @@
  *            'resume' → calls Blazor.reconnect() before visibilitychange fires,
  *            collapsing recovery time by one round trip on Android Chrome.
  * - pageshow (persisted): iOS bfcache — reloads immediately for a fresh circuit.
- * - Polls Blazor's reconnect state every 250ms (reliable, no MutationObserver races)
+ * - Polls Blazor's reconnect state every 250ms while disconnected (5s while connected)
  * - Re-hooks Blazor's reconnectionHandler every 5s so it survives server restarts
  * - Suppresses noisy console errors during disconnection
  * - Lifecycle callbacks: onReconnecting / onReconnected / onFailed / onServerBack
@@ -90,20 +91,10 @@
         // Set to 0 to show the modal immediately.
         showDelayMilliseconds: 5000,
 
-        // Phase 1: circuit retry behaviour (effectively infinite — Phase 2 is the real exit)
-        maxRetries: 1000,                 // Effectively infinite: Phase 2 (server ping) triggers reload, not retry exhaustion
-        // Retry interval: use Blazor's rapid-then-backoff default pattern.
-        // Array.prototype.at.bind([...]) returns undefined after the last entry → retries stop.
-        // [0]      = immediate first retry (Blazor fires this before show() in most cases,
-        //            but having 0 here ensures the first UI-visible attempt is instant)
-        // [500]    = 500ms   (within grace period, invisible to user)
-        // [1000]   = 1s
-        // [2000]   = 2s
-        // [3000]   = 3s
-        // [5000…]  = 5s, 10s … (long-tail / server restart scenario)
-        // If you prefer a flat interval, set retryIntervalMilliseconds to a number (e.g. 2000)
-        // instead of the array form.
-        retryIntervalMilliseconds: [0, 500, 1000, 2000, 3000, 5000],
+        // Phase 1: circuit retry. Default matches a 5s DisconnectedCircuitRetentionPeriod.
+        // Hosts with longer retention should override maxRetries / retryIntervalMilliseconds.
+        maxRetries: 1,
+        retryIntervalMilliseconds: 5000,
 
         // Phase 2: server-alive polling — starts IN PARALLEL with Phase 1 after a short delay.
         // If the server responds while Phase 1 is still running, reload immediately.
@@ -112,7 +103,7 @@
         serverPingStartDelayMilliseconds: 0,        // Start pinging immediately when the circuit drops.
                                                     // stopServerPing() uses AbortController to cancel any
                                                     // in-flight fetch the instant Blazor reconnects.
-        serverPingIntervalMilliseconds: 2000,       // ms between ping attempts (fast polling inside grace period)
+        serverPingIntervalMilliseconds: 5000,       // ms between ping attempts (aligned with 5s circuit grace)
         autoReloadOnServerBack: true,               // true = auto-reload; false = show a prompt
 
         // When true: the reconnect modal is suppressed until at LEAST ONE /health ping has
@@ -163,7 +154,7 @@
 
     console.log('[BlazorReconnect] Initializing with config:', config);
 
-    const VERSION = 'v1.12.0';
+    const VERSION = 'v1.13.0';
 
     // ===== SCROLL POSITION PRESERVATION =====
     //
@@ -708,6 +699,7 @@
         circuitReconnected = false;
         const pingDelay = wokenFromVisibility ? 0 : config.serverPingStartDelayMilliseconds;
         startServerPing(pingDelay);
+        setPollInterval(desiredPollMs());
 
         showDelayTimer = setTimeout(() => {
             showDelayTimer = null;
@@ -791,6 +783,7 @@
             cancelShowDelay();
             stopServerPing(true);
             fireCallback('onReconnected');
+            setPollInterval(desiredPollMs());
             return;
         }
         if (reconnectModal) {
@@ -803,6 +796,7 @@
             reconnectModal = null;
             fireCallback('onReconnected');
         }
+        setPollInterval(desiredPollMs());
     }
 
     function showFailedModal() {
@@ -948,6 +942,22 @@
     // "Connected"    = element absent OR has class components-reconnect-hide
 
     let lastPollState = 'connected'; // 'connected' | 'disconnected' | 'failed'
+    let pollTimer = null;
+    let currentPollMs = 0;
+    const POLL_MS_DISCONNECTED = 250;
+    const POLL_MS_CONNECTED = 5000;
+
+    function desiredPollMs() {
+        const disconnected = lastPollState !== 'connected' || reconnectModal || showDelayTimer;
+        return disconnected ? POLL_MS_DISCONNECTED : POLL_MS_CONNECTED;
+    }
+
+    function setPollInterval(ms) {
+        if (pollTimer && currentPollMs === ms) return;
+        currentPollMs = ms;
+        if (pollTimer) clearInterval(pollTimer);
+        pollTimer = setInterval(pollReconnectState, ms);
+    }
 
     function getCircuitState() {
         const el = document.getElementById('components-reconnect-modal');
@@ -993,11 +1003,13 @@
             restoreDefaultModal();
             hideReconnectModal();
         }
+
+        setPollInterval(desiredPollMs());
     }
 
     function startPolling() {
-        setInterval(pollReconnectState, 250);
-        console.log('[BlazorReconnect] Fallback polling started (250ms)');
+        setPollInterval(desiredPollMs());
+        console.log('[BlazorReconnect] Fallback polling started (250ms disconnected / 5s connected)');
     }
 
     // ===== MAINTENANCE HOOK =====

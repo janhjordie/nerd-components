@@ -1,6 +1,6 @@
 # TheNerdCollective.Blazor.Reconnect
 
-**v1.12.0** — Silent-first: 5s grace period + immediate /health ping + scroll position preservation + accessibility + network-restore detection + Page Lifecycle freeze/resume + desktop window-focus + lifecycle callbacks + `requireFailedPingBeforeModal` for always-on deployments. New in `v1.12.0`: the built-in Blazor reconnect overlay is suppressed permanently, `keepReconnectingUiOnFailure` also covers the polling fallback path, and BilletSalg now runs the TNC reconnect experience with fixed 5-second retry and health-ping intervals indefinitely.
+**v1.13.0** — Defaults match a 5s circuit retention (`maxRetries: 1`, 5s retry/ping). Connected tabs poll reconnect state every 5s; disconnected tabs stay at 250ms. Hosts can still override `blazorReconnectConfig`.
 
 A lightweight, project-agnostic Blazor Server circuit reconnection handler. Works out of the box with sensible English defaults and is fully customisable for branding, localisation, and styling.
 

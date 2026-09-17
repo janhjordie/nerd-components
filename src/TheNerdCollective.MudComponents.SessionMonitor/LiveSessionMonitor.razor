@@ -3,29 +3,30 @@
 @implements IDisposable
 @inject ISessionMonitorService SessionMonitor
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="py-4">
-    <MudStack Spacing="3">
-        <!-- Header with auto-refresh indicator -->
-        <MudStack Row="true" Class="align-center">
-            <MudIcon Icon="@Icons.Material.Filled.Monitor" Size="Size.Large" Color="Color.Primary" />
-            <MudText Typo="Typo.h4">Live Session Monitor</MudText>
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="py-2">
+    <MudStack Spacing="1">
+        <MudStack Row="true" Spacing="1" Class="align-center flex-wrap">
+            <MudIcon Icon="@Icons.Material.Filled.Monitor" Size="Size.Small" Color="Color.Primary" />
+            <MudText Typo="Typo.h6">Live Session Monitor</MudText>
             <MudSpacer />
-            <MudStack Row="true" Spacing="2" Class="align-center">
+            <MudStack Row="true" Spacing="1" Class="align-center flex-wrap">
                 @if (!string.IsNullOrWhiteSpace(_metrics.InstanceId))
                 {
-                    <MudChip T="string" Color="Color.Info" Size="Size.Small" Variant="Variant.Outlined"
-                             Icon="@Icons.Material.Filled.Dns">
-                        @_metrics.InstanceId
-                    </MudChip>
+                    <MudTooltip Text="Per-replica metrics. Sticky sessions keep this view on one instance.">
+                        <MudChip T="string" Color="Color.Info" Size="Size.Small" Variant="Variant.Outlined"
+                                 Icon="@Icons.Material.Filled.Dns">
+                            @_metrics.InstanceId
+                        </MudChip>
+                    </MudTooltip>
                 }
                 @if (_metrics.IsDegradedMode)
                 {
                     <MudChip T="string" Color="Color.Warning" Size="Size.Small" Variant="Variant.Filled"
                              Icon="@Icons.Material.Filled.Speed">
-                        Summary only
+                        Summary (≥@_metrics.DegradedModeThreshold)
                     </MudChip>
                 }
-                <DeploymentSafetyIndicator RefreshToken="@_metrics.Timestamp" />
+                <DeploymentSafetyIndicator RefreshToken="@_metrics.Timestamp" ChipSize="Size.Small" />
                 <MudChip T="string" Color="Color.Default" Size="Size.Small" Variant="Variant.Outlined"
                          Icon="@Icons.Material.Filled.Update">
                     @(_autoRefresh ? $"Live ({RefreshIntervalSeconds}s)" : "Paused")
@@ -38,117 +39,25 @@
             </MudStack>
         </MudStack>
 
-        @if (!string.IsNullOrWhiteSpace(_metrics.InstanceId))
-        {
-            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Info">
-                <MudText Typo="Typo.subtitle2">Per-replica metrics</MudText>
-                <MudText Typo="Typo.body2">
-                    Showing metrics for replica <b>@_metrics.InstanceId</b> only. In multi-replica deployments, numbers may vary as load balancing routes requests to different instances. Use sticky sessions for the monitor route to keep a consistent view.
-                </MudText>
-            </MudAlert>
-        }
-
-        <!-- Quick metrics bar -->
-        <QuickMetricsBar Metrics="@_metrics" ShowRefreshButton="false" />
+        <QuickMetricsBar Metrics="@_metrics"
+                         ShowRefreshButton="false"
+                         ShowCircuitsOpened="false"
+                         ShowStarted="false"
+                         ShowEnded="false"
+                         ShowAvgDuration="false"
+                         ShowDisconnected="true"
+                         ShowDisconnects="true"
+                         ShowReconnects="true"
+                         ShowReconnectRate="true"
+                         Elevation="0" />
 
         @if (_metrics.IsDegradedMode)
         {
-            <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Speed">
-                <MudText Typo="Typo.subtitle2">High load — summary only</MudText>
-                <MudText Typo="Typo.body2">
-                    Over @_metrics.DegradedModeThreshold active sessions. Circuit details are hidden and history is capped at @_metrics.EffectiveHistoryCap snapshots to reduce monitor overhead.
-                </MudText>
+            <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Icon="@Icons.Material.Filled.Speed">
+                Circuit details hidden. History capped at @_metrics.EffectiveHistoryCap snapshots.
             </MudAlert>
         }
 
-        <!-- Real-time cards -->
-        <MudGrid>
-            <MudItem xs="12" sm="6" md="3">
-                <SessionMetricsCard Title="Active Sessions"
-                                    Value="@_metrics.ActiveSessions.ToString()"
-                                    Color="Color.Primary"
-                                    Icon="@Icons.Material.Filled.Cloud" />
-            </MudItem>
-            <MudItem xs="12" sm="6" md="3">
-                <SessionMetricsCard Title="Disconnected (Retained)"
-                                    Value="@_metrics.DisconnectedSessions.ToString()"
-                                    Color="@(_metrics.DisconnectedSessions > 0 ? Color.Warning : Color.Success)"
-                                    Icon="@Icons.Material.Filled.SignalWifiStatusbarConnectedNoInternet4" />
-            </MudItem>
-            <MudItem xs="12" sm="6" md="3">
-                <SessionMetricsCard Title="Peak Sessions"
-                                    Value="@_metrics.PeakSessions.ToString()"
-                                    Color="Color.Warning"
-                                    Icon="@Icons.Material.Filled.TrendingUp" />
-            </MudItem>
-            <MudItem xs="12" sm="6" md="3">
-                <MudPaper Class="pa-4" Elevation="1">
-                    <MudStack Spacing="2">
-                        <MudStack Row="true" Class="align-center">
-                            <MudIcon Icon="@Icons.Material.Filled.SwapHoriz" Color="Color.Info" Size="Size.Medium" />
-                            <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Reconnect Rate</MudText>
-                        </MudStack>
-                        <MudText Typo="Typo.h4" Color="Color.Info">@ReconnectRate</MudText>
-                    </MudStack>
-                </MudPaper>
-            </MudItem>
-        </MudGrid>
-
-        <!-- Disconnect/Reconnect stats -->
-        <MudPaper Class="pa-4" Elevation="1">
-            <MudStack Row="true" Spacing="6" Class="align-center flex-wrap">
-                <MudStack Row="true" Spacing="1" Class="align-center">
-                    <MudIcon Icon="@Icons.Material.Filled.LinkOff" Color="Color.Error" Size="Size.Small" />
-                    <MudText Typo="Typo.body2" Color="Color.Secondary">Total Disconnects:</MudText>
-                    <MudText Typo="Typo.body1"><b>@_metrics.TotalDisconnects</b></MudText>
-                </MudStack>
-                <MudDivider Vertical="true" FlexItem="true" />
-                <MudStack Row="true" Spacing="1" Class="align-center">
-                    <MudIcon Icon="@Icons.Material.Filled.Link" Color="Color.Success" Size="Size.Small" />
-                    <MudText Typo="Typo.body2" Color="Color.Secondary">Total Reconnects:</MudText>
-                    <MudText Typo="Typo.body1"><b>@_metrics.TotalReconnects</b></MudText>
-                </MudStack>
-                <MudDivider Vertical="true" FlexItem="true" />
-                <MudStack Row="true" Spacing="1" Class="align-center">
-                    <MudIcon Icon="@Icons.Material.Filled.Lan" Color="Color.Info" Size="Size.Small" />
-                    <MudText Typo="Typo.body2" Color="Color.Secondary">Circuits opened:</MudText>
-                    <MudText Typo="Typo.body1"><b>@_metrics.TotalCircuitsOpened</b></MudText>
-                </MudStack>
-                <MudDivider Vertical="true" FlexItem="true" />
-                <MudStack Row="true" Spacing="1" Class="align-center">
-                    <MudIcon Icon="@Icons.Material.Filled.Login" Color="Color.Success" Size="Size.Small" />
-                    <MudText Typo="Typo.body2" Color="Color.Secondary">Client sessions:</MudText>
-                    <MudText Typo="Typo.body1"><b>@_metrics.TotalSessionsStarted</b></MudText>
-                </MudStack>
-                <MudDivider Vertical="true" FlexItem="true" />
-                <MudStack Row="true" Spacing="1" Class="align-center">
-                    <MudIcon Icon="@Icons.Material.Filled.Logout" Color="Color.Info" Size="Size.Small" />
-                    <MudText Typo="Typo.body2" Color="Color.Secondary">Total Ended:</MudText>
-                    <MudText Typo="Typo.body1"><b>@_metrics.TotalSessionsEnded</b></MudText>
-                </MudStack>
-                <MudDivider Vertical="true" FlexItem="true" />
-                <MudStack Row="true" Spacing="1" Class="align-center">
-                    <MudIcon Icon="@Icons.Material.Filled.Schedule" Color="Color.Default" Size="Size.Small" />
-                    <MudText Typo="Typo.body2" Color="Color.Secondary">Tracking since:</MudText>
-                    <MudText Typo="Typo.body1"><b>@_metrics.TrackingSince.ToLocalTime().ToString("g")</b></MudText>
-                </MudStack>
-            </MudStack>
-        </MudPaper>
-
-        @if (_metrics.AverageSessionDurationSeconds.HasValue)
-        {
-            <MudPaper Class="pa-4" Elevation="1">
-                <MudStack Row="true" Class="align-center" Spacing="2">
-                    <MudIcon Icon="@Icons.Material.Filled.Timer" Size="Size.Medium" />
-                    <MudStack Spacing="0">
-                        <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Average Session Duration</MudText>
-                        <MudText Typo="Typo.h6">@FormatDuration(_metrics.AverageSessionDurationSeconds.Value)</MudText>
-                    </MudStack>
-                </MudStack>
-            </MudPaper>
-        }
-
-        <!-- Tabs for detail views -->
         <MudTabs Outlined="true" ApplyEffectsToContainer="true">
             <MudTabPanel Text="By Browser" Icon="@Icons.Material.Filled.Devices">
                 <ClientSessionCountsTable RefreshToken="@_metrics.Timestamp" IsDegradedMode="@_metrics.IsDegradedMode" />
@@ -159,16 +68,22 @@
             <MudTabPanel Text="Active Circuits" Icon="@Icons.Material.Filled.Lan" Disabled="@_metrics.IsDegradedMode">
                 <SessionDetailsTable RefreshToken="@_metrics.Timestamp" IsDegradedMode="@_metrics.IsDegradedMode" />
             </MudTabPanel>
-            <MudTabPanel Text="Session History" Icon="@Icons.Material.Filled.History">
+            <MudTabPanel Text="History" Icon="@Icons.Material.Filled.History">
                 <SessionHistoryChart IsDegradedMode="@_metrics.IsDegradedMode" EffectiveHistoryCap="@_metrics.EffectiveHistoryCap" />
             </MudTabPanel>
-            <MudTabPanel Text="Deployment Windows" Icon="@Icons.Material.Filled.Timeline">
+            <MudTabPanel Text="Deploy windows" Icon="@Icons.Material.Filled.Timeline">
                 <DeploymentWindowsTable IsDegradedMode="@_metrics.IsDegradedMode" />
             </MudTabPanel>
         </MudTabs>
 
-        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="text-center">
-            Last updated: @_metrics.Timestamp.ToLocalTime().ToString("G")
+        <MudText Typo="Typo.caption" Color="Color.Secondary">
+            Updated @_metrics.Timestamp.ToLocalTime().ToString("G")
+            @if (_metrics.AverageSessionDurationSeconds.HasValue)
+            {
+                <text> · avg @FormatDuration(_metrics.AverageSessionDurationSeconds.Value)</text>
+            }
+            · opened @_metrics.TotalCircuitsOpened · clients @_metrics.TotalSessionsStarted · ended @_metrics.TotalSessionsEnded
+            · since @_metrics.TrackingSince.ToLocalTime().ToString("g")
         </MudText>
     </MudStack>
 </MudContainer>
@@ -179,11 +94,6 @@
     private bool _autoRefresh = true;
 
     [Parameter] public int RefreshIntervalSeconds { get; set; } = 5;
-
-    private string ReconnectRate =>
-        _metrics.TotalDisconnects > 0
-            ? $"{(double)_metrics.TotalReconnects / _metrics.TotalDisconnects * 100:F0}%"
-            : "—";
 
     protected override void OnInitialized()
     {

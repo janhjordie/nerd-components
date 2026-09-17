@@ -2,15 +2,15 @@
 @using MudBlazor
 @inject ISessionMonitorService SessionMonitor
 
-<MudStack Spacing="3" Class="pa-4">
-    <MudText Typo="Typo.subtitle1">
-        Active circuits grouped by browser: @_totalCircuits circuits across @_clientGroups.Count browsers
+<MudStack Spacing="1" Class="pa-1">
+    <MudText Typo="Typo.caption" Color="Color.Secondary">
+        @_totalCircuits circuits · @_clientGroups.Count browsers
     </MudText>
 
     @if (IsDegradedMode)
     {
-        <MudAlert Severity="Severity.Warning">
-            Circuit details are unavailable in summary-only mode. Use the <b>By Browser</b> tab for aggregates.
+        <MudAlert Severity="Severity.Warning" Dense="true">
+            Circuit details hidden in summary-only mode. Use <b>By Browser</b>.
         </MudAlert>
     }
     else if (_clientGroups.Count == 0)
@@ -21,10 +21,10 @@
     }
     else
     {
-        <MudExpansionPanels MultiExpansion="true">
+        <MudExpansionPanels MultiExpansion="true" Dense="true">
             @foreach (var group in _clientGroups)
             {
-                <MudExpansionPanel Text="@GetPanelTitle(group)" Expanded="true">
+                <MudExpansionPanel Text="@GetPanelTitle(group)" Expanded="false">
                     @if (group.IsAdminMonitorGroup)
                     {
                         <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mb-2"

@@ -13,6 +13,17 @@
             </MudStack>
         }
 
+        @if (ShowDisconnected)
+        {
+            <MudDivider Vertical="true" FlexItem="true"/>
+            <MudStack Row="true" Spacing="1" Class="align-center">
+                <MudIcon Icon="@Icons.Material.Filled.SignalWifiStatusbarConnectedNoInternet4"
+                         Color="@(DisplayMetrics.DisconnectedSessions > 0 ? Color.Warning : Color.Success)" Size="Size.Small"/>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">Held:</MudText>
+                <MudText Typo="Typo.body1"><b>@DisplayMetrics.DisconnectedSessions</b></MudText>
+            </MudStack>
+        }
+
         @if (ShowPeak)
         {
             <MudDivider Vertical="true" FlexItem="true"/>
@@ -20,6 +31,36 @@
                 <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Color="Color.Warning" Size="Size.Small"/>
                 <MudText Typo="Typo.body2" Color="Color.Secondary">Peak:</MudText>
                 <MudText Typo="Typo.body1"><b>@DisplayMetrics.PeakSessions</b></MudText>
+            </MudStack>
+        }
+
+        @if (ShowDisconnects)
+        {
+            <MudDivider Vertical="true" FlexItem="true"/>
+            <MudStack Row="true" Spacing="1" Class="align-center">
+                <MudIcon Icon="@Icons.Material.Filled.LinkOff" Color="Color.Error" Size="Size.Small"/>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">Disconnects:</MudText>
+                <MudText Typo="Typo.body1"><b>@FormatLargeNumber(DisplayMetrics.TotalDisconnects)</b></MudText>
+            </MudStack>
+        }
+
+        @if (ShowReconnects)
+        {
+            <MudDivider Vertical="true" FlexItem="true"/>
+            <MudStack Row="true" Spacing="1" Class="align-center">
+                <MudIcon Icon="@Icons.Material.Filled.Link" Color="Color.Success" Size="Size.Small"/>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">Reconnects:</MudText>
+                <MudText Typo="Typo.body1"><b>@FormatLargeNumber(DisplayMetrics.TotalReconnects)</b></MudText>
+            </MudStack>
+        }
+
+        @if (ShowReconnectRate)
+        {
+            <MudDivider Vertical="true" FlexItem="true"/>
+            <MudStack Row="true" Spacing="1" Class="align-center">
+                <MudIcon Icon="@Icons.Material.Filled.SwapHoriz" Color="Color.Info" Size="Size.Small"/>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">Rate:</MudText>
+                <MudText Typo="Typo.body1"><b>@ReconnectRate</b></MudText>
             </MudStack>
         }
 
@@ -91,6 +132,11 @@
 
     private SessionMetrics DisplayMetrics => Metrics ?? CurrentMetrics;
 
+    private string ReconnectRate =>
+        DisplayMetrics.TotalDisconnects > 0
+            ? $"{(double)DisplayMetrics.TotalReconnects / DisplayMetrics.TotalDisconnects * 100:F0}%"
+            : "—";
+
     /// <summary>
     /// Whether to show active sessions count.
     /// </summary>
@@ -98,10 +144,34 @@
     public bool ShowActive { get; set; } = true;
 
     /// <summary>
+    /// Whether to show disconnected (retained) circuit count.
+    /// </summary>
+    [Parameter]
+    public bool ShowDisconnected { get; set; }
+
+    /// <summary>
     /// Whether to show peak sessions count.
     /// </summary>
     [Parameter]
     public bool ShowPeak { get; set; } = true;
+
+    /// <summary>
+    /// Whether to show total disconnect events.
+    /// </summary>
+    [Parameter]
+    public bool ShowDisconnects { get; set; }
+
+    /// <summary>
+    /// Whether to show total reconnect events.
+    /// </summary>
+    [Parameter]
+    public bool ShowReconnects { get; set; }
+
+    /// <summary>
+    /// Whether to show reconnect / disconnect rate.
+    /// </summary>
+    [Parameter]
+    public bool ShowReconnectRate { get; set; }
 
     /// <summary>
     /// Whether to show total circuits opened (includes reloads).

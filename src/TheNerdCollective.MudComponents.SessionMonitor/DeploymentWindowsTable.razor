@@ -2,7 +2,7 @@
 @using MudBlazor
 @inject ISessionMonitorService SessionMonitor
 
-<MudStack Spacing="3" Class="pa-4">
+<MudStack Spacing="1" Class="pa-1">
     @if (IsDegradedMode)
     {
         <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined">
@@ -30,7 +30,7 @@
             Found @Windows.Count() optimal windows
         </MudText>
 
-        <MudDataGrid T="DeploymentWindow" Items="@Windows" ReadOnly="true" Hover="true" Striped="true">
+        <MudDataGrid T="DeploymentWindow" Items="@Windows" ReadOnly="true" Hover="true" Dense="true" Striped="true">
             <Columns>
                 <TemplateColumn Title="Start Time">
                     <CellTemplate>

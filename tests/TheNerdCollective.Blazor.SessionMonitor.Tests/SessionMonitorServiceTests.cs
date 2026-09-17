@@ -278,6 +278,27 @@ public sealed class SessionMonitorServiceTests
         Assert.True(admin.Circuits.Single(c => c.CurrentPath == "/events").IsAdminMonitorGroup);
     }
 
+    [Fact]
+    public void Connected_count_tracks_disconnect_reconnect_and_close_without_scanning_sessions()
+    {
+        var monitor = CreateMonitor();
+
+        monitor.OnCircuitOpened("a", "/", "client-a");
+        monitor.OnCircuitOpened("b", "/", "client-b");
+        Assert.Equal(2, monitor.GetCurrentMetrics().ActiveSessions);
+
+        monitor.OnConnectionDown("a");
+        Assert.Equal(1, monitor.GetCurrentMetrics().ActiveSessions);
+        Assert.Equal(1, monitor.GetCurrentMetrics().DisconnectedSessions);
+
+        monitor.OnConnectionUp("a");
+        Assert.Equal(2, monitor.GetCurrentMetrics().ActiveSessions);
+        Assert.Equal(0, monitor.GetCurrentMetrics().DisconnectedSessions);
+
+        monitor.OnCircuitClosed("b");
+        Assert.Equal(1, monitor.GetCurrentMetrics().ActiveSessions);
+    }
+
     private static SessionMonitorService CreateMonitor()
         => new(Options.Create(new SessionMonitorOptions()));
 }

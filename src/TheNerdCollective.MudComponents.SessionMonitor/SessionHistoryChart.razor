@@ -2,8 +2,8 @@
 @using MudBlazor
 @inject ISessionMonitorService SessionMonitor
 
-<MudStack Spacing="3" Class="pa-4">
-    <MudText Typo="Typo.subtitle1">Session History</MudText>
+<MudStack Spacing="1" Class="pa-1">
+    <MudText Typo="Typo.caption" Color="Color.Secondary">Session history</MudText>
 
     @if (IsDegradedMode)
     {
@@ -38,7 +38,7 @@
 
     @if (History.Any())
     {
-        <MudDataGrid T="SessionSnapshot" Items="@History" ReadOnly="true" Hover="true" Striped="true">
+        <MudDataGrid T="SessionSnapshot" Items="@History" ReadOnly="true" Hover="true" Dense="true" Striped="true">
             <Columns>
                 <TemplateColumn Title="Timestamp">
                     <CellTemplate>

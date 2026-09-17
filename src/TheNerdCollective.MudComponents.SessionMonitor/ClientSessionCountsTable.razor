@@ -2,28 +2,24 @@
 @using MudBlazor
 @inject ISessionMonitorService SessionMonitor
 
-<MudStack Spacing="3" Class="pa-4">
-    <MudStack Row="true" Class="align-center flex-wrap" Spacing="2">
-        <MudText Typo="Typo.subtitle1">
-            Active sessions by browser: @_totalActiveSessions circuits across @_clientSummaries.Count browsers
+<MudStack Spacing="1" Class="pa-1">
+    <MudStack Row="true" Class="align-center flex-wrap" Spacing="1">
+        <MudText Typo="Typo.caption" Color="Color.Secondary">
+            @_totalActiveSessions circuits · @_clientSummaries.Count browsers · grouped by `.bs-sm-client`
         </MudText>
         <MudSpacer />
         @if (_clientSummaries.Count > 0)
         {
             <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">
-                @_clientSummaries.Count unique browsers
+                @_clientSummaries.Count browsers
             </MudChip>
         }
     </MudStack>
 
-    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
-        Circuits from the same browser share the session monitor cookie (<code>.bs-sm-client</code>). Tabs from one browser are grouped together below.
-    </MudAlert>
-
     @if (IsDegradedMode)
     {
-        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mb-2">
-            Showing top browser clients only in summary-only mode.
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true">
+            Top browser clients only.
         </MudAlert>
     }
 
@@ -86,10 +82,10 @@
             </tbody>
         </MudSimpleTable>
 
-        <MudExpansionPanels MultiExpansion="true">
+        <MudExpansionPanels MultiExpansion="true" Dense="true">
             @foreach (var group in _clientSummaries)
             {
-                <MudExpansionPanel Text="@GetPanelTitle(group)" Expanded="@(group.ActiveSessionCount <= 3)">
+                <MudExpansionPanel Text="@GetPanelTitle(group)" Expanded="false">
                     <MudStack Spacing="2" Class="mb-2">
                         <ClientEnvironmentChips Environment="@group.ClientEnvironment" />
                         @if (!string.IsNullOrWhiteSpace(group.ClientEnvironment.UserAgent))

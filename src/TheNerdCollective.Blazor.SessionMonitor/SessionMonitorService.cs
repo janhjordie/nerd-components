@@ -11,8 +11,10 @@ public class SessionMonitorService : ISessionMonitorService
 {
     private readonly SessionMonitorOptions _options;
     private readonly ConcurrentDictionary<string, CircuitSession> _activeSessions = new();
+    private readonly ConcurrentDictionary<string, int> _circuitsByClientId = new(StringComparer.Ordinal);
     private readonly ConcurrentQueue<SessionSnapshot> _history = new();
     private readonly object _statsLock = new();
+    private int _connectedCount;
 
     private long _totalSessionsStarted;
     private long _totalCircuitsOpened;
@@ -53,18 +55,19 @@ public class SessionMonitorService : ISessionMonitorService
             CurrentPathUpdatedAt = initialPath is null ? null : DateTime.UtcNow
         };
 
-        _activeSessions.TryAdd(circuitId, session);
+        if (!_activeSessions.TryAdd(circuitId, session))
+        {
+            return;
+        }
+
+        Interlocked.Increment(ref _connectedCount);
+        var isReloadReplacement = IncrementClientIndex(clientId) > 1;
 
         lock (_statsLock)
         {
             _totalCircuitsOpened++;
 
-            var isReloadReplacement = _options.DeduplicateReloadStarts
-                && clientId is not null
-                && _activeSessions.Values.Any(s =>
-                    s.CircuitId != circuitId && s.ClientId == clientId);
-
-            if (!isReloadReplacement)
+            if (!_options.DeduplicateReloadStarts || !isReloadReplacement)
             {
                 _totalSessionsStarted++;
             }
@@ -86,6 +89,12 @@ public class SessionMonitorService : ISessionMonitorService
         {
             session.EndedAt = DateTime.UtcNow;
             var duration = session.EndedAt.Value - session.StartedAt;
+            if (session.DisconnectedAt is null)
+            {
+                Interlocked.Decrement(ref _connectedCount);
+            }
+
+            DecrementClientIndex(session.ClientId);
 
             lock (_statsLock)
             {
@@ -103,6 +112,11 @@ public class SessionMonitorService : ISessionMonitorService
     {
         if (_activeSessions.TryGetValue(circuitId, out var session))
         {
+            if (session.DisconnectedAt is null)
+            {
+                Interlocked.Decrement(ref _connectedCount);
+            }
+
             session.DisconnectedAt = DateTime.UtcNow;
             lock (_statsLock)
             {
@@ -120,6 +134,7 @@ public class SessionMonitorService : ISessionMonitorService
                 var duration = DateTime.UtcNow - session.DisconnectedAt.Value;
                 session.LastDisconnectDuration = duration;
                 session.DisconnectedAt = null;
+                Interlocked.Increment(ref _connectedCount);
                 lock (_statsLock)
                 {
                     _totalReconnects++;
@@ -462,7 +477,48 @@ public class SessionMonitorService : ISessionMonitorService
 
     private bool IsDegradedMode() => _trackingMode == SessionTrackingMode.DegradedSummaryOnly;
 
-    private int GetConnectedSessionCount() => _activeSessions.Values.Count(s => !s.DisconnectedAt.HasValue);
+    private int GetConnectedSessionCount() => Math.Max(0, Volatile.Read(ref _connectedCount));
+
+    private int IncrementClientIndex(string? clientId)
+    {
+        if (string.IsNullOrWhiteSpace(clientId))
+        {
+            return 1;
+        }
+
+        return _circuitsByClientId.AddOrUpdate(clientId, 1, (_, count) => count + 1);
+    }
+
+    private void DecrementClientIndex(string? clientId)
+    {
+        if (string.IsNullOrWhiteSpace(clientId))
+        {
+            return;
+        }
+
+        while (true)
+        {
+            if (!_circuitsByClientId.TryGetValue(clientId, out var count))
+            {
+                return;
+            }
+
+            if (count <= 1)
+            {
+                if (_circuitsByClientId.TryRemove(new KeyValuePair<string, int>(clientId, count)))
+                {
+                    return;
+                }
+
+                continue;
+            }
+
+            if (_circuitsByClientId.TryUpdate(clientId, count - 1, count))
+            {
+                return;
+            }
+        }
+    }
 
     private static string? ResolveInstanceId(string? instanceIdOverride)
     {
