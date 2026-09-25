@@ -60,7 +60,9 @@
 
         <MudTabs Outlined="true" ApplyEffectsToContainer="true">
             <MudTabPanel Text="By Browser" Icon="@Icons.Material.Filled.Devices">
-                <ClientSessionCountsTable RefreshToken="@_metrics.Timestamp" IsDegradedMode="@_metrics.IsDegradedMode" />
+                <ClientSessionCountsTable RefreshToken="@_metrics.Timestamp"
+                                         IsDegradedMode="@_metrics.IsDegradedMode"
+                                         BrowserChips="BrowserChips" />
             </MudTabPanel>
             <MudTabPanel Text="By URL" Icon="@Icons.Material.Filled.Link">
                 <UrlSessionCountsTable RefreshToken="@_metrics.Timestamp" IsDegradedMode="@_metrics.IsDegradedMode" />
@@ -94,6 +96,11 @@
     private bool _autoRefresh = true;
 
     [Parameter] public int RefreshIntervalSeconds { get; set; } = 5;
+
+    /// <summary>
+    /// Optional chips beside each browser label. Host-specific markers stay outside this package.
+    /// </summary>
+    [Parameter] public RenderFragment<ActiveClientSessionSummary>? BrowserChips { get; set; }
 
     protected override void OnInitialized()
     {

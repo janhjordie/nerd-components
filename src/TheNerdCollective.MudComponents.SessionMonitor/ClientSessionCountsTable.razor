@@ -3,18 +3,9 @@
 @inject ISessionMonitorService SessionMonitor
 
 <MudStack Spacing="1" Class="pa-1">
-    <MudStack Row="true" Class="align-center flex-wrap" Spacing="1">
-        <MudText Typo="Typo.caption" Color="Color.Secondary">
-            @_totalActiveSessions circuits · @_clientSummaries.Count browsers · grouped by `.bs-sm-client`
-        </MudText>
-        <MudSpacer />
-        @if (_clientSummaries.Count > 0)
-        {
-            <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">
-                @_clientSummaries.Count browsers
-            </MudChip>
-        }
-    </MudStack>
+    <MudText Typo="Typo.caption" Color="Color.Secondary">
+        @_clientSummaries.Count browsers · @_totalActiveSessions open pages
+    </MudText>
 
     @if (IsDegradedMode)
     {
@@ -35,11 +26,8 @@
             <thead>
                 <tr>
                     <th>Browser</th>
-                    <th>Circuits</th>
-                    <th>URLs</th>
-                    <th>Connected</th>
-                    <th>Disconnected</th>
-                    <th>Share</th>
+                    <th>Active URL</th>
+                    <th>Client</th>
                 </tr>
             </thead>
             <tbody>
@@ -47,76 +35,50 @@
                 {
                     <tr>
                         <td>
-                            <MudStack Spacing="1">
-                                <MudStack Row="true" Spacing="1" Class="align-center flex-wrap">
-                                    <MudText Typo="Typo.body2"><b>@summary.ClientLabel</b></MudText>
-                                    @if (summary.IsAdminMonitorGroup)
-                                    {
-                                        <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined"
-                                                 Icon="@Icons.Material.Filled.AdminPanelSettings">
-                                            Admin
-                                        </MudChip>
-                                    }
-                                </MudStack>
-                                <ClientEnvironmentChips Environment="@summary.ClientEnvironment" />
+                            <MudStack Row="true" Spacing="1" Class="align-center flex-wrap">
+                                <MudText Typo="Typo.body2"><b>@summary.ClientLabel</b></MudText>
+                                @if (summary.IsAdminMonitorGroup)
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Outlined">
+                                        Admin
+                                    </MudChip>
+                                }
+                                @if (BrowserChips is not null)
+                                {
+                                    @BrowserChips(summary)
+                                }
                             </MudStack>
                         </td>
-                        <td><MudText Typo="Typo.body2"><b>@summary.ActiveSessionCount</b></MudText></td>
-                        <td><MudText Typo="Typo.body2">@summary.DistinctPathCount</MudText></td>
-                        <td><MudText Typo="Typo.body2" Color="Color.Success">@summary.ConnectedCount</MudText></td>
                         <td>
-                            @if (summary.DisconnectedCount > 0)
-                            {
-                                <MudText Typo="Typo.body2" Color="Color.Warning">@summary.DisconnectedCount</MudText>
-                            }
-                            else
-                            {
-                                <MudText Typo="Typo.body2" Color="Color.Secondary">0</MudText>
-                            }
+                            <MudStack Spacing="0">
+                                @foreach (var circuit in summary.Circuits)
+                                {
+                                    var path = SplitPath(circuit.CurrentPath);
+                                    <MudStack Row="true" Spacing="1" Class="align-center flex-wrap">
+                                        <MudText Typo="Typo.body2"><b>@path.Route</b></MudText>
+                                        @if (!string.IsNullOrEmpty(path.Query))
+                                        {
+                                            <MudText Typo="Typo.caption" Color="Color.Secondary">@path.Query</MudText>
+                                        }
+                                        @if (circuit.IsDisconnected)
+                                        {
+                                            <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined">
+                                                Disconnected
+                                            </MudChip>
+                                        }
+                                    </MudStack>
+                                }
+                            </MudStack>
                         </td>
                         <td>
-                            <MudText Typo="Typo.caption" Color="Color.Secondary">@($"{GetSharePercent(summary.ActiveSessionCount):F0}%")</MudText>
+                            <MudStack Row="true" Justify="Justify.FlexEnd">
+                                <ClientEnvironmentChips Environment="@summary.ClientEnvironment" />
+                            </MudStack>
                         </td>
                     </tr>
                 }
             </tbody>
         </MudSimpleTable>
-
-        <MudExpansionPanels MultiExpansion="true" Dense="true">
-            @foreach (var group in _clientSummaries)
-            {
-                <MudExpansionPanel Text="@GetPanelTitle(group)" Expanded="false">
-                    <MudStack Spacing="2" Class="mb-2">
-                        <ClientEnvironmentChips Environment="@group.ClientEnvironment" />
-                        @if (!string.IsNullOrWhiteSpace(group.ClientEnvironment.UserAgent))
-                        {
-                            <MudText Typo="Typo.caption" Color="Color.Secondary">@group.ClientEnvironment.UserAgent</MudText>
-                        }
-                    </MudStack>
-                    <MudStack Spacing="1">
-                        @foreach (var circuit in group.Circuits)
-                        {
-                            <MudPaper Class="pa-2" Elevation="0" Outlined="true">
-                                <MudStack Row="true" Spacing="2" Class="align-center flex-wrap">
-                                    <MudIcon Icon="@Icons.Material.Filled.Lan" Size="Size.Small" Color="@(circuit.IsDisconnected ? Color.Warning : Color.Success)" />
-                                    <MudText Typo="Typo.body2">@(circuit.CurrentPath ?? "—")</MudText>
-                                    @if (circuit.IsOnAdminMonitorPath)
-                                    {
-                                        <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Text">Monitor</MudChip>
-                                    }
-                                    <MudSpacer />
-                                    <MudText Typo="Typo.caption" Color="Color.Secondary">@circuit.CircuitId</MudText>
-                                    @if (circuit.IsDisconnected)
-                                    {
-                                        <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined">Disconnected</MudChip>
-                                    }
-                                </MudStack>
-                            </MudPaper>
-                        }
-                    </MudStack>
-                </MudExpansionPanel>
-            }
-        </MudExpansionPanels>
     }
 
     <MudButton Variant="Variant.Outlined"
@@ -135,6 +97,11 @@
 
     [Parameter] public bool IsDegradedMode { get; set; }
 
+    /// <summary>
+    /// Optional chips rendered beside the browser label. Host-specific, not part of the general monitor.
+    /// </summary>
+    [Parameter] public RenderFragment<ActiveClientSessionSummary>? BrowserChips { get; set; }
+
     protected override async Task OnInitializedAsync()
     {
         await RefreshSummaries();
@@ -152,19 +119,20 @@
         await Task.CompletedTask;
     }
 
-    private double GetSharePercent(int count)
+    private static (string Route, string? Query) SplitPath(string? currentPath)
     {
-        if (_totalActiveSessions == 0)
+        if (string.IsNullOrWhiteSpace(currentPath))
         {
-            return 0;
+            return ("—", null);
         }
 
-        return (double)count / _totalActiveSessions * 100;
-    }
+        var queryIndex = currentPath.IndexOf('?');
+        if (queryIndex < 0)
+        {
+            return (currentPath, null);
+        }
 
-    private static string GetPanelTitle(ActiveClientSessionSummary group)
-    {
-        var adminSuffix = group.IsAdminMonitorGroup ? " · Admin" : "";
-        return $"{group.ClientLabel} · {group.ActiveSessionCount} circuits · {group.DistinctPathCount} URLs{adminSuffix}";
+        var query = currentPath[(queryIndex + 1)..].Replace("&", " · ", StringComparison.Ordinal);
+        return (currentPath[..queryIndex], string.IsNullOrEmpty(query) ? null : query);
     }
 }
