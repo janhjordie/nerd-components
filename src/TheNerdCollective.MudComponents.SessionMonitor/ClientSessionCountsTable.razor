@@ -60,6 +60,9 @@
                                         {
                                             <MudText Typo="Typo.caption" Color="Color.Secondary">@path.Query</MudText>
                                         }
+                                        <MudChip T="string" Size="Size.Small" Color="@DwellColor(circuit)" Variant="Variant.Filled">
+                                            @DwellLabel(circuit)
+                                        </MudChip>
                                         @if (circuit.IsDisconnected)
                                         {
                                             <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined">
@@ -134,5 +137,40 @@
 
         var query = currentPath[(queryIndex + 1)..].Replace("&", " · ", StringComparison.Ordinal);
         return (currentPath[..queryIndex], string.IsNullOrEmpty(query) ? null : query);
+    }
+
+    private static TimeSpan Dwell(ActiveCircuitSession circuit)
+        => DateTime.UtcNow - (circuit.CurrentPathUpdatedAt ?? circuit.StartedAt);
+
+    private static Color DwellColor(ActiveCircuitSession circuit)
+    {
+        var minutes = Dwell(circuit).TotalMinutes;
+        if (minutes <= 2)
+        {
+            return Color.Error;
+        }
+
+        return minutes <= 5 ? Color.Warning : Color.Success;
+    }
+
+    private static string DwellLabel(ActiveCircuitSession circuit)
+    {
+        var dwell = Dwell(circuit);
+        if (dwell < TimeSpan.Zero)
+        {
+            dwell = TimeSpan.Zero;
+        }
+
+        if (dwell.TotalHours >= 1)
+        {
+            return $"{(int)dwell.TotalHours}h {dwell.Minutes}m";
+        }
+
+        if (dwell.TotalMinutes >= 1)
+        {
+            return $"{(int)dwell.TotalMinutes}m";
+        }
+
+        return $"{dwell.Seconds}s";
     }
 }
