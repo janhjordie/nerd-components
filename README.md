@@ -118,6 +118,12 @@ Integration client for GetHarvest API v2.
 - Service abstractions and configuration support
 - Used by the HarvestTimesheet UI
 
+#### [TheNerdCollective.Integrations.Brevo](src/TheNerdCollective.Integrations.Brevo/README.md)
+Brevo API v3 client for contacts and transactional email.
+- Create or update a contact and add it to lists
+- Send a transactional email
+- Configuration and retry support
+
 #### [TheNerdCollective.Integrations.GitHub](src/TheNerdCollective.Integrations.GitHub/README.md)
 GitHub API v3 integration for workflow management.
 - List, cancel, and rerun workflow runs
