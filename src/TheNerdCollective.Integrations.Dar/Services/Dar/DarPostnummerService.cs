@@ -89,6 +89,17 @@ public sealed class DarPostnummerService
     {
         var normalizedCode = NormalizeKommunekode(kommunekode);
 
+        var enriched = await ResolveAllWithKommuneAsync(cancellationToken).ConfigureAwait(false);
+        var fromDatafordeler = enriched
+            .Where(p => string.Equals(p.Kommunekode, normalizedCode, StringComparison.Ordinal))
+            .Select(ToBasic)
+            .OrderBy(p => p.Postnummer, StringComparer.Ordinal)
+            .ToList();
+        if (fromDatafordeler.Count > 0)
+        {
+            return fromDatafordeler;
+        }
+
         if (_options.EnableDawaEnrichment)
         {
             var dawaResults = await _dawaClient.GetByMunicipalityCodeAsync(normalizedCode, cancellationToken)
@@ -102,12 +113,7 @@ public sealed class DarPostnummerService
             }
         }
 
-        var enriched = await ResolveAllWithKommuneAsync(cancellationToken).ConfigureAwait(false);
-        return enriched
-            .Where(p => string.Equals(p.Kommunekode, normalizedCode, StringComparison.Ordinal))
-            .Select(ToBasic)
-            .OrderBy(p => p.Postnummer, StringComparer.Ordinal)
-            .ToList();
+        return fromDatafordeler;
     }
 
     /// <summary>Resolver et eller flere postnumre inkl. primær kommune.</summary>
@@ -175,7 +181,7 @@ public sealed class DarPostnummerService
 
         var polygonWkt = GeoCircleHelper.CreateCirclePolygonWkt(longitude, latitude, radiusMeters);
         var kommuner = await _kommuneService
-            .FindKommunerByGeometryAsync(polygonWkt, includeWfsFallback: false, cancellationToken)
+            .FindKommunerByGeometryAsync(polygonWkt, includeWfsFallback: true, cancellationToken)
             .ConfigureAwait(false);
 
         IReadOnlyList<PostnummerMedKommunerDto> ordered;
@@ -258,6 +264,13 @@ public sealed class DarPostnummerService
         string postdistrikt,
         CancellationToken cancellationToken)
     {
+        var fromDatafordeler = await _kommuneResolver.ResolveAllKommunerAsync(postnummer, postdistrikt, cancellationToken)
+            .ConfigureAwait(false);
+        if (fromDatafordeler is not null)
+        {
+            return fromDatafordeler;
+        }
+
         if (_options.EnableDawaEnrichment)
         {
             var dawa = await _dawaClient.GetByPostalCodeWithAllKommunerAsync(postnummer, cancellationToken)
@@ -270,8 +283,7 @@ public sealed class DarPostnummerService
             }
         }
 
-        return await _kommuneResolver.ResolveAllKommunerAsync(postnummer, postdistrikt, cancellationToken)
-            .ConfigureAwait(false);
+        return fromDatafordeler;
     }
 
     /// <summary>
@@ -285,6 +297,13 @@ public sealed class DarPostnummerService
     {
         var normalizedCode = NormalizeKommunekode(kommunekode);
 
+        var fromDatafordeler = await _kommuneResolver.GetByKommunekodeAsync(normalizedCode, cancellationToken)
+            .ConfigureAwait(false);
+        if (fromDatafordeler.Count > 0)
+        {
+            return fromDatafordeler;
+        }
+
         if (_options.EnableDawaEnrichment)
         {
             var dawaResults = await _dawaClient
@@ -296,8 +315,7 @@ public sealed class DarPostnummerService
             }
         }
 
-        return await _kommuneResolver.GetByKommunekodeAsync(normalizedCode, cancellationToken)
-            .ConfigureAwait(false);
+        return fromDatafordeler;
     }
 
     private static void ValidateCircleParameters(double longitude, double latitude, int radiusMeters)
@@ -348,6 +366,16 @@ public sealed class DarPostnummerService
         PostnummerDto basic,
         CancellationToken cancellationToken)
     {
+        var rest = await _restClient.ResolveKommuneAsync(
+            basic.Postnummer,
+            basic.Postdistrikt,
+            cancellationToken).ConfigureAwait(false);
+
+        if (rest is not null && !string.IsNullOrWhiteSpace(rest.Kommunekode))
+        {
+            return rest;
+        }
+
         if (_options.EnableDawaEnrichment)
         {
             var dawa = await _dawaClient.GetByPostalCodeAsync(basic.Postnummer, cancellationToken)
@@ -362,11 +390,6 @@ public sealed class DarPostnummerService
                 };
             }
         }
-
-        var rest = await _restClient.ResolveKommuneAsync(
-            basic.Postnummer,
-            basic.Postdistrikt,
-            cancellationToken).ConfigureAwait(false);
 
         return rest ?? new PostnummerMedKommuneDto
         {

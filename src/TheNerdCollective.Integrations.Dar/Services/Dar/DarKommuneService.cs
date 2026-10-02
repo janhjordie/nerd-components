@@ -158,25 +158,23 @@ public sealed class DarKommuneService
     {
         ValidateWgs84Coordinates(latitude, longitude);
 
-        var graphQlKommune = await TryGraphQlFindByWgs84Async(latitude, longitude, cancellationToken)
-            .ConfigureAwait(false);
-        if (graphQlKommune is not null)
+        try
         {
-            if (_dagiOptions.EnableDawaFallback)
-            {
-                var dawaKommune = await _dawaClient.FindByWgs84Async(latitude, longitude, cancellationToken)
-                    .ConfigureAwait(false);
-                if (dawaKommune is not null
-                    && !string.Equals(
-                        graphQlKommune.Kommunekode,
-                        dawaKommune.Kommunekode,
-                        StringComparison.OrdinalIgnoreCase))
-                {
-                    return dawaKommune;
-                }
-            }
+            return await FindByCoordinatesDatafordelerAsync(latitude, longitude, cancellationToken)
+                .ConfigureAwait(false);
+        }
+        catch (InvalidOperationException)
+        {
+            // GraphQL + REST DAGI did not resolve the point — try WFS, then optional DAWA.
+        }
 
-            return graphQlKommune;
+        var (easting, northing) = Etrs89Utm32NConverter.FromWgs84(latitude, longitude);
+        try
+        {
+            return await FindByEtrs89InternalAsync(easting, northing, cancellationToken).ConfigureAwait(false);
+        }
+        catch (InvalidOperationException)
+        {
         }
 
         if (_dagiOptions.EnableDawaFallback)
@@ -189,8 +187,7 @@ public sealed class DarKommuneService
             }
         }
 
-        var (easting, northing) = Etrs89Utm32NConverter.FromWgs84(latitude, longitude);
-        return await FindByEtrs89InternalAsync(easting, northing, cancellationToken).ConfigureAwait(false);
+        throw new InvalidOperationException(DagiAccessHelp.PointLookupFailedMessage);
     }
 
     /// <summary>Finder kommunen for et punkt i ETRS89 UTM zone 32N (EPSG:25832).</summary>
@@ -206,6 +203,14 @@ public sealed class DarKommuneService
             return graphQlKommune;
         }
 
+        try
+        {
+            return await FindByEtrs89InternalAsync(easting, northing, cancellationToken).ConfigureAwait(false);
+        }
+        catch (InvalidOperationException)
+        {
+        }
+
         if (_dagiOptions.EnableDawaFallback)
         {
             var dawaKommune = await _dawaClient.FindByEtrs89Async(easting, northing, cancellationToken)
@@ -216,7 +221,7 @@ public sealed class DarKommuneService
             }
         }
 
-        return await FindByEtrs89InternalAsync(easting, northing, cancellationToken).ConfigureAwait(false);
+        throw new InvalidOperationException(DagiAccessHelp.PointLookupFailedMessage);
     }
 
     private async Task<KommuneDto> FindByEtrs89InternalAsync(

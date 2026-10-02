@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading;
@@ -37,7 +38,10 @@ internal sealed class DawaRegionClient
         {
             var url = $"{_baseUrl}/regioner?per_side={PageSize}&side={side}";
             using var response = await _httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
-            await EnsureSuccessAsync(response).ConfigureAwait(false);
+            if (!await DawaHttpHelper.TryEnsureSuccessAsync(response, "DAWA regioner").ConfigureAwait(false))
+            {
+                break;
+            }
 
             using var document = await JsonDocument.ParseAsync(
                 await response.Content.ReadAsStreamAsync().ConfigureAwait(false),
@@ -108,15 +112,4 @@ internal sealed class DawaRegionClient
         return value.ValueKind == JsonValueKind.String ? value.GetString() : value.ToString();
     }
 
-    private static async Task EnsureSuccessAsync(HttpResponseMessage response)
-    {
-        if (response.IsSuccessStatusCode)
-        {
-            return;
-        }
-
-        var body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-        throw new InvalidOperationException(
-            $"DAWA returnerede HTTP {(int)response.StatusCode}: {body}");
-    }
 }

@@ -54,6 +54,24 @@ public sealed class DarKommuneIntegrationTests
         Assert.Equal("0217", kommune.Kommunekode);
     }
 
+    [SkippableTheory]
+    [InlineData(57.008719345136434, 10.348322345606388, "0851", "Aalborg")] // Hals
+    [InlineData(56.1456465450032, 10.14043589178547, "0751", "Aarhus")] // Brabrand
+    [InlineData(57.4684031, 10.07790672, "0860", "Hjørring")]
+    [InlineData(55.72707466, 12.36851587, "0151", "Ballerup")]
+    public async Task FindByCoordinatesAsync_returnerer_kommune_for_tid_til_tur_koordinater(
+        double latitude,
+        double longitude,
+        string expectedCode,
+        string expectedNamePrefix)
+    {
+        var services = await CreateServicesAsync();
+        var kommune = await services.Dar.Kommune.FindByCoordinatesAsync(latitude, longitude);
+
+        Assert.Equal(expectedCode, kommune.Kommunekode);
+        Assert.StartsWith(expectedNamePrefix, kommune.Navn, StringComparison.Ordinal);
+    }
+
     private const string DagiAccessDeniedMessage =
         "Ingen kommuner fra DAGI GraphQL, DAWA eller WFS. Tjek EnableDawaFallback (default true) og netværksadgang til api.dataforsyningen.dk.";
 

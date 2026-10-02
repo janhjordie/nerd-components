@@ -14,8 +14,8 @@ public sealed class DarPostnummerOptions
     /// <summary>Cache-varighed for cirkel-opslag (default 24 timer).</summary>
     public TimeSpan CircleCacheDuration { get; set; } = TimeSpan.FromHours(24);
 
-    /// <summary>DAWA til kommune-opslag og filtrering på kommunekode (gratis, ingen nøgle).</summary>
-    public bool EnableDawaEnrichment { get; set; } = true;
+    /// <summary>DAWA til kommune-opslag (udfaset — default fra 1.8.0 er false; Datafordeler/DAR bruges først).</summary>
+    public bool EnableDawaEnrichment { get; set; }
 
     /// <summary>DAWA base-URL (<see href="https://api.dataforsyningen.dk"/>).</summary>
     public string DawaBaseUrl { get; set; } = DefaultDawaBaseUrl;

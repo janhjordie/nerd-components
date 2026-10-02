@@ -15,8 +15,8 @@ public sealed class DarDagiOptions
     /// <summary>Cache-varighed for region-listen (default 24 timer).</summary>
     public TimeSpan RegionListCacheDuration { get; set; } = TimeSpan.FromHours(24);
 
-    /// <summary>DAWA fallback (gratis, ingen nøgle) når Datafordeler DAGI GraphQL er tom.</summary>
-    public bool EnableDawaFallback { get; set; } = true;
+    /// <summary>DAWA fallback når Datafordeler ikke har data (DAWA er udfaset — default fra 1.8.0 er false).</summary>
+    public bool EnableDawaFallback { get; set; }
 
     /// <summary>DAWA base-URL (<see href="https://api.dataforsyningen.dk"/>).</summary>
     public string DawaBaseUrl { get; set; } = DefaultDawaBaseUrl;
