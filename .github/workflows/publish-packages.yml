@@ -17,7 +17,7 @@ permissions:
 
 jobs:
   detect-changes:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       packages: ${{ steps.filter.outputs.packages }}
     steps:
@@ -127,7 +127,7 @@ jobs:
   publish:
     needs: detect-changes
     if: needs.detect-changes.outputs.packages != '[]'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     environment: production
     strategy:
       matrix:
