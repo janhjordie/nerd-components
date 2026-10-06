@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using TheNerdCollective.Integrations.Dar.Mapping;
 using TheNerdCollective.Integrations.Dar.Models;
+using TheNerdCollective.Integrations.Dar.ReferenceData;
 
 namespace TheNerdCollective.Integrations.Dar.Services.Dar.Internal;
 
@@ -31,8 +32,10 @@ internal static class KommuneRegionEnricher
                     TryResolveRegion(regionById, graph.RegionLokalid),
                     TryResolveDawa(dawaByCode, graph.Kommunekode));
 
+                var dawa = TryResolveDawa(dawaByCode, graph.Kommunekode);
+                enriched = ApplyRepresentativePointFromDawa(enriched, dawa);
                 enriched = ApplyRepresentativePoint(enriched, graph.Geometri);
-                return ApplyRepresentativePointFromDawa(enriched, TryResolveDawa(dawaByCode, graph.Kommunekode));
+                return ApplyReferenceCenter(enriched);
             })
             .OrderBy(k => k.Navn, StringComparer.CurrentCultureIgnoreCase)
             .ToList();
@@ -58,7 +61,8 @@ internal static class KommuneRegionEnricher
                     kommune,
                     region: null,
                     TryResolveDawa(dawaByCode, kommune.Kommunekode));
-                return ApplyRepresentativePointFromDawa(enriched, TryResolveDawa(dawaByCode, kommune.Kommunekode));
+                enriched = ApplyRepresentativePointFromDawa(enriched, TryResolveDawa(dawaByCode, kommune.Kommunekode));
+                return ApplyReferenceCenter(enriched);
             })
             .OrderBy(k => k.Navn, StringComparer.CurrentCultureIgnoreCase)
             .ToList();
@@ -156,6 +160,11 @@ internal static class KommuneRegionEnricher
 
     private static KommuneDto ApplyRepresentativePoint(KommuneDto kommune, KoordinatDto? geometri)
     {
+        if (kommune.RepræsentativPunktLatitude is not null && kommune.RepræsentativPunktLongitude is not null)
+        {
+            return kommune;
+        }
+
         var centroid = WktCentroidHelper.TryGetCentroidWgs84(geometri?.Wkt);
         if (centroid is null)
         {
@@ -169,13 +178,25 @@ internal static class KommuneRegionEnricher
         };
     }
 
-    private static KommuneDto ApplyRepresentativePointFromDawa(KommuneDto kommune, KommuneDto? dawa)
+    private static KommuneDto ApplyReferenceCenter(KommuneDto kommune)
     {
-        if (kommune.RepræsentativPunktLatitude is not null && kommune.RepræsentativPunktLongitude is not null)
+        if (!KommuneReferenceCenterCatalog.TryGetCenter(
+                kommune.Kommunekode,
+                out var latitude,
+                out var longitude))
         {
             return kommune;
         }
 
+        return kommune with
+        {
+            RepræsentativPunktLatitude = latitude,
+            RepræsentativPunktLongitude = longitude
+        };
+    }
+
+    private static KommuneDto ApplyRepresentativePointFromDawa(KommuneDto kommune, KommuneDto? dawa)
+    {
         if (dawa?.RepræsentativPunktLatitude is not double latitude || dawa.RepræsentativPunktLongitude is not double longitude)
         {
             return kommune;

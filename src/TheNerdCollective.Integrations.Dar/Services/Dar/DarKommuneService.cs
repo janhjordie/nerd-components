@@ -10,6 +10,7 @@ using TheNerdCollective.Integrations.Dar.GraphQL;
 using TheNerdCollective.Integrations.Dar.Json;
 using TheNerdCollective.Integrations.Dar.Mapping;
 using TheNerdCollective.Integrations.Dar.Models;
+using TheNerdCollective.Integrations.Dar.ReferenceData;
 using TheNerdCollective.Integrations.Dar.Services.Dar.Internal;
 using TheNerdCollective.Integrations.Dar.Services.Internal;
 
@@ -91,12 +92,6 @@ public sealed class DarKommuneService
             .ConfigureAwait(false);
         if (graphQlKommune is not null)
         {
-            graphQlKommune = await ApplyRepresentativeProximityOverrideAsync(
-                    latitude,
-                    longitude,
-                    graphQlKommune,
-                    cancellationToken)
-                .ConfigureAwait(false);
             return await EnrichRepresentativePointAsync(graphQlKommune, cancellationToken).ConfigureAwait(false);
         }
 
@@ -105,12 +100,6 @@ public sealed class DarKommuneService
             .ConfigureAwait(false);
         if (restKommune is not null)
         {
-            restKommune = await ApplyRepresentativeProximityOverrideAsync(
-                    latitude,
-                    longitude,
-                    restKommune,
-                    cancellationToken)
-                .ConfigureAwait(false);
             return await EnrichRepresentativePointAsync(restKommune, cancellationToken).ConfigureAwait(false);
         }
 
@@ -120,13 +109,7 @@ public sealed class DarKommuneService
         {
             var enriched = await EnrichExistingAsync(new[] { wfsKommune }, cancellationToken).ConfigureAwait(false);
             wfsKommune = enriched.FirstOrDefault() ?? wfsKommune;
-            wfsKommune = await ApplyRepresentativeProximityOverrideAsync(
-                    latitude,
-                    longitude,
-                    wfsKommune,
-                    cancellationToken)
-                .ConfigureAwait(false);
-            return wfsKommune;
+            return await EnrichRepresentativePointAsync(wfsKommune, cancellationToken).ConfigureAwait(false);
         }
 
         throw new InvalidOperationException(DagiAccessHelp.PointLookupFailedMessage);
@@ -186,6 +169,13 @@ public sealed class DarKommuneService
     {
         ValidateWgs84Coordinates(latitude, longitude);
 
+        var snapMatch = await TryFindBySnapToReferenceCenterAsync(latitude, longitude, cancellationToken)
+            .ConfigureAwait(false);
+        if (snapMatch is not null)
+        {
+            return snapMatch;
+        }
+
         try
         {
             return await FindByCoordinatesDatafordelerAsync(latitude, longitude, cancellationToken)
@@ -235,6 +225,27 @@ public sealed class DarKommuneService
         throw new InvalidOperationException(DagiAccessHelp.PointLookupFailedMessage);
     }
 
+    /// <summary>
+    /// Som <see cref="FindByCoordinatesAsync"/>, men med beslutnings-trace (repr-afstande, polygon-match, override).
+    /// </summary>
+    public async Task<(KommuneDto Kommune, KommuneCoordinateResolutionDiagnostics Diagnostics)> FindByCoordinatesWithDiagnosticsAsync(
+        double latitude,
+        double longitude,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateWgs84Coordinates(latitude, longitude);
+
+        var kommune = await FindByCoordinatesAsync(latitude, longitude, cancellationToken).ConfigureAwait(false);
+        var diagnostics = await BuildCoordinateResolutionDiagnosticsAsync(
+                latitude,
+                longitude,
+                kommune,
+                cancellationToken)
+            .ConfigureAwait(false);
+
+        return (kommune, diagnostics);
+    }
+
     /// <summary>Finder kommunen for et punkt i ETRS89 UTM zone 32N (EPSG:25832).</summary>
     public async Task<KommuneDto> FindByEtrs89Async(
         double easting,
@@ -246,8 +257,7 @@ public sealed class DarKommuneService
             .ConfigureAwait(false);
         if (graphQlKommune is not null)
         {
-            return await ApplyRepresentativeProximityOverrideAsync(latitude, longitude, graphQlKommune, cancellationToken)
-                .ConfigureAwait(false);
+            return await EnrichRepresentativePointAsync(graphQlKommune, cancellationToken).ConfigureAwait(false);
         }
 
         try
@@ -328,59 +338,28 @@ public sealed class DarKommuneService
             maxMeters);
     }
 
-    private async Task<KommuneDto> ApplyRepresentativeProximityOverrideAsync(
+    private async Task<KommuneDto?> TryFindBySnapToReferenceCenterAsync(
         double latitude,
         double longitude,
-        KommuneDto polygonMatch,
         CancellationToken cancellationToken)
     {
-        var polygonMatchEnriched = await EnrichRepresentativePointAsync(polygonMatch, cancellationToken)
-            .ConfigureAwait(false);
-        var polygonDistance = KommuneRepresentativePointHelper.TryGetDistanceToRepresentativeMeters(
-            latitude,
-            longitude,
-            polygonMatchEnriched);
-        if (polygonDistance is null)
+        var snapMeters = _dagiOptions.RepresentativeProximitySnapMeters;
+        if (snapMeters <= 0)
         {
-            return polygonMatchEnriched;
+            return null;
         }
 
         var kommuner = await SafeGetAllKommunerAsync(cancellationToken).ConfigureAwait(false);
         if (kommuner.Count == 0)
         {
-            return polygonMatchEnriched;
+            return null;
         }
 
-        var nearest = KommuneRepresentativePointHelper.TryFindNearestByRepresentativePoint(
+        return KommuneRepresentativePointHelper.TryFindNearestByRepresentativePoint(
             latitude,
             longitude,
             kommuner,
-            double.MaxValue);
-        if (nearest is null)
-        {
-            return polygonMatchEnriched;
-        }
-
-        var nearestDistance = KommuneRepresentativePointHelper.TryGetDistanceToRepresentativeMeters(
-            latitude,
-            longitude,
-            nearest);
-        if (nearestDistance is null)
-        {
-            return polygonMatchEnriched;
-        }
-
-        if (string.Equals(nearest.Kommunekode, polygonMatchEnriched.Kommunekode, StringComparison.Ordinal))
-        {
-            return polygonMatchEnriched;
-        }
-
-        if (nearestDistance.Value < polygonDistance.Value)
-        {
-            return nearest;
-        }
-
-        return polygonMatchEnriched;
+            snapMeters);
     }
 
     private async Task<IReadOnlyList<KommuneDto>> SafeGetAllKommunerAsync(CancellationToken cancellationToken)
@@ -425,10 +404,7 @@ public sealed class DarKommuneService
         var regioner = await SafeGetRegionsAsync(cancellationToken).ConfigureAwait(false);
         IReadOnlyList<KommuneDto>? dawaKommuner = null;
 
-        if (_dagiOptions.EnableDawaFallback)
-        {
-            dawaKommuner = await _dawaClient.GetAllAsync(cancellationToken).ConfigureAwait(false);
-        }
+        dawaKommuner = await TryGetDawaKommunerForEnrichmentAsync(cancellationToken).ConfigureAwait(false);
 
         return KommuneRegionEnricher.EnrichFromGraph(graphKommuner, regioner, dawaKommuner);
     }
@@ -440,10 +416,7 @@ public sealed class DarKommuneService
         var regioner = await SafeGetRegionsAsync(cancellationToken).ConfigureAwait(false);
         IReadOnlyList<KommuneDto>? dawaKommuner = null;
 
-        if (_dagiOptions.EnableDawaFallback)
-        {
-            dawaKommuner = await _dawaClient.GetAllAsync(cancellationToken).ConfigureAwait(false);
-        }
+        dawaKommuner = await TryGetDawaKommunerForEnrichmentAsync(cancellationToken).ConfigureAwait(false);
 
         return KommuneRegionEnricher.EnrichExisting(kommuner, regioner, dawaKommuner);
     }
@@ -658,13 +631,57 @@ public sealed class DarKommuneService
         return null;
     }
 
+    private async Task<IReadOnlyList<KommuneDto>?> TryGetDawaKommunerForEnrichmentAsync(CancellationToken cancellationToken)
+    {
+        if (!_dagiOptions.EnableDawaVisualCenterEnrichment && !_dagiOptions.EnableDawaFallback)
+        {
+            return null;
+        }
+
+        try
+        {
+            return await _dawaClient.GetAllAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch (InvalidOperationException)
+        {
+            return null;
+        }
+    }
+
     private async Task<KommuneDto> EnrichRepresentativePointAsync(
         KommuneDto kommune,
         CancellationToken cancellationToken)
     {
+        if (KommuneReferenceCenterCatalog.TryGetCenter(
+                kommune.Kommunekode,
+                out var referenceLatitude,
+                out var referenceLongitude))
+        {
+            return kommune with
+            {
+                RepræsentativPunktLatitude = referenceLatitude,
+                RepræsentativPunktLongitude = referenceLongitude
+            };
+        }
+
         if (kommune.RepræsentativPunktLatitude is not null && kommune.RepræsentativPunktLongitude is not null)
         {
             return kommune;
+        }
+
+        var dawaKommuner = await TryGetDawaKommunerForEnrichmentAsync(cancellationToken).ConfigureAwait(false);
+        if (dawaKommuner is not null && !string.IsNullOrWhiteSpace(kommune.Kommunekode))
+        {
+            var dawa = dawaKommuner.FirstOrDefault(k =>
+                string.Equals(k.Kommunekode, kommune.Kommunekode, StringComparison.Ordinal));
+            if (dawa?.RepræsentativPunktLatitude is double dawaLat && dawa.RepræsentativPunktLongitude is double dawaLng)
+            {
+                return kommune with
+                {
+                    RepræsentativPunktLatitude = dawaLat,
+                    RepræsentativPunktLongitude = dawaLng
+                };
+            }
         }
 
         if (string.IsNullOrWhiteSpace(kommune.IdLokalId))
@@ -696,6 +713,72 @@ public sealed class DarKommuneService
         {
             RepræsentativPunktLatitude = centroid.Value.Latitude,
             RepræsentativPunktLongitude = centroid.Value.Longitude
+        };
+    }
+
+    private async Task<KommuneCoordinateResolutionDiagnostics> BuildCoordinateResolutionDiagnosticsAsync(
+        double latitude,
+        double longitude,
+        KommuneDto resolved,
+        CancellationToken cancellationToken)
+    {
+        var polygonMatch = await TryGraphQlFindByWgs84Async(latitude, longitude, cancellationToken).ConfigureAwait(false);
+
+        var polygonEnriched = polygonMatch is not null
+            ? await EnrichRepresentativePointAsync(polygonMatch, cancellationToken).ConfigureAwait(false)
+            : null;
+        var polygonDistance = polygonEnriched is null
+            ? null
+            : KommuneRepresentativePointHelper.TryGetDistanceToRepresentativeMeters(latitude, longitude, polygonEnriched);
+
+        var allKommuner = await SafeGetAllKommunerAsync(cancellationToken).ConfigureAwait(false);
+        var nearest = KommuneRepresentativePointHelper.TryFindNearestByRepresentativePoint(
+            latitude,
+            longitude,
+            allKommuner,
+            double.MaxValue);
+        var nearestDistance = nearest is null
+            ? null
+            : KommuneRepresentativePointHelper.TryGetDistanceToRepresentativeMeters(latitude, longitude, nearest);
+
+        var snapMeters = _dagiOptions.RepresentativeProximitySnapMeters;
+        var snapApplied = nearestDistance is not null
+            && nearestDistance.Value <= snapMeters
+            && string.Equals(nearest?.Kommunekode, resolved.Kommunekode, StringComparison.Ordinal);
+
+        var topNearest = allKommuner
+            .Select(k =>
+            {
+                var distance = KommuneRepresentativePointHelper.TryGetDistanceToRepresentativeMeters(latitude, longitude, k);
+                return distance is null
+                    ? null
+                    : new KommuneReprDistanceSnapshot
+                    {
+                        Kommunekode = k.Kommunekode,
+                        Navn = k.Navn,
+                        DistanceMeters = Math.Round(distance.Value, 2)
+                    };
+            })
+            .Where(s => s is not null)
+            .Cast<KommuneReprDistanceSnapshot>()
+            .OrderBy(s => s.DistanceMeters)
+            .Take(8)
+            .ToList();
+
+        return new KommuneCoordinateResolutionDiagnostics
+        {
+            QueryLatitude = latitude,
+            QueryLongitude = longitude,
+            ResolvedKommunekode = resolved.Kommunekode,
+            ResolvedNavn = resolved.Navn,
+            ResolutionPath = "FindByCoordinatesAsync",
+            PolygonMatchKommunekode = polygonEnriched?.Kommunekode,
+            PolygonMatchReprDistanceMeters = polygonDistance,
+            NearestReprKommunekode = nearest?.Kommunekode,
+            NearestReprDistanceMeters = nearestDistance,
+            RepresentativeProximityOverrideApplied = snapApplied,
+            RepresentativeProximitySnapMeters = snapMeters,
+            TopNearestRepresentativePoints = topNearest
         };
     }
 

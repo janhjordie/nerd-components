@@ -18,6 +18,11 @@ public sealed class DarDagiOptions
     /// <summary>DAWA fallback når Datafordeler ikke har data (DAWA er udfaset — default fra 1.8.0 er false).</summary>
     public bool EnableDawaFallback { get; set; }
 
+    /// <summary>
+    /// Hent DAWA <c>visueltcenter</c> til repræsentativpunkt (gratis liste) — uafhængigt af <see cref="EnableDawaFallback"/>.
+    /// </summary>
+    public bool EnableDawaVisualCenterEnrichment { get; set; } = true;
+
     /// <summary>DAWA base-URL (<see href="https://api.dataforsyningen.dk"/>).</summary>
     public string DawaBaseUrl { get; set; } = DefaultDawaBaseUrl;
 
@@ -42,7 +47,7 @@ public sealed class DarDagiOptions
     public double NearestRepresentativeFallbackMaxKilometers { get; set; } = 15;
 
     /// <summary>
-    /// Når et punkt er tættere på en anden kommunes repræsentativpunkt end polygon-match, foretrækkes den kommune (meter).
+    /// Snap til nærmeste indlejret kommune-center (Fleming/Dwarf) før polygon-opslag, og max afstand for repr-fallback (meter).
     /// </summary>
-    public double RepresentativeProximitySnapMeters { get; set; } = 200;
+    public double RepresentativeProximitySnapMeters { get; set; } = 500;
 }
