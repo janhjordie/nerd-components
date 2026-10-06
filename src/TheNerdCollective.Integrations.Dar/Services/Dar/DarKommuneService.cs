@@ -19,6 +19,7 @@ namespace TheNerdCollective.Integrations.Dar.Services.Dar;
 public sealed class DarKommuneService
 {
     private const int MinimumExpectedKommuneCount = 90;
+    private static readonly int[] MicroCircleRadiiMeters = { 75, 250, 1000, 5000, 25000 };
     private readonly GraphQlDataAccessor _accessor;
     private readonly DawaKommuneClient _dawaClient;
     private readonly DagiRestKommuneClient _restClient;
@@ -101,6 +102,14 @@ public sealed class DarKommuneService
             return await EnrichRepresentativePointAsync(restKommune, cancellationToken).ConfigureAwait(false);
         }
 
+        var wfsKommune = await _wfsClient.FindByPointAsync(easting, northing, cancellationToken)
+            .ConfigureAwait(false);
+        if (wfsKommune is not null)
+        {
+            var enriched = await EnrichExistingAsync(new[] { wfsKommune }, cancellationToken).ConfigureAwait(false);
+            return enriched.FirstOrDefault() ?? wfsKommune;
+        }
+
         throw new InvalidOperationException(DagiAccessHelp.PointLookupFailedMessage);
     }
 
@@ -175,6 +184,13 @@ public sealed class DarKommuneService
         }
         catch (InvalidOperationException)
         {
+        }
+
+        var microCircleKommune = await TryFindByMicroCircleAsync(latitude, longitude, cancellationToken)
+            .ConfigureAwait(false);
+        if (microCircleKommune is not null)
+        {
+            return microCircleKommune;
         }
 
         if (_dagiOptions.EnableDawaFallback)
@@ -336,8 +352,20 @@ public sealed class DarKommuneService
             return null;
         }
 
-        var graph = DarJsonSerializer.DeserializeRequired<KommuneGraphDto>(nodes[0]);
-        var enriched = await EnrichFromGraphAsync(new[] { graph }, cancellationToken).ConfigureAwait(false);
+        var candidates = new List<KommuneGraphDto>(nodes.GetArrayLength());
+        for (var index = 0; index < nodes.GetArrayLength(); index++)
+        {
+            candidates.Add(DarJsonSerializer.DeserializeRequired<KommuneGraphDto>(nodes[index]));
+        }
+
+        var selectedGraph = await SelectGraphContainingPointAsync(candidates, easting, northing, cancellationToken)
+            .ConfigureAwait(false);
+        if (selectedGraph is null)
+        {
+            return null;
+        }
+
+        var enriched = await EnrichFromGraphAsync(new[] { selectedGraph }, cancellationToken).ConfigureAwait(false);
         var kommune = enriched.FirstOrDefault();
         if (kommune is null)
         {
@@ -345,6 +373,118 @@ public sealed class DarKommuneService
         }
 
         return await EnrichRepresentativePointAsync(kommune, cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task<KommuneGraphDto?> SelectGraphContainingPointAsync(
+        IReadOnlyList<KommuneGraphDto> candidates,
+        double easting,
+        double northing,
+        CancellationToken cancellationToken)
+    {
+        var containing = new List<KommuneGraphDto>();
+        foreach (var candidate in candidates)
+        {
+            var geometryGraph = await TryFetchKommuneGraphWithGeometryAsync(candidate, cancellationToken)
+                .ConfigureAwait(false);
+            if (geometryGraph is null)
+            {
+                continue;
+            }
+
+            if (WktPointInPolygonHelper.ContainsEtrs89(geometryGraph.Geometri?.Wkt, easting, northing))
+            {
+                containing.Add(geometryGraph);
+            }
+        }
+
+        if (containing.Count == 0)
+        {
+            return null;
+        }
+
+        return containing
+            .OrderBy(candidate => WktPointInPolygonHelper.TryGetAbsoluteAreaEtrs89(candidate.Geometri?.Wkt))
+            .ThenBy(candidate => candidate.Kommunekode ?? string.Empty, StringComparer.OrdinalIgnoreCase)
+            .First();
+    }
+
+    private async Task<KommuneGraphDto?> TryFetchKommuneGraphWithGeometryAsync(
+        KommuneGraphDto candidate,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(candidate.IdLokalId))
+        {
+            return string.IsNullOrWhiteSpace(candidate.Geometri?.Wkt) ? null : candidate;
+        }
+
+        var temporal = GraphQlDataAccessor.CreateTemporalVariables();
+        var nodes = await _accessor.FetchDagiNodesAsync(
+            GraphQlQueries.GetKommuneById,
+            new KommuneByIdVariables(candidate.IdLokalId!, temporal.Virkningstid, temporal.Registreringstid),
+            "DAGI_Kommuneinddeling",
+            cancellationToken).ConfigureAwait(false);
+
+        if (nodes.GetArrayLength() == 0)
+        {
+            return null;
+        }
+
+        return DarJsonSerializer.DeserializeRequired<KommuneGraphDto>(nodes[0]);
+    }
+
+    private async Task<KommuneDto?> TryFindByMicroCircleAsync(
+        double latitude,
+        double longitude,
+        CancellationToken cancellationToken)
+    {
+        var (easting, northing) = Etrs89Utm32NConverter.FromWgs84(latitude, longitude);
+
+        foreach (var radiusMeters in MicroCircleRadiiMeters)
+        {
+            var polygonWkt = GeoCircleHelper.CreateCirclePolygonWkt(longitude, latitude, radiusMeters);
+            var kommuner = await FindKommunerByGeometryAsync(polygonWkt, cancellationToken).ConfigureAwait(false);
+            if (kommuner.Count == 0)
+            {
+                continue;
+            }
+
+            if (kommuner.Count == 1)
+            {
+                return kommuner[0];
+            }
+
+            var graphCandidates = new List<KommuneGraphDto>();
+            foreach (var kommune in kommuner)
+            {
+                if (string.IsNullOrWhiteSpace(kommune.IdLokalId))
+                {
+                    continue;
+                }
+
+                var graph = await TryFetchKommuneGraphWithGeometryAsync(
+                    new KommuneGraphDto { IdLokalId = kommune.IdLokalId, Kommunekode = kommune.Kommunekode, Navn = kommune.Navn },
+                    cancellationToken).ConfigureAwait(false);
+
+                if (graph is not null)
+                {
+                    graphCandidates.Add(graph);
+                }
+            }
+
+            var selectedGraph = await SelectGraphContainingPointAsync(graphCandidates, easting, northing, cancellationToken)
+                .ConfigureAwait(false);
+            if (selectedGraph is not null)
+            {
+                var enriched = await EnrichFromGraphAsync(new[] { selectedGraph }, cancellationToken).ConfigureAwait(false);
+                var resolved = enriched.FirstOrDefault();
+                if (resolved is not null)
+                {
+                    return resolved;
+                }
+            }
+        }
+
+        return null;
     }
 
     private async Task<KommuneDto> EnrichRepresentativePointAsync(

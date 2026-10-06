@@ -253,15 +253,15 @@ public static class GraphQlQueries
         """;
 
     public static string FindKommuneByPoint => $$"""
-        # DAGI_Kommuneinddeling — geometri.contains (EPSG:25832), jf. Datafordeler DAGI-vejledning
+        # DAGI_Kommuneinddeling — geometri.intersects (EPSG:25832), aligned with circle lookup
         query FindKommuneByPoint($wkt: String!, $virkningstid: DafDateTime, $registreringstid: DafDateTime) {
           DAGI_Kommuneinddeling(
-            first: 1
+            first: 10
             virkningstid: $virkningstid
             registreringstid: $registreringstid
             where: {
               geometri: {
-                contains: {
+                intersects: {
                   crs: 25832
                   wkt: $wkt
                 }
@@ -269,7 +269,7 @@ public static class GraphQlQueries
             }
           ) {
             nodes {
-              {{GraphQlFieldLists.Kommuneinddeling}}
+              {{GraphQlFieldLists.KommuneinddelingWithGeometri}}
             }
           }
         }

@@ -86,7 +86,7 @@ internal sealed class DagiWfsKommuneClient
         var wkt = FormatPointWkt(easting, northing);
         var features = await FetchByCqlAsync(
             $"INTERSECTS(geometri, {wkt})",
-            5,
+            20,
             cancellationToken).ConfigureAwait(false);
 
         return SelectBestPointMatch(features, easting, northing);
@@ -164,40 +164,49 @@ internal sealed class DagiWfsKommuneClient
             return null;
         }
 
-        KommuneDto? best = null;
-        double bestDistanceSquared = double.MaxValue;
-
+        var containing = new List<(KommuneDto Kommune, double Area)>();
         foreach (var feature in features)
         {
-            var mapped = ApplyRepresentativePointFromFeature(feature);
-            if (mapped?.RepræsentativPunktLatitude is null || mapped.RepræsentativPunktLongitude is null)
+            if (!WktPointInPolygonHelper.GeoJsonFeatureContainsEtrs89(feature, easting, northing))
             {
-                if (best is null)
-                {
-                    best = mapped;
-                }
-
                 continue;
             }
 
-            var (candidateEasting, candidateNorthing) = Etrs89Utm32NConverter.FromWgs84(
-                mapped.RepræsentativPunktLatitude.Value,
-                mapped.RepræsentativPunktLongitude.Value);
-
-            var distanceSquared = GeoPointHelper.SquaredDistanceEtrs89(
-                candidateEasting,
-                candidateNorthing,
-                easting,
-                northing);
-
-            if (distanceSquared < bestDistanceSquared)
+            var mapped = ApplyRepresentativePointFromFeature(feature);
+            if (mapped is null)
             {
-                bestDistanceSquared = distanceSquared;
-                best = mapped;
+                continue;
             }
+
+            var area = WktPointInPolygonHelper.TryGetAbsoluteAreaEtrs89(TryGetFeatureGeometryWkt(feature));
+            containing.Add((mapped, area));
         }
 
-        return best;
+        if (containing.Count == 0)
+        {
+            return null;
+        }
+
+        if (containing.Count == 1)
+        {
+            return containing[0].Kommune;
+        }
+
+        return containing
+            .OrderBy(pair => pair.Area)
+            .ThenBy(pair => pair.Kommune.Kommunekode ?? string.Empty, StringComparer.Ordinal)
+            .First()
+            .Kommune;
+    }
+
+    private static string? TryGetFeatureGeometryWkt(JsonElement feature)
+    {
+        if (!feature.TryGetProperty("geometry", out var geometry))
+        {
+            return null;
+        }
+
+        return geometry.GetRawText();
     }
 
     private static KommuneDto? ApplyRepresentativePointFromFeature(JsonElement feature)
