@@ -89,7 +89,8 @@ internal sealed class DagiWfsKommuneClient
             20,
             cancellationToken).ConfigureAwait(false);
 
-        return SelectBestPointMatch(features, easting, northing);
+        var (queryLatitude, queryLongitude) = Etrs89Utm32NConverter.ToWgs84(easting, northing);
+        return SelectBestPointMatch(features, queryLatitude, queryLongitude, easting, northing);
     }
 
     internal async Task<IReadOnlyList<KommuneDto>> FindByGeometryAsync(
@@ -156,6 +157,8 @@ internal sealed class DagiWfsKommuneClient
 
     private static KommuneDto? SelectBestPointMatch(
         IReadOnlyList<JsonElement> features,
+        double queryLatitude,
+        double queryLongitude,
         double easting,
         double northing)
     {
@@ -164,7 +167,7 @@ internal sealed class DagiWfsKommuneClient
             return null;
         }
 
-        var containing = new List<(KommuneDto Kommune, double Area)>();
+        var containing = new List<(KommuneDto Kommune, JsonElement Feature)>();
         foreach (var feature in features)
         {
             if (!WktPointInPolygonHelper.GeoJsonFeatureContainsEtrs89(feature, easting, northing))
@@ -178,8 +181,7 @@ internal sealed class DagiWfsKommuneClient
                 continue;
             }
 
-            var area = WktPointInPolygonHelper.TryGetAbsoluteAreaEtrs89(TryGetFeatureGeometryWkt(feature));
-            containing.Add((mapped, area));
+            containing.Add((mapped, feature));
         }
 
         if (containing.Count == 0)
@@ -193,7 +195,10 @@ internal sealed class DagiWfsKommuneClient
         }
 
         return containing
-            .OrderBy(pair => pair.Area)
+            .OrderBy(pair => KommuneRepresentativePointHelper.TryGetDistanceToGeoJsonFeatureRepresentativeMeters(
+                queryLatitude,
+                queryLongitude,
+                pair.Feature) ?? double.MaxValue)
             .ThenBy(pair => pair.Kommune.Kommunekode ?? string.Empty, StringComparer.Ordinal)
             .First()
             .Kommune;

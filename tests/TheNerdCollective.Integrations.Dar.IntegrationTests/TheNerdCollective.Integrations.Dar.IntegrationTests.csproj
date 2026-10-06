@@ -23,4 +23,9 @@
     <ProjectReference Include="..\..\src\TheNerdCollective.Integrations.Dar\TheNerdCollective.Integrations.Dar.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="TestData\municipality-center-check.csv" />
+    <None Include="TestData\municipality-center-check.csv" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

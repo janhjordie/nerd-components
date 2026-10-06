@@ -35,4 +35,14 @@ public sealed class DarDagiOptions
 
     /// <summary>Adgangskode til <see cref="RestUsername"/>.</summary>
     public string? RestPassword { get; set; }
+
+    /// <summary>
+    /// Maks. afstand (km) til nærmeste repræsentativpunkt når punkt ikke ligger i nogen kommune-polygon (offshore/hav-centre).
+    /// </summary>
+    public double NearestRepresentativeFallbackMaxKilometers { get; set; } = 15;
+
+    /// <summary>
+    /// Når et punkt er tættere på en anden kommunes repræsentativpunkt end polygon-match, foretrækkes den kommune (meter).
+    /// </summary>
+    public double RepresentativeProximitySnapMeters { get; set; } = 200;
 }
