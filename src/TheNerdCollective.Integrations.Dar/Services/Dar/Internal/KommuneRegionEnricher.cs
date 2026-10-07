@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using TheNerdCollective.Integrations.Dar.Mapping;
 using TheNerdCollective.Integrations.Dar.Models;
-using TheNerdCollective.Integrations.Dar.ReferenceData;
-
 namespace TheNerdCollective.Integrations.Dar.Services.Dar.Internal;
 
 internal static class KommuneRegionEnricher
@@ -34,8 +32,7 @@ internal static class KommuneRegionEnricher
 
                 var dawa = TryResolveDawa(dawaByCode, graph.Kommunekode);
                 enriched = ApplyRepresentativePointFromDawa(enriched, dawa);
-                enriched = ApplyRepresentativePoint(enriched, graph.Geometri);
-                return ApplyReferenceCenter(enriched);
+                return ApplyRepresentativePoint(enriched, graph.Geometri);
             })
             .OrderBy(k => k.Navn, StringComparer.CurrentCultureIgnoreCase)
             .ToList();
@@ -62,7 +59,7 @@ internal static class KommuneRegionEnricher
                     region: null,
                     TryResolveDawa(dawaByCode, kommune.Kommunekode));
                 enriched = ApplyRepresentativePointFromDawa(enriched, TryResolveDawa(dawaByCode, kommune.Kommunekode));
-                return ApplyReferenceCenter(enriched);
+                return enriched;
             })
             .OrderBy(k => k.Navn, StringComparer.CurrentCultureIgnoreCase)
             .ToList();
@@ -175,23 +172,6 @@ internal static class KommuneRegionEnricher
         {
             RepræsentativPunktLatitude = centroid.Value.Latitude,
             RepræsentativPunktLongitude = centroid.Value.Longitude
-        };
-    }
-
-    private static KommuneDto ApplyReferenceCenter(KommuneDto kommune)
-    {
-        if (!KommuneReferenceCenterCatalog.TryGetCenter(
-                kommune.Kommunekode,
-                out var latitude,
-                out var longitude))
-        {
-            return kommune;
-        }
-
-        return kommune with
-        {
-            RepræsentativPunktLatitude = latitude,
-            RepræsentativPunktLongitude = longitude
         };
     }
 

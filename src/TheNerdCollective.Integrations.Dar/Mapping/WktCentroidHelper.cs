@@ -55,6 +55,52 @@ internal static class WktCentroidHelper
             : Etrs89Utm32NConverter.ToWgs84(centroid.Value.Easting, centroid.Value.Northing);
     }
 
+    /// <summary>Absolut areal (m²) af første/yderste ring — bruges til tie-break ved overlappende kommune-polygoner.</summary>
+    internal static double? TryGetAbsoluteAreaSquareMeters(string? wkt)
+    {
+        if (string.IsNullOrWhiteSpace(wkt))
+        {
+            return null;
+        }
+
+        var normalized = wkt!.Trim();
+        if (normalized.StartsWith("POLYGON", StringComparison.OrdinalIgnoreCase))
+        {
+            return AbsoluteRingArea(ParseFirstRing(normalized));
+        }
+
+        if (normalized.StartsWith("MULTIPOLYGON", StringComparison.OrdinalIgnoreCase))
+        {
+            var rings = ParseMultiPolygonRings(normalized);
+            if (rings.Count == 0)
+            {
+                return null;
+            }
+
+            return rings.Max(AbsoluteRingArea);
+        }
+
+        return null;
+    }
+
+    private static double AbsoluteRingArea(IReadOnlyList<(double Easting, double Northing)> ring)
+    {
+        if (ring.Count < 3)
+        {
+            return 0;
+        }
+
+        double area = 0;
+        for (var index = 0; index < ring.Count - 1; index++)
+        {
+            var (x0, y0) = ring[index];
+            var (x1, y1) = ring[index + 1];
+            area += x0 * y1 - x1 * y0;
+        }
+
+        return Math.Abs(area * 0.5);
+    }
+
     private static (double Easting, double Northing)? CentroidFromRing(IReadOnlyList<(double Easting, double Northing)> ring)
     {
         if (ring.Count == 0)

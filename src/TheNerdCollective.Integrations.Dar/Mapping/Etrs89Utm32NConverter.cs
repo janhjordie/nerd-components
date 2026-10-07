@@ -13,44 +13,51 @@ namespace TheNerdCollective.Integrations.Dar.Mapping
 
         public static (double Easting, double Northing) FromWgs84(double latitude, double longitude)
         {
-            var eccentricitySquared = 2 * Flattening - Flattening * Flattening;
-            var eccentricityPrimeSquared = eccentricitySquared / (1 - eccentricitySquared);
+            // Inverse of <see cref="ToWgs84"/> (Newton with numeric Jacobian). The closed-form forward
+            // UTM series here previously drifted ~12 km in northing for Denmark — breaking DAGI point-in-polygon.
+            var easting = FalseEasting
+                + (longitude - ((ZoneNumber - 1) * 6 - 180 + 3))
+                * 111_320.0
+                * Math.Cos(latitude * Math.PI / 180.0);
+            var northing = latitude * 110_540.0;
 
-            var latitudeRadians = latitude * Math.PI / 180.0;
-            var longitudeRadians = longitude * Math.PI / 180.0;
-            var centralMeridianRadians = ((ZoneNumber - 1) * 6 - 180 + 3) * Math.PI / 180.0;
+            const int maxIterations = 20;
+            const double toleranceDegrees = 1e-11;
+            const double stepEastingMeters = 0.5;
+            const double stepNorthingMeters = 0.5;
 
-            var sinLatitude = Math.Sin(latitudeRadians);
-            var cosLatitude = Math.Cos(latitudeRadians);
-            var tanLatitude = Math.Tan(latitudeRadians);
+            for (var iteration = 0; iteration < maxIterations; iteration++)
+            {
+                var (resolvedLatitude, resolvedLongitude) = ToWgs84(easting, northing);
+                var deltaLatitude = latitude - resolvedLatitude;
+                var deltaLongitude = longitude - resolvedLongitude;
+                if (Math.Abs(deltaLatitude) < toleranceDegrees && Math.Abs(deltaLongitude) < toleranceDegrees)
+                {
+                    return (easting, northing);
+                }
 
-            var radiusOfCurvature = SemiMajorAxis / Math.Sqrt(1 - eccentricitySquared * sinLatitude * sinLatitude);
-            var tanLatitudeSquared = tanLatitude * tanLatitude;
-            var eccentricityPrimeComponent = eccentricityPrimeSquared * cosLatitude * cosLatitude;
-            var longitudeDelta = longitudeRadians - centralMeridianRadians;
+                var (latitudeNorthingStep, longitudeNorthingStep) = ToWgs84(easting, northing + stepNorthingMeters);
+                var (latitudeEastingStep, longitudeEastingStep) = ToWgs84(easting + stepEastingMeters, northing);
 
-            var meridionalArc = SemiMajorAxis * (
-                (1 - eccentricitySquared / 4 - 3 * eccentricitySquared * eccentricitySquared / 64
-                    - 5 * eccentricitySquared * eccentricitySquared * eccentricitySquared / 256) * latitudeRadians
-                - (3 * eccentricitySquared / 8 + 3 * eccentricitySquared * eccentricitySquared / 32
-                    + 45 * eccentricitySquared * eccentricitySquared * eccentricitySquared / 1024) * Math.Sin(2 * latitudeRadians)
-                + (15 * eccentricitySquared * eccentricitySquared / 256
-                    + 45 * eccentricitySquared * eccentricitySquared * eccentricitySquared / 1024) * Math.Sin(4 * latitudeRadians)
-                - (35 * eccentricitySquared * eccentricitySquared * eccentricitySquared / 3072) * Math.Sin(6 * latitudeRadians));
+                var dLatitudePerNorthing = (latitudeNorthingStep - resolvedLatitude) / stepNorthingMeters;
+                var dLongitudePerNorthing = (longitudeNorthingStep - resolvedLongitude) / stepNorthingMeters;
+                var dLatitudePerEasting = (latitudeEastingStep - resolvedLatitude) / stepEastingMeters;
+                var dLongitudePerEasting = (longitudeEastingStep - resolvedLongitude) / stepEastingMeters;
 
-            var easting = ScaleFactor * radiusOfCurvature * (longitudeDelta * cosLatitude
-                + Math.Pow(longitudeDelta, 3) * cosLatitude * cosLatitude * cosLatitude
-                * (1 - tanLatitudeSquared + eccentricityPrimeComponent) / 6
-                + Math.Pow(longitudeDelta, 5) * cosLatitude * cosLatitude * cosLatitude * cosLatitude * cosLatitude
-                * (5 - 18 * tanLatitudeSquared + tanLatitudeSquared * tanLatitudeSquared
-                    + 72 * eccentricityPrimeComponent - 58 * eccentricityPrimeSquared) / 120)
-                + FalseEasting;
+                var determinant = dLatitudePerNorthing * dLongitudePerEasting - dLatitudePerEasting * dLongitudePerNorthing;
+                if (Math.Abs(determinant) < 1e-20)
+                {
+                    break;
+                }
 
-            var northing = ScaleFactor * (meridionalArc + radiusOfCurvature * tanLatitude * (longitudeDelta * longitudeDelta / 2
-                + Math.Pow(longitudeDelta, 4) * (5 - tanLatitudeSquared + 9 * eccentricityPrimeComponent
-                    + 4 * eccentricityPrimeComponent * eccentricityPrimeComponent) / 24
-                + Math.Pow(longitudeDelta, 6) * (61 - 58 * tanLatitudeSquared + tanLatitudeSquared * tanLatitudeSquared
-                    + 600 * eccentricityPrimeComponent - 330 * eccentricityPrimeSquared) / 720));
+                var inverse00 = dLongitudePerEasting / determinant;
+                var inverse01 = -dLongitudePerNorthing / determinant;
+                var inverse10 = -dLatitudePerEasting / determinant;
+                var inverse11 = dLatitudePerNorthing / determinant;
+
+                northing += inverse00 * deltaLatitude + inverse01 * deltaLongitude;
+                easting += inverse10 * deltaLatitude + inverse11 * deltaLongitude;
+            }
 
             return (easting, northing);
         }

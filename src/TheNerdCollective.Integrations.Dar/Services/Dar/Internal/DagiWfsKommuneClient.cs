@@ -86,7 +86,7 @@ internal sealed class DagiWfsKommuneClient
         var wkt = FormatPointWkt(easting, northing);
         var features = await FetchByCqlAsync(
             $"INTERSECTS(geometri, {wkt})",
-            20,
+            100,
             cancellationToken).ConfigureAwait(false);
 
         var (queryLatitude, queryLongitude) = Etrs89Utm32NConverter.ToWgs84(easting, northing);
@@ -195,13 +195,88 @@ internal sealed class DagiWfsKommuneClient
         }
 
         return containing
-            .OrderBy(pair => KommuneRepresentativePointHelper.TryGetDistanceToGeoJsonFeatureRepresentativeMeters(
-                queryLatitude,
-                queryLongitude,
-                pair.Feature) ?? double.MaxValue)
+            .OrderBy(pair => TryGetGeoJsonFeatureAreaSquareMeters(pair.Feature) ?? double.MaxValue)
             .ThenBy(pair => pair.Kommune.Kommunekode ?? string.Empty, StringComparer.Ordinal)
             .First()
             .Kommune;
+    }
+
+    private static double? TryGetGeoJsonFeatureAreaSquareMeters(JsonElement feature)
+    {
+        if (!feature.TryGetProperty("geometry", out var geometry)
+            || !geometry.TryGetProperty("coordinates", out var coordinates))
+        {
+            return null;
+        }
+
+        if (!geometry.TryGetProperty("type", out var typeElement))
+        {
+            return null;
+        }
+
+        var type = typeElement.GetString();
+        if (string.Equals(type, "Polygon", StringComparison.OrdinalIgnoreCase))
+        {
+            return AbsoluteAreaFromGeoJsonRing(coordinates);
+        }
+
+        if (string.Equals(type, "MultiPolygon", StringComparison.OrdinalIgnoreCase)
+            && coordinates.ValueKind == JsonValueKind.Array)
+        {
+            double? maxArea = null;
+            foreach (var polygon in coordinates.EnumerateArray())
+            {
+                var area = AbsoluteAreaFromGeoJsonRing(polygon);
+                if (area is not null)
+                {
+                    maxArea = maxArea is null ? area : Math.Max(maxArea.Value, area.Value);
+                }
+            }
+
+            return maxArea;
+        }
+
+        return null;
+    }
+
+    private static double? AbsoluteAreaFromGeoJsonRing(JsonElement polygonCoordinates)
+    {
+        if (polygonCoordinates.ValueKind != JsonValueKind.Array || polygonCoordinates.GetArrayLength() == 0)
+        {
+            return null;
+        }
+
+        var ring = polygonCoordinates[0];
+        if (ring.ValueKind != JsonValueKind.Array)
+        {
+            return null;
+        }
+
+        var points = new List<(double X, double Y)>();
+        foreach (var point in ring.EnumerateArray())
+        {
+            if (point.ValueKind != JsonValueKind.Array || point.GetArrayLength() < 2)
+            {
+                continue;
+            }
+
+            points.Add((point[0].GetDouble(), point[1].GetDouble()));
+        }
+
+        if (points.Count < 3)
+        {
+            return null;
+        }
+
+        double area = 0;
+        for (var index = 0; index < points.Count - 1; index++)
+        {
+            var (x0, y0) = points[index];
+            var (x1, y1) = points[index + 1];
+            area += x0 * y1 - x1 * y0;
+        }
+
+        return Math.Abs(area * 0.5);
     }
 
     private static string? TryGetFeatureGeometryWkt(JsonElement feature)

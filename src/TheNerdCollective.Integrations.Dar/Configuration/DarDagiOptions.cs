@@ -47,7 +47,7 @@ public sealed class DarDagiOptions
     public double NearestRepresentativeFallbackMaxKilometers { get; set; } = 15;
 
     /// <summary>
-    /// Snap til nærmeste indlejret kommune-center (Fleming/Dwarf) før polygon-opslag, og max afstand for repr-fallback (meter).
+    /// Reserveret til fremtidig repræsentativpunkt-justering ved grænser (bruges ikke til Fleming/CSV).
     /// </summary>
-    public double RepresentativeProximitySnapMeters { get; set; } = 500;
+    public double RepresentativeProximitySnapMeters { get; set; } = 200;
 }

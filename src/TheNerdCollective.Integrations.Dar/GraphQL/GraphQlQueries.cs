@@ -256,7 +256,7 @@ public static class GraphQlQueries
         # DAGI_Kommuneinddeling — geometri.intersects (EPSG:25832), aligned with circle lookup
         query FindKommuneByPoint($wkt: String!, $virkningstid: DafDateTime, $registreringstid: DafDateTime) {
           DAGI_Kommuneinddeling(
-            first: 10
+            first: 100
             virkningstid: $virkningstid
             registreringstid: $registreringstid
             where: {
