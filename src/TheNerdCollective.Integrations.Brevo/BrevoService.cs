@@ -11,7 +11,7 @@ namespace TheNerdCollective.Integrations.Brevo;
 
 /// <summary>
 /// Client for Brevo API v3 contacts and transactional email.
-/// https://developers.brevo.com/reference/createcontact
+/// https://developers.brevo.com/reference/create-contact
 /// </summary>
 public sealed class BrevoService
 {
@@ -46,25 +46,72 @@ public sealed class BrevoService
         IReadOnlyList<long>? listIds = null,
         CancellationToken cancellationToken = default)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(email);
+        Dictionary<string, object?> body = CreateContactRequestBody(email, attributes, listIds);
+        return SendAsync(HttpMethod.Post, "contacts", body, cancellationToken);
+    }
 
-        var body = new Dictionary<string, object?>
+    /// <summary>
+    /// Creates or updates a contact and returns its Brevo contact ID.
+    /// </summary>
+    public async Task<BrevoDataResult<long>> CreateOrUpdateContactAndGetIdAsync(
+        string email,
+        IReadOnlyDictionary<string, string>? attributes = null,
+        IReadOnlyList<long>? listIds = null,
+        CancellationToken cancellationToken = default)
+    {
+        Dictionary<string, object?> body = CreateContactRequestBody(email, attributes, listIds);
+        body["getId"] = true;
+
+        BrevoDataResult<long?> result = await SendJsonAsync<long?>(
+            HttpMethod.Post,
+            "contacts",
+            body,
+            response => ReadOptionalContactIdAsync(response, cancellationToken),
+            cancellationToken);
+
+        if (!result.Succeeded)
         {
-            ["email"] = email.Trim(),
-            ["updateEnabled"] = true
+            return BrevoDataResult<long>.Fail(result.StatusCode, result.Error);
+        }
+
+        if (result.Data is long contactId)
+        {
+            return BrevoDataResult<long>.Ok(contactId, result.StatusCode);
+        }
+
+        BrevoDataResult<long> lookup = await GetAsync(
+            $"contacts/{Uri.EscapeDataString(email.Trim())}",
+            ReadContactId,
+            cancellationToken);
+
+        if (!lookup.Succeeded || lookup.Data <= 0)
+        {
+            return BrevoDataResult<long>.Fail(
+                lookup.StatusCode,
+                lookup.Error ?? "Brevo did not return a contact ID after create or update.");
+        }
+
+        return BrevoDataResult<long>.Ok(lookup.Data, result.StatusCode);
+    }
+
+    /// <summary>
+    /// Creates a CRM note associated with a contact.
+    /// </summary>
+    public Task<BrevoResult> CreateContactNoteAsync(
+        long contactId,
+        string text,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(contactId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(text);
+
+        var body = new
+        {
+            text,
+            contactIds = new[] { contactId }
         };
 
-        if (attributes is { Count: > 0 })
-        {
-            body["attributes"] = attributes;
-        }
-
-        if (listIds is { Count: > 0 })
-        {
-            body["listIds"] = listIds;
-        }
-
-        return SendAsync(HttpMethod.Post, "contacts", body, cancellationToken);
+        return SendAsync(HttpMethod.Post, "crm/notes", body, cancellationToken);
     }
 
     /// <summary>
@@ -319,6 +366,62 @@ public sealed class BrevoService
         }
 
         return null;
+    }
+
+    private static Dictionary<string, object?> CreateContactRequestBody(
+        string email,
+        IReadOnlyDictionary<string, string>? attributes,
+        IReadOnlyList<long>? listIds)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(email);
+
+        var body = new Dictionary<string, object?>
+        {
+            ["email"] = email.Trim(),
+            ["updateEnabled"] = true
+        };
+
+        if (attributes is { Count: > 0 })
+        {
+            body["attributes"] = attributes;
+        }
+
+        if (listIds is { Count: > 0 })
+        {
+            body["listIds"] = listIds;
+        }
+
+        return body;
+    }
+
+    private static async Task<long?> ReadOptionalContactIdAsync(
+        HttpResponseMessage response,
+        CancellationToken cancellationToken)
+    {
+        string content = await response.Content.ReadAsStringAsync(cancellationToken);
+        if (string.IsNullOrWhiteSpace(content))
+        {
+            return null;
+        }
+
+        using JsonDocument document = JsonDocument.Parse(content);
+        return document.RootElement.TryGetProperty("id", out JsonElement idElement)
+            && idElement.TryGetInt64(out long contactId)
+            && contactId > 0
+                ? contactId
+                : null;
+    }
+
+    private static long ReadContactId(JsonElement document)
+    {
+        if (document.TryGetProperty("id", out JsonElement idElement)
+            && idElement.TryGetInt64(out long contactId)
+            && contactId > 0)
+        {
+            return contactId;
+        }
+
+        throw new JsonException("Brevo response did not include a valid contact ID.");
     }
 
     private void ConfigureHttpClient()

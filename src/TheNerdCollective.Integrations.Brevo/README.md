@@ -5,6 +5,8 @@
 ## Features
 
 - Create or update a contact, including list membership
+- Create or update a contact and retrieve its ID
+- Add a CRM note to a contact
 - Send a transactional email
 - Dependency injection and Polly retry for transient failures
 
@@ -33,6 +35,18 @@ await brevo.CreateOrUpdateContactAsync(
     "guest@example.com",
     attributes: new Dictionary<string, string> { ["FIRSTNAME"] = "Guest" },
     listIds: [12]);
+
+BrevoDataResult<long> contact = await brevo.CreateOrUpdateContactAndGetIdAsync(
+    "guest@example.com",
+    attributes: new Dictionary<string, string> { ["FIRSTNAME"] = "Guest" },
+    listIds: [12]);
+
+if (!contact.Succeeded || contact.Data is not long contactId)
+{
+    throw new InvalidOperationException(contact.Error ?? "Brevo did not return a contact ID.");
+}
+
+await brevo.CreateContactNoteAsync(contactId, "New inquiry: please call after 16:00.");
 
 await brevo.SendEmailAsync(
     senderEmail: "hello@example.com",

@@ -111,6 +111,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TheNerdCollective.Integrati
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TheNerdCollective.Integrations.Umbraco.Brevo", "src\TheNerdCollective.Integrations.Umbraco.Brevo\TheNerdCollective.Integrations.Umbraco.Brevo.csproj", "{085BBDD5-E6E3-4AB8-9BE0-A718294D903A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TheNerdCollective.Integrations.Brevo.Tests", "tests\TheNerdCollective.Integrations.Brevo.Tests\TheNerdCollective.Integrations.Brevo.Tests.csproj", "{16F7F0B6-4A31-4982-B456-62BBF43261D7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -745,6 +747,18 @@ Global
 		{085BBDD5-E6E3-4AB8-9BE0-A718294D903A}.Release|x64.Build.0 = Release|Any CPU
 		{085BBDD5-E6E3-4AB8-9BE0-A718294D903A}.Release|x86.ActiveCfg = Release|Any CPU
 		{085BBDD5-E6E3-4AB8-9BE0-A718294D903A}.Release|x86.Build.0 = Release|Any CPU
+		{16F7F0B6-4A31-4982-B456-62BBF43261D7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{16F7F0B6-4A31-4982-B456-62BBF43261D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{16F7F0B6-4A31-4982-B456-62BBF43261D7}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{16F7F0B6-4A31-4982-B456-62BBF43261D7}.Debug|x64.Build.0 = Debug|Any CPU
+		{16F7F0B6-4A31-4982-B456-62BBF43261D7}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{16F7F0B6-4A31-4982-B456-62BBF43261D7}.Debug|x86.Build.0 = Debug|Any CPU
+		{16F7F0B6-4A31-4982-B456-62BBF43261D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{16F7F0B6-4A31-4982-B456-62BBF43261D7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{16F7F0B6-4A31-4982-B456-62BBF43261D7}.Release|x64.ActiveCfg = Release|Any CPU
+		{16F7F0B6-4A31-4982-B456-62BBF43261D7}.Release|x64.Build.0 = Release|Any CPU
+		{16F7F0B6-4A31-4982-B456-62BBF43261D7}.Release|x86.ActiveCfg = Release|Any CPU
+		{16F7F0B6-4A31-4982-B456-62BBF43261D7}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -793,6 +807,7 @@ Global
 		{02F57D02-5372-42BF-A436-85398CB527B0} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{B3C149D7-995B-4190-B039-8B20B0843273} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{085BBDD5-E6E3-4AB8-9BE0-A718294D903A} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+		{16F7F0B6-4A31-4982-B456-62BBF43261D7} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {1D53F923-BAF3-4969-8AB5-D88CEBA81E99}

@@ -4,10 +4,10 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <PackageId>TheNerdCollective.Integrations.Brevo</PackageId>
-    <Version>1.0.1</Version>
+    <Version>1.0.2</Version>
     <Authors>The Nerd Collective</Authors>
-    <Description>Integration client for the Brevo API v3, for contacts and transactional email.</Description>
-    <PackageTags>brevo;email;newsletter;contacts;integration;api</PackageTags>
+    <Description>Integration client for Brevo API v3 contacts, CRM notes, and transactional email.</Description>
+    <PackageTags>brevo;email;newsletter;contacts;crm;notes;integration;api</PackageTags>
     <License>Apache-2.0</License>
     <LicenseExpression>Apache-2.0</LicenseExpression>
     <RepositoryUrl>https://github.com/janhjordie/nerd-components</RepositoryUrl>
