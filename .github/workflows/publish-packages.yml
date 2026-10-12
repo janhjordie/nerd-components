@@ -51,6 +51,7 @@ jobs:
             ["TheNerdCollective.Cli.Trello"]="src/TheNerdCollective.Cli.Trello"
             ["TheNerdCollective.Integrations.Dar"]="src/TheNerdCollective.Integrations.Dar"
             ["TheNerdCollective.Integrations.Brevo"]="src/TheNerdCollective.Integrations.Brevo"
+            ["TheNerdCollective.Integrations.Umbraco.Brevo"]="src/TheNerdCollective.Integrations.Umbraco.Brevo"
             ["TheNerdCollective.MudComponents.MudQuillEditor"]="src/TheNerdCollective.MudComponents.MudQuillEditor"
             ["TheNerdCollective.MudComponents.MudSwiper"]="src/TheNerdCollective.MudComponents.MudSwiper"
             ["TheNerdCollective.MudComponents.HarvestTimesheet"]="src/TheNerdCollective.MudComponents.HarvestTimesheet"

@@ -1,0 +1,18 @@
+<Project>
+  <!-- Umbraco reads App_Plugins from the host project's wwwroot at dev time. -->
+  <Target Name="SyncTheNerdCollectiveUmbracoBrevoAppPlugins" BeforeTargets="Build">
+    <ItemGroup>
+      <_TncBrevoPlugin Include="$(MSBuildThisFileDirectory)..\wwwroot\**\*" />
+    </ItemGroup>
+    <Copy
+      SourceFiles="@(_TncBrevoPlugin)"
+      DestinationFiles="@(_TncBrevoPlugin->'$(MSBuildProjectDirectory)\wwwroot\%(RecursiveDir)%(Filename)%(Extension)')"
+      SkipUnchangedFiles="true" />
+  </Target>
+
+  <ItemGroup>
+    <Content Include="$(MSBuildProjectDirectory)\wwwroot\App_Plugins\TheNerdCollective.Brevo\**\*"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

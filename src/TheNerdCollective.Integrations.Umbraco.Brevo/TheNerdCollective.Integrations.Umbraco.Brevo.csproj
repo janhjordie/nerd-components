@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>TheNerdCollective.Integrations.Umbraco.Brevo</RootNamespace>
+    <PackageId>TheNerdCollective.Integrations.Umbraco.Brevo</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>The Nerd Collective</Authors>
+    <Description>Brevo backoffice section, dashboard, and CMS settings reader for Umbraco CMS.</Description>
+    <PackageTags>umbraco;brevo;email;newsletter;integration</PackageTags>
+    <LicenseExpression>Apache-2.0</LicenseExpression>
+    <RepositoryUrl>https://github.com/janhjordie/nerd-components</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Umbraco.Cms.Api.Management" Version="18.2.0" />
+    <PackageReference Include="Umbraco.Cms.Web.Common" Version="18.2.0" />
+    <ProjectReference Include="..\TheNerdCollective.Integrations.Brevo\TheNerdCollective.Integrations.Brevo.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="build\TheNerdCollective.Integrations.Umbraco.Brevo.props" Pack="true" PackagePath="build\" />
+    <None Include="build\TheNerdCollective.Integrations.Umbraco.Brevo.targets" Pack="true" PackagePath="build\" />
+    <None Include="wwwroot\**\*" Pack="true" PackagePath="contentFiles\any\any\wwwroot\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

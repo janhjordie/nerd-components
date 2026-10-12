@@ -1,0 +1,3 @@
+<Project>
+  <Import Project="$(MSBuildThisFileDirectory)TheNerdCollective.Integrations.Umbraco.Brevo.props" />
+</Project>

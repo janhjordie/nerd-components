@@ -109,6 +109,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TheNerdCollective.Blazor.Se
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TheNerdCollective.Integrations.Brevo", "src\TheNerdCollective.Integrations.Brevo\TheNerdCollective.Integrations.Brevo.csproj", "{B3C149D7-995B-4190-B039-8B20B0843273}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TheNerdCollective.Integrations.Umbraco.Brevo", "src\TheNerdCollective.Integrations.Umbraco.Brevo\TheNerdCollective.Integrations.Umbraco.Brevo.csproj", "{085BBDD5-E6E3-4AB8-9BE0-A718294D903A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -731,6 +733,18 @@ Global
 		{B3C149D7-995B-4190-B039-8B20B0843273}.Release|x64.Build.0 = Release|Any CPU
 		{B3C149D7-995B-4190-B039-8B20B0843273}.Release|x86.ActiveCfg = Release|Any CPU
 		{B3C149D7-995B-4190-B039-8B20B0843273}.Release|x86.Build.0 = Release|Any CPU
+		{085BBDD5-E6E3-4AB8-9BE0-A718294D903A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{085BBDD5-E6E3-4AB8-9BE0-A718294D903A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{085BBDD5-E6E3-4AB8-9BE0-A718294D903A}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{085BBDD5-E6E3-4AB8-9BE0-A718294D903A}.Debug|x64.Build.0 = Debug|Any CPU
+		{085BBDD5-E6E3-4AB8-9BE0-A718294D903A}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{085BBDD5-E6E3-4AB8-9BE0-A718294D903A}.Debug|x86.Build.0 = Debug|Any CPU
+		{085BBDD5-E6E3-4AB8-9BE0-A718294D903A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{085BBDD5-E6E3-4AB8-9BE0-A718294D903A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{085BBDD5-E6E3-4AB8-9BE0-A718294D903A}.Release|x64.ActiveCfg = Release|Any CPU
+		{085BBDD5-E6E3-4AB8-9BE0-A718294D903A}.Release|x64.Build.0 = Release|Any CPU
+		{085BBDD5-E6E3-4AB8-9BE0-A718294D903A}.Release|x86.ActiveCfg = Release|Any CPU
+		{085BBDD5-E6E3-4AB8-9BE0-A718294D903A}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -778,6 +792,7 @@ Global
 		{69704B1E-149E-486A-BE0E-9E04C191ABE2} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{02F57D02-5372-42BF-A436-85398CB527B0} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{B3C149D7-995B-4190-B039-8B20B0843273} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+		{085BBDD5-E6E3-4AB8-9BE0-A718294D903A} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {1D53F923-BAF3-4969-8AB5-D88CEBA81E99}
