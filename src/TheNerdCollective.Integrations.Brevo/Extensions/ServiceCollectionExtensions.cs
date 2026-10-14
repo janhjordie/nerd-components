@@ -34,6 +34,7 @@ public static class ServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(configuration);
 
         services.Configure<BrevoOptions>(configuration.GetSection("Brevo"));
+        services.AddSingleton<IBrevoApiKeyProvider, BrevoApiKeyProvider>();
         services
             .AddHttpClient<BrevoService>()
             .AddPolicyHandler(GetRetryPolicy());

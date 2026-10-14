@@ -11,7 +11,7 @@ namespace TheNerdCollective.Integrations.Brevo;
 
 /// <summary>
 /// Client for Brevo API v3 contacts and transactional email.
-/// https://developers.brevo.com/reference/create-contact
+/// https://developers.brevo.com/reference/createcontact
 /// </summary>
 public sealed class BrevoService
 {
@@ -23,18 +23,31 @@ public sealed class BrevoService
 
     private readonly HttpClient _httpClient;
     private readonly BrevoOptions _options;
+    private readonly IBrevoApiKeyProvider _apiKeyProvider;
 
     public BrevoService(HttpClient httpClient, IOptions<BrevoOptions> options)
+        : this(httpClient, options, new BrevoApiKeyProvider(options))
+    {
+    }
+
+    public BrevoService(HttpClient httpClient, IOptions<BrevoOptions> options, IBrevoApiKeyProvider apiKeyProvider)
     {
         _httpClient = httpClient;
         _options = options.Value;
+        _apiKeyProvider = apiKeyProvider;
         ConfigureHttpClient();
     }
 
     /// <summary>
-    /// Gets whether an API key is configured.
+    /// Gets whether an API key is configured directly in options.
     /// </summary>
     public bool IsConfigured => !string.IsNullOrWhiteSpace(_options.ApiKey);
+
+    /// <summary>
+    /// Gets whether an API key is configured.
+    /// </summary>
+    public async ValueTask<bool> IsConfiguredAsync(CancellationToken cancellationToken = default)
+        => !string.IsNullOrWhiteSpace(await _apiKeyProvider.GetApiKeyAsync(cancellationToken));
 
     /// <summary>
     /// Creates a contact, or updates it when the email already exists.
@@ -43,6 +56,21 @@ public sealed class BrevoService
     public Task<BrevoResult> CreateOrUpdateContactAsync(
         string email,
         IReadOnlyDictionary<string, string>? attributes = null,
+        IReadOnlyList<long>? listIds = null,
+        CancellationToken cancellationToken = default)
+        => CreateOrUpdateContactWithAttributesAsync(
+            email,
+            ConvertAttributes(attributes),
+            listIds,
+            cancellationToken);
+
+    /// <summary>
+    /// Creates or updates a contact with arbitrary typed attribute values.
+    /// Attribute names must already exist in the Brevo account.
+    /// </summary>
+    public Task<BrevoResult> CreateOrUpdateContactWithAttributesAsync(
+        string email,
+        IReadOnlyDictionary<string, object?>? attributes = null,
         IReadOnlyList<long>? listIds = null,
         CancellationToken cancellationToken = default)
     {
@@ -56,6 +84,20 @@ public sealed class BrevoService
     public async Task<BrevoDataResult<long>> CreateOrUpdateContactAndGetIdAsync(
         string email,
         IReadOnlyDictionary<string, string>? attributes = null,
+        IReadOnlyList<long>? listIds = null,
+        CancellationToken cancellationToken = default)
+        => await CreateOrUpdateContactWithAttributesAndGetIdAsync(
+            email,
+            ConvertAttributes(attributes),
+            listIds,
+            cancellationToken);
+
+    /// <summary>
+    /// Creates or updates a contact with arbitrary typed attribute values and returns its Brevo contact ID.
+    /// </summary>
+    public async Task<BrevoDataResult<long>> CreateOrUpdateContactWithAttributesAndGetIdAsync(
+        string email,
+        IReadOnlyDictionary<string, object?>? attributes = null,
         IReadOnlyList<long>? listIds = null,
         CancellationToken cancellationToken = default)
     {
@@ -160,6 +202,103 @@ public sealed class BrevoService
                 return new BrevoAccount(email, company, ReadPlanType(document));
             },
             cancellationToken);
+
+    /// <summary>
+    /// Lists the contact attributes configured in Brevo.
+    /// </summary>
+    public Task<BrevoDataResult<IReadOnlyList<BrevoContactAttribute>>> ListContactAttributesAsync(
+        CancellationToken cancellationToken = default)
+        => GetAsync("contacts/attributes", ReadContactAttributes, cancellationToken);
+
+    /// <summary>
+    /// Finds an attribute in Brevo's attribute catalog.
+    /// </summary>
+    public async Task<BrevoDataResult<BrevoContactAttribute>> GetContactAttributeAsync(
+        string name,
+        string? category = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        if (!string.IsNullOrWhiteSpace(category))
+        {
+            category = NormalizeAttributeCategory(category);
+        }
+
+        BrevoDataResult<IReadOnlyList<BrevoContactAttribute>> result =
+            await ListContactAttributesAsync(cancellationToken);
+        if (!result.Succeeded || result.Data is null)
+        {
+            return BrevoDataResult<BrevoContactAttribute>.Fail(result.StatusCode, result.Error);
+        }
+
+        BrevoContactAttribute? attribute = result.Data.FirstOrDefault(item =>
+            string.Equals(item.Name, name.Trim(), StringComparison.OrdinalIgnoreCase)
+            && (category is null || string.Equals(item.Category, category, StringComparison.OrdinalIgnoreCase)));
+
+        return attribute is null
+            ? BrevoDataResult<BrevoContactAttribute>.Fail(404, $"Contact attribute '{name}' was not found.")
+            : BrevoDataResult<BrevoContactAttribute>.Ok(attribute, result.StatusCode);
+    }
+
+    /// <summary>
+    /// Creates a contact attribute. The category and type determine which options are accepted.
+    /// </summary>
+    public Task<BrevoResult> CreateContactAttributeAsync(
+        string category,
+        string name,
+        BrevoContactAttributeWriteOptions options,
+        CancellationToken cancellationToken = default)
+    {
+        string normalizedCategory = NormalizeAttributeCategory(category);
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        ArgumentNullException.ThrowIfNull(options);
+        ValidateAttributeOptions(normalizedCategory, options, isUpdate: false);
+
+        return SendAsync(
+            HttpMethod.Post,
+            BuildContactAttributePath(normalizedCategory, name),
+            CreateAttributeRequestBody(options),
+            cancellationToken);
+    }
+
+    /// <summary>
+    /// Updates an attribute's supported options or formula. Brevo does not allow changing its type here.
+    /// </summary>
+    public Task<BrevoResult> UpdateContactAttributeAsync(
+        string category,
+        string name,
+        BrevoContactAttributeWriteOptions options,
+        CancellationToken cancellationToken = default)
+    {
+        string normalizedCategory = NormalizeAttributeCategory(category);
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        ArgumentNullException.ThrowIfNull(options);
+        ValidateAttributeOptions(normalizedCategory, options, isUpdate: true);
+
+        return SendAsync(
+            HttpMethod.Put,
+            BuildContactAttributePath(normalizedCategory, name),
+            CreateAttributeRequestBody(options),
+            cancellationToken);
+    }
+
+    /// <summary>
+    /// Permanently deletes a contact attribute and its values from contacts.
+    /// </summary>
+    public Task<BrevoResult> DeleteContactAttributeAsync(
+        string category,
+        string name,
+        CancellationToken cancellationToken = default)
+    {
+        string normalizedCategory = NormalizeAttributeCategory(category);
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+
+        return SendAsync(
+            HttpMethod.Delete,
+            BuildContactAttributePath(normalizedCategory, name),
+            null,
+            cancellationToken);
+    }
 
     /// <summary>
     /// Lists a page of contacts.
@@ -338,6 +477,230 @@ public sealed class BrevoService
         return new BrevoPagedResult<BrevoCampaignSummary>(count, items);
     }
 
+    private static IReadOnlyList<BrevoContactAttribute> ReadContactAttributes(JsonElement document)
+    {
+        if (!document.TryGetProperty("attributes", out JsonElement attributesElement)
+            || attributesElement.ValueKind != JsonValueKind.Array)
+        {
+            throw new JsonException("Brevo response did not contain a contact attributes array.");
+        }
+
+        List<BrevoContactAttribute> attributes = new();
+        foreach (JsonElement item in attributesElement.EnumerateArray())
+        {
+            string? name = ReadOptionalString(item, "name");
+            string? category = ReadOptionalString(item, "category");
+            if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(category))
+            {
+                throw new JsonException("Brevo contact attribute is missing its name or category.");
+            }
+
+            attributes.Add(new BrevoContactAttribute(
+                name,
+                category,
+                ReadOptionalString(item, "type"),
+                ReadAttributeEnumeration(item),
+                ReadAttributeOptions(item),
+                item.TryGetProperty("isRecurring", out JsonElement recurringElement)
+                    && recurringElement.ValueKind is JsonValueKind.True or JsonValueKind.False
+                        ? recurringElement.GetBoolean()
+                        : null,
+                ReadOptionalString(item, "value"),
+                ReadOptionalString(item, "calculatedValue")));
+        }
+
+        return attributes;
+    }
+
+    private static IReadOnlyList<BrevoContactAttributeOption>? ReadAttributeEnumeration(JsonElement attribute)
+    {
+        if (!attribute.TryGetProperty("enumeration", out JsonElement values)
+            || values.ValueKind == JsonValueKind.Null)
+        {
+            return null;
+        }
+
+        if (values.ValueKind != JsonValueKind.Array)
+        {
+            throw new JsonException("Brevo contact attribute enumeration was not an array.");
+        }
+
+        List<BrevoContactAttributeOption> options = new();
+        foreach (JsonElement item in values.EnumerateArray())
+        {
+            if (!item.TryGetProperty("label", out JsonElement labelElement)
+                || labelElement.ValueKind != JsonValueKind.String)
+            {
+                throw new JsonException("Brevo contact attribute enumeration contains an invalid option.");
+            }
+
+            long? value = null;
+            string? valueStr = ReadOptionalString(item, "valueStr");
+            if (item.TryGetProperty("value", out JsonElement valueElement))
+            {
+                if (valueElement.ValueKind == JsonValueKind.Number && valueElement.TryGetInt64(out long numericValue))
+                {
+                    value = numericValue;
+                }
+                else if (valueElement.ValueKind == JsonValueKind.String)
+                {
+                    valueStr ??= valueElement.GetString();
+                }
+                else
+                {
+                    valueStr ??= valueElement.GetRawText();
+                }
+            }
+
+            if (!value.HasValue && string.IsNullOrWhiteSpace(valueStr))
+            {
+                throw new JsonException("Brevo contact attribute enumeration option did not include a value.");
+            }
+
+            options.Add(new BrevoContactAttributeOption(value, valueStr, labelElement.GetString() ?? string.Empty));
+        }
+
+        return options;
+    }
+
+    private static IReadOnlyList<string>? ReadAttributeOptions(JsonElement attribute)
+    {
+        if (!attribute.TryGetProperty("multiCategoryOptions", out JsonElement values)
+            || values.ValueKind == JsonValueKind.Null)
+        {
+            return null;
+        }
+
+        if (values.ValueKind != JsonValueKind.Array)
+        {
+            throw new JsonException("Brevo multiple-choice options were not an array.");
+        }
+
+        List<string> options = new();
+        foreach (JsonElement item in values.EnumerateArray())
+        {
+            if (item.ValueKind != JsonValueKind.String)
+            {
+                throw new JsonException("Brevo multiple-choice option was not a string.");
+            }
+
+            options.Add(item.GetString() ?? string.Empty);
+        }
+
+        return options;
+    }
+
+    private static string? ReadOptionalString(JsonElement document, string propertyName)
+        => document.TryGetProperty(propertyName, out JsonElement element)
+           && element.ValueKind == JsonValueKind.String
+            ? element.GetString()
+            : null;
+
+    private static string NormalizeAttributeCategory(string category)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(category);
+        string normalized = category.Trim().ToLowerInvariant();
+        if (normalized is not ("normal" or "transactional" or "category" or "calculated" or "global"))
+        {
+            throw new ArgumentException("Unsupported Brevo contact attribute category.", nameof(category));
+        }
+
+        return normalized;
+    }
+
+    private static string BuildContactAttributePath(string category, string name)
+        => $"contacts/attributes/{category}/{Uri.EscapeDataString(name.Trim().ToUpperInvariant())}";
+
+    private static Dictionary<string, object?> CreateAttributeRequestBody(
+        BrevoContactAttributeWriteOptions options)
+    {
+        Dictionary<string, object?> body = new();
+        if (options.Type is not null)
+        {
+            body["type"] = options.Type;
+        }
+
+        if (options.Enumeration is not null)
+        {
+            body["enumeration"] = options.Enumeration;
+        }
+
+        if (options.IsRecurring.HasValue)
+        {
+            body["isRecurring"] = options.IsRecurring.Value;
+        }
+
+        if (options.MultiCategoryOptions is not null)
+        {
+            body["multiCategoryOptions"] = options.MultiCategoryOptions;
+        }
+
+        if (options.Value is not null)
+        {
+            body["value"] = options.Value;
+        }
+
+        return body;
+    }
+
+    private static void ValidateAttributeOptions(
+        string category,
+        BrevoContactAttributeWriteOptions options,
+        bool isUpdate)
+    {
+        if (isUpdate && options.Type is not null)
+        {
+            throw new ArgumentException("Brevo does not support changing an attribute's type.");
+        }
+
+        if (isUpdate && options.IsRecurring.HasValue)
+        {
+            throw new ArgumentException("Brevo does not support changing the recurring flag through the update endpoint.");
+        }
+
+        if (options.MultiCategoryOptions is not null
+            && (category != "normal" || (options.Type is not null && options.Type != "multiple-choice")))
+        {
+            throw new ArgumentException("Multiple-choice options are only valid for normal multiple-choice attributes.");
+        }
+
+        if (options.Enumeration is not null && category != "category")
+        {
+            throw new ArgumentException("Enumeration options are only valid for category attributes.");
+        }
+
+        if ((options.Value is not null || options.IsRecurring.HasValue)
+            && category is not ("calculated" or "global"))
+        {
+            throw new ArgumentException("Value and recurring options are only valid for calculated or global attributes.");
+        }
+
+        if (!isUpdate)
+        {
+            if (category is "normal" or "transactional" or "category"
+                && string.IsNullOrWhiteSpace(options.Type))
+            {
+                throw new ArgumentException("A type is required for this contact attribute category.");
+            }
+
+            if (options.Type == "multiple-choice" && options.MultiCategoryOptions is not { Count: > 0 })
+            {
+                throw new ArgumentException("A multiple-choice attribute requires at least one option.");
+            }
+
+            if (category is "calculated" or "global" && options.Value is null)
+            {
+                throw new ArgumentException("A value is required for calculated or global attributes.");
+            }
+        }
+        else if (options.MultiCategoryOptions is null
+                 && options.Enumeration is null
+                 && options.Value is null)
+        {
+            throw new ArgumentException("Provide supported attribute options to update.");
+        }
+    }
+
     private static string? ReadPlanType(JsonElement document)
     {
         if (!document.TryGetProperty("plan", out JsonElement planElement))
@@ -370,7 +733,7 @@ public sealed class BrevoService
 
     private static Dictionary<string, object?> CreateContactRequestBody(
         string email,
-        IReadOnlyDictionary<string, string>? attributes,
+        IReadOnlyDictionary<string, object?>? attributes,
         IReadOnlyList<long>? listIds)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(email);
@@ -392,6 +755,23 @@ public sealed class BrevoService
         }
 
         return body;
+    }
+
+    private static IReadOnlyDictionary<string, object?>? ConvertAttributes(
+        IReadOnlyDictionary<string, string>? attributes)
+    {
+        if (attributes is null)
+        {
+            return null;
+        }
+
+        Dictionary<string, object?> converted = new(StringComparer.Ordinal);
+        foreach ((string name, string value) in attributes)
+        {
+            converted[name] = value;
+        }
+
+        return converted;
     }
 
     private static async Task<long?> ReadOptionalContactIdAsync(
@@ -439,12 +819,6 @@ public sealed class BrevoService
             _httpClient.BaseAddress = new Uri(baseUrl);
         }
 
-        if (!string.IsNullOrWhiteSpace(_options.ApiKey)
-            && !_httpClient.DefaultRequestHeaders.Contains("api-key"))
-        {
-            _httpClient.DefaultRequestHeaders.Add("api-key", _options.ApiKey);
-        }
-
         if (!_httpClient.DefaultRequestHeaders.Accept.Any())
         {
             _httpClient.DefaultRequestHeaders.Accept.ParseAdd("application/json");
@@ -463,7 +837,7 @@ public sealed class BrevoService
             return read(document.RootElement);
         }, cancellationToken);
 
-    private async Task<BrevoResult> SendAsync(HttpMethod method, string path, object body, CancellationToken cancellationToken)
+    private async Task<BrevoResult> SendAsync(HttpMethod method, string path, object? body, CancellationToken cancellationToken)
     {
         BrevoDataResult<bool> result = await SendJsonAsync<bool>(
             method,
@@ -483,12 +857,14 @@ public sealed class BrevoService
         Func<HttpResponseMessage, Task<T>> readSuccess,
         CancellationToken cancellationToken)
     {
-        if (!IsConfigured)
+        string? apiKey = await _apiKeyProvider.GetApiKeyAsync(cancellationToken);
+        if (string.IsNullOrWhiteSpace(apiKey))
         {
             return BrevoDataResult<T>.Fail(0, "Brevo API key is not configured.");
         }
 
         using HttpRequestMessage request = new(method, path);
+        request.Headers.TryAddWithoutValidation("api-key", apiKey);
         if (body is not null)
         {
             request.Content = JsonContent.Create(body, options: SerializerOptions);

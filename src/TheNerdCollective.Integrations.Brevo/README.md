@@ -4,10 +4,10 @@
 
 ## Features
 
-- Create or update a contact, including list membership
-- Create or update a contact and retrieve its ID
-- Add a CRM note to a contact
+- Create or update a contact with typed, generic attributes and list membership
+- Read, create, update supported options, and delete contact attributes
 - Send a transactional email
+- Resolve API keys from configuration or an optional persistent store
 - Dependency injection and Polly retry for transient failures
 
 ## Installation
@@ -31,22 +31,15 @@ builder.Services.AddBrevoIntegration(builder.Configuration);
 ```
 
 ```csharp
-await brevo.CreateOrUpdateContactAsync(
+await brevo.CreateOrUpdateContactWithAttributesAsync(
     "guest@example.com",
-    attributes: new Dictionary<string, string> { ["FIRSTNAME"] = "Guest" },
+    attributes: new Dictionary<string, object?>
+    {
+        ["FIRSTNAME"] = "Guest",
+        ["INTERESTS"] = new[] { "cafe", "news" },
+        ["INQUIRY_TYPE"] = new[] { "tasting_box" }
+    },
     listIds: [12]);
-
-BrevoDataResult<long> contact = await brevo.CreateOrUpdateContactAndGetIdAsync(
-    "guest@example.com",
-    attributes: new Dictionary<string, string> { ["FIRSTNAME"] = "Guest" },
-    listIds: [12]);
-
-if (!contact.Succeeded || contact.Data is not long contactId)
-{
-    throw new InvalidOperationException(contact.Error ?? "Brevo did not return a contact ID.");
-}
-
-await brevo.CreateContactNoteAsync(contactId, "New inquiry: please call after 16:00.");
 
 await brevo.SendEmailAsync(
     senderEmail: "hello@example.com",
@@ -58,3 +51,28 @@ await brevo.SendEmailAsync(
 ```
 
 Attribute names must already exist in the Brevo account. The sender address must be a verified sender.
+The original `CreateOrUpdateContactAsync` and `CreateOrUpdateContactAndGetIdAsync` methods remain available for string-valued attributes. Use the `...WithAttributes...` methods for arrays, booleans, numbers, and other typed values.
+
+## Manage contact attributes
+
+```csharp
+BrevoDataResult<IReadOnlyList<BrevoContactAttribute>> attributes =
+    await brevo.ListContactAttributesAsync();
+
+BrevoResult create = await brevo.CreateContactAttributeAsync(
+    "normal",
+    "INTERESTS",
+    new BrevoContactAttributeWriteOptions(
+        Type: "multiple-choice",
+        MultiCategoryOptions: ["cafe", "products", "recipes", "news"]));
+
+BrevoResult update = await brevo.UpdateContactAttributeAsync(
+    "normal",
+    "INTERESTS",
+    new BrevoContactAttributeWriteOptions(
+        MultiCategoryOptions: ["cafe", "products", "recipes", "news"]));
+
+BrevoResult delete = await brevo.DeleteContactAttributeAsync("normal", "INTERESTS");
+```
+
+`GetContactAttributeAsync` reads one attribute from Brevo's attribute catalog. Brevo's update endpoint can update supported enumeration values, multiple-choice options, or calculated/global formulas, but cannot change an attribute's type. Deleting an attribute permanently removes its values from contacts.
