@@ -7,9 +7,20 @@
     @if (Mode == NerdReCaptchaMode.GoogleV2)
     {
         <div @ref="_widgetHost" class="nerd-recaptcha-google" data-testid="nerd-recaptcha-google"></div>
-        @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+        @if (!string.IsNullOrWhiteSpace(DisplayError))
         {
-            <MudAlert Severity="Severity.Error" Dense="true" Class="mt-2" data-testid="nerd-recaptcha-error">@ErrorMessage</MudAlert>
+            <MudAlert Severity="Severity.Error" Dense="true" Class="mt-2" data-testid="nerd-recaptcha-error">@DisplayError</MudAlert>
+        }
+    }
+    else if (Mode == NerdReCaptchaMode.GoogleEnterprise)
+    {
+        <div @ref="_widgetHost"
+             class="nerd-recaptcha-enterprise"
+             data-testid="nerd-recaptcha-enterprise"
+             aria-live="polite"></div>
+        @if (!string.IsNullOrWhiteSpace(DisplayError))
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" Class="mt-2" data-testid="nerd-recaptcha-error">@DisplayError</MudAlert>
         }
     }
     else if (_challenge is not null)
@@ -69,6 +80,7 @@
             </MudStack>
         </MudPaper>
     }
+    <input type="hidden" name="@TokenInputName" value="@Token" />
 </div>
 
 @code {
@@ -79,6 +91,7 @@
     private SimpleChallenge? _challenge;
     private string _answerText = "";
     private bool _googleRendered;
+    private string? _runtimeError;
 
     [Parameter]
     public string? Token { get; set; }
@@ -123,7 +136,8 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (Mode != NerdReCaptchaMode.GoogleV2 || _googleRendered)
+        if (Mode is not (NerdReCaptchaMode.GoogleV2 or NerdReCaptchaMode.GoogleEnterprise)
+            || _googleRendered)
         {
             return;
         }
@@ -143,15 +157,43 @@
             Verifier.SiteKey,
             Theme,
             Size,
-            _dotNetRef);
+            _dotNetRef,
+            Mode == NerdReCaptchaMode.GoogleEnterprise,
+            Verifier.Action ?? Action,
+            TokenInputName);
         _googleRendered = true;
     }
 
-    [JSInvokable]
-    public Task OnGoogleTokenAsync(string token) => SetTokenAsync(token);
+    [Parameter]
+    public string Action { get; set; } = "submit";
+
+    [Parameter]
+    public string TokenInputName { get; set; } = "captchaToken";
+
+    private string? DisplayError => ErrorMessage ?? _runtimeError;
 
     [JSInvokable]
-    public Task OnGoogleExpiredAsync() => SetTokenAsync(null);
+    public async Task OnGoogleTokenAsync(string token)
+    {
+        _runtimeError = null;
+        await SetTokenAsync(token);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    [JSInvokable]
+    public async Task OnGoogleExpiredAsync()
+    {
+        await SetTokenAsync(null);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    [JSInvokable]
+    public async Task OnGoogleErrorAsync()
+    {
+        _runtimeError = "Google reCAPTCHA kunne ikke bekræfte formularen. Prøv igen.";
+        await SetTokenAsync(null);
+        await InvokeAsync(StateHasChanged);
+    }
 
     private async Task RefreshSimpleChallengeAsync()
     {
