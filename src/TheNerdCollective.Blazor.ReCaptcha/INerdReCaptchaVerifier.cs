@@ -10,11 +10,12 @@ public interface INerdReCaptchaVerifier
     string? SiteKey { get; }
 
     /// <summary>Expected action for reCAPTCHA Enterprise; null in other modes.</summary>
-    string? Action { get; }
+    string? Action => null;
 
     Task<SimpleChallenge> CreateSimpleChallengeAsync(CancellationToken cancellationToken = default);
 
     Task<ReCaptchaVerifyResult> VerifyAsync(string? responseToken, CancellationToken cancellationToken = default);
+
 }
 
 public sealed record SimpleChallenge(string ChallengeId, int Left, int Right, string Prompt);

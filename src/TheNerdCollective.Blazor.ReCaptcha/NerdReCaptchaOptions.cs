@@ -55,7 +55,7 @@ public sealed class NerdReCaptchaOptions
 
 public enum NerdReCaptchaMode
 {
-    GoogleV2,
-    GoogleEnterprise,
-    Simple
+    GoogleV2 = 0,
+    Simple = 1,
+    GoogleEnterprise = 2
 }
