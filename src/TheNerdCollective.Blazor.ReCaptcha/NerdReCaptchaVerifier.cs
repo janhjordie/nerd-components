@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Globalization;
 using System.Net.Http.Json;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Options;
 
@@ -21,7 +22,15 @@ public sealed class NerdReCaptchaVerifier : INerdReCaptchaVerifier
 
     public NerdReCaptchaMode Mode => _options.ResolvedMode;
 
-    public string? SiteKey => Mode == NerdReCaptchaMode.GoogleV2 ? _options.SiteKey : null;
+    public string? SiteKey =>
+        Mode is NerdReCaptchaMode.GoogleV2 or NerdReCaptchaMode.GoogleEnterprise
+            ? _options.SiteKey
+            : null;
+
+    public string? Action =>
+        Mode == NerdReCaptchaMode.GoogleEnterprise
+            ? _options.Action
+            : null;
 
     public Task<SimpleChallenge> CreateSimpleChallengeAsync(CancellationToken cancellationToken = default)
     {
@@ -52,12 +61,14 @@ public sealed class NerdReCaptchaVerifier : INerdReCaptchaVerifier
             return new ReCaptchaVerifyResult(false, "missing-input-response");
         }
 
-        if (Mode == NerdReCaptchaMode.Simple || responseToken.StartsWith(SimplePrefix, StringComparison.Ordinal))
+        if (Mode == NerdReCaptchaMode.Simple)
         {
             return VerifySimple(responseToken);
         }
 
-        return await VerifyGoogleAsync(responseToken, cancellationToken).ConfigureAwait(false);
+        return Mode == NerdReCaptchaMode.GoogleEnterprise
+            ? await VerifyGoogleEnterpriseAsync(responseToken, cancellationToken).ConfigureAwait(false)
+            : await VerifyGoogleAsync(responseToken, cancellationToken).ConfigureAwait(false);
     }
 
     private ReCaptchaVerifyResult VerifySimple(string responseToken)
@@ -134,6 +145,63 @@ public sealed class NerdReCaptchaVerifier : INerdReCaptchaVerifier
             ? string.Join(',', payload.ErrorCodes)
             : "google-rejected";
         return new ReCaptchaVerifyResult(false, code);
+    }
+
+    private async Task<ReCaptchaVerifyResult> VerifyGoogleEnterpriseAsync(
+        string responseToken,
+        CancellationToken cancellationToken)
+    {
+        if (!_options.HasGoogleEnterpriseConfiguration)
+        {
+            return new ReCaptchaVerifyResult(false, "missing-enterprise-configuration");
+        }
+
+        var client = _httpClientFactory.CreateClient(nameof(NerdReCaptchaVerifier));
+        var endpoint =
+            $"https://recaptchaenterprise.googleapis.com/v1/projects/{Uri.EscapeDataString(_options.ProjectId!)}/assessments?key={Uri.EscapeDataString(_options.ApiKey!)}";
+        using var response = await client.PostAsJsonAsync(
+            endpoint,
+            new
+            {
+                @event = new
+                {
+                    token = responseToken,
+                    siteKey = _options.SiteKey,
+                    expectedAction = _options.Action
+                }
+            },
+            cancellationToken).ConfigureAwait(false);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            return new ReCaptchaVerifyResult(false, "google-enterprise-http-error");
+        }
+
+        using var payload = await JsonDocument.ParseAsync(
+            await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false),
+            cancellationToken: cancellationToken).ConfigureAwait(false);
+        var root = payload.RootElement;
+        if (!root.TryGetProperty("tokenProperties", out var tokenProperties)
+            || !tokenProperties.TryGetProperty("valid", out var valid)
+            || !valid.GetBoolean())
+        {
+            return new ReCaptchaVerifyResult(false, "google-enterprise-invalid-token");
+        }
+
+        if (!tokenProperties.TryGetProperty("action", out var action)
+            || !string.Equals(action.GetString(), _options.Action, StringComparison.Ordinal))
+        {
+            return new ReCaptchaVerifyResult(false, "google-enterprise-action-mismatch");
+        }
+
+        if (!root.TryGetProperty("riskAnalysis", out var riskAnalysis)
+            || !riskAnalysis.TryGetProperty("score", out var score)
+            || score.GetSingle() < _options.MinimumScore)
+        {
+            return new ReCaptchaVerifyResult(false, "google-enterprise-score-too-low");
+        }
+
+        return new ReCaptchaVerifyResult(true);
     }
 
     private void CleanupExpired()
