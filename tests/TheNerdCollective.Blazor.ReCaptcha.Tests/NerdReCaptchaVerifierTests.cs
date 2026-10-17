@@ -21,6 +21,29 @@ public sealed class NerdReCaptchaVerifierTests
     }
 
     [Fact]
+    public void Existing_simple_enum_value_and_config_remain_compatible()
+    {
+        Assert.Equal(1, (int)NerdReCaptchaMode.Simple);
+
+        var services = new ServiceCollection();
+        services.AddNerdReCaptcha(options =>
+            options.Mode = (NerdReCaptchaMode)1);
+        using var sp = services.BuildServiceProvider();
+
+        Assert.Equal(
+            NerdReCaptchaMode.Simple,
+            sp.GetRequiredService<INerdReCaptchaVerifier>().Mode);
+    }
+
+    [Fact]
+    public void Existing_verifier_implementations_can_omit_enterprise_action()
+    {
+        INerdReCaptchaVerifier verifier = new LegacyVerifier();
+
+        Assert.Null(verifier.Action);
+    }
+
+    [Fact]
     public void Enterprise_configuration_selects_enterprise_mode()
     {
         var services = new ServiceCollection();
@@ -142,5 +165,20 @@ public sealed class NerdReCaptchaVerifierTests
                 Content = new StringContent(responseBody, Encoding.UTF8, "application/json")
             };
         }
+    }
+
+    private sealed class LegacyVerifier : INerdReCaptchaVerifier
+    {
+        public NerdReCaptchaMode Mode => NerdReCaptchaMode.Simple;
+        public string? SiteKey => null;
+
+        public Task<SimpleChallenge> CreateSimpleChallengeAsync(
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult(new SimpleChallenge("id", 1, 1, "What is 1 + 1?"));
+
+        public Task<ReCaptchaVerifyResult> VerifyAsync(
+            string? responseToken,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult(new ReCaptchaVerifyResult(true));
     }
 }
