@@ -133,6 +133,34 @@ public sealed class NerdReCaptchaVerifierTests
         Assert.False(reuse.Success);
     }
 
+    [Theory]
+    [InlineData(NerdReCaptchaMode.GoogleV2)]
+    [InlineData(NerdReCaptchaMode.GoogleEnterprise)]
+    public async Task Simple_fallback_token_is_accepted_when_google_mode_is_configured(
+        NerdReCaptchaMode mode)
+    {
+        var services = new ServiceCollection();
+        services.AddNerdReCaptcha(options =>
+        {
+            options.Mode = mode;
+            options.SiteKey = "site-key";
+            options.SecretKey = "secret-key";
+            options.ProjectId = "project-id";
+            options.ApiKey = "api-key";
+        });
+        services.AddHttpClient(nameof(NerdReCaptchaVerifier))
+            .ConfigurePrimaryHttpMessageHandler(() => new StubHttpMessageHandler("{}"));
+        using var sp = services.BuildServiceProvider();
+        var verifier = sp.GetRequiredService<INerdReCaptchaVerifier>();
+
+        var challenge = await verifier.CreateSimpleChallengeAsync();
+        var token = $"simple:{challenge.ChallengeId}:{challenge.Left + challenge.Right}";
+
+        var result = await verifier.VerifyAsync(token);
+
+        Assert.True(result.Success);
+    }
+
     private static INerdReCaptchaVerifier CreateEnterpriseVerifier(StubHttpMessageHandler handler)
     {
         var services = new ServiceCollection();
