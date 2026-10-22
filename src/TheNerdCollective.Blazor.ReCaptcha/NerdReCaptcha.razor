@@ -165,6 +165,14 @@
         }
     }
 
+    protected override async Task OnParametersSetAsync()
+    {
+        if (UseSimpleFallback && !_useSimpleFallback)
+        {
+            await ActivateSimpleFallbackAsync();
+        }
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (_useSimpleFallback
@@ -234,7 +242,7 @@
 
     public async Task<string?> GenerateTokenAsync()
     {
-        if (Mode != NerdReCaptchaMode.GoogleEnterprise)
+        if (_useSimpleFallback || Mode != NerdReCaptchaMode.GoogleEnterprise)
         {
             return Token;
         }
