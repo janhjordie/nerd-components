@@ -78,7 +78,7 @@ export async function render(host, siteKey, theme, size, dotNetRef, enterprise, 
     size: size || "normal",
     callback: (token) => dotNetRef.invokeMethodAsync("OnGoogleTokenAsync", token),
     "expired-callback": () => dotNetRef.invokeMethodAsync("OnGoogleExpiredAsync"),
-    "error-callback": () => dotNetRef.invokeMethodAsync("OnGoogleExpiredAsync")
+    "error-callback": () => dotNetRef.invokeMethodAsync("OnGoogleErrorAsync")
   });
 }
 

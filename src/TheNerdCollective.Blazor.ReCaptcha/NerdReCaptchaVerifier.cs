@@ -61,6 +61,11 @@ public sealed class NerdReCaptchaVerifier : INerdReCaptchaVerifier
             return new ReCaptchaVerifyResult(false, "missing-input-response");
         }
 
+        if (responseToken.StartsWith(SimplePrefix, StringComparison.Ordinal))
+        {
+            return VerifySimple(responseToken);
+        }
+
         if (Mode == NerdReCaptchaMode.Simple)
         {
             return VerifySimple(responseToken);

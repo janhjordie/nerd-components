@@ -39,6 +39,8 @@ builder.Services.AddNerdReCaptcha(options =>
 
 Enterprise mode loads `enterprise.js`, executes the `Action` configured in `NerdReCaptchaOptions` when the containing form is submitted, and verifies the token by creating an assessment through the reCAPTCHA Enterprise API. The server accepts only valid tokens with the configured action and a score at or above `MinimumScore`. Configure the action in `NerdReCaptchaOptions`; it is deliberately not overridable per component so the browser cannot choose the action the server trusts.
 
+If Google cannot initialize, reports an error, or rejects the submitted token, the component can switch to its built-in math challenge. Simple challenge tokens are verified server-side even when a Google mode is configured. For applications that handle a rejected token server-side, re-render the contact form with `UseSimpleFallback="true"`.
+
 Restrict the Google Cloud API key to the reCAPTCHA Enterprise API and keep it server-side. Configure `SiteKey`, `ProjectId`, and `ApiKey`; do not expose `ApiKey` to the browser.
 
 For the legacy v2 checkbox, configure `SiteKey` and `SecretKey` with `Mode` set to `GoogleV2`. When Google configuration is missing (or `Mode` is `Simple`), the component renders a local math challenge instead.
