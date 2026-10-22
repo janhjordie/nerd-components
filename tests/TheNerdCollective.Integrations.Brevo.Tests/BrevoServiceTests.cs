@@ -50,6 +50,37 @@ public sealed class BrevoServiceTests
     }
 
     [Fact]
+    public async Task CreateOrUpdateContactByPhoneAndGetIdAsync_posts_contact_without_email()
+    {
+        string? requestBody = null;
+        var handler = new StubHttpMessageHandler(async (request, cancellationToken) =>
+        {
+            Assert.Equal(HttpMethod.Post, request.Method);
+            Assert.Equal("/v3/contacts", request.RequestUri?.AbsolutePath);
+            requestBody = await request.Content!.ReadAsStringAsync(cancellationToken);
+            return JsonResponse("""{"id":42}""", HttpStatusCode.Created);
+        });
+        BrevoService service = CreateService(handler);
+
+        BrevoDataResult<long> result = await service.CreateOrUpdateContactByPhoneAndGetIdAsync(
+            " +4528876905 ",
+            new Dictionary<string, string> { ["FIRSTNAME"] = "Guest" },
+            [12]);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(42L, result.Data);
+
+        using JsonDocument body = JsonDocument.Parse(requestBody!);
+        Assert.False(body.RootElement.TryGetProperty("email", out _));
+        Assert.True(body.RootElement.GetProperty("updateEnabled").GetBoolean());
+        Assert.True(body.RootElement.GetProperty("getId").GetBoolean());
+        Assert.Equal(12L, body.RootElement.GetProperty("listIds")[0].GetInt64());
+        JsonElement contactAttributes = body.RootElement.GetProperty("attributes");
+        Assert.Equal("Guest", contactAttributes.GetProperty("FIRSTNAME").GetString());
+        Assert.Equal("+4528876905", contactAttributes.GetProperty("SMS").GetString());
+    }
+
+    [Fact]
     public async Task CreateOrUpdateContactAndGetIdAsync_looks_up_id_after_update_without_response_body()
     {
         int requestCount = 0;

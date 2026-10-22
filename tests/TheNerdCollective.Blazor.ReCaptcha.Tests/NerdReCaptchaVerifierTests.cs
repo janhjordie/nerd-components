@@ -9,7 +9,7 @@ namespace TheNerdCollective.Blazor.ReCaptcha.Tests;
 public sealed class NerdReCaptchaVerifierTests
 {
     [Fact]
-    public void ResolvedMode_falls_back_to_simple_without_keys()
+    public async Task ResolvedMode_falls_back_to_simple_without_keys()
     {
         var services = new ServiceCollection();
         services.AddNerdReCaptcha(_ => { });
@@ -18,6 +18,8 @@ public sealed class NerdReCaptchaVerifierTests
 
         Assert.Equal(NerdReCaptchaMode.Simple, verifier.Mode);
         Assert.Null(verifier.SiteKey);
+        var challenge = await verifier.CreateSimpleChallengeAsync();
+        Assert.StartsWith("Hvad er ", challenge.Prompt);
     }
 
     [Fact]
@@ -202,7 +204,7 @@ public sealed class NerdReCaptchaVerifierTests
 
         public Task<SimpleChallenge> CreateSimpleChallengeAsync(
             CancellationToken cancellationToken = default) =>
-            Task.FromResult(new SimpleChallenge("id", 1, 1, "What is 1 + 1?"));
+            Task.FromResult(new SimpleChallenge("id", 1, 1, "Hvad er 1 + 1?"));
 
         public Task<ReCaptchaVerifyResult> VerifyAsync(
             string? responseToken,

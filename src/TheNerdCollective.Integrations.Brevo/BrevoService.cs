@@ -102,8 +102,39 @@ public sealed class BrevoService
         CancellationToken cancellationToken = default)
     {
         Dictionary<string, object?> body = CreateContactRequestBody(email, attributes, listIds);
-        body["getId"] = true;
+        return await CreateOrUpdateContactAndGetIdAsync(body, email.Trim(), cancellationToken);
+    }
 
+    /// <summary>
+    /// Creates or updates a contact using its SMS phone number as the unique identifier.
+    /// </summary>
+    public async Task<BrevoDataResult<long>> CreateOrUpdateContactByPhoneAndGetIdAsync(
+        string phone,
+        IReadOnlyDictionary<string, string>? attributes = null,
+        IReadOnlyList<long>? listIds = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(phone);
+
+        var normalizedPhone = phone.Trim();
+        var contactAttributes = attributes is null
+            ? new Dictionary<string, object?>(StringComparer.Ordinal)
+            : ConvertAttributes(attributes)!.ToDictionary(
+                attribute => attribute.Key,
+                attribute => attribute.Value,
+                StringComparer.Ordinal);
+        contactAttributes["SMS"] = normalizedPhone;
+
+        var body = CreateContactRequestBodyWithoutEmail(contactAttributes, listIds);
+        return await CreateOrUpdateContactAndGetIdAsync(body, normalizedPhone, cancellationToken);
+    }
+
+    private async Task<BrevoDataResult<long>> CreateOrUpdateContactAndGetIdAsync(
+        Dictionary<string, object?> body,
+        string identifier,
+        CancellationToken cancellationToken)
+    {
+        body["getId"] = true;
         BrevoDataResult<long?> result = await SendJsonAsync<long?>(
             HttpMethod.Post,
             "contacts",
@@ -122,7 +153,7 @@ public sealed class BrevoService
         }
 
         BrevoDataResult<long> lookup = await GetAsync(
-            $"contacts/{Uri.EscapeDataString(email.Trim())}",
+            $"contacts/{Uri.EscapeDataString(identifier)}",
             ReadContactId,
             cancellationToken);
 
@@ -748,6 +779,24 @@ public sealed class BrevoService
         {
             body["attributes"] = attributes;
         }
+
+        if (listIds is { Count: > 0 })
+        {
+            body["listIds"] = listIds;
+        }
+
+        return body;
+    }
+
+    private static Dictionary<string, object?> CreateContactRequestBodyWithoutEmail(
+        IReadOnlyDictionary<string, object?> attributes,
+        IReadOnlyList<long>? listIds)
+    {
+        var body = new Dictionary<string, object?>
+        {
+            ["updateEnabled"] = true,
+            ["attributes"] = attributes
+        };
 
         if (listIds is { Count: > 0 })
         {

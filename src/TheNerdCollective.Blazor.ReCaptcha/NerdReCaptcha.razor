@@ -46,12 +46,6 @@
                   Class="pa-4 nerd-recaptcha-simple"
                   data-testid="nerd-recaptcha-simple">
             <MudStack Spacing="3">
-                @if (_useSimpleFallback && Mode != NerdReCaptchaMode.Simple)
-                {
-                    <MudAlert Severity="Severity.Info" Dense="true" data-testid="nerd-recaptcha-fallback-message">
-                        Google reCAPTCHA kunne ikke bruges. Bekræft i stedet, at du er et menneske, ved at løse regnestykket.
-                    </MudAlert>
-                }
                 <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="2">
                     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
                         <MudAvatar Color="Color.Primary" Size="MudBlazor.Size.Medium" Variant="Variant.Filled">
@@ -140,19 +134,19 @@
     public string Size { get; set; } = "normal";
 
     [Parameter]
-    public string SimpleTitle { get; set; } = "Quick verification";
+    public string SimpleTitle { get; set; } = "Bekræft, at du er et menneske";
 
     [Parameter]
-    public string RefreshLabel { get; set; } = "New challenge";
+    public string RefreshLabel { get; set; } = "Ny opgave";
 
     [Parameter]
     public string HintLabel { get; set; } = "";
 
     [Parameter]
-    public string ChallengeLabel { get; set; } = "Solve this to continue";
+    public string ChallengeLabel { get; set; } = "Regn opgaven ud, og skriv summen i feltet";
 
     [Parameter]
-    public string AnswerLabel { get; set; } = "Your answer";
+    public string AnswerLabel { get; set; } = "Skriv summen her";
 
     private NerdReCaptchaMode Mode => Verifier.Mode;
 

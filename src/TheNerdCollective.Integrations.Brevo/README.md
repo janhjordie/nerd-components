@@ -53,6 +53,20 @@ await brevo.SendEmailAsync(
 Attribute names must already exist in the Brevo account. The sender address must be a verified sender.
 The original `CreateOrUpdateContactAsync` and `CreateOrUpdateContactAndGetIdAsync` methods remain available for string-valued attributes. Use the `...WithAttributes...` methods for arrays, booleans, numbers, and other typed values.
 
+For a contact without an email address, use the SMS phone number as its unique identifier:
+
+```csharp
+await brevo.CreateOrUpdateContactByPhoneAndGetIdAsync(
+    "+4528876905",
+    attributes: new Dictionary<string, string>
+    {
+        ["FIRSTNAME"] = "Guest"
+    },
+    listIds: [12]);
+```
+
+The method adds the formatted number as the `SMS` contact attribute.
+
 ## Manage contact attributes
 
 ```csharp

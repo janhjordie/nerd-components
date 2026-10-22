@@ -25,6 +25,8 @@ public sealed class NerdReCaptchaComponentTests
 
         Assert.NotNull(cut.Find("[data-testid=nerd-recaptcha-simple]"));
         Assert.DoesNotContain("data-testid=\"nerd-recaptcha-enterprise\"", cut.Markup);
+        Assert.DoesNotContain("Google reCAPTCHA kunne ikke bruges", cut.Markup);
+        Assert.Contains("Ny opgave", cut.Markup);
     }
 
     [Fact]

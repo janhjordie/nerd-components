@@ -47,7 +47,7 @@ public sealed class NerdReCaptchaVerifier : INerdReCaptchaVerifier
             id,
             left,
             right,
-            $"What is {left} + {right}?");
+            $"Hvad er {left} + {right}?");
 
         return Task.FromResult(challenge);
     }
