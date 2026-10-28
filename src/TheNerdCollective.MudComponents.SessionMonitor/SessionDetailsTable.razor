@@ -4,13 +4,13 @@
 
 <MudStack Spacing="1" Class="pa-1">
     <MudText Typo="Typo.caption" Color="Color.Secondary">
-        @_totalCircuits circuits · @_clientGroups.Count browsers
+        @_connectedCircuits connected circuits · @_retainedCircuits retained · @_clientGroups.Count client groups
     </MudText>
 
     @if (IsDegradedMode)
     {
         <MudAlert Severity="Severity.Warning" Dense="true">
-            Circuit details hidden in summary-only mode. Use <b>By Browser</b>.
+            Circuit details hidden in summary-only mode. Use <b>By client</b>.
         </MudAlert>
     }
     else if (_clientGroups.Count == 0)
@@ -29,7 +29,7 @@
                     {
                         <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mb-2"
                                   Icon="@Icons.Material.Filled.AdminPanelSettings">
-                            Admin browser — sessions from this group are excluded from deploy safety counts while the monitor tab is open.
+                            Admin client — connected circuits from this group are excluded from deploy safety while a monitor tab is connected.
                         </MudAlert>
                     }
                     <MudStack Spacing="2" Class="mb-2">
@@ -97,7 +97,8 @@
 
 @code {
     private List<ActiveClientSessionSummary> _clientGroups = [];
-    private int _totalCircuits;
+    private int _connectedCircuits;
+    private int _retainedCircuits;
 
     [Parameter] public DateTime RefreshToken { get; set; }
 
@@ -118,12 +119,14 @@
         if (IsDegradedMode)
         {
             _clientGroups = [];
-            _totalCircuits = 0;
+            _connectedCircuits = 0;
+            _retainedCircuits = 0;
         }
         else
         {
             _clientGroups = SessionMonitor.GetActiveSessionsByClient().ToList();
-            _totalCircuits = _clientGroups.Sum(g => g.ActiveSessionCount);
+            _connectedCircuits = _clientGroups.Sum(g => g.ConnectedCount);
+            _retainedCircuits = _clientGroups.Sum(g => g.DisconnectedCount);
         }
 
         await Task.CompletedTask;
@@ -136,6 +139,6 @@
             : group.ClientLabel;
         var adminSuffix = group.IsAdminMonitorGroup ? " · Admin" : "";
 
-        return $"{label} · {group.ActiveSessionCount} circuits · {group.ConnectedCount} connected{adminSuffix}";
+        return $"{label} · {group.ConnectedCount} connected · {group.DisconnectedCount} retained{adminSuffix}";
     }
 }

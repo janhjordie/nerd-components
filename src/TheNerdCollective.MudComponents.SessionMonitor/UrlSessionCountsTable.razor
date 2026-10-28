@@ -5,7 +5,7 @@
 <MudStack Spacing="1" Class="pa-1">
     <MudStack Row="true" Class="align-center flex-wrap" Spacing="1">
         <MudText Typo="Typo.caption" Color="Color.Secondary">
-            @_totalActiveSessions sessions · @_pathSummaries.Count URLs
+            @_totalActiveSessions connected circuits · @_retainedCircuits retained · @_pathSummaries.Count URLs
         </MudText>
         <MudSpacer />
         @if (_pathSummaries.Count > 0)
@@ -94,6 +94,7 @@
 @code {
     private List<ActivePathSessionSummary> _pathSummaries = [];
     private int _totalActiveSessions;
+    private int _retainedCircuits;
 
     [Parameter] public DateTime RefreshToken { get; set; }
 
@@ -112,7 +113,8 @@
     private async Task RefreshSummaries()
     {
         _pathSummaries = SessionMonitor.GetActiveSessionsByPath().ToList();
-        _totalActiveSessions = _pathSummaries.Sum(s => s.ActiveSessionCount);
+        _totalActiveSessions = _pathSummaries.Sum(s => s.ConnectedCount);
+        _retainedCircuits = _pathSummaries.Sum(s => s.DisconnectedCount);
         await Task.CompletedTask;
     }
 

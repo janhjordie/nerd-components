@@ -299,6 +299,99 @@ public sealed class SessionMonitorServiceTests
         Assert.Equal(1, monitor.GetCurrentMetrics().ActiveSessions);
     }
 
+    [Fact]
+    public void Duplicate_disconnect_and_close_do_not_drift_connected_count()
+    {
+        var monitor = CreateMonitor();
+
+        monitor.OnCircuitOpened("circuit-1", "/booking");
+        monitor.OnConnectionDown("circuit-1");
+        monitor.OnConnectionDown("circuit-1");
+        monitor.OnConnectionUp("circuit-1");
+        monitor.OnConnectionUp("circuit-1");
+        monitor.OnCircuitClosed("circuit-1");
+        monitor.OnCircuitClosed("circuit-1");
+        monitor.OnConnectionUp("circuit-1");
+
+        var metrics = monitor.GetCurrentMetrics();
+
+        Assert.Equal(0, metrics.ActiveSessions);
+        Assert.Equal(0, metrics.DisconnectedSessions);
+        Assert.Equal(1, metrics.TotalDisconnects);
+        Assert.Equal(1, metrics.TotalReconnects);
+        Assert.Equal(1, metrics.TotalSessionsEnded);
+        Assert.False(monitor.HasActiveSessions());
+    }
+
+    [Fact]
+    public void Retained_circuit_is_not_an_active_session()
+    {
+        const string clientId = "client-retained";
+        var monitor = CreateMonitor();
+
+        monitor.OnCircuitOpened("connected", "/booking", clientId);
+        monitor.OnCircuitOpened("retained", "/booking/other", clientId);
+        monitor.OnConnectionDown("retained");
+
+        var summary = monitor.GetActiveSessionsByClient().Single();
+        var metrics = monitor.GetCurrentMetrics();
+
+        Assert.Equal(1, metrics.ActiveSessions);
+        Assert.Equal(1, metrics.DisconnectedSessions);
+        Assert.Equal(1, summary.ActiveSessionCount);
+        Assert.Equal(1, summary.ConnectedCount);
+        Assert.Equal(1, summary.DisconnectedCount);
+        Assert.Equal(2, summary.Circuits.Count);
+        Assert.Equal(["connected"], monitor.GetActiveCircuitIds());
+        Assert.True(monitor.HasActiveSessions());
+
+        monitor.OnConnectionDown("connected");
+
+        Assert.False(monitor.HasActiveSessions());
+        Assert.Empty(monitor.GetActiveCircuitIds());
+        Assert.Empty(monitor.GetActiveSessions());
+    }
+
+    [Fact]
+    public void Parallel_open_and_disconnect_keeps_connected_count_at_zero()
+    {
+        var monitor = CreateMonitor();
+        var ids = Enumerable.Range(0, 32).Select(i => $"circuit-{i}").ToArray();
+
+        Parallel.ForEach(ids, id => monitor.OnCircuitOpened(id, "/booking", "same-client"));
+        Parallel.ForEach(ids, id => monitor.OnConnectionDown(id));
+
+        var metrics = monitor.GetCurrentMetrics();
+
+        Assert.Equal(0, metrics.ActiveSessions);
+        Assert.Equal(32, metrics.DisconnectedSessions);
+        Assert.Equal(32, metrics.TotalDisconnects);
+        Assert.False(monitor.HasActiveSessions());
+    }
+
+    [Fact]
+    public void Open_records_started_delta_in_history()
+    {
+        var monitor = CreateMonitor();
+
+        monitor.OnCircuitOpened("circuit-1", "/");
+
+        var snapshot = monitor.GetHistory().Single();
+
+        Assert.Equal(1, snapshot.ActiveSessions);
+        Assert.Equal(1, snapshot.SessionsStarted);
+        Assert.Equal(0, snapshot.SessionsEnded);
+    }
+
+    [Fact]
+    public void Deployment_window_rejects_non_positive_minutes()
+    {
+        var monitor = CreateMonitor();
+        monitor.OnCircuitOpened("circuit-1", "/");
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => monitor.FindOptimalDeploymentWindows(0, 1));
+    }
+
     private static SessionMonitorService CreateMonitor()
         => new(Options.Create(new SessionMonitorOptions()));
 }

@@ -12,7 +12,7 @@ public class ActivePathSessionSummary
     public string Path { get; set; } = "";
 
     /// <summary>
-    /// Total active circuits on this path.
+    /// Connected circuits on this path. Retained circuits are <see cref="DisconnectedCount"/>.
     /// </summary>
     public int ActiveSessionCount { get; set; }
 

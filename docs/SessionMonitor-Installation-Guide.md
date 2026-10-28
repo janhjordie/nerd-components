@@ -11,6 +11,8 @@ The Session Monitoring solution consists of two complementary packages:
 
 You can use them together for a complete monitoring solution, or use only the service package if you prefer to build your own UI.
 
+Load `session-monitor-client.js` before `blazor.web.js`. Active counts are connected circuits on one replica. `can-deploy` is that replica's observation: poll the intended revision, require consecutive zeros, apply a hard cap, and recheck before deactivation. Pass `configureGroup` to require authorization.
+
 ---
 
 ## Option 1: Full Stack (Service + UI Components)

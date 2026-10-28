@@ -15,6 +15,8 @@ public class SessionMonitorService : ISessionMonitorService
     private readonly ConcurrentQueue<SessionSnapshot> _history = new();
     private readonly object _statsLock = new();
     private int _connectedCount;
+    private int _pendingStarted;
+    private int _pendingEnded;
 
     private long _totalSessionsStarted;
     private long _totalCircuitsOpened;
@@ -55,91 +57,145 @@ public class SessionMonitorService : ISessionMonitorService
             CurrentPathUpdatedAt = initialPath is null ? null : DateTime.UtcNow
         };
 
-        if (!_activeSessions.TryAdd(circuitId, session))
+        var startedDelta = 0;
+        lock (session.Gate)
         {
-            return;
-        }
-
-        Interlocked.Increment(ref _connectedCount);
-        var isReloadReplacement = IncrementClientIndex(clientId) > 1;
-
-        lock (_statsLock)
-        {
-            _totalCircuitsOpened++;
-
-            if (!_options.DeduplicateReloadStarts || !isReloadReplacement)
+            if (!_activeSessions.TryAdd(circuitId, session))
             {
-                _totalSessionsStarted++;
+                return;
             }
 
-            var connectedCount = GetConnectedSessionCount();
-            if (connectedCount > _peakSessions)
+            Interlocked.Increment(ref _connectedCount);
+            var isReloadReplacement = IncrementClientIndex(clientId) > 1;
+
+            lock (_statsLock)
             {
-                _peakSessions = connectedCount;
+                _totalCircuitsOpened++;
+
+                if (!_options.DeduplicateReloadStarts || !isReloadReplacement)
+                {
+                    _totalSessionsStarted++;
+                    startedDelta = 1;
+                }
+
+                var connectedCount = GetConnectedSessionCount();
+                if (connectedCount > _peakSessions)
+                {
+                    _peakSessions = connectedCount;
+                }
             }
         }
 
         UpdateTrackingMode(GetConnectedSessionCount());
-        RecordSnapshot();
+        RecordSnapshot(startedDelta, 0);
     }
 
     internal void OnCircuitClosed(string circuitId)
     {
-        if (_activeSessions.TryRemove(circuitId, out var session))
+        if (!_activeSessions.TryGetValue(circuitId, out var session))
         {
+            return;
+        }
+
+        var removed = false;
+        lock (session.Gate)
+        {
+            var state = session.State;
+            if (state == CircuitConnectionState.Closed)
+            {
+                return;
+            }
+
             session.EndedAt = DateTime.UtcNow;
-            var duration = session.EndedAt.Value - session.StartedAt;
-            if (session.DisconnectedAt is null)
+            if (state == CircuitConnectionState.Connected)
             {
                 Interlocked.Decrement(ref _connectedCount);
             }
 
-            DecrementClientIndex(session.ClientId);
+            session.SetState(CircuitConnectionState.Closed);
+            removed = _activeSessions.TryRemove(circuitId, out _);
+            if (!removed)
+            {
+                return;
+            }
 
+            DecrementClientIndex(session.ClientId);
+            var duration = session.EndedAt.Value - session.StartedAt;
             lock (_statsLock)
             {
                 _totalSessionsEnded++;
                 _completedDurationTicks += duration.Ticks;
                 _completedSessionCount++;
             }
-
-            UpdateTrackingMode(GetConnectedSessionCount());
-            RecordSnapshot();
         }
+
+        UpdateTrackingMode(GetConnectedSessionCount());
+        RecordSnapshot(0, 1);
     }
 
     internal void OnConnectionDown(string circuitId)
     {
-        if (_activeSessions.TryGetValue(circuitId, out var session))
+        if (!_activeSessions.TryGetValue(circuitId, out var session))
         {
-            if (session.DisconnectedAt is null)
+            return;
+        }
+
+        var changed = false;
+        lock (session.Gate)
+        {
+            if (session.State != CircuitConnectionState.Connected)
             {
-                Interlocked.Decrement(ref _connectedCount);
+                return;
             }
 
             session.DisconnectedAt = DateTime.UtcNow;
+            session.SetState(CircuitConnectionState.DisconnectedRetained);
+            Interlocked.Decrement(ref _connectedCount);
             lock (_statsLock)
             {
                 _totalDisconnects++;
             }
+
+            changed = true;
+        }
+
+        if (changed)
+        {
+            RecordSnapshot(0, 0);
         }
     }
 
     internal void OnConnectionUp(string circuitId)
     {
-        if (_activeSessions.TryGetValue(circuitId, out var session))
+        if (!_activeSessions.TryGetValue(circuitId, out var session))
         {
-            if (session.DisconnectedAt.HasValue)
+            return;
+        }
+
+        var changed = false;
+        lock (session.Gate)
+        {
+            if (session.State != CircuitConnectionState.DisconnectedRetained)
             {
-                var duration = DateTime.UtcNow - session.DisconnectedAt.Value;
-                session.LastDisconnectDuration = duration;
-                session.DisconnectedAt = null;
-                Interlocked.Increment(ref _connectedCount);
-                lock (_statsLock)
-                {
-                    _totalReconnects++;
-                }
+                return;
             }
+
+            var disconnectedAt = session.DisconnectedAt ?? DateTime.UtcNow;
+            session.LastDisconnectDuration = DateTime.UtcNow - disconnectedAt;
+            session.DisconnectedAt = null;
+            session.SetState(CircuitConnectionState.Connected);
+            Interlocked.Increment(ref _connectedCount);
+            lock (_statsLock)
+            {
+                _totalReconnects++;
+            }
+
+            changed = true;
+        }
+
+        if (changed)
+        {
+            RecordSnapshot(0, 0);
         }
     }
 
@@ -183,6 +239,12 @@ public class SessionMonitorService : ISessionMonitorService
 
     public IEnumerable<SessionSnapshot> GetHistory(DateTime? since = null, int maxCount = 100)
     {
+        if (maxCount <= 0)
+        {
+            return [];
+        }
+
+        maxCount = Math.Min(maxCount, SessionMonitorQueryLimits.MaxHistoryCount);
         if (IsDegradedMode())
         {
             maxCount = Math.Min(maxCount, _options.DegradedMaxHistorySize);
@@ -207,7 +269,10 @@ public class SessionMonitorService : ISessionMonitorService
             return Array.Empty<string>();
         }
 
-        return _activeSessions.Keys.ToList();
+        return _activeSessions.Values
+            .Where(IsConnected)
+            .Select(s => s.CircuitId)
+            .ToList();
     }
 
     public IEnumerable<ActiveCircuitSession> GetActiveSessions()
@@ -218,6 +283,7 @@ public class SessionMonitorService : ISessionMonitorService
         }
 
         return _activeSessions.Values
+            .Where(IsConnected)
             .OrderBy(s => SessionMonitorService.FormatClientLabel(s.ClientId), StringComparer.OrdinalIgnoreCase)
             .ThenByDescending(s => s.CurrentPathUpdatedAt ?? s.StartedAt)
             .Select(s => MapToActiveCircuitSession(s))
@@ -227,7 +293,7 @@ public class SessionMonitorService : ISessionMonitorService
     public IEnumerable<ActiveClientSessionSummary> GetActiveSessionsByClient()
     {
         var prefixes = _options.AdminMonitorPathPrefixes ?? [];
-        var connected = _activeSessions.Values.Where(s => !s.DisconnectedAt.HasValue).ToList();
+        var connected = _activeSessions.Values.Where(IsConnected).ToList();
         var adminClientIds = GetAdminClientIds(connected, prefixes);
 
         var summaries = _activeSessions.Values
@@ -245,7 +311,7 @@ public class SessionMonitorService : ISessionMonitorService
                 {
                     ClientId = g.Key == ActiveClientSessionSummary.UnknownClientLabel ? null : g.Key,
                     ClientLabel = FormatClientLabel(g.Key == ActiveClientSessionSummary.UnknownClientLabel ? null : g.Key),
-                    ActiveSessionCount = circuits.Count,
+                    ActiveSessionCount = circuits.Count(s => !s.IsDisconnected),
                     ConnectedCount = circuits.Count(s => !s.IsDisconnected),
                     DisconnectedCount = circuits.Count(s => s.IsDisconnected),
                     DistinctPathCount = circuits
@@ -275,9 +341,9 @@ public class SessionMonitorService : ISessionMonitorService
             .Select(g => new ActivePathSessionSummary
             {
                 Path = g.Key,
-                ActiveSessionCount = g.Count(),
-                ConnectedCount = g.Count(s => !s.DisconnectedAt.HasValue),
-                DisconnectedCount = g.Count(s => s.DisconnectedAt.HasValue)
+                ActiveSessionCount = g.Count(IsConnected),
+                ConnectedCount = g.Count(IsConnected),
+                DisconnectedCount = g.Count(s => !IsConnected(s))
             })
             .OrderByDescending(s => s.ActiveSessionCount)
             .ThenBy(s => s.Path, StringComparer.OrdinalIgnoreCase);
@@ -296,18 +362,36 @@ public class SessionMonitorService : ISessionMonitorService
     {
         if (_activeSessions.TryGetValue(circuitId, out var session))
         {
-            session.CurrentPath = path;
-            session.CurrentPathUpdatedAt = DateTime.UtcNow;
+            lock (session.Gate)
+            {
+                if (session.State == CircuitConnectionState.Closed)
+                {
+                    return;
+                }
+
+                session.CurrentPath = path;
+                session.CurrentPathUpdatedAt = DateTime.UtcNow;
+            }
         }
     }
 
     public bool HasActiveSessions()
     {
-        return !_activeSessions.IsEmpty;
+        return GetConnectedSessionCount() > 0;
     }
 
     public IEnumerable<DeploymentWindow> FindOptimalDeploymentWindows(int windowMinutes = 5, int lookbackHours = 24)
     {
+        if (windowMinutes is < 1 or > SessionMonitorQueryLimits.MaxWindowMinutes)
+        {
+            throw new ArgumentOutOfRangeException(nameof(windowMinutes));
+        }
+
+        if (lookbackHours is < 1 or > SessionMonitorQueryLimits.MaxLookbackHours)
+        {
+            throw new ArgumentOutOfRangeException(nameof(lookbackHours));
+        }
+
         if (IsDegradedMode())
         {
             lookbackHours = Math.Min(lookbackHours, 6);
@@ -364,7 +448,7 @@ public class SessionMonitorService : ISessionMonitorService
     public DeploymentSafetyAssessment GetDeploymentSafety(int maxActiveSessions = 0)
     {
         var connected = _activeSessions.Values
-            .Where(s => !s.DisconnectedAt.HasValue)
+            .Where(IsConnected)
             .ToList();
 
         var prefixes = _options.AdminMonitorPathPrefixes ?? [];
@@ -407,7 +491,7 @@ public class SessionMonitorService : ISessionMonitorService
         }
 
         return groupSessions.Any(s =>
-            !s.DisconnectedAt.HasValue && SessionPathNormalizer.MatchesPathPrefix(s.CurrentPath, prefixes));
+            IsConnected(s) && SessionPathNormalizer.MatchesPathPrefix(s.CurrentPath, prefixes));
     }
 
     private static bool IsExcludedForDeploySafety(
@@ -423,27 +507,41 @@ public class SessionMonitorService : ISessionMonitorService
         return session.ClientId is not null && adminClientIds.Contains(session.ClientId);
     }
 
-    private void RecordSnapshot()
+    private void RecordSnapshot(int startedDelta, int endedDelta)
     {
         var now = DateTime.UtcNow;
         var currentCount = GetConnectedSessionCount();
+        SessionSnapshot? snapshot = null;
 
-        if (currentCount != _lastSnapshotCount || (now - _lastSnapshotTime).TotalMinutes >= 1)
+        lock (_statsLock)
         {
-            var snapshot = new SessionSnapshot
+            _pendingStarted += startedDelta;
+            _pendingEnded += endedDelta;
+            if (currentCount == _lastSnapshotCount && (now - _lastSnapshotTime).TotalMinutes < 1)
+            {
+                return;
+            }
+
+            snapshot = new SessionSnapshot
             {
                 Timestamp = now,
                 ActiveSessions = currentCount,
-                SessionsStarted = 0,
-                SessionsEnded = 0
+                SessionsStarted = _pendingStarted,
+                SessionsEnded = _pendingEnded
             };
-
-            _history.Enqueue(snapshot);
-            TrimHistoryTo(GetEffectiveMaxHistorySize());
-
+            _pendingStarted = 0;
+            _pendingEnded = 0;
             _lastSnapshotTime = now;
             _lastSnapshotCount = currentCount;
         }
+
+        if (snapshot is null)
+        {
+            return;
+        }
+
+        _history.Enqueue(snapshot);
+        TrimHistoryTo(GetEffectiveMaxHistorySize());
     }
 
     private void UpdateTrackingMode(int activeCount)
@@ -570,7 +668,7 @@ public class SessionMonitorService : ISessionMonitorService
             CurrentPath = session.CurrentPath,
             CurrentPathUpdatedAt = session.CurrentPathUpdatedAt,
             StartedAt = session.StartedAt,
-            IsDisconnected = session.DisconnectedAt.HasValue,
+            IsDisconnected = !IsConnected(session),
             IsOnAdminMonitorPath = prefixes is not null
                 && SessionPathNormalizer.MatchesPathPrefix(session.CurrentPath, prefixes),
             IsAdminMonitorGroup = prefixes is not null
@@ -590,8 +688,26 @@ public class SessionMonitorService : ISessionMonitorService
             ?? SessionClientEnvironment.Unknown;
     }
 
+    private static bool IsConnected(CircuitSession session)
+        => session.State == CircuitConnectionState.Connected;
+
+    private enum CircuitConnectionState
+    {
+        Connected = 0,
+        DisconnectedRetained = 1,
+        Closed = 2
+    }
+
     private class CircuitSession
     {
+        private int _state = (int)CircuitConnectionState.Connected;
+
+        public object Gate { get; } = new();
+
+        public CircuitConnectionState State => (CircuitConnectionState)Volatile.Read(ref _state);
+
+        public void SetState(CircuitConnectionState state) => Volatile.Write(ref _state, (int)state);
+
         public string CircuitId { get; set; } = "";
         public string? ClientId { get; set; }
         public SessionClientEnvironment ClientEnvironment { get; set; } = SessionClientEnvironment.Unknown;

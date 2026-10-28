@@ -5,7 +5,7 @@ namespace TheNerdCollective.Blazor.SessionMonitor;
 /// </summary>
 public class ActiveClientSessionSummary
 {
-    public const string UnknownClientLabel = "(unknown browser)";
+    public const string UnknownClientLabel = "(unknown client)";
 
     /// <summary>
     /// Raw client identifier from the browser cookie, when available.
@@ -18,7 +18,7 @@ public class ActiveClientSessionSummary
     public string ClientLabel { get; set; } = "";
 
     /// <summary>
-    /// Total active circuits for this browser client (typically one per tab).
+    /// Connected circuits for this client group. Retained circuits are <see cref="DisconnectedCount"/>.
     /// </summary>
     public int ActiveSessionCount { get; set; }
 

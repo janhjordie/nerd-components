@@ -14,6 +14,22 @@ Track and monitor active Blazor Server sessions/circuits in real-time. Get insig
 ✅ **Zero Configuration** - Works out-of-the-box with sensible defaults  
 ✅ **Lightweight** - Minimal performance overhead
 
+## Reliability contract
+
+`ActiveSessions` means **connected Blazor circuits on this process/replica**. Retained disconnected circuits stay visible separately and do not count as active. A restart resets the counters; `instanceId` and `trackingSince` identify that window.
+
+Browser grouping uses one origin-wide id from `wwwroot/js/session-monitor-client.js`, loaded before `blazor.web.js`. The script stores the id in `localStorage` and synchronizes cookie `.bs-sm-client` with `Path=/`. If storage is unavailable and no cookie exists, the circuit is `(unknown client)` — the server does not mint a new browser per request.
+
+`GET /api/session-monitor/can-deploy` is a per-replica observation. Drain automation must query the intended revision, require consecutive zero-connected polls, apply a hard cap, and recheck before deactivation. Protect the routes with `configureGroup`, for example `group => group.RequireAuthorization(...)`.
+
+```html
+<script>
+  window.sessionMonitorClientConfig = { cookieName: '.bs-sm-client', storageKey: 'bs-sm-client' };
+</script>
+<script src="_content/TheNerdCollective.Blazor.SessionMonitor/js/session-monitor-client.js"></script>
+<script src="_framework/blazor.web.js"></script>
+```
+
 ## Installation
 
 ```bash

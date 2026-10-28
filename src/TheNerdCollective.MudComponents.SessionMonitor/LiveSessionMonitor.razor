@@ -12,7 +12,7 @@
             <MudStack Row="true" Spacing="1" Class="align-center flex-wrap">
                 @if (!string.IsNullOrWhiteSpace(_metrics.InstanceId))
                 {
-                    <MudTooltip Text="Per-replica metrics. Sticky sessions keep this view on one instance.">
+                        <MudTooltip Text="Connected circuits on this replica only. A deploy resets this view.">
                         <MudChip T="string" Color="Color.Info" Size="Size.Small" Variant="Variant.Outlined"
                                  Icon="@Icons.Material.Filled.Dns">
                             @_metrics.InstanceId
@@ -59,7 +59,7 @@
         }
 
         <MudTabs Outlined="true" ApplyEffectsToContainer="true">
-            <MudTabPanel Text="By Browser" Icon="@Icons.Material.Filled.Devices">
+            <MudTabPanel Text="By client" Icon="@Icons.Material.Filled.Devices">
                 <ClientSessionCountsTable RefreshToken="@_metrics.Timestamp"
                                          IsDegradedMode="@_metrics.IsDegradedMode"
                                          BrowserChips="BrowserChips" />
@@ -86,6 +86,7 @@
             }
             · opened @_metrics.TotalCircuitsOpened · clients @_metrics.TotalSessionsStarted · ended @_metrics.TotalSessionsEnded
             · since @_metrics.TrackingSince.ToLocalTime().ToString("g")
+            · this replica only
         </MudText>
     </MudStack>
 </MudContainer>

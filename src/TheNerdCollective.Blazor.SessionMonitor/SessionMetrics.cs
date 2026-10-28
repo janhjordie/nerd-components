@@ -6,7 +6,7 @@ namespace TheNerdCollective.Blazor.SessionMonitor;
 public class SessionMetrics
 {
     /// <summary>
-    /// Number of currently active sessions.
+    /// Number of currently connected circuits on this replica.
     /// </summary>
     public int ActiveSessions { get; set; }
 

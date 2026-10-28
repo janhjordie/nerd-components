@@ -16,10 +16,12 @@ public static class EndpointRouteBuilderExtensions
     /// </summary>
     /// <param name="endpoints">The endpoint route builder.</param>
     /// <param name="pattern">Base URL pattern (default: "/api/session-monitor").</param>
+    /// <param name="configureGroup">Optional group convention, for example authorization. Existing routes stay unchanged.</param>
     /// <returns>The endpoint route builder for chaining.</returns>
     public static IEndpointRouteBuilder MapSessionMonitoringEndpoints(
         this IEndpointRouteBuilder endpoints,
-        string pattern = "/api/session-monitor")
+        string pattern = "/api/session-monitor",
+        Action<RouteGroupBuilder>? configureGroup = null)
     {
         var jsonOptions = new JsonSerializerOptions
         {
@@ -27,8 +29,10 @@ public static class EndpointRouteBuilderExtensions
             WriteIndented = true
         };
 
-        // GET /api/session-monitor/current
-        endpoints.MapGet($"{pattern}/current", async (ISessionMonitorService monitor) =>
+        var group = endpoints.MapGroup(pattern);
+        configureGroup?.Invoke(group);
+
+        group.MapGet("/current", (ISessionMonitorService monitor) =>
         {
             var metrics = monitor.GetCurrentMetrics();
             return Results.Json(metrics, jsonOptions);
@@ -37,11 +41,17 @@ public static class EndpointRouteBuilderExtensions
         .WithDescription("Get current session metrics");
 
         // GET /api/session-monitor/history?since=<timestamp>&maxCount=100
-        endpoints.MapGet($"{pattern}/history", async (
+        group.MapGet("/history", (
             ISessionMonitorService monitor,
             DateTime? since,
             int maxCount = 100) =>
         {
+            var error = SessionMonitorQueryLimits.ValidateHistoryCount(maxCount);
+            if (error is not null)
+            {
+                return Results.BadRequest(new { message = error });
+            }
+
             var history = monitor.GetHistory(since, maxCount);
             return Results.Json(history, jsonOptions);
         })
@@ -49,7 +59,7 @@ public static class EndpointRouteBuilderExtensions
         .WithDescription("Get historical session snapshots");
 
         // GET /api/session-monitor/active-circuits
-        endpoints.MapGet($"{pattern}/active-circuits", async (ISessionMonitorService monitor) =>
+        group.MapGet("/active-circuits", (ISessionMonitorService monitor) =>
         {
             var metrics = monitor.GetCurrentMetrics();
             var clients = monitor.GetActiveSessionsByClient().ToList();
@@ -59,10 +69,15 @@ public static class EndpointRouteBuilderExtensions
                 trackingMode = metrics.TrackingMode,
                 isDegradedMode = metrics.IsDegradedMode,
                 degradedModeThreshold = metrics.DegradedModeThreshold,
-                activeCircuits = sessions.Select(s => s.CircuitId),
+                activeCircuits = sessions.Where(s => !s.IsDisconnected).Select(s => s.CircuitId),
+                retainedCircuitIds = sessions.Where(s => s.IsDisconnected).Select(s => s.CircuitId),
                 clients,
                 sessions,
                 count = metrics.ActiveSessions,
+                connectedCount = metrics.ActiveSessions,
+                retainedSessions = metrics.DisconnectedSessions,
+                instanceId = metrics.InstanceId,
+                trackingSince = metrics.TrackingSince,
                 uniqueBrowsers = clients.Count,
                 detailAvailable = !metrics.IsDegradedMode
             }, jsonOptions);
@@ -71,7 +86,7 @@ public static class EndpointRouteBuilderExtensions
         .WithDescription("Get list of active circuit IDs");
 
         // GET /api/session-monitor/active-by-path
-        endpoints.MapGet($"{pattern}/active-by-path", async (ISessionMonitorService monitor) =>
+        group.MapGet("/active-by-path", (ISessionMonitorService monitor) =>
         {
             var metrics = monitor.GetCurrentMetrics();
             var summaries = monitor.GetActiveSessionsByPath().ToList();
@@ -81,14 +96,17 @@ public static class EndpointRouteBuilderExtensions
                 isDegradedMode = metrics.IsDegradedMode,
                 paths = summaries,
                 uniquePaths = summaries.Count,
-                totalActiveSessions = metrics.ActiveSessions
+                totalActiveSessions = metrics.ActiveSessions,
+                retainedSessions = metrics.DisconnectedSessions,
+                instanceId = metrics.InstanceId,
+                trackingSince = metrics.TrackingSince
             }, jsonOptions);
         })
         .WithName("GetActiveSessionsByPath")
         .WithDescription("Get active session counts grouped by URL path");
 
         // GET /api/session-monitor/active-by-client
-        endpoints.MapGet($"{pattern}/active-by-client", async (ISessionMonitorService monitor) =>
+        group.MapGet("/active-by-client", (ISessionMonitorService monitor) =>
         {
             var metrics = monitor.GetCurrentMetrics();
             var summaries = monitor.GetActiveSessionsByClient().ToList();
@@ -98,18 +116,27 @@ public static class EndpointRouteBuilderExtensions
                 isDegradedMode = metrics.IsDegradedMode,
                 clients = summaries,
                 uniqueBrowsers = summaries.Count,
-                totalActiveSessions = metrics.ActiveSessions
+                totalActiveSessions = metrics.ActiveSessions,
+                retainedSessions = metrics.DisconnectedSessions,
+                instanceId = metrics.InstanceId,
+                trackingSince = metrics.TrackingSince
             }, jsonOptions);
         })
         .WithName("GetActiveSessionsByClient")
         .WithDescription("Get active session counts grouped by browser client (shared cookie across tabs)");
 
         // GET /api/session-monitor/deployment-windows?windowMinutes=5&lookbackHours=24
-        endpoints.MapGet($"{pattern}/deployment-windows", async (
+        group.MapGet("/deployment-windows", (
             ISessionMonitorService monitor,
             int windowMinutes = 5,
             int lookbackHours = 24) =>
         {
+            var error = SessionMonitorQueryLimits.ValidateDeploymentWindow(windowMinutes, lookbackHours);
+            if (error is not null)
+            {
+                return Results.BadRequest(new { message = error });
+            }
+
             var windows = monitor.FindOptimalDeploymentWindows(windowMinutes, lookbackHours);
             return Results.Json(windows, jsonOptions);
         })
@@ -117,7 +144,7 @@ public static class EndpointRouteBuilderExtensions
         .WithDescription("Find optimal deployment windows with minimal active sessions");
 
         // GET /api/session-monitor/can-deploy?maxActiveSessions=0
-        endpoints.MapGet($"{pattern}/can-deploy", async (
+        group.MapGet("/can-deploy", (
             ISessionMonitorService monitor,
             int maxActiveSessions = 0) =>
         {
@@ -135,7 +162,9 @@ public static class EndpointRouteBuilderExtensions
                 threshold = maxActiveSessions,
                 timestamp = DateTime.UtcNow,
                 instanceId = metrics.InstanceId,
-                machineName = metrics.MachineName
+                machineName = metrics.MachineName,
+                trackingSince = metrics.TrackingSince,
+                scope = "per-replica"
             }, jsonOptions);
         })
         .WithName("CanDeploy")

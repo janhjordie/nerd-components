@@ -4,7 +4,7 @@
 
 <MudStack Spacing="1" Class="pa-1">
     <MudText Typo="Typo.caption" Color="Color.Secondary">
-        @_clientSummaries.Count browsers · @_totalActiveSessions open pages
+        @_clientSummaries.Count client groups · @_connectedCircuits connected circuits · @_retainedCircuits retained
     </MudText>
 
     @if (IsDegradedMode)
@@ -17,7 +17,7 @@
     @if (_clientSummaries.Count == 0)
     {
         <MudAlert Severity="Severity.Info">
-            No active sessions at this moment.
+            No connected circuits on this replica.
         </MudAlert>
     }
     else
@@ -94,7 +94,8 @@
 
 @code {
     private List<ActiveClientSessionSummary> _clientSummaries = [];
-    private int _totalActiveSessions;
+    private int _connectedCircuits;
+    private int _retainedCircuits;
 
     [Parameter] public DateTime RefreshToken { get; set; }
 
@@ -118,7 +119,8 @@
     private async Task RefreshSummaries()
     {
         _clientSummaries = SessionMonitor.GetActiveSessionsByClient().ToList();
-        _totalActiveSessions = _clientSummaries.Sum(s => s.ActiveSessionCount);
+        _connectedCircuits = _clientSummaries.Sum(s => s.ConnectedCount);
+        _retainedCircuits = _clientSummaries.Sum(s => s.DisconnectedCount);
         await Task.CompletedTask;
     }
 

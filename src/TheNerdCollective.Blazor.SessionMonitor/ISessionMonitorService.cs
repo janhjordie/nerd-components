@@ -45,7 +45,7 @@ public interface ISessionMonitorService
     SessionTrackingMode GetTrackingMode();
 
     /// <summary>
-    /// Check if there are any active sessions.
+    /// Check if there are any connected circuits on this replica.
     /// </summary>
     bool HasActiveSessions();
 
