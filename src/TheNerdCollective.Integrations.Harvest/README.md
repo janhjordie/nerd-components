@@ -133,9 +133,9 @@ harvestService.ClearProjectIds();
 ```json
 {
   "Harvest": {
-    "ApiToken": "3488495.pt.Ak1avQxXKRtGcO4U5-QWYg9fu3y39-ntbF6_aw95in5nICz35ZLtyHT5fcIJGcuIZIwoe3NnGGAbXUihvZ6H_A",
-    "AccountId": "1764854",
-    "ProjectIds": [46478953, 46478934]
+    "ApiToken": "your_api_token_here",
+    "AccountId": "your_account_id_here",
+    "ProjectIds": [123456, 789012]
   }
 }
 ```
