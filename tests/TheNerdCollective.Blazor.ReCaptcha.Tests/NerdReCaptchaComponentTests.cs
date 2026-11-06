@@ -1,7 +1,6 @@
 using Bunit;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
-using MudBlazor.Services;
 using TheNerdCollective.Blazor.ReCaptcha;
 using Xunit;
 
@@ -59,7 +58,6 @@ public sealed class NerdReCaptchaComponentTests
     private static TestContext CreateContext()
     {
         var context = new TestContext();
-        context.Services.AddMudServices();
         context.Services.AddSingleton<INerdReCaptchaVerifier>(new StubVerifier());
         context.JSInterop.Mode = JSRuntimeMode.Loose;
         return context;

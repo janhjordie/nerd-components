@@ -9,16 +9,15 @@
     @if (Mode == NerdReCaptchaMode.GoogleV2 && !_useSimpleFallback)
     {
         <div @ref="_widgetHost" class="nerd-recaptcha-google" data-testid="nerd-recaptcha-google"></div>
-        <MudButton Variant="Variant.Text"
-                   Color="Color.Primary"
-                   Size="MudBlazor.Size.Small"
-                   OnClick="ActivateSimpleFallbackAsync"
-                   data-testid="nerd-recaptcha-use-simple-fallback">
+        <button type="button"
+                class="nerd-recaptcha__fallback-button"
+                @onclick="ActivateSimpleFallbackAsync"
+                data-testid="nerd-recaptcha-use-simple-fallback">
             Brug regneopgaven i stedet
-        </MudButton>
+        </button>
         @if (!string.IsNullOrWhiteSpace(DisplayError))
         {
-            <MudAlert Severity="Severity.Error" Dense="true" Class="mt-2" data-testid="nerd-recaptcha-error">@DisplayError</MudAlert>
+            <div class="nerd-recaptcha__error" role="alert" data-testid="nerd-recaptcha-error">@DisplayError</div>
         }
     }
     else if (Mode == NerdReCaptchaMode.GoogleEnterprise && !_useSimpleFallback)
@@ -27,74 +26,61 @@
              class="nerd-recaptcha-enterprise"
              data-testid="nerd-recaptcha-enterprise"
              aria-live="polite"></div>
-        <MudButton Variant="Variant.Text"
-                   Color="Color.Primary"
-                   Size="MudBlazor.Size.Small"
-                   OnClick="ActivateSimpleFallbackAsync"
-                   data-testid="nerd-recaptcha-use-simple-fallback">
+        <button type="button"
+                class="nerd-recaptcha__fallback-button"
+                @onclick="ActivateSimpleFallbackAsync"
+                data-testid="nerd-recaptcha-use-simple-fallback">
             Brug regneopgaven i stedet
-        </MudButton>
+        </button>
         @if (!string.IsNullOrWhiteSpace(DisplayError))
         {
-            <MudAlert Severity="Severity.Error" Dense="true" Class="mt-2" data-testid="nerd-recaptcha-error">@DisplayError</MudAlert>
+            <div class="nerd-recaptcha__error" role="alert" data-testid="nerd-recaptcha-error">@DisplayError</div>
         }
     }
     else if (_challenge is not null)
     {
-        <MudPaper Outlined="true"
-                  Elevation="0"
-                  Class="pa-4 nerd-recaptcha-simple"
-                  data-testid="nerd-recaptcha-simple">
-            <MudStack Spacing="3">
-                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="2">
-                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                        <MudAvatar Color="Color.Primary" Size="MudBlazor.Size.Medium" Variant="Variant.Filled">
-                            <MudIcon Icon="@Icons.Material.Filled.VerifiedUser" />
-                        </MudAvatar>
-                        <MudStack Spacing="0">
-                            <MudText Typo="Typo.subtitle1">@SimpleTitle</MudText>
-                            @if (!string.IsNullOrWhiteSpace(HintLabel))
-                            {
-                                <MudText Typo="Typo.caption" Class="mud-text-secondary">@HintLabel</MudText>
-                            }
-                        </MudStack>
-                    </MudStack>
-                    <MudButton Variant="Variant.Text"
-                               Color="Color.Primary"
-                               Size="MudBlazor.Size.Small"
-                               StartIcon="@Icons.Material.Outlined.Refresh"
-                               OnClick="RefreshSimpleChallengeAsync"
-                               aria-label="@RefreshLabel"
-                               data-testid="nerd-recaptcha-simple-refresh">
-                        @RefreshLabel
-                    </MudButton>
-                </MudStack>
+        <div class="nerd-recaptcha-simple" data-testid="nerd-recaptcha-simple">
+            <div class="nerd-recaptcha-simple__header">
+                <div class="nerd-recaptcha-simple__identity">
+                    <span class="nerd-recaptcha-simple__avatar" aria-hidden="true">✓</span>
+                    <div>
+                        <div class="nerd-recaptcha-simple__title">@SimpleTitle</div>
+                        @if (!string.IsNullOrWhiteSpace(HintLabel))
+                        {
+                            <div class="nerd-recaptcha-simple__hint">@HintLabel</div>
+                        }
+                    </div>
+                </div>
+                <button type="button"
+                        class="nerd-recaptcha-simple__refresh"
+                        @onclick="RefreshSimpleChallengeAsync"
+                        aria-label="@RefreshLabel"
+                        data-testid="nerd-recaptcha-simple-refresh">
+                    <span aria-hidden="true">↻</span>
+                    @RefreshLabel
+                </button>
+            </div>
 
-                <MudDivider />
+            <hr class="nerd-recaptcha-simple__divider" />
 
-                <MudStack Spacing="2">
-                    <MudText Typo="Typo.body2" Class="mud-text-secondary">@ChallengeLabel</MudText>
-                    <MudText Typo="Typo.h5" data-testid="nerd-recaptcha-simple-prompt">@_challenge.Prompt</MudText>
-                    <MudTextField T="string"
-                                  Value="_answerText"
-                                  ValueChanged="OnAnswerTextChangedAsync"
-                                  Label="@AnswerLabel"
-                                  Variant="Variant.Outlined"
-                                  InputType="InputType.Text"
-                                  InputMode="InputMode.numeric"
-                                  Immediate="true"
-                                  FullWidth="true"
-                                  Adornment="Adornment.Start"
-                                  AdornmentIcon="@Icons.Material.Outlined.Calculate"
-                                  data-testid="nerd-recaptcha-simple-answer" />
-                </MudStack>
+            <div class="nerd-recaptcha-simple__challenge">
+                <div class="nerd-recaptcha-simple__label">@ChallengeLabel</div>
+                <div class="nerd-recaptcha-simple__prompt" data-testid="nerd-recaptcha-simple-prompt">@_challenge.Prompt</div>
+                <label class="nerd-recaptcha-simple__input-label" for="@AnswerInputId">@AnswerLabel</label>
+                <input id="@AnswerInputId"
+                       class="nerd-recaptcha-simple__input"
+                       value="@_answerText"
+                       @oninput="OnAnswerInputChanged"
+                       inputmode="numeric"
+                       autocomplete="off"
+                       data-testid="nerd-recaptcha-simple-answer" />
+            </div>
 
-                @if (!string.IsNullOrWhiteSpace(ErrorMessage))
-                {
-                    <MudAlert Severity="Severity.Error" Dense="true" data-testid="nerd-recaptcha-error">@ErrorMessage</MudAlert>
-                }
-            </MudStack>
-        </MudPaper>
+            @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+            {
+                <div class="nerd-recaptcha__error" role="alert" data-testid="nerd-recaptcha-error">@ErrorMessage</div>
+            }
+        </div>
     }
     <input type="hidden" name="@TokenInputName" value="@Token" />
 </div>
@@ -110,6 +96,7 @@
     private bool _disposed;
     private bool _useSimpleFallback;
     private string? _runtimeError;
+    private string AnswerInputId { get; } = $"nerd-recaptcha-answer-{Guid.NewGuid():N}";
 
     [Parameter]
     public string? Token { get; set; }
@@ -317,6 +304,11 @@
         _challenge = await Verifier.CreateSimpleChallengeAsync();
         _answerText = "";
         await SetTokenAsync(null);
+    }
+
+    private Task OnAnswerInputChanged(ChangeEventArgs args)
+    {
+        return OnAnswerTextChangedAsync(args.Value?.ToString() ?? "");
     }
 
     private Task OnAnswerTextChangedAsync(string value)
