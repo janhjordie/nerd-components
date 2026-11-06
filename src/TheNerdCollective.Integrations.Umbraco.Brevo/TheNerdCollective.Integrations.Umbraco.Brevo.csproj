@@ -19,6 +19,9 @@
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <!-- Pins transitive versions from Umbraco stack for known advisories. -->
+    <PackageReference Include="MessagePack" Version="3.1.9" />
+    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.13" />
     <PackageReference Include="Umbraco.Cms.Api.Management" Version="18.2.0" />
     <PackageReference Include="Umbraco.Cms.Web.Common" Version="18.2.0" />
     <ProjectReference Include="..\TheNerdCollective.Integrations.Brevo\TheNerdCollective.Integrations.Brevo.csproj" />
