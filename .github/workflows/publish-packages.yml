@@ -163,21 +163,23 @@ jobs:
       - name: Configure NuGet Sources
         run: dotnet nuget update source nuget.org -s https://api.nuget.org/v3/index.json --configfile ./NuGet.config 2>/dev/null || dotnet nuget add source https://api.nuget.org/v3/index.json -n nuget.org --configfile ./NuGet.config
 
+      - name: NuGet login (Trusted Publishing)
+        uses: NuGet/login@v1
+        id: nuget-login
+        with:
+          user: ${{ secrets.NUGET_USER }}
+
       - name: Push to NuGet
-        env:
-          NUGET_SECRET: ${{ secrets.NUGET }}
         run: |
           set -euo pipefail
-          TOKEN=${NUGET_SECRET:-}
-          if [ -z "$TOKEN" ]; then
-            echo "No token available (NUGET secret)" >&2
-            exit 1
-          fi
           for nupkg in artifacts/*.nupkg; do
             case "$nupkg" in
               *.snupkg) continue ;;
             esac
-            dotnet nuget push "$nupkg" --source https://api.nuget.org/v3/index.json --api-key "$TOKEN" --skip-duplicate
+            dotnet nuget push "$nupkg" \
+              --source https://api.nuget.org/v3/index.json \
+              --api-key "${{ steps.nuget-login.outputs.NUGET_API_KEY }}" \
+              --skip-duplicate
           done
 
       - name: Create Git Tag
