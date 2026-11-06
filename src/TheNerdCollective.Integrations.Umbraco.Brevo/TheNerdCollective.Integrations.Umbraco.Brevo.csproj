@@ -24,6 +24,9 @@
     <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.13" />
     <PackageReference Include="Umbraco.Cms.Api.Management" Version="18.2.0" />
     <PackageReference Include="Umbraco.Cms.Web.Common" Version="18.2.0" />
+    <!-- Pin transitive fixes (NuGet audit); stay on 18.2 / same major.minor as Umbraco stack -->
+    <PackageReference Include="MessagePack" Version="3.1.11" />
+    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.13" />
     <ProjectReference Include="..\TheNerdCollective.Integrations.Brevo\TheNerdCollective.Integrations.Brevo.csproj" />
   </ItemGroup>
 
