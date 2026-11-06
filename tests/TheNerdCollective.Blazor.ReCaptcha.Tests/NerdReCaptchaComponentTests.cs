@@ -43,6 +43,19 @@ public sealed class NerdReCaptchaComponentTests
         Assert.DoesNotContain(context.JSInterop.Invocations, invocation => invocation.Identifier == "execute");
     }
 
+    [Fact]
+    public void Does_not_import_recaptcha_module_when_simple_fallback_is_active()
+    {
+        using var context = CreateContext();
+
+        context.Render<NerdReCaptcha>(parameters => parameters
+            .Add(component => component.UseSimpleFallback, true));
+
+        Assert.DoesNotContain(
+            context.JSInterop.Invocations,
+            invocation => invocation.Identifier == "import");
+    }
+
     private static TestContext CreateContext()
     {
         var context = new TestContext();

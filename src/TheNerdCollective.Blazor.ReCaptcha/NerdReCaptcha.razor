@@ -169,7 +169,8 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (_useSimpleFallback
+        if (UseSimpleFallback
+            || _useSimpleFallback
             || Mode is not (NerdReCaptchaMode.GoogleV2 or NerdReCaptchaMode.GoogleEnterprise)
             || _googleRendered)
         {
@@ -183,10 +184,21 @@
 
         try
         {
+            if (UseSimpleFallback || _useSimpleFallback)
+            {
+                return;
+            }
+
             _module ??= await JS.InvokeAsync<IJSObjectReference>(
                 "import",
                 "./_content/TheNerdCollective.Blazor.ReCaptcha/js/nerd-recaptcha.js");
             _dotNetRef ??= DotNetObjectReference.Create(this);
+
+            if (UseSimpleFallback || _useSimpleFallback)
+            {
+                return;
+            }
+
             await _module.InvokeVoidAsync(
                 "render",
                 _widgetHost,
