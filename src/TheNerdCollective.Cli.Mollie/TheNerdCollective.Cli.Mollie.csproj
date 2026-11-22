@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>tnc-mollie</ToolCommandName>
+    <AssemblyName>tnc-mollie</AssemblyName>
+    <PackageId>TheNerdCollective.Cli.Mollie</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>The Nerd Collective</Authors>
+    <Description>Mollie Payments API CLI and local payment-template catalog.</Description>
+    <PackageTags>mollie;payments;cli;tool</PackageTags>
+    <License>Apache-2.0</License>
+    <LicenseExpression>Apache-2.0</LicenseExpression>
+    <RepositoryUrl>https://github.com/The-Nerd-Collective/TheNerdCollective.Components</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageOutputPath>./nupkg</PackageOutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.CommandLine" Version="2.0.12" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.10" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.10" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.10" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TheNerdCollective.Integrations.Mollie\TheNerdCollective.Integrations.Mollie.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+</Project>

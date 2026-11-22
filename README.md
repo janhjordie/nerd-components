@@ -17,6 +17,12 @@ Minimal Trello CLI for dev-task workflow automation.
 - Mark items complete or incomplete
 - Add progress comments to a Trello card
 
+#### [TheNerdCollective.Cli.Mollie](src/TheNerdCollective.Cli.Mollie/README.md)
+Mollie Payments API global tool with a local-only payment-template catalog.
+- Inspect the Mollie profile and enabled payment methods
+- Create and inspect payments, customers, and subscriptions
+- Store reusable payment templates locally; Mollie has no general product-catalog API
+
 ### UI Components
 
 #### [TheNerdCollective.Components](src/TheNerdCollective.Components/README.md)
@@ -112,6 +118,12 @@ Lightweight utility library with essential helper methods for common operations.
 - String and MIME type extensions
 
 ### Integrations
+
+#### [TheNerdCollective.Integrations.Mollie](src/TheNerdCollective.Integrations.Mollie/README.md)
+Typed .NET 10 client for Mollie's Payments API, including first recurring payments and subscriptions.
+- Typed `HttpClient` and options-based API-key configuration
+- Profile, methods, payments, customers, and subscription operations
+- Safe provider errors and optional idempotency keys
 
 #### [TheNerdCollective.Integrations.Harvest](src/TheNerdCollective.Integrations.Harvest/README.md)
 Integration client for GetHarvest API v2.
