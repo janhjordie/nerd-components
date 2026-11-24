@@ -54,10 +54,7 @@ public sealed class DarKommuneService
         if (graphQlKommuner.Count >= MinimumExpectedKommuneCount)
         {
             var enriched = await EnrichFromGraphAsync(graphQlKommuner, cancellationToken).ConfigureAwait(false);
-            var withRepresentativePoints = await EnrichRepresentativePointsForListAsync(
-                enriched,
-                cancellationToken).ConfigureAwait(false);
-            return CacheAndReturn(withRepresentativePoints);
+            return CacheAndReturn(enriched);
         }
 
         if (_dagiOptions.EnableDawaFallback)
@@ -73,10 +70,7 @@ public sealed class DarKommuneService
         if (wfsKommuner.Count > 0)
         {
             var enriched = await EnrichExistingAsync(wfsKommuner, cancellationToken).ConfigureAwait(false);
-            var withRepresentativePoints = await EnrichRepresentativePointsForListAsync(
-                enriched,
-                cancellationToken).ConfigureAwait(false);
-            return CacheAndReturn(withRepresentativePoints);
+            return CacheAndReturn(enriched);
         }
 
         throw new InvalidOperationException(DagiAccessHelp.EmptyKommuneResultMessage);
@@ -601,34 +595,6 @@ public sealed class DarKommuneService
         {
             return null;
         }
-    }
-
-    private async Task<IReadOnlyList<KommuneDto>> EnrichRepresentativePointsForListAsync(
-        IReadOnlyList<KommuneDto> kommuner,
-        CancellationToken cancellationToken)
-    {
-        const int parallelism = 12;
-        var results = new KommuneDto[kommuner.Count];
-
-        for (var offset = 0; offset < kommuner.Count; offset += parallelism)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            var batchSize = Math.Min(parallelism, kommuner.Count - offset);
-            var tasks = new Task<KommuneDto>[batchSize];
-            for (var i = 0; i < batchSize; i++)
-            {
-                var index = offset + i;
-                tasks[i] = EnrichRepresentativePointAsync(kommuner[index], cancellationToken);
-            }
-
-            var resolved = await Task.WhenAll(tasks).ConfigureAwait(false);
-            for (var i = 0; i < batchSize; i++)
-            {
-                results[offset + i] = resolved[i];
-            }
-        }
-
-        return results;
     }
 
     private async Task<KommuneDto> EnrichRepresentativePointAsync(
