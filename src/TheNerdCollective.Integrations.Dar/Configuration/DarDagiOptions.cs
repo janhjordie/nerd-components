@@ -19,9 +19,9 @@ public sealed class DarDagiOptions
     public bool EnableDawaFallback { get; set; }
 
     /// <summary>
-    /// Hent DAWA <c>visueltcenter</c> til repræsentativpunkt (gratis liste) — uafhængigt af <see cref="EnableDawaFallback"/>.
+    /// DAWA <c>visueltcenter</c> (udfases — /kommuner er 410). Default false; brug DAGI GetKommuneById-geometri.
     /// </summary>
-    public bool EnableDawaVisualCenterEnrichment { get; set; } = true;
+    public bool EnableDawaVisualCenterEnrichment { get; set; } = false;
 
     /// <summary>DAWA base-URL (<see href="https://api.dataforsyningen.dk"/>).</summary>
     public string DawaBaseUrl { get; set; } = DefaultDawaBaseUrl;

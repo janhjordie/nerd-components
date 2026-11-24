@@ -28,6 +28,8 @@ public sealed class DarKommuneIntegrationTests
         var koebenhavn = kommuner.First(k => k.Kommunekode == "0101");
         Assert.Equal("1084", koebenhavn.Regionskode);
         Assert.Equal("Region Hovedstaden", koebenhavn.Regionnavn);
+        Assert.NotNull(koebenhavn.RepræsentativPunktLatitude);
+        Assert.NotNull(koebenhavn.RepræsentativPunktLongitude);
     }
 
     [SkippableFact]
