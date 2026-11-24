@@ -136,7 +136,7 @@ public sealed class DarPostnummerService
         }
 
         var activeByCode = await BuildActiveLookupAsync(cancellationToken).ConfigureAwait(false);
-        var results = new List<PostnummerMedKommuneDto>(normalizedCodes.Count);
+        var basics = new List<PostnummerDto>(normalizedCodes.Count);
 
         foreach (var code in normalizedCodes)
         {
@@ -145,16 +145,28 @@ public sealed class DarPostnummerService
             if (!activeByCode.TryGetValue(code, out var basic))
             {
                 basic = await TryLookupInactivePostalCodeAsync(code, cancellationToken).ConfigureAwait(false);
-                if (basic is null)
-                {
-                    continue;
-                }
             }
 
-            var enriched = await ResolveKommuneAsync(basic, cancellationToken).ConfigureAwait(false);
-            if (enriched is not null)
+            if (basic is not null)
             {
-                results.Add(enriched);
+                basics.Add(basic);
+            }
+        }
+
+        var results = new List<PostnummerMedKommuneDto>(basics.Count);
+        foreach (var batch in Batch(basics, Math.Max(1, _options.MaxParallelKommuneLookups)))
+        {
+            var tasks = batch
+                .Select(p => ResolveKommuneAsync(p, cancellationToken))
+                .ToArray();
+
+            var resolved = await Task.WhenAll(tasks).ConfigureAwait(false);
+            foreach (var item in resolved)
+            {
+                if (item is not null)
+                {
+                    results.Add(item);
+                }
             }
         }
 
