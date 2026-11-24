@@ -89,17 +89,6 @@ public sealed class DarPostnummerService
     {
         var normalizedCode = NormalizeKommunekode(kommunekode);
 
-        var enriched = await ResolveAllWithKommuneAsync(cancellationToken).ConfigureAwait(false);
-        var fromDatafordeler = enriched
-            .Where(p => string.Equals(p.Kommunekode, normalizedCode, StringComparison.Ordinal))
-            .Select(ToBasic)
-            .OrderBy(p => p.Postnummer, StringComparer.Ordinal)
-            .ToList();
-        if (fromDatafordeler.Count > 0)
-        {
-            return fromDatafordeler;
-        }
-
         if (_options.EnableDawaEnrichment)
         {
             var dawaResults = await _dawaClient.GetByMunicipalityCodeAsync(normalizedCode, cancellationToken)
@@ -113,7 +102,21 @@ public sealed class DarPostnummerService
             }
         }
 
-        return fromDatafordeler;
+        var fromGraphQl = await TryGetByMunicipalityFromKommunePostnumreAsync(normalizedCode, cancellationToken)
+            .ConfigureAwait(false);
+        if (fromGraphQl.Count > 0)
+        {
+            return fromGraphQl;
+        }
+
+        var enriched = await ResolveAllWithKommuneAsync(cancellationToken).ConfigureAwait(false);
+        var fromNationalEnrichment = enriched
+            .Where(p => string.Equals(p.Kommunekode, normalizedCode, StringComparison.Ordinal))
+            .Select(ToBasic)
+            .OrderBy(p => p.Postnummer, StringComparer.Ordinal)
+            .ToList();
+
+        return fromNationalEnrichment;
     }
 
     /// <summary>Resolver et eller flere postnumre inkl. primær kommune.</summary>
@@ -297,13 +300,6 @@ public sealed class DarPostnummerService
     {
         var normalizedCode = NormalizeKommunekode(kommunekode);
 
-        var fromDatafordeler = await _kommuneResolver.GetByKommunekodeAsync(normalizedCode, cancellationToken)
-            .ConfigureAwait(false);
-        if (fromDatafordeler.Count > 0)
-        {
-            return fromDatafordeler;
-        }
-
         if (_options.EnableDawaEnrichment)
         {
             var dawaResults = await _dawaClient
@@ -313,6 +309,16 @@ public sealed class DarPostnummerService
             {
                 return dawaResults;
             }
+        }
+
+        var fromDatafordeler = await EnrichPostdistrikterAsync(
+                await _kommuneResolver.GetByKommunekodeAsync(normalizedCode, cancellationToken)
+                    .ConfigureAwait(false),
+                cancellationToken)
+            .ConfigureAwait(false);
+        if (fromDatafordeler.Count > 0)
+        {
+            return fromDatafordeler;
         }
 
         return fromDatafordeler;
@@ -340,6 +346,60 @@ public sealed class DarPostnummerService
     {
         var all = await GetAllActiveAsync(cancellationToken).ConfigureAwait(false);
         return all.ToDictionary(p => p.Postnummer, StringComparer.Ordinal);
+    }
+
+    private async Task<IReadOnlyList<PostnummerDto>> TryGetByMunicipalityFromKommunePostnumreAsync(
+        string normalizedKommunekode,
+        CancellationToken cancellationToken)
+    {
+        var postnumre = await _kommuneResolver
+            .GetPostnumreByKommunekodeAsync(normalizedKommunekode, cancellationToken)
+            .ConfigureAwait(false);
+        if (postnumre.Count == 0)
+        {
+            return Array.Empty<PostnummerDto>();
+        }
+
+        var active = await BuildActiveLookupAsync(cancellationToken).ConfigureAwait(false);
+        return postnumre
+            .Select(postnummer =>
+            {
+                active.TryGetValue(postnummer, out var basic);
+                return new PostnummerDto
+                {
+                    Postnummer = postnummer,
+                    Postdistrikt = basic?.Postdistrikt ?? string.Empty
+                };
+            })
+            .OrderBy(p => p.Postnummer, StringComparer.Ordinal)
+            .ToList();
+    }
+
+    private async Task<IReadOnlyList<PostnummerMedKommunerDto>> EnrichPostdistrikterAsync(
+        IReadOnlyList<PostnummerMedKommunerDto> rows,
+        CancellationToken cancellationToken)
+    {
+        if (rows.Count == 0 || rows.All(r => !string.IsNullOrWhiteSpace(r.Postdistrikt)))
+        {
+            return rows;
+        }
+
+        var active = await BuildActiveLookupAsync(cancellationToken).ConfigureAwait(false);
+        return rows
+            .Select(row =>
+            {
+                if (!string.IsNullOrWhiteSpace(row.Postdistrikt))
+                {
+                    return row;
+                }
+
+                active.TryGetValue(row.Postnummer, out var basic);
+                return row with
+                {
+                    Postdistrikt = basic?.Postdistrikt ?? string.Empty
+                };
+            })
+            .ToList();
     }
 
     private async Task<PostnummerDto?> TryLookupInactivePostalCodeAsync(

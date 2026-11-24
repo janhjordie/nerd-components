@@ -94,6 +94,12 @@ internal sealed class PostnummerKommuneRestResolver
         string kommunekode,
         CancellationToken cancellationToken = default)
     {
+        var graphQl = await TryGetByKommunekodeViaGraphQlAsync(kommunekode, cancellationToken).ConfigureAwait(false);
+        if (graphQl.Count > 0)
+        {
+            return graphQl;
+        }
+
         return await GetByKommunekodeViaRestAsync(kommunekode, cancellationToken).ConfigureAwait(false);
     }
 
