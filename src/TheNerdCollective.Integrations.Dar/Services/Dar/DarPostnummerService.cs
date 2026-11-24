@@ -102,21 +102,21 @@ public sealed class DarPostnummerService
             }
         }
 
-        var fromGraphQl = await TryGetByMunicipalityFromKommunePostnumreAsync(normalizedCode, cancellationToken)
-            .ConfigureAwait(false);
-        if (fromGraphQl.Count > 0)
-        {
-            return fromGraphQl;
-        }
-
         var enriched = await ResolveAllWithKommuneAsync(cancellationToken).ConfigureAwait(false);
         var fromNationalEnrichment = enriched
             .Where(p => string.Equals(p.Kommunekode, normalizedCode, StringComparison.Ordinal))
             .Select(ToBasic)
             .OrderBy(p => p.Postnummer, StringComparer.Ordinal)
             .ToList();
+        if (fromNationalEnrichment.Count > 0)
+        {
+            return fromNationalEnrichment;
+        }
 
-        return fromNationalEnrichment;
+        var fromGraphQl = await TryGetByMunicipalityFromKommunePostnumreAsync(normalizedCode, cancellationToken)
+            .ConfigureAwait(false);
+
+        return fromGraphQl;
     }
 
     /// <summary>Resolver et eller flere postnumre inkl. primær kommune.</summary>
