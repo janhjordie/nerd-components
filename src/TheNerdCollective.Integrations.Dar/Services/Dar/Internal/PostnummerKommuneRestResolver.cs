@@ -94,13 +94,6 @@ internal sealed class PostnummerKommuneRestResolver
         string kommunekode,
         CancellationToken cancellationToken = default)
     {
-        var graphQlResults = await TryGetByKommunekodeViaGraphQlAsync(kommunekode, cancellationToken)
-            .ConfigureAwait(false);
-        if (graphQlResults.Count > 0)
-        {
-            return graphQlResults;
-        }
-
         return await GetByKommunekodeViaRestAsync(kommunekode, cancellationToken).ConfigureAwait(false);
     }
 
@@ -137,17 +130,18 @@ internal sealed class PostnummerKommuneRestResolver
             return Array.Empty<PostnummerMedKommunerDto>();
         }
 
-        var results = new List<PostnummerMedKommunerDto>(postnumre.Count);
-        foreach (var postnummer in postnumre.OrderBy(p => p, StringComparer.Ordinal))
-        {
-            var enriched = await ResolveAllKommunerAsync(postnummer, null, cancellationToken).ConfigureAwait(false);
-            if (enriched is not null)
+        return postnumre
+            .OrderBy(p => p, StringComparer.Ordinal)
+            .Select(postnummer => new PostnummerMedKommunerDto
             {
-                results.Add(enriched);
-            }
-        }
-
-        return results;
+                Postnummer = postnummer,
+                Postdistrikt = string.Empty,
+                Kommuner = new List<KommuneRefDto>
+                {
+                    new() { Kommunekode = kommunekode, Navn = string.Empty }
+                }
+            })
+            .ToList();
     }
 
     internal async Task<IReadOnlyList<string>> GetPostnumreByKommunekodeAsync(
