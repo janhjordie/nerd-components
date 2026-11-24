@@ -24,12 +24,24 @@ public sealed class DarPostnummerIntegrationTests
     }
 
     [SkippableFact]
+    [Trait("Category", "Slow")]
     public async Task GetByMunicipalityCodeAsync_returnerer_postnumre_for_Koebenhavn()
     {
         var services = CreateServices();
         var postnumre = await services.Dar.Postnummer.GetByMunicipalityCodeAsync("0101");
 
         Assert.NotEmpty(postnumre);
+        Assert.All(postnumre, p => Assert.Matches("^[0-9]{4}$", p.Postnummer));
+    }
+
+    [SkippableFact]
+    public async Task GetByMunicipalityCodeAsync_returnerer_postnumre_for_Helsingoer()
+    {
+        var services = CreateServices();
+        var postnumre = await services.Dar.Postnummer.GetByMunicipalityCodeAsync("0217");
+
+        Assert.NotEmpty(postnumre);
+        Assert.Contains(postnumre, p => p.Postnummer == "3000");
         Assert.All(postnumre, p => Assert.Matches("^[0-9]{4}$", p.Postnummer));
     }
 

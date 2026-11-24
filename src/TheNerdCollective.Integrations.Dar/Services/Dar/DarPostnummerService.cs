@@ -102,12 +102,10 @@ public sealed class DarPostnummerService
             }
         }
 
-        var enriched = await ResolveAllWithKommuneAsync(cancellationToken).ConfigureAwait(false);
-        var fromNationalEnrichment = enriched
-            .Where(p => string.Equals(p.Kommunekode, normalizedCode, StringComparison.Ordinal))
-            .Select(ToBasic)
-            .OrderBy(p => p.Postnummer, StringComparer.Ordinal)
-            .ToList();
+        var fromNationalEnrichment = await FilterByMunicipalityViaParallelKommuneLookupAsync(
+                normalizedCode,
+                cancellationToken)
+            .ConfigureAwait(false);
         if (fromNationalEnrichment.Count > 0)
         {
             return fromNationalEnrichment;
@@ -434,10 +432,49 @@ public sealed class DarPostnummerService
         return MapBasic(dto);
     }
 
+    private async Task<IReadOnlyList<PostnummerDto>> FilterByMunicipalityViaParallelKommuneLookupAsync(
+        string normalizedKommunekode,
+        CancellationToken cancellationToken)
+    {
+        var all = await GetAllActiveAsync(cancellationToken).ConfigureAwait(false);
+        var matches = new List<PostnummerDto>();
+
+        foreach (var batch in Batch(all, Math.Max(1, _options.MaxParallelKommuneLookups)))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var tasks = batch
+                .Select(p => ResolveKommuneAsync(p, cancellationToken))
+                .ToArray();
+
+            var resolved = await Task.WhenAll(tasks).ConfigureAwait(false);
+            foreach (var item in resolved)
+            {
+                if (item is null
+                    || string.IsNullOrWhiteSpace(item.Kommunekode)
+                    || !string.Equals(item.Kommunekode, normalizedKommunekode, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                matches.Add(ToBasic(item));
+            }
+        }
+
+        return matches
+            .OrderBy(p => p.Postnummer, StringComparer.Ordinal)
+            .ToList();
+    }
+
     private async Task<PostnummerMedKommuneDto?> ResolveKommuneAsync(
         PostnummerDto basic,
         CancellationToken cancellationToken)
     {
+        if (PostnummerCache.TryGetKommuneByPostnr(basic.Postnummer, _options.CacheDuration, out var cached))
+        {
+            return cached;
+        }
+
         var rest = await _restClient.ResolveKommuneAsync(
             basic.Postnummer,
             basic.Postdistrikt,
@@ -445,6 +482,7 @@ public sealed class DarPostnummerService
 
         if (rest is not null && !string.IsNullOrWhiteSpace(rest.Kommunekode))
         {
+            PostnummerCache.SetKommuneByPostnr(basic.Postnummer, rest, _options.CacheDuration);
             return rest;
         }
 
@@ -454,20 +492,25 @@ public sealed class DarPostnummerService
                 .ConfigureAwait(false);
             if (dawa is not null)
             {
-                return dawa with
+                var enriched = dawa with
                 {
                     Postdistrikt = string.IsNullOrWhiteSpace(dawa.Postdistrikt)
                         ? basic.Postdistrikt
                         : dawa.Postdistrikt
                 };
+                PostnummerCache.SetKommuneByPostnr(basic.Postnummer, enriched, _options.CacheDuration);
+                return enriched;
             }
         }
 
-        return rest ?? new PostnummerMedKommuneDto
+        var result = rest ?? new PostnummerMedKommuneDto
         {
             Postnummer = basic.Postnummer,
             Postdistrikt = basic.Postdistrikt
         };
+
+        PostnummerCache.SetKommuneByPostnr(basic.Postnummer, result, _options.CacheDuration);
+        return result;
     }
 
     private async Task<IReadOnlyList<PostnummerMedKommuneDto>> ResolveAllWithKommuneAsync(

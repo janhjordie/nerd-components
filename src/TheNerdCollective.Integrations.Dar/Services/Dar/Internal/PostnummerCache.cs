@@ -11,6 +11,8 @@ internal static class PostnummerCache
     private static DateTimeOffset _activeExpiresAt = DateTimeOffset.MinValue;
     private static readonly Dictionary<string, (IReadOnlyList<PostnummerMedKommunerDto> Results, DateTimeOffset ExpiresAt)> CircleCache =
         new(StringComparer.Ordinal);
+    private static readonly Dictionary<string, (PostnummerMedKommuneDto Result, DateTimeOffset ExpiresAt)> KommuneByPostnrCache =
+        new(StringComparer.Ordinal);
 
     internal static bool TryGetActive(TimeSpan cacheDuration, out IReadOnlyList<PostnummerDto> postnumre)
     {
@@ -56,6 +58,29 @@ internal static class PostnummerCache
         lock (Sync)
         {
             CircleCache[cacheKey] = (results, DateTimeOffset.UtcNow.Add(cacheDuration));
+        }
+    }
+
+    internal static bool TryGetKommuneByPostnr(string postnummer, TimeSpan cacheDuration, out PostnummerMedKommuneDto result)
+    {
+        lock (Sync)
+        {
+            if (KommuneByPostnrCache.TryGetValue(postnummer, out var entry) && DateTimeOffset.UtcNow < entry.ExpiresAt)
+            {
+                result = entry.Result;
+                return true;
+            }
+        }
+
+        result = default!;
+        return false;
+    }
+
+    internal static void SetKommuneByPostnr(string postnummer, PostnummerMedKommuneDto result, TimeSpan cacheDuration)
+    {
+        lock (Sync)
+        {
+            KommuneByPostnrCache[postnummer] = (result, DateTimeOffset.UtcNow.Add(cacheDuration));
         }
     }
 }
