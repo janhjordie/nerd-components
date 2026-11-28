@@ -2,6 +2,7 @@
   <!-- SDK 10.0.400: Razor source generator has false RZ1021 on markup inside @if blocks
        (dotnet/razor#13184). Legacy compiler is stable for these component libraries. -->
   <PropertyGroup>
+    <TargetFramework Condition="'$(TargetFrameworks)' == '' and '$(TargetFramework)' == ''">net11.0</TargetFramework>
     <UseRazorSourceGenerator>false</UseRazorSourceGenerator>
   </PropertyGroup>
 </Project>

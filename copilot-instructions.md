@@ -96,7 +96,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.0.400'
+          dotnet-version: '11.0.x'
 
       - name: Get Version from csproj
         id: version

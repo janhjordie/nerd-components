@@ -85,7 +85,7 @@ TheNerdCollective.Components/
 mkdir -p src/TheNerdCollective.{Category}.{PackageName}
 
 # Create C# project file
-dotnet new classlib -n TheNerdCollective.{Category}.{PackageName} -f net10.0 --force
+dotnet new classlib -n TheNerdCollective.{Category}.{PackageName} -f net11.0 --force
 ```
 
 ### Step 2: Configure Package Metadata
@@ -96,7 +96,7 @@ Edit `src/TheNerdCollective.{Category}.{PackageName}/{PackageName}.csproj`:
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net11.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     
